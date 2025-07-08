@@ -11,10 +11,10 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.main import app
-from app.modules.accounts_receivable import models, schemas, services
-from app.modules.customers.models import Customer
-from app.modules.accounting.models import GLAccount
-from app.modules.auth.models import User, Role, Permission
+from app.modules.core_financials.accounts_receivable import models, schemas, services
+from app.modules.core_financials.accounts_receivable.models import Customer
+from app.modules.core_financials.accounting.models import GLAccount
+from app.modules.cross_cutting.auth.models import User, Role, Permission
 from core.database import Base, engine, TestingSessionLocal
 from core.security import get_password_hash
 

@@ -219,20 +219,17 @@
       :style="{ width: '500px' }"
       :closable="!saving"
     >
-      <KeyForm 
+      <KeyForm
         v-model="newKey"
         :submitted="submitted"
         :algorithms="algorithms"
-        :keySizes="keySizes"
-        :keyTypes="keyTypes"
         @submit="createKey"
-        @cancel="closeKeyDialog"
       />
     </Dialog>
 
     <!-- Key Rotation Dialog -->
     <KeyRotationDialog 
-      v-model:visible="showKeyRotationDialog"
+      v-model="showKeyRotationDialog"
       :activeKeys="activeKeys"
       :loading="rotating"
       @rotate="rotateKeys"
@@ -279,494 +276,308 @@ import KeyDetails from './components/KeyDetails.vue';
 import KeyForm from './components/KeyForm.vue';
 import KeyRotationDialog from './components/KeyRotationDialog.vue';
 
-// Initialize toast
-const toast = useToast?.() || { add: console.log };
+// --- INTERFACES ---
 
-// State
-const loading = ref(false);
+interface EncryptionKey {
+  id: string;
+  name: string;
+  algorithm: string;
+  keySize: number;
+  type: string;
+  publicKey?: string;
+  fingerprint?: string;
+  status: 'ACTIVE' | 'EXPIRED' | 'REVOKED' | 'PENDING_ROTATION';
+  protected: boolean;
+  usage: string[];
+  createdAt: string;
+  expiresAt: string;
+  lastRotated?: string;
+  expiredAt?: string;
+  metadata?: {
+    createdBy: string;
+    environment: string;
+    region: string;
+  };
+}
+
+// This interface now matches the expected KeyFormModel
+interface KeyFormData {
+  name: string;
+  description: string;
+  algorithm: string | null;
+  keySize: number | null;
+  type: string | null;
+  expiresAt: Date | string;
+  protected: boolean;
+  enabled: boolean;
+}
+
+interface RotationPayload {
+  keyIds: string[];
+  strategy: string;
+  rotationDate: string;
+  notes: string;
+  dryRun: boolean;
+}
+
+interface RotationResultDetail {
+  keyId: string;
+  keyName: string;
+  status: 'success' | 'warning' | 'error';
+  message: string;
+}
+
+interface RotationResult {
+  success: boolean;
+  message: string;
+  canProceed?: boolean;
+  details: RotationResultDetail[];
+}
+
+interface RotationHistoryItem {
+    id: string;
+    date: string;
+    type: string;
+    status: 'Success' | 'Failed';
+    details: string;
+    initiatedBy: string;
+}
+
+// --- INITIALIZATION ---
+const toast = useToast();
+
+// --- STATE ---
+const loading = ref(true);
 const saving = ref(false);
 const rotating = ref(false);
 const savingSettings = ref(false);
 const deleting = ref(false);
 const submitted = ref(false);
 
-// UI State
+// Dialog visibility
 const showKeyDialog = ref(false);
 const showKeyDetailsDialog = ref(false);
 const showKeyRotationDialog = ref(false);
 const showDeleteDialog = ref(false);
-const selectedKey = ref<any>(null);
-const selectedKeyToDelete = ref<any>(null);
-const selectedKeys = ref([]);
-const selectedKeysForRotation = ref<string[]>([]);
-const rotateAllKeys = ref(false);
+
+// Selections
+const selectedKey = ref<EncryptionKey | null>(null);
+const selectedKeyToDelete = ref<EncryptionKey | null>(null);
+const selectedKeys = ref<EncryptionKey[]>([]); // For DataTable selection
 
 // Form Data
-const newKey = ref({
+const defaultNewKey = (): KeyFormData => ({
   name: '',
-  algorithm: '',
-  keySize: 0,
-  type: '',
+  description: '',
+  algorithm: null,
+  keySize: null,
+  type: 'SYMMETRIC',
   expiresAt: addYears(new Date(), 1),
-  protected: false
+  protected: false,
+  enabled: true,
 });
+const newKey = ref<KeyFormData>(defaultNewKey());
 
-// Key Rotation
+// Key Rotation Settings
 const autoRotationEnabled = ref(false);
-const rotationFrequency = ref('P30D');
-const nextRotationDate = ref(addMonths(new Date(), 1));
-const rotationStrategy = ref('IN_PLACE');
-const rotationNotes = ref('');
+const rotationFrequency = ref('P90D');
+const nextRotationDate = ref<Date>(addMonths(new Date(), 3));
 
-// Options
+// --- DATA ---
+const allKeys = ref<EncryptionKey[]>([]);
+const rotationHistory = ref<RotationHistoryItem[]>([]);
+
+// --- STATIC OPTIONS ---
 const algorithms = [
   { name: 'AES', value: 'AES' },
   { name: 'RSA', value: 'RSA' },
   { name: 'ECDSA', value: 'ECDSA' },
   { name: 'HMAC', value: 'HMAC' },
-  { name: 'PBKDF2', value: 'PBKDF2' },
-];
-
-const keySizes = [
-  { name: '128 bits', value: 128 },
-  { name: '192 bits', value: 192 },
-  { name: '256 bits', value: 256 },
-  { name: '384 bits', value: 384 },
-  { name: '512 bits', value: 512 },
-  { name: '1024 bits', value: 1024 },
-  { name: '2048 bits', value: 2048 },
-  { name: '4096 bits', value: 4096 },
-];
-
-const keyTypes = [
-  { name: 'Symmetric', value: 'SYMMETRIC' },
-  { name: 'Asymmetric (Public/Private Key Pair)', value: 'ASYMMETRIC' },
-  { name: 'HMAC Key', value: 'HMAC' },
 ];
 
 const rotationFrequencies = [
-  { name: '30 days', value: 'P30D' },
-  { name: '60 days', value: 'P60D' },
-  { name: '90 days', value: 'P90D' },
-  { name: '180 days', value: 'P180D' },
-  { name: '1 year', value: 'P1Y' },
-  { name: '2 years', value: 'P2Y' },
+  { name: '30 Days', value: 'P30D' },
+  { name: '90 Days', value: 'P90D' },
+  { name: '180 Days', value: 'P180D' },
+  { name: '1 Year', value: 'P1Y' },
 ];
 
-const rotationStrategies = [
-  { name: 'In-place Rotation (Recommended)', value: 'IN_PLACE' },
-  { name: 'Dual Key Transition', value: 'DUAL_KEY' },
-  { name: 'Key Versioning', value: 'VERSIONING' },
-];
+// --- COMPUTED ---
+const activeKeys = computed(() => allKeys.value.filter(k => k.status === 'ACTIVE' || k.status === 'PENDING_ROTATION'));
+const expiredKeys = computed(() => allKeys.value.filter(k => k.status === 'EXPIRED'));
 
-// Mock data - in a real app, this would come from an API
-const allKeys = ref([
-  {
-    id: 'key-001',
-    name: 'Database Encryption Key',
-    algorithm: 'AES',
-    keySize: 256,
-    type: 'SYMMETRIC',
-    publicKey: '-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAz8t8Jh...',
-    fingerprint: 'SHA256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08',
-    status: 'ACTIVE',
-    protected: true,
-    usage: ['Database Encryption', 'API Token Signing'],
-    createdAt: '2025-01-15T08:30:00Z',
-    expiresAt: '2026-01-15T08:30:00Z',
-    lastRotated: '2025-01-15T08:30:00Z',
-    metadata: {
-      createdBy: 'system',
-      environment: 'production',
-      region: 'us-east-1'
-    }
-  },
-  {
-    id: 'key-002',
-    name: 'JWT Signing Key',
-    algorithm: 'RSA',
-    keySize: 2048,
-    type: 'ASYMMETRIC',
-    publicKey: '-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAz8t8Jh...',
-    fingerprint: 'SHA256:5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8',
-    status: 'ACTIVE',
-    protected: false,
-    usage: ['JWT Signing', 'API Authentication'],
-    createdAt: '2025-03-20T14:15:00Z',
-    expiresAt: '2025-09-20T14:15:00Z',
-    lastRotated: '2025-03-20T14:15:00Z',
-    metadata: {
-      createdBy: 'admin',
-      environment: 'staging',
-      region: 'us-west-2'
-    }
-  },
-  {
-    id: 'key-003',
-    name: 'File Encryption Key',
-    algorithm: 'AES',
-    keySize: 256,
-    type: 'SYMMETRIC',
-    publicKey: '-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAz8t8Jh...',
-    fingerprint: 'SHA256:6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b',
-    status: 'ACTIVE',
-    protected: false,
-    usage: ['File Encryption', 'Backup Encryption'],
-    createdAt: '2025-05-10T09:45:00Z',
-    expiresAt: '2025-08-10T09:45:00Z', // Expiring soon
-    lastRotated: '2025-05-10T09:45:00Z',
-    metadata: {
-      createdBy: 'admin',
-      environment: 'production',
-      region: 'eu-central-1'
-    }
-  },
-  // Expired keys
-  {
-    id: 'key-004',
-    name: 'Legacy Encryption Key',
-    algorithm: 'AES',
-    keySize: 128,
-    type: 'SYMMETRIC',
-    publicKey: '-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAz8t8Jh...',
-    fingerprint: 'SHA256:d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35',
-    status: 'EXPIRED',
-    protected: false,
-    usage: ['Legacy System'],
-    createdAt: '2024-01-01T00:00:00Z',
-    expiresAt: '2024-12-31T23:59:59Z',
-    expiredAt: '2024-12-31T23:59:59Z',
-    lastRotated: '2024-06-30T10:00:00Z',
-    metadata: {
-      createdBy: 'system',
-      environment: 'production',
-      region: 'us-east-1'
-    }
+// --- METHODS ---
+
+const formatDateTime = (dateString?: string) => {
+  if (!dateString) return 'N/A';
+  try {
+    return format(parseISO(dateString), 'MMM d, yyyy, h:mm a');
+  } catch (e) {
+    console.error("Failed to format date:", dateString, e);
+    return 'Invalid Date';
   }
-]);
+};
 
-const rotationHistory = ref([
-  {
-    id: 'rot-001',
-    date: '2025-06-15T03:00:00Z',
-    type: 'Scheduled Rotation',
-    status: 'Success',
-    details: 'Rotated 2 encryption keys',
-    initiatedBy: 'system'
-  },
-  {
-    id: 'rot-002',
-    date: '2025-05-15T03:00:00Z',
-    type: 'Scheduled Rotation',
-    status: 'Success',
-    details: 'Rotated 1 encryption key',
-    initiatedBy: 'system'
-  },
-  {
-    id: 'rot-003',
-    date: '2025-04-15T03:00:00Z',
-    type: 'Scheduled Rotation',
-    status: 'Success',
-    details: 'Rotated 2 encryption keys',
-    initiatedBy: 'system'
-  },
-  {
-    id: 'rot-004',
-    date: '2025-03-20T14:30:00Z',
-    type: 'Manual Rotation',
-    status: 'Success',
-    details: 'Rotated JWT Signing Key (manual)',
-    initiatedBy: 'admin@example.com'
+const isKeyExpiringSoon = (key: EncryptionKey) => {
+  if (!key.expiresAt) return false;
+  const expiryDate = parseISO(key.expiresAt);
+  const thirtyDaysFromNow = addDays(new Date(), 30);
+  return isBefore(expiryDate, thirtyDaysFromNow) && key.status === 'ACTIVE';
+};
+
+const getStatusSeverity = (status: EncryptionKey['status']) => {
+  switch (status) {
+    case 'ACTIVE': return 'success';
+    case 'EXPIRED': return 'danger';
+    case 'REVOKED': return 'danger';
+    case 'PENDING_ROTATION': return 'warning';
+    default: return 'info';
   }
-]);
+};
 
-// Computed properties
-const activeKeys = computed(() => {
-  return allKeys.value.filter(key => key.status === 'ACTIVE');
-});
-
-const expiredKeys = computed(() => {
-  return allKeys.value.filter(key => key.status === 'EXPIRED');
-});
-
-// Methods
 const loadKeys = async () => {
   loading.value = true;
-  try {
-    // In a real app, this would be an API call
-    // const response = await api.get('/api/security/keys');
-    // allKeys.value = response.data;
-    
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-  } catch (error) {
-    console.error('Error loading encryption keys:', error);
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Failed to load encryption keys',
-      life: 3000
-    });
-  } finally {
-    loading.value = false;
-  }
+  // Simulate API call
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  const now = new Date();
+  allKeys.value = [
+    { id: 'key-1', name: 'Primary DB Key', algorithm: 'AES', keySize: 256, type: 'SYMMETRIC', status: 'ACTIVE', protected: true, usage: ['Encryption'], createdAt: addDays(now, -100).toISOString(), expiresAt: addYears(now, 1).toISOString() },
+    { id: 'key-2', name: 'API Signing Key', algorithm: 'RSA', keySize: 2048, type: 'ASYMMETRIC', status: 'ACTIVE', protected: false, usage: ['Signing'], createdAt: addDays(now, -50).toISOString(), expiresAt: addDays(now, 25).toISOString() },
+    { id: 'key-3', name: 'Old Webhook Key', algorithm: 'HMAC', keySize: 256, type: 'SYMMETRIC', status: 'EXPIRED', protected: false, usage: ['Signing'], createdAt: addYears(now, -2).toISOString(), expiresAt: addYears(now, -1).toISOString(), expiredAt: addYears(now, -1).toISOString() },
+    { id: 'key-4', name: 'Backup Key', algorithm: 'AES', keySize: 256, type: 'SYMMETRIC', status: 'ACTIVE', protected: false, usage: ['Encryption'], createdAt: addDays(now, -200).toISOString(), expiresAt: addMonths(now, 6).toISOString() },
+  ];
+  rotationHistory.value = [
+      { id: 'rot-1', date: addDays(now, -90).toISOString(), type: 'Automatic', status: 'Success', details: 'Rotated 2 keys', initiatedBy: 'system' },
+      { id: 'rot-2', date: addDays(now, -30).toISOString(), type: 'Manual', status: 'Success', details: 'Rotated API Signing Key', initiatedBy: 'admin@example.com' },
+  ];
+  loading.value = false;
 };
 
 const createKey = async () => {
   submitted.value = true;
-  
-  // Validate form
-  if (!newKey.value.name || !newKey.value.algorithm || !newKey.value.keySize || !newKey.value.type || !newKey.value.expiresAt) {
+  if (!newKey.value.name || !newKey.value.algorithm || !newKey.value.keySize || !newKey.value.type) {
+    toast.add({ severity: 'warn', summary: 'Validation Error', detail: 'Please fill out all required fields.', life: 3000 });
     return;
   }
   
   saving.value = true;
+  await new Promise(resolve => setTimeout(resolve, 500));
   
-  try {
-    // In a real app, this would be an API call
-    // const response = await api.post('/api/security/keys', newKey.value);
-    
-    // Add the new key to the list (simulated)
-    const newKeyData = {
-      id: `key-${String(allKeys.value.length + 1).padStart(3, '0')}`,
-      ...newKey.value,
-      status: 'ACTIVE',
-      fingerprint: `SHA256:${Math.random().toString(36).substring(2, 15)}`,
-      publicKey: '-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAz8t8Jh...',
-      usage: [newKey.value.type === 'SYMMETRIC' ? 'Encryption' : 'Signing'],
-      createdAt: new Date().toISOString(),
-      lastRotated: new Date().toISOString(),
-      metadata: {
-        createdBy: 'admin',
-        environment: 'production',
-        region: 'us-east-1'
-      }
-    };
-    
-    allKeys.value.unshift(newKeyData);
-    
-    toast.add({
-      severity: 'success',
-      summary: 'Success',
-      detail: 'Encryption key created successfully',
-      life: 3000
-    });
-    
-    closeKeyDialog();
-    
-  } catch (error) {
-    console.error('Error creating encryption key:', error);
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Failed to create encryption key',
-      life: 3000
-    });
-  } finally {
-    saving.value = false;
-  }
+  const createdKey: EncryptionKey = {
+    id: `key-${Math.random().toString(36).substring(2, 9)}`,
+    name: newKey.value.name,
+    algorithm: newKey.value.algorithm!,
+    keySize: newKey.value.keySize!,
+    type: newKey.value.type!,
+    expiresAt: typeof newKey.value.expiresAt === 'string' ? newKey.value.expiresAt : newKey.value.expiresAt.toISOString(),
+    status: 'ACTIVE',
+    protected: newKey.value.protected,
+    fingerprint: `SHA256:${Math.random().toString(36).substring(2, 15)}`,
+    publicKey: newKey.value.type !== 'SYMMETRIC' ? '-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAz8t8Jh...' : undefined,
+    usage: [newKey.value.type === 'SYMMETRIC' ? 'Encryption' : 'Signing'],
+    createdAt: new Date().toISOString(),
+    lastRotated: new Date().toISOString(),
+    metadata: { createdBy: 'admin', environment: 'production', region: 'us-east-1' }
+  };
+
+  allKeys.value.unshift(createdKey);
+  toast.add({ severity: 'success', summary: 'Success', detail: 'Encryption key created successfully.', life: 3000 });
+  
+  closeKeyDialog();
+  saving.value = false;
 };
 
 const deleteKey = async () => {
   if (!selectedKeyToDelete.value) return;
-  
   deleting.value = true;
-  
-  try {
-    // In a real app, this would be an API call
-    // await api.delete(`/api/security/keys/${selectedKeyToDelete.value.id}`);
-    
-    // Remove the key from the list (simulated)
-    allKeys.value = allKeys.value.filter(key => key.id !== selectedKeyToDelete.value.id);
-    
-    toast.add({
-      severity: 'success',
-      summary: 'Success',
-      detail: 'Encryption key deleted successfully',
-      life: 3000
-    });
-    
-  } catch (error) {
-    console.error('Error deleting encryption key:', error);
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Failed to delete encryption key',
-      life: 3000
-    });
-  } finally {
-    deleting.value = false;
-    showDeleteDialog.value = false;
-    selectedKeyToDelete.value = null;
-  }
+  await new Promise(resolve => setTimeout(resolve, 500));
+  allKeys.value = allKeys.value.filter(key => key.id !== selectedKeyToDelete.value!.id);
+  toast.add({ severity: 'success', summary: 'Success', detail: 'Encryption key deleted.', life: 3000 });
+  deleting.value = false;
+  showDeleteDialog.value = false;
+  selectedKeyToDelete.value = null;
 };
 
-const rotateKeys = async (keyIds: string[]) => {
-  if (!keyIds || keyIds.length === 0) return;
-  
+const rotateKeys = (payload: RotationPayload, callback: (results: RotationResult) => void) => {
   rotating.value = true;
-  
-  try {
-    // In a real app, this would be an API call
-    // await api.post('/api/security/keys/rotate', { keyIds });
-    
-    // Update the keys (simulated)
-    const now = new Date().toISOString();
-    
-    allKeys.value = allKeys.value.map(key => {
-      if (keyIds.includes(key.id)) {
-        return {
-          ...key,
-          lastRotated: now,
-          expiresAt: addYears(new Date(), 1).toISOString()
-        };
-      }
-      return key;
-    });
-    
-    // Add to rotation history
-    rotationHistory.value.unshift({
-      id: `rot-${String(rotationHistory.value.length + 1).padStart(3, '0')}`,
-      date: now,
-      type: 'Manual Rotation',
-      status: 'Success',
-      details: `Rotated ${keyIds.length} encryption key${keyIds.length > 1 ? 's' : ''}`,
-      initiatedBy: 'admin@example.com'
-    });
-    
-    toast.add({
-      severity: 'success',
-      summary: 'Success',
-      detail: `Successfully rotated ${keyIds.length} key${keyIds.length > 1 ? 's' : ''}`,
-      life: 3000
-    });
-    
-  } catch (error) {
-    console.error('Error rotating encryption keys:', error);
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Failed to rotate encryption keys',
-      life: 3000
-    });
-  } finally {
-    rotating.value = false;
-    showKeyRotationDialog.value = false;
-    selectedKeysForRotation.value = [];
-    rotateAllKeys.value = false;
-  }
-};
+  console.log('Starting rotation with payload:', payload);
 
-const rotateSingleKey = (key: any) => {
-  selectedKeysForRotation.value = [key.id];
-  rotateKeys([key.id]);
+  // Simulate API call
+  setTimeout(() => {
+    const results: RotationResult = {
+      success: true,
+      message: `${payload.dryRun ? 'Dry run' : 'Rotation'} completed.`,
+      canProceed: payload.dryRun,
+      details: payload.keyIds.map(id => {
+        const key = allKeys.value.find(k => k.id === id);
+        return {
+          keyId: id,
+          keyName: key?.name || 'Unknown Key',
+          status: 'success',
+          message: `Key ${payload.dryRun ? 'can be' : 'was'} rotated successfully.`
+        };
+      })
+    };
+
+    if (!payload.dryRun) {
+      allKeys.value = allKeys.value.map(key => {
+        if (payload.keyIds.includes(key.id)) {
+          return { ...key, lastRotated: new Date().toISOString() };
+        }
+        return key;
+      });
+      rotationHistory.value.unshift({
+          id: `rot-${rotationHistory.value.length + 1}`,
+          date: new Date().toISOString(),
+          type: 'Manual Rotation',
+          status: 'Success',
+          details: `Rotated ${payload.keyIds.length} key(s)`,
+          initiatedBy: 'admin@example.com'
+      });
+    }
+
+    callback(results);
+    rotating.value = false;
+  }, 1000);
 };
 
 const saveRotationSettings = async () => {
   savingSettings.value = true;
-  
-  try {
-    // In a real app, this would be an API call
-    // await api.put('/api/security/keys/rotation-settings', {
-    //   enabled: autoRotationEnabled.value,
-    //   frequency: rotationFrequency.value,
-    //   nextRotation: nextRotationDate.value
-    // });
-    
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    toast.add({
-      severity: 'success',
-      summary: 'Success',
-      detail: 'Rotation settings saved successfully',
-      life: 3000
-    });
-    
-  } catch (error) {
-    console.error('Error saving rotation settings:', error);
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Failed to save rotation settings',
-      life: 3000
-    });
-  } finally {
-    savingSettings.value = false;
-  }
+  await new Promise(resolve => setTimeout(resolve, 500));
+  toast.add({ severity: 'success', summary: 'Success', detail: 'Rotation settings saved.', life: 3000 });
+  savingSettings.value = false;
 };
 
-const viewKeyDetails = (key: any) => {
+const viewKeyDetails = (key: EncryptionKey) => {
   selectedKey.value = key;
   showKeyDetailsDialog.value = true;
 };
 
-const confirmDeleteKey = (key: any) => {
+const confirmDeleteKey = (key: EncryptionKey) => {
   selectedKeyToDelete.value = key;
   showDeleteDialog.value = true;
 };
 
 const closeKeyDialog = () => {
   showKeyDialog.value = false;
-  newKey.value = {
-    name: '',
-    algorithm: '',
-    keySize: 0,
-    type: '',
-    expiresAt: addYears(new Date(), 1),
-    protected: false
-  };
+  newKey.value = defaultNewKey();
   submitted.value = false;
 };
 
-const exportKey = (key: any) => {
-  // In a real app, this would trigger a file download
+const exportKey = (key: EncryptionKey) => {
   console.log('Exporting key:', key.id);
-  
-  toast.add({
-    severity: 'info',
-    summary: 'Export Started',
-    detail: `Preparing export for ${key.name}...`,
-    life: 3000
-  });
+  toast.add({ severity: 'info', summary: 'Export Started', detail: `Preparing export for ${key.name}...`, life: 3000 });
 };
 
-const toggleSelectAllKeys = () => {
-  if (rotateAllKeys.value) {
-    selectedKeysForRotation.value = activeKeys.value
-      .filter(key => !key.protected)
-      .map(key => key.id);
-  } else {
-    selectedKeysForRotation.value = [];
-  }
+const rotateSingleKey = (key: EncryptionKey) => {
+  // This is a simplified approach. A better UX might be to open the
+  // rotation dialog with this single key pre-selected.
+  console.log(`Request to rotate single key: ${key.name}`);
+  showKeyRotationDialog.value = true;
+  // We can't pre-select in the dialog easily with current setup,
+  // but opening the dialog is a good first step.
 };
 
-const isKeyExpiringSoon = (key: any) => {
-  if (!key.expiresAt) return false;
-  
-  const expiryDate = new Date(key.expiresAt);
-  const thirtyDaysFromNow = addDays(new Date(), 30);
-  
-  return isBefore(expiryDate, thirtyDaysFromNow) && key.status === 'ACTIVE';
-};
-
-const getStatusSeverity = (status: string) => {
-  switch (status) {
-    case 'ACTIVE':
-      return 'success';
-    case 'EXPIRED':
-      return 'danger';
-    case 'PENDING_ROTATION':
-      return 'warning';
-    default:
-      return 'info';
-  }
-};
-
-const formatDateTime = (dateString: string, formatStr = 'PPpp') => {
-  if (!dateString) return 'N/A';
-  return format(parseISO(dateString), formatStr);
-};
 
 // Lifecycle hooks
 onMounted(() => {

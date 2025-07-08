@@ -2,19 +2,21 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sess
 from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy.pool import NullPool
 from typing import AsyncGenerator
+import os
+from pathlib import Path
 
-from .config import settings
+# Get the base directory
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Database configuration
+SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite+aiosqlite:///{BASE_DIR}/paksa_financial.db")
 
 # Create async engine
 engine = create_async_engine(
-    settings.DATABASE_URI,
-    echo=settings.DEBUG,
+    SQLALCHEMY_DATABASE_URL,
+    echo=True,
     future=True,
-    pool_pre_ping=True,
-    pool_recycle=3600,
-    pool_size=20,
-    max_overflow=10,
-    poolclass=NullPool if settings.TESTING else None,
+    connect_args={"check_same_thread": False} if "sqlite" in SQLALCHEMY_DATABASE_URL else {}
 )
 
 # Create async session factory
@@ -50,7 +52,7 @@ async def init_db() -> None:
     
     async with engine.begin() as conn:
         # Create extensions
-        await conn.execute(text("CREATE EXTENSION IF NOT EXISTS "uuid-osup""))
+        await conn.execute(text("CREATE EXTENSION IF NOT EXISTS 'uuid-ossp'"))
         
         # Create all tables
         await conn.run_sync(Base.metadata.create_all)

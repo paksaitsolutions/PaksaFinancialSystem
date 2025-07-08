@@ -40,7 +40,7 @@ from .endpoints import (
 )
 
 # Import compliance module
-from app.modules.compliance.api import paksa_compliance_router
+from app.modules.cross_cutting.compliance.api import paksa_compliance_router
 
 # Include API routes with proper organization
 

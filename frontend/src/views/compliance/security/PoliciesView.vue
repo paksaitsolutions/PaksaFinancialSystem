@@ -1,4 +1,287 @@
 <template>
+  <div class="policy-management-view">
+    <Toast />
+    <div class="card">
+      <Toolbar class="mb-4">
+        <template #start>
+          <Button label="New Policy" icon="pi pi-plus" class="p-button-success mr-2" @click="openNew" />
+        </template>
+      </Toolbar>
+
+      <DataTable :value="policies" :loading="loading" responsiveLayout="scroll">
+        <Column field="name" header="Name" :sortable="true"></Column>
+        <Column field="category" header="Category" :sortable="true"></Column>
+        <Column field="version" header="Version"></Column>
+        <Column field="is_active" header="Status">
+          <template #body="{ data }">
+            <Tag :value="data.is_active ? 'Active' : 'Inactive'" :severity="data.is_active ? 'success' : 'danger'" />
+          </template>
+        </Column>
+        <Column field="updated_at" header="Last Updated">
+            <template #body="{ data }">
+                {{ format(new Date(data.updated_at), 'PPpp') }}
+            </template>
+        </Column>
+        <Column :exportable="false" style="min-width:8rem">
+          <template #body="{ data }">
+            <Button icon="pi pi-pencil" class="p-button-rounded p-button-success mr-2" @click="editPolicy(data)" />
+            <Button icon="pi pi-trash" class="p-button-rounded p-button-warning" @click="confirmDeletePolicy(data)" />
+          </template>
+        </Column>
+      </DataTable>
+    </div>
+
+    <Dialog v-model:visible="policyDialog" :style="{width: '450px'}" header="Policy Details" :modal="true" class="p-fluid">
+        <div class="field">
+            <label for="name">Name</label>
+            <InputText id="name" v-model.trim="policy.name" required="true" autofocus :class="{'p-invalid': submitted && !policy.name}" />
+            <small class="p-error" v-if="submitted && !policy.name">Name is required.</small>
+        </div>
+        <div class="field">
+            <label for="description">Description</label>
+            <Textarea id="description" v-model="policy.description" required="true" rows="3" cols="20" />
+        </div>
+        <div class="field">
+            <label for="category">Category</label>
+            <InputText id="category" v-model.trim="policy.category" required="true" />
+        </div>
+        <div class="field">
+            <label for="version">Version</label>
+            <InputText id="version" v-model.trim="policy.version" required="true" />
+        </div>
+        <div class="field">
+            <label for="content">Content</label>
+            <Textarea id="content" v-model="policy.content" required="true" rows="5" cols="20" />
+        </div>
+        <div class="field-checkbox">
+            <Checkbox id="is_active" v-model="policy.is_active" :binary="true" />
+            <label for="is_active">Active</label>
+        </div>
+
+        <template #footer>
+            <Button label="Cancel" icon="pi pi-times" class="p-button-text" @click="hideDialog"/>
+            <Button label="Save" icon="pi pi-check" class="p-button-text" @click="savePolicy" />
+        </template>
+    </Dialog>
+
+    <Dialog v-model:visible="deletePolicyDialog" :style="{width: '450px'}" header="Confirm" :modal="true">
+      <div class="confirmation-content">
+        <i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem" />
+        <span v-if="policy">Are you sure you want to delete <b>{{policy.name}}</b>?</span>
+      </div>
+      <template #footer>
+        <Button label="No" icon="pi pi-times" class="p-button-text" @click="deletePolicyDialog = false"/>
+        <Button label="Yes" icon="pi pi-check" class="p-button-text" @click="deletePolicy" />
+      </template>
+    </Dialog>
+
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted } from 'vue';
+import { useToast } from 'primevue/usetoast';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+import Button from 'primevue/button';
+import Dialog from 'primevue/dialog';
+import InputText from 'primevue/inputtext';
+import Textarea from 'primevue/textarea';
+import Checkbox from 'primevue/checkbox';
+import Toolbar from 'primevue/toolbar';
+import Tag from 'primevue/tag';
+import { format } from 'date-fns';
+
+// MOCK DATA AND API
+// TODO: Replace with real API calls once the api.ts corruption is resolved.
+
+interface SecurityPolicy {
+    id: number;
+    name: string;
+    description: string;
+    category: string;
+    content: string;
+    version: string;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+}
+
+const mockPolicies: SecurityPolicy[] = [
+    {
+        id: 1,
+        name: 'Password Complexity Policy',
+        description: 'Requires strong passwords for all user accounts.',
+        category: 'Access Control',
+        content: 'Passwords must be at least 12 characters long, include uppercase, lowercase, numbers, and symbols.',
+        version: '1.2',
+        is_active: true,
+        created_at: '2023-01-15T10:00:00Z',
+        updated_at: '2023-05-20T14:30:00Z',
+    },
+    {
+        id: 2,
+        name: 'Data Encryption Policy',
+        description: 'Ensures all sensitive data is encrypted at rest and in transit.',
+        category: 'Data Protection',
+        content: 'All databases containing PII must use AES-256 encryption. All network traffic must use TLS 1.2 or higher.',
+        version: '2.0',
+        is_active: true,
+        created_at: '2023-02-01T09:00:00Z',
+        updated_at: '2023-06-01T11:00:00Z',
+    },
+    {
+        id: 3,
+        name: 'Incident Response Plan',
+        description: 'Defines procedures for handling security incidents.',
+        category: 'Security Operations',
+        content: 'In case of a breach, the security team must be notified within 1 hour. The incident must be documented and resolved within 24 hours.',
+        version: '1.5',
+        is_active: false,
+        created_at: '2023-03-10T16:00:00Z',
+        updated_at: '2023-04-10T18:00:00Z',
+    },
+];
+
+const mockApi = {
+    getSecurityPolicies: async (): Promise<SecurityPolicy[]> => {
+        console.log('Mock API: Fetching policies...');
+        return new Promise(resolve => setTimeout(() => resolve(JSON.parse(JSON.stringify(mockPolicies))), 500));
+    },
+    createSecurityPolicy: async (policy: Omit<SecurityPolicy, 'id' | 'created_at' | 'updated_at'>): Promise<SecurityPolicy> => {
+        console.log('Mock API: Creating policy...', policy);
+        const newPolicy: SecurityPolicy = {
+            ...policy,
+            id: Math.floor(Math.random() * 1000) + 10,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+        };
+        mockPolicies.push(newPolicy);
+        return new Promise(resolve => setTimeout(() => resolve(newPolicy), 500));
+    },
+    updateSecurityPolicy: async (id: number, policyUpdate: Partial<SecurityPolicy>): Promise<SecurityPolicy> => {
+        console.log(`Mock API: Updating policy ${id}...`, policyUpdate);
+        const index = mockPolicies.findIndex(p => p.id === id);
+        if (index !== -1) {
+            const originalPolicy = mockPolicies[index];
+            const updatedPolicy: SecurityPolicy = {
+                ...originalPolicy,
+                ...policyUpdate,
+                id: originalPolicy.id, // Ensure ID is not changed and is not undefined
+                updated_at: new Date().toISOString(),
+            };
+            mockPolicies[index] = updatedPolicy;
+            return new Promise(resolve => setTimeout(() => resolve(updatedPolicy), 500));
+        }
+        throw new Error('Policy not found');
+    },
+    deleteSecurityPolicy: async (id: number): Promise<{}> => {
+        console.log(`Mock API: Deleting policy ${id}...`);
+        const index = mockPolicies.findIndex(p => p.id === id);
+        if (index !== -1) {
+            mockPolicies.splice(index, 1);
+            return new Promise(resolve => setTimeout(() => resolve({}), 500));
+        }
+        throw new Error('Policy not found');
+    },
+};
+
+// COMPONENT LOGIC
+const toast = useToast();
+const policies = ref<SecurityPolicy[]>([]);
+const policyDialog = ref(false);
+const deletePolicyDialog = ref(false);
+const policy = ref<Partial<SecurityPolicy>>({});
+const submitted = ref(false);
+const loading = ref(true);
+
+onMounted(() => {
+    loadPolicies();
+});
+
+const loadPolicies = async () => {
+    loading.value = true;
+    try {
+        // TODO: Replace with: policies.value = await api.getSecurityPolicies();
+        policies.value = await mockApi.getSecurityPolicies();
+    } catch (error) {
+        console.error('Failed to load policies:', error);
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load policies', life: 3000 });
+    } finally {
+        loading.value = false;
+    }
+};
+
+const openNew = () => {
+    policy.value = { is_active: true, version: '1.0' };
+    submitted.value = false;
+    policyDialog.value = true;
+};
+
+const hideDialog = () => {
+    policyDialog.value = false;
+    submitted.value = false;
+};
+
+const savePolicy = async () => {
+    submitted.value = true;
+
+    if (!policy.value.name?.trim()) {
+        return;
+    }
+
+    try {
+        if (policy.value.id) {
+            // TODO: Replace with: await api.updateSecurityPolicy(policy.value.id, policy.value);
+            await mockApi.updateSecurityPolicy(policy.value.id, policy.value);
+            toast.add({ severity: 'success', summary: 'Successful', detail: 'Policy Updated', life: 3000 });
+        } else {
+            // TODO: Replace with: await api.createSecurityPolicy(policy.value as any);
+            await mockApi.createSecurityPolicy(policy.value as any);
+            toast.add({ severity: 'success', summary: 'Successful', detail: 'Policy Created', life: 3000 });
+        }
+        policyDialog.value = false;
+        policy.value = {};
+        loadPolicies(); // Refresh list
+    } catch (error) {
+        console.error('Failed to save policy:', error);
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to save policy', life: 3000 });
+    }
+};
+
+const editPolicy = (prod: SecurityPolicy) => {
+    policy.value = { ...prod };
+    policyDialog.value = true;
+};
+
+const confirmDeletePolicy = (prod: SecurityPolicy) => {
+    policy.value = prod;
+    deletePolicyDialog.value = true;
+};
+
+const deletePolicy = async () => {
+    if (!policy.value.id) return;
+
+    try {
+        // TODO: Replace with: await api.deleteSecurityPolicy(policy.value.id);
+        await mockApi.deleteSecurityPolicy(policy.value.id);
+        deletePolicyDialog.value = false;
+        toast.add({ severity: 'success', summary: 'Successful', detail: 'Policy Deleted', life: 3000 });
+        policy.value = {};
+        loadPolicies(); // Refresh list
+    } catch (error) {
+        console.error('Failed to delete policy:', error);
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete policy', life: 3000 });
+    }
+};
+
+</script>
+
+<style scoped>
+.policy-management-view {
+    padding: 1rem;
+}
+</style>
   <div class="security-policies">
     <!-- Header -->
     <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">

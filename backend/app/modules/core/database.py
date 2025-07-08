@@ -6,19 +6,31 @@ from typing import Any, AsyncGenerator, Optional
 
 from sqlalchemy import Column, DateTime, Integer, func
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.pool import NullPool
+
+# Import settings from the correct location
+from app.core.config import settings
 from sqlalchemy.ext.declarative import as_declarative, declared_attr
 from sqlalchemy.orm import sessionmaker
 
-from .config import settings
+# Settings imported at the top
 
-# Create async database engine
+# Determine if we're using SQLite
+IS_SQLITE = "sqlite" in settings.DATABASE_URI.lower()
+
+# Create async database engine with appropriate parameters based on database type
 engine = create_async_engine(
-    str(settings.DATABASE_URI),
-    echo=settings.DEBUG,
+    settings.DATABASE_URI,
+    echo=settings.SQLALCHEMY_ECHO,
     future=True,
-    pool_pre_ping=True,
-    pool_size=20,
-    max_overflow=10,
+    connect_args={"check_same_thread": False} if IS_SQLITE else {},
+    pool_pre_ping=not IS_SQLITE,  # Enable for PostgreSQL, disable for SQLite
+    # For SQLite, use a memory-based connection pool
+    poolclass=NullPool if IS_SQLITE else None,
+    pool_size=settings.SQLALCHEMY_POOL_SIZE if not IS_SQLITE else 5,
+    max_overflow=settings.SQLALCHEMY_MAX_OVERFLOW if not IS_SQLITE else 0,
+    pool_timeout=settings.SQLALCHEMY_POOL_TIMEOUT if not IS_SQLITE else 30,
+    pool_recycle=settings.SQLALCHEMY_POOL_RECYCLE if not IS_SQLITE else 3600,
 )
 
 # Create async session factory
@@ -50,8 +62,7 @@ class Base:
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
-    ""
-    Dependency function that yields database sessions.
+    """Dependency function that yields database sessions.
     
     Usage:
         async with get_db() as db:
@@ -71,10 +82,25 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 async def init_db() -> None:
     """Initialize database tables."""
+    import os
+    from sqlalchemy import text
+    
+    # Create database directory for SQLite if it doesn't exist
+    if IS_SQLITE and not os.path.exists("instance"):
+        os.makedirs("instance")
+    
     async with engine.begin() as conn:
+        # Enable foreign keys for SQLite
+        if IS_SQLITE:
+            await conn.execute(text("PRAGMA foreign_keys=ON"))
+        
         # Create all tables
-        from ..modules import models  # Import all models to register them with SQLAlchemy
+        from .. import models  # Import all models to register them with SQLAlchemy
         await conn.run_sync(Base.metadata.create_all)
+        
+        # For SQLite, ensure WAL mode is enabled for better concurrency
+        if IS_SQLITE:
+            await conn.execute(text("PRAGMA journal_mode=WAL"))
 
 
 @contextlib.asynccontextmanager

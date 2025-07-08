@@ -3,46 +3,29 @@
 ## Project Overview
 The Paksa Financial System is a comprehensive, AI-accelerated financial management platform designed to streamline financial operations, ensure compliance, and provide actionable insights for organizations. The system is built with a microservices architecture, focusing on security, scalability, and user experience.
 
-## Core Modules
-1. **General Ledger (GL)**
-   - Chart of Accounts management
-   - Journal entries and transaction processing
-   - Financial reporting and analytics
-   - Multi-currency support
-   - Budgeting and forecasting
+## I. Core Financial Modules
+- **General Ledger (GL)**: Chart of Accounts, journal entries, multi-currency, budgeting, consolidation.
+- **Accounts Payable (AP)**: Invoice management, three-way matching, payment workflows, vendor management.
+- **Accounts Receivable (AR)**: Customer invoicing, payment processing, dispute management, dunning.
+- **Cash Management**: Real-time cash positioning, forecasting, automated bank reconciliation.
+- **Fixed Assets**: Asset lifecycle management, depreciation, maintenance, reporting.
+- **Payroll**: Automated wage/deduction calculation, tax filings, benefits management, self-service portal.
 
-2. **Accounts Payable (AP)**
-   - Vendor management
-   - Invoice processing
-   - Payment scheduling
-   - Three-way matching
-   - 1099 reporting
+## II. Cross-Cutting & System-Wide Modules
+- **Business Intelligence (BI) & Reporting**: Customizable dashboards, KPI tracking, advanced data visualization.
+- **AI & Machine Learning Integration**: Anomaly detection, predictive forecasting, smart recommendations.
+- **Security & Internal Controls**: Data encryption, RBAC, MFA, audit trails, SoD enforcement.
+- **Compliance Management**: Support for SOX, PCI DSS, GDPR, and other regulations.
+- **System Administration & Settings**: Company profile, user/role management, approval workflows.
+- **Audit & Logging**: Comprehensive, immutable audit trails for all system activities.
 
-3. **Accounts Receivable (AR)**
-   - Customer management
-   - Invoice generation
-   - Payment processing
-   - Collections management
-   - Aging reports
-
-4. **Cash Management**
-   - Bank reconciliation
-   - Cash flow forecasting
-   - Liquidity management
-   - Payment processing
-
-5. **Fixed Assets**
-   - Asset tracking
-   - Depreciation calculation
-   - Maintenance scheduling
-   - Disposal management
-
-6. **Payroll**
-   - Employee management
-   - Salary processing
-   - Tax calculations
-   - Benefits administration
-   - Compliance reporting
+## III. Extended Financial & Operational Modules
+- **Project Accounting**: Project profitability, budget/expense tracking, time tracking.
+- **Inventory Management**: Real-time inventory tracking, automated restocking, warehouse integration.
+- **Procurement**: Requisition management, purchase order handling, contract management.
+- **Treasury Management**: Financial risk management (FX, interest rate), investment/debt tracking.
+- **Document Management System (DMS)**: Centralized/secure document storage, OCR search, e-signature.
+- **Advanced Financial Reporting & Consolidation**: Financial statement consolidation, M&A accounting, segment reporting.
 
 ## Technical Architecture
 
@@ -68,64 +51,86 @@ The Paksa Financial System is a comprehensive, AI-accelerated financial manageme
 - Monitoring with Prometheus and Grafana
 - Logging with ELK Stack
 
-## Project Structure
+## Project Structure (Expanded)
 ```
 paksa_finance/
 ├── backend/
-│   ├── core/               # Core functionality and utilities
-│   ├── modules/            # Business logic modules
-│   │   ├── general_ledger/
-│   │   ├── accounts_payable/
-│   │   ├── accounts_receivable/
-│   │   ├── cash_management/
-│   │   ├── fixed_assets/
-│   │   └── payroll/
-│   ├── api/                # API endpoints
-│   ├── models/             # Database models
-│   ├── schemas/            # Pydantic schemas
-│   ├── services/           # Business logic
-│   └── tests/              # Test cases
-├── frontend/               # Future frontend application
-├── infrastructure/         # Infrastructure as Code
-│   ├── docker/
-│   ├── kubernetes/
-│   └── terraform/
-├── docs/                   # Documentation
-└── scripts/                # Utility scripts
+│   ├── modules/
+│   │   ├── core_financials/
+│   │   │   ├── general_ledger/
+│   │   │   ├── accounts_payable/
+│   │   │   ├── accounts_receivable/
+│   │   │   ├── cash_management/
+│   │   │   ├── fixed_assets/
+│   │   │   └── payroll/
+│   │   ├── extended_financials/
+│   │   │   ├── project_accounting/
+│   │   │   ├── inventory_management/
+│   │   │   ├── procurement/
+│   │   │   ├── treasury_management/
+│   │   │   └── advanced_reporting/
+│   │   └── cross_cutting/
+│   │       ├── bi_reporting/
+│   │       ├── ai_ml/
+│   │       ├── security/
+│   │       ├── compliance/
+│   │       ├── admin/
+│   │       └── dms/
+│   ├── api/
+│   ├── models/
+│   ├── schemas/
+│   ├── services/
+│   └── tests/
+├── frontend/
+├── infrastructure/
+├── docs/
+└── scripts/
 ```
 
-## Development Phases
+## Development Phases (Revised)
 
-### Phase 1: Foundation (Weeks 1-2)
-- [ ] Set up project structure
-- [ ] Configure development environment
-- [ ] Implement core utilities and helpers
-- [ ] Set up database with initial migrations
-- [ ] Implement authentication and authorization
+### Phase 1: Foundation (Complete)
+- Project structure setup
+- Dev environment configuration
+- Core utilities and helpers
+- Database and migrations
+- Authentication and authorization
 
-### Phase 2: Core Modules (Weeks 3-8)
-- [ ] General Ledger implementation
-- [ ] Accounts Payable implementation
-- [ ] Accounts Receivable implementation
-- [ ] Basic reporting functionality
+### Phase 2: Core Financials - Part 1
+- General Ledger (GL) implementation
+- Accounts Payable (AP) implementation
+- Accounts Receivable (AR) implementation
 
-### Phase 3: Advanced Features (Weeks 9-12)
-- [ ] Cash Management module
-- [ ] Fixed Assets module
-- [ ] Payroll module
-- [ ] Advanced analytics and reporting
+### Phase 3: Core Financials - Part 2
+- Cash Management module
+- Fixed Assets module
+- Payroll module
 
-### Phase 4: Integration & Testing (Weeks 13-14)
-- [ ] System integration testing
-- [ ] Performance optimization
-- [ ] Security audit
-- [ ] User acceptance testing
+### Phase 4: Cross-Cutting Systems
+- Security & Internal Controls
+- Compliance Management
+- System Administration & Settings
+- Audit & Logging
 
-### Phase 5: Deployment (Week 15-16)
-- [ ] Production environment setup
-- [ ] Data migration
-- [ ] User training
-- [ ] Go-live
+### Phase 5: Extended Modules - Part 1
+- Project Accounting
+- Inventory Management
+- Procurement
+
+### Phase 6: Extended Modules - Part 2
+- Treasury Management
+- Document Management System (DMS)
+- Advanced Financial Reporting
+
+### Phase 7: Intelligence Layer
+- Business Intelligence (BI) & Reporting
+- AI & Machine Learning Integration
+
+### Phase 8: Integration, Testing & Deployment
+- Full system integration testing
+- Performance optimization and security audit
+- User acceptance testing (UAT)
+- Production deployment and go-live
 
 ## Getting Started
 
@@ -146,11 +151,10 @@ paksa_finance/
 
 ## Development Guidelines
 - Follow PEP 8 style guide
-- Write unit tests for all new features
+- Write unit tests for all new features (post-implementation, per user)
 - Document all public APIs
 - Use type hints for better code maintainability
 - Keep commits small and focused
-- Write meaningful commit messages
 
 ## License
-Proprietary - All rights reserved
+Proprietary - All rights reserved - Paksa IT Solutions

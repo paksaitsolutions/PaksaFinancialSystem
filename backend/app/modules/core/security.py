@@ -10,7 +10,7 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import ValidationError
 
-from . import models
+from .models import User, Role, Permission
 from .config import settings
 from .database import AsyncSession, get_db
 from .exceptions import (
@@ -60,7 +60,7 @@ def create_access_token(
 async def get_current_user(
     db: AsyncSession = Depends(get_db),
     token: str = Depends(oauth2_scheme)
-) -> models.User:
+) -> User:
     """Get the current authenticated user from the token."""
     try:
         payload = jwt.decode(
@@ -85,18 +85,19 @@ async def get_current_user(
 
 
 async def get_current_active_superuser(
-    current_user: models.User = Depends(get_current_user),
-) -> models.User:
+    current_user: User = Depends(get_current_user),
+) -> User:
     """Require that the current user is a superuser."""
     if not current_user.is_superuser:
-        raise InsufficientPermissionsException(
-            "The user doesn't have enough privileges"
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="The user doesn't have enough privileges",
         )
     return current_user
 
 
 def has_permission(
-    user: models.User, 
+    user: User, 
     permission: str, 
     resource: Optional[str] = None
 ) -> bool:
@@ -123,11 +124,12 @@ def has_permission(
 async def require_permission(
     permission: str,
     resource: Optional[str] = None,
-    current_user: models.User = Depends(get_current_user),
-) -> models.User:
+    current_user: User = Depends(get_current_user),
+) -> User:
     """Dependency to require a specific permission."""
     if not has_permission(current_user, permission, resource):
-        raise InsufficientPermissionsException(
-            f"Required permission: {resource or ''}:{permission}"
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Not enough permissions to {permission} {resource or 'this resource'}",
         )
     return current_user
