@@ -339,196 +339,1183 @@
           :loading="generating"
         />
       </template>
-    </Dialog>
+  <div class="financial-statements">
+    <v-card>
+      <v-tabs v-model="activeTab" grow>
+        <v-tab value="balance-sheet">Balance Sheet</v-tab>
+        <v-tab value="income-statement">Income Statement</v-tab>
+        <v-tab value="cash-flow">Cash Flow</v-tab>
+      </v-tabs>
+
+      <v-card-text>
+        <div class="d-flex align-center mb-4">
+          <v-menu
+            v-model="startDateMenu"
+            :close-on-content-click="false"
+            :nudge-right="40"
+            transition="scale-transition"
+            offset-y
+            min-width="auto"
+          >
+            <template v-slot:activator="{ on, attrs }">
+              <v-text-field
+                v-model="formattedStartDate"
+                label="Start Date"
+                prepend-icon="mdi-calendar"
+                readonly
+                v-bind="attrs"
+                v-on="on"
+                class="mr-4"
+                style="max-width: 200px"
+              ></v-text-field>
+            </template>
+            <v-date-picker
+              v-model="dateRange.start"
+              @input="startDateMenu = false"
+            ></v-date-picker>
+          </v-menu>
+
+          <v-menu
+            v-model="endDateMenu"
+            :close-on-content-click="false"
+            :nudge-right="40"
+            transition="scale-transition"
+            offset-y
+            min-width="auto"
+          >
+            <template v-slot:activator="{ on, attrs }">
+              <v-text-field
+                v-model="formattedEndDate"
+                label="End Date"
+                prepend-icon="mdi-calendar"
+                readonly
+                v-bind="attrs"
+                v-on="on"
+                class="mr-4"
+                style="max-width: 200px"
+              ></v-text-field>
+            </template>
+            <v-date-picker
+              v-model="dateRange.end"
+              @input="endDateMenu = false"
+            ></v-date-picker>
+          </v-menu>
+
+          <v-btn
+            color="primary"
+            class="mr-2"
+            @click="fetchFinancialData"
+            :loading="loading"
+          >
+            <v-icon left>mdi-refresh</v-icon>
+            {{ t('common.refresh') }}
+          </v-btn>
+
+          <v-btn
+            color="secondary"
+            @click="showExportDialog = true"
+            :loading="loading"
+          >
+            <v-icon left>mdi-download</v-icon>
+            {{ t('common.export') }}
+          </v-btn>
+        </div>
+
+        <v-window v-model="activeTab">
+          <!-- Balance Sheet Tab -->
+          <v-window-item value="balance-sheet">
+            <v-card v-if="balanceSheetData" flat>
+              <v-card-title class="text-h5">
+                {{ t('financialStatements.balanceSheet') }}
+                <v-spacer></v-spacer>
+                <span class="text-subtitle-1">
+                  {{ t('financialStatements.asOf') }} {{ formattedEndDate }}
+                </span>
+              </v-card-title>
+              
+              <v-card-text>
+                <v-row>
+                  <!-- Assets -->
+                  <v-col cols="12" md="6">
+                    <v-card outlined class="mb-4">
+                      <v-card-title class="text-h6 primary--text">
+                        {{ t('financialStatements.assets') }}
+                      </v-card-title>
+                      <v-card-text>
+                        <v-simple-table dense>
+                          <template v-slot:default>
+                            <tbody>
+                              <tr v-for="(item, index) in balanceSheetData.assets" :key="`asset-${index}`">
+                                <td :class="{ 'font-weight-bold': item.isHeader, 'pl-4': !item.isHeader }">
+                                  {{ item.account }}
+                                </td>
+                                <td class="text-right">
+                                  {{ formatCurrency(item.amount) }}
+                                </td>
+                              </tr>
+                              <tr class="font-weight-bold">
+                                <td>{{ t('financialStatements.totalAssets') }}</td>
+                                <td class="text-right">
+                                  {{ formatCurrency(totalAssets) }}
+                                </td>
+                              </tr>
+                            </tbody>
+                          </template>
+                        </v-simple-table>
+                      </v-card-text>
+                    </v-card>
+                  </v-col>
+
+                  <!-- Liabilities & Equity -->
+                  <v-col cols="12" md="6">
+                    <v-card outlined class="mb-4">
+                      <v-card-title class="text-h6 primary--text">
+                        {{ t('financialStatements.liabilitiesAndEquity') }}
+                      </v-card-title>
+                      <v-card-text>
+                        <v-simple-table dense>
+                          <template v-slot:default>
+                            <tbody>
+                              <!-- Liabilities -->
+                              <tr v-for="(item, index) in balanceSheetData.liabilities" :key="`liability-${index}`">
+                                <td :class="{ 'font-weight-bold': item.isHeader, 'pl-4': !item.isHeader }">
+                                  {{ item.account }}
+                                </td>
+                                <td class="text-right">
+                                  {{ formatCurrency(item.amount) }}
+                                </td>
+                              </tr>
+                              <tr class="font-weight-bold">
+                                <td>{{ t('financialStatements.totalLiabilities') }}</td>
+                                <td class="text-right">
+                                  {{ formatCurrency(totalLiabilities) }}
+                                </td>
+                              </tr>
+
+                              <!-- Equity -->
+                              <tr v-for="(item, index) in balanceSheetData.equity" :key="`equity-${index}`">
+                                <td :class="{ 'font-weight-bold': item.isHeader, 'pl-4': !item.isHeader }">
+                                  {{ item.account }}
+                                </td>
+                                <td class="text-right">
+                                  {{ formatCurrency(item.amount) }}
+                                </td>
+                              </tr>
+                              <tr class="font-weight-bold">
+                                <td>{{ t('financialStatements.totalEquity') }}</td>
+                                <td class="text-right">
+                                  {{ formatCurrency(totalEquity) }}
+                                </td>
+                              </tr>
+
+                              <!-- Total Liabilities & Equity -->
+                              <tr class="font-weight-bold">
+                                <td>{{ t('financialStatements.totalLiabilitiesAndEquity') }}</td>
+                                <td class="text-right">
+                                  {{ formatCurrency(totalLiabilities + totalEquity) }}
+                                </td>
+                              </tr>
+                            </tbody>
+                          </template>
+                        </v-simple-table>
+                      </v-card-text>
+                    </v-card>
+                  </v-col>
+                </v-row>
+              </v-card-text>
+            </v-card>
+            <v-skeleton-loader
+              v-else
+              type="article, actions"
+              class="mt-4"
+            ></v-skeleton-loader>
+          </v-window-item>
+
+          <!-- Income Statement Tab -->
+          <v-window-item value="income-statement">
+            <v-card v-if="incomeStatementData" flat>
+              <v-card-title class="text-h5">
+                {{ t('financialStatements.incomeStatement') }}
+                <v-spacer></v-spacer>
+                <span class="text-subtitle-1">
+                  {{ t('financialStatements.forThePeriod') }} {{ formattedStartDate }} - {{ formattedEndDate }}
+                </span>
+              </v-card-title>
+              
+              <v-card-text>
+                <v-card outlined class="mb-4">
+                  <v-simple-table dense>
+                    <template v-slot:default>
+                      <tbody>
+                        <!-- Revenues -->
+                        <tr>
+                          <td colspan="2" class="font-weight-bold primary--text">
+                            {{ t('financialStatements.revenue') }}
+                          </td>
+                        </tr>
+                        <tr v-for="(item, index) in incomeStatementData.revenues" :key="`revenue-${index}`">
+                          <td :class="{ 'pl-4': !item.isHeader }">
+                            {{ item.account }}
+                          </td>
+                          <td class="text-right">
+                            {{ formatCurrency(item.amount) }}
+                          </td>
+                        </tr>
+                        <tr class="font-weight-bold">
+                          <td>{{ t('financialStatements.totalRevenue') }}</td>
+                          <td class="text-right">
+                            {{ formatCurrency(incomeStatementData.grossProfit) }}
+                          </td>
+                        </tr>
+
+                        <!-- Expenses -->
+                        <tr>
+                          <td colspan="2" class="font-weight-bold primary--text mt-4">
+                            {{ t('financialStatements.expenses') }}
+                          </td>
+                        </tr>
+                        <tr v-for="(item, index) in incomeStatementData.expenses" :key="`expense-${index}`">
+                          <td :class="{ 'pl-4': !item.isHeader }">
+                            {{ item.account }}
+                          </td>
+                          <td class="text-right">
+                            ({{ formatCurrency(Math.abs(item.amount)) }})
+                          </td>
+                        </tr>
+                        <tr class="font-weight-bold">
+                          <td>{{ t('financialStatements.totalExpenses') }}</td>
+                          <td class="text-right">
+                            ({{ formatCurrency(Math.abs(incomeStatementData.expenses.reduce((sum, item) => sum + item.amount, 0))) }})
+                          </td>
+                        </tr>
+
+                        <!-- Net Income -->
+                        <tr class="font-weight-bold" :class="{ 'success--text': incomeStatementData.netIncome >= 0, 'error--text': incomeStatementData.netIncome < 0 }">
+                          <td>{{ t('financialStatements.netIncome') }}</td>
+                          <td class="text-right">
+                            {{ formatCurrency(incomeStatementData.netIncome) }}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </template>
+                  </v-simple-table>
+                </v-card>
+              </v-card-text>
+            </v-card>
+            <v-skeleton-loader
+              v-else
+              type="article, actions"
+              class="mt-4"
+            ></v-skeleton-loader>
+          </v-window-item>
+
+          <!-- Cash Flow Tab -->
+          <v-window-item value="cash-flow">
+            <v-card v-if="cashFlowData" flat>
+              <v-card-title class="text-h5">
+                {{ t('financialStatements.cashFlow') }}
+                <v-spacer></v-spacer>
+                <span class="text-subtitle-1">
+                  {{ t('financialStatements.forThePeriod') }} {{ formattedStartDate }} - {{ formattedEndDate }}
+                </span>
+              </v-card-title>
+              
+              <v-card-text>
+                <v-card outlined class="mb-4">
+                  <v-simple-table dense>
+                    <template v-slot:default>
+                      <tbody>
+                        <!-- Operating Activities -->
+                        <tr>
+                          <td colspan="2" class="font-weight-bold primary--text">
+                            {{ t('financialStatements.cashFromOperatingActivities') }}
+                          </td>
+                        </tr>
+                        <tr v-for="(item, index) in cashFlowData.operatingActivities" :key="`operating-${index}`">
+                          <td :class="{ 'pl-4': !item.isHeader }">
+                            {{ item.activity }}
+                          </td>
+                          <td class="text-right">
+                            {{ formatCurrency(item.amount) }}
+                          </td>
+                        </tr>
+                        <tr class="font-weight-bold">
+                          <td>{{ t('financialStatements.netCashFromOperating') }}</td>
+                          <td class="text-right">
+                            {{ formatCurrency(cashFlowData.operatingActivities.reduce((sum, item) => sum + item.amount, 0)) }}
+                          </td>
+                        </tr>
+
+                        <!-- Investing Activities -->
+                        <tr>
+                          <td colspan="2" class="font-weight-bold primary--text mt-4">
+                            {{ t('financialStatements.cashFromInvestingActivities') }}
+                          </td>
+                        </tr>
+                        <tr v-for="(item, index) in cashFlowData.investingActivities" :key="`investing-${index}`">
+                          <td :class="{ 'pl-4': !item.isHeader }">
+                            {{ item.activity }}
+                          </td>
+                          <td class="text-right">
+                            {{ formatCurrency(item.amount) }}
+                          </td>
+                        </tr>
+                        <tr class="font-weight-bold">
+                          <td>{{ t('financialStatements.netCashFromInvesting') }}</td>
+                          <td class="text-right">
+                            {{ formatCurrency(cashFlowData.investingActivities.reduce((sum, item) => sum + item.amount, 0)) }}
+                          </td>
+                        </tr>
+
+                        <!-- Financing Activities -->
+                        <tr>
+                          <td colspan="2" class="font-weight-bold primary--text mt-4">
+                            {{ t('financialStatements.cashFromFinancingActivities') }}
+                          </td>
+                        </tr>
+                        <tr v-for="(item, index) in cashFlowData.financingActivities" :key="`financing-${index}`">
+                          <td :class="{ 'pl-4': !item.isHeader }">
+                            {{ item.activity }}
+                          </td>
+                          <td class="text-right">
+                            {{ formatCurrency(item.amount) }}
+                          </td>
+                        </tr>
+                        <tr class="font-weight-bold">
+                          <td>{{ t('financialStatements.netCashFromFinancing') }}</td>
+                          <td class="text-right">
+                            {{ formatCurrency(cashFlowData.financingActivities.reduce((sum, item) => sum + item.amount, 0)) }}
+                          </td>
+                        </tr>
+
+                        <!-- Net Increase in Cash -->
+                        <tr class="font-weight-bold" :class="{ 'success--text': cashFlowData.netCashFlow >= 0, 'error--text': cashFlowData.netCashFlow < 0 }">
+                          <td>{{ t('financialStatements.netIncreaseInCash') }}</td>
+                          <td class="text-right">
+                            {{ formatCurrency(cashFlowData.netCashFlow) }}
+                          </td>
+                        </tr>
+
+                        <!-- Cash at Beginning of Period -->
+                        <tr>
+                          <td>{{ t('financialStatements.cashAtBeginning') }}</td>
+                          <td class="text-right">
+                            {{ formatCurrency(cashFlowData.cashBeginning) }}
+                          </td>
+                        </tr>
+
+                        <!-- Cash at End of Period -->
+                        <tr class="font-weight-bold">
+                          <td>{{ t('financialStatements.cashAtEnd') }}</td>
+                          <td class="text-right">
+                            {{ formatCurrency(cashFlowData.cashEnd) }}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </template>
+                  </v-simple-table>
+                </v-card>
+              </v-card-text>
+            </v-card>
+            <v-skeleton-loader
+              v-else
+              type="article, actions"
+              class="mt-4"
+            ></v-skeleton-loader>
+          </v-window-item>
+        </v-window>
+      </v-card-text>
+    </v-card>
+
+    <!-- Export Dialog -->
+    <v-dialog v-model="showExportDialog" max-width="500">
+      <v-card>
+        <v-card-title>{{ t('common.exportReport') }}</v-card-title>
+        <v-card-text>
+          <v-select
+            v-model="selectedExportFormat"
+            :items="exportFormats"
+            :label="t('common.exportFormat')"
+            outlined
+            dense
+          ></v-select>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn text @click="showExportDialog = false">{{ t('common.cancel') }}</v-btn>
+          <v-btn 
+            color="primary" 
+            @click="handleExport"
+            :loading="loading"
+          >
+            {{ t('common.export') }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
-<script>
-import { ref, computed, onMounted } from 'vue';
-import { useToast } from 'primevue/usetoast';
+<script setup lang="ts">
+import { ref, computed, onMounted, watch } from 'vue';
+import { format, parseISO } from 'date-fns';
+import { useI18n } from 'vue-i18n';
+import { useToast } from 'vue-toastification';
+import { useGLStore } from '@/stores/gl';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
-export default {
-  name: 'FinancialStatementsView',
-  
-  setup() {
-    const toast = useToast();
+declare module 'jspdf' {
+  interface jsPDF {
+    autoTable: (options: any) => jsPDF;
+    lastAutoTable: {
+      finalY: number;
+    };
+  }
+}
+
+// Types
+interface FinancialStatementParams {
+  report_type: string;
+  period: string;
+  start_date: Date | string;
+  end_date: Date | string;
+  format: string;
+  currency: string;
+}
+
+interface DateRange {
+  start: Date | string;
+  end: Date | string;
+}
+
+interface BalanceSheetData {
+  assets: Array<{ account: string; amount: number; isHeader?: boolean }>;
+  liabilities: Array<{ account: string; amount: number; isHeader?: boolean }>;
+  equity: Array<{ account: string; amount: number; isHeader?: boolean }>;
+  totalAssets: number;
+  totalLiabilities: number;
+  totalEquity: number;
+  asOfDate: string;
+}
+
+interface IncomeStatementData {
+  revenues: Array<{ account: string; amount: number; isHeader?: boolean }>;
+  expenses: Array<{ account: string; amount: number; isHeader?: boolean }>;
+  grossProfit: number;
+  operatingIncome: number;
+  netIncome: number;
+  period: string;
+}
+
+interface CashFlowData {
+  operatingActivities: Array<{ activity: string; amount: number; isHeader?: boolean }>;
+  investingActivities: Array<{ activity: string; amount: number; isHeader?: boolean }>;
+  financingActivities: Array<{ activity: string; amount: number; isHeader?: boolean }>;
+  netCashFlow: number;
+  cashBeginning: number;
+  cashEnd: number;
+  period: string;
+}
+
+type ReportType = 'balance-sheet' | 'income-statement' | 'cash-flow';
+type ExportFormat = 'pdf' | 'excel' | 'csv';
+
+declare module 'jspdf' {
+  interface jsPDF {
+    autoTable: (options: any) => jsPDF;
+  }
+}
+
+// Initialize composables
+const { t } = useI18n();
+const toast = useToast();
+const glStore = useGLStore();
+
+// Component state
+const loading = ref(false);
+const activeTab = ref<ReportType>('balance-sheet');
+const showExportDialog = ref(false);
+const selectedExportFormat = ref<ExportFormat>('pdf');
+const exportFormats = [
+  { text: 'PDF', value: 'pdf' },
+  { text: 'Excel', value: 'excel' },
+  { text: 'CSV', value: 'csv' }
+];
+
+// Date range state
+const startDateMenu = ref(false);
+const endDateMenu = ref(false);
+const dateRange = ref<DateRange>({
+  start: new Date(new Date().getFullYear(), 0, 1), // Start of current year
+  end: new Date() // Today
+});
+
+// Financial data
+const balanceSheetData = ref<BalanceSheetData | null>(null);
+const incomeStatementData = ref<IncomeStatementData | null>(null);
+const cashFlowData = ref<CashFlowData | null>(null);
+
+// Computed properties
+const formattedStartDate = computed(() => {
+  if (!dateRange.value.start) return '';
+  const date = typeof dateRange.value.start === 'string' 
+    ? new Date(dateRange.value.start) 
+    : dateRange.value.start;
+  return format(date, 'yyyy-MM-dd');
+});
+
+const formattedEndDate = computed(() => {
+  if (!dateRange.value.end) return '';
+  const date = typeof dateRange.value.end === 'string' 
+    ? new Date(dateRange.value.end) 
+    : dateRange.value.end;
+  return format(date, 'yyyy-MM-dd');
+});
+
+const totalAssets = computed(() => {
+  if (!balanceSheetData.value) return 0;
+  return balanceSheetData.value.assets.reduce((sum, item) => sum + item.amount, 0);
+});
+
+const totalLiabilities = computed(() => {
+  if (!balanceSheetData.value) return 0;
+  return balanceSheetData.value.liabilities.reduce((sum, item) => sum + item.amount, 0);
+});
+
+const totalEquity = computed(() => {
+  if (!balanceSheetData.value) return 0;
+  return balanceSheetData.value.equity.reduce((sum, item) => sum + item.amount, 0);
+});
+
+// Methods
+const formatCurrency = (value: number): string => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(value);
+};
+
+const fetchFinancialData = async () => {
+  try {
+    loading.value = true;
     
-    const loading = ref(false);
-    const generating = ref(false);
-    const showReportDialog = ref(false);
-    
-    const reportParams = ref({
-      report_type: 'all',
-      period: 'month',
-      start_date: new Date(new Date().setDate(1)), // Start of current month
-      end_date: new Date(), // Today
-      format: 'pdf',
+    // Convert string dates to Date objects if needed
+    const start = typeof dateRange.value.start === 'string' 
+      ? new Date(dateRange.value.start) 
+      : dateRange.value.start;
+    const end = typeof dateRange.value.end === 'string'
+      ? new Date(dateRange.value.end)
+      : dateRange.value.end;
+
+    // Format dates for API
+    const startDate = format(start, 'yyyy-MM-dd');
+    const endDate = format(end, 'yyyy-MM-dd');
+
+    // Fetch balance sheet data
+    const balanceSheetParams: FinancialStatementParams = {
+      report_type: 'balance-sheet',
+      period: 'custom',
+      start_date: startDate,
+      end_date: endDate,
+      format: 'json',
       currency: 'USD'
-    });
-    
-    // Mock data - replace with actual API calls
-    const balanceSheetData = ref([
-      { account: 'ASSETS', amount: null, isHeader: true },
-      { account: '  Current Assets', amount: null, isHeader: true },
-      { account: '    Cash and Cash Equivalents', amount: 150000, isHeader: false },
-      { account: '    Accounts Receivable', amount: 75000, isHeader: false },
-      { account: '    Inventory', amount: 120000, isHeader: false },
-      { account: '    Prepaid Expenses', amount: 15000, isHeader: false },
-      { account: '  Total Current Assets', amount: 360000, isHeader: true },
-      { account: '  Non-Current Assets', amount: null, isHeader: true },
-      { account: '    Property, Plant & Equipment', amount: 450000, isHeader: false },
-      { account: '    Less: Accumulated Depreciation', amount: -120000, isHeader: false },
-      { account: '  Total Non-Current Assets', amount: 330000, isHeader: true },
-      { account: 'TOTAL ASSETS', amount: 690000, isHeader: true },
-      
-      { account: 'LIABILITIES', amount: null, isHeader: true },
-      { account: '  Current Liabilities', amount: null, isHeader: true },
-      { account: '    Accounts Payable', amount: 65000, isHeader: false },
-      { account: '    Short-term Loans', amount: 50000, isHeader: false },
-      { account: '    Accrued Expenses', amount: 25000, isHeader: false },
-      { account: '  Total Current Liabilities', amount: 140000, isHeader: true },
-      { account: '  Long-term Liabilities', amount: null, isHeader: true },
-      { account: '    Long-term Debt', amount: 200000, isHeader: false },
-      { account: '    Deferred Tax Liabilities', amount: 35000, isHeader: false },
-      { account: '  Total Long-term Liabilities', amount: 235000, isHeader: true },
-      { account: 'TOTAL LIABILITIES', amount: 375000, isHeader: true },
-      
-      { account: 'EQUITY', amount: null, isHeader: true },
-      { account: '  Common Stock', amount: 200000, isHeader: false },
-      { account: '  Retained Earnings', amount: 115000, isHeader: false },
-      { account: 'TOTAL EQUITY', amount: 315000, isHeader: true },
-      { account: 'TOTAL LIABILITIES & EQUITY', amount: 690000, isHeader: true },
-    ]);
-    
-    const incomeStatementData = ref([
-      { account: 'REVENUE', amount: null, isHeader: true },
-      { account: '  Product Sales', amount: 850000, isHeader: false },
-      { account: '  Service Revenue', amount: 150000, isHeader: false },
-      { account: '  Other Income', amount: 25000, isHeader: false },
-      { account: 'TOTAL REVENUE', amount: 1025000, isHeader: true },
-      
-      { account: 'COST OF GOODS SOLD', amount: null, isHeader: true },
-      { account: '  Direct Materials', amount: 320000, isHeader: false },
-      { account: '  Direct Labor', amount: 180000, isHeader: false },
-      { account: '  Manufacturing Overhead', amount: 120000, isHeader: false },
-      { account: 'TOTAL COST OF GOODS SOLD', amount: 620000, isHeader: true },
-      { account: 'GROSS PROFIT', amount: 405000, isHeader: true },
-      
-      { account: 'OPERATING EXPENSES', amount: null, isHeader: true },
-      { account: '  Salaries and Wages', amount: 120000, isHeader: false },
-      { account: '  Rent Expense', amount: 48000, isHeader: false },
-      { account: '  Utilities', amount: 18000, isHeader: false },
-      { account: '  Marketing', amount: 35000, isHeader: false },
-      { account: '  Depreciation', amount: 25000, isHeader: false },
-      { account: '  Other Expenses', amount: 15000, isHeader: false },
-      { account: 'TOTAL OPERATING EXPENSES', amount: 261000, isHeader: true },
-      
-      { account: 'OPERATING INCOME', amount: 144000, isHeader: true },
-      
-      { account: 'OTHER INCOME/EXPENSES', amount: null, isHeader: true },
-      { account: '  Interest Income', amount: 5000, isHeader: false },
-      { account: '  Interest Expense', amount: -18000, isHeader: false },
-      { account: 'TOTAL OTHER INCOME/EXPENSES', amount: -13000, isHeader: true },
-      
-      { account: 'INCOME BEFORE TAXES', amount: 131000, isHeader: true },
-      { account: 'Income Tax Expense', amount: -32750, isHeader: false },
-      { account: 'NET INCOME', amount: 98250, isHeader: true },
-    ]);
-    
-    const cashFlowData = ref([
-      { activity: 'CASH FLOWS FROM OPERATING ACTIVITIES', amount: null, isHeader: true },
-      { activity: '  Net Income', amount: 98250, isHeader: false },
-      { activity: '  Adjustments to Reconcile Net Income to Net Cash', amount: null, isHeader: true },
-      { activity: '    Depreciation Expense', amount: 25000, isHeader: false },
-      { activity: '    Changes in Working Capital', amount: null, isHeader: true },
-      { activity: '      (Increase) in Accounts Receivable', amount: -15000, isHeader: false },
-      { activity: '      (Increase) in Inventory', amount: -20000, isHeader: false },
-      { activity: '      (Increase) in Prepaid Expenses', amount: -5000, isHeader: false },
-      { activity: '      Increase in Accounts Payable', amount: 10000, isHeader: false },
-      { activity: '      Increase in Accrued Expenses', amount: 5000, isHeader: false },
-      { activity: '  Net Cash Provided by Operating Activities', amount: 94250, isHeader: true },
-      
-      { activity: 'CASH FLOWS FROM INVESTING ACTIVITIES', amount: null, isHeader: true },
-      { activity: '  Purchase of Property, Plant & Equipment', amount: -75000, isHeader: false },
-      { activity: '  Proceeds from Sale of Equipment', amount: 10000, isHeader: false },
-      { activity: '  Net Cash Used in Investing Activities', amount: -65000, isHeader: true },
-      
-      { activity: 'CASH FLOWS FROM FINANCING ACTIVITIES', amount: null, isHeader: true },
-      { activity: '  Proceeds from Long-term Debt', amount: 50000, isHeader: false },
-      { activity: '  Repayment of Long-term Debt', amount: -25000, isHeader: false },
-      { activity: '  Dividends Paid', amount: -30000, isHeader: false },
-      { activity: '  Net Cash Used in Financing Activities', amount: -5000, isHeader: true },
-      
-      { activity: 'NET INCREASE IN CASH', amount: 24250, isHeader: true },
-      { activity: 'CASH AT BEGINNING OF PERIOD', amount: 125750, isHeader: true },
-      { activity: 'CASH AT END OF PERIOD', amount: 150000, isHeader: true },
-    ]);
-    
-    // Computed properties
-    const totalAssets = computed(() => {
-      return balanceSheetData.value.find(item => item.account === 'TOTAL ASSETS')?.amount || 0;
-    });
-    
-    const totalLiabilitiesEquity = computed(() => {
-      return balanceSheetData.value.find(item => item.account === 'TOTAL LIABILITIES & EQUITY')?.amount || 0;
-    });
-    
-    const netIncome = computed(() => {
-      return incomeStatementData.value.find(item => item.account === 'NET INCOME')?.amount || 0;
-    });
-    
-    const netCashFlow = computed(() => {
-      return cashFlowData.value.find(item => item.activity === 'NET INCREASE IN CASH')?.amount || 0;
-    });
-    
-    const cashBeginning = computed(() => {
-      return cashFlowData.value.find(item => item.activity === 'CASH AT BEGINNING OF PERIOD')?.amount || 0;
-    });
-    
-    const cashEnd = computed(() => {
-      return cashFlowData.value.find(item => item.activity === 'CASH AT END OF PERIOD')?.amount || 0;
-    });
-    
-    // Methods
-    const formatDate = (date) => {
-      if (!date) return '';
-      const options = { year: 'numeric', month: 'long', day: 'numeric' };
-      return new Date(date).toLocaleDateString('en-US', options);
     };
     
-    const formatDateRange = (start, end) => {
-      if (!start || !end) return '';
-      return `${formatDate(start)} to ${formatDate(end)}`;
+    balanceSheetData.value = await glStore.getFinancialStatement(balanceSheetParams);
+
+    // Fetch income statement data
+    const incomeStatementParams: FinancialStatementParams = {
+      report_type: 'income-statement',
+      period: 'custom',
+      start_date: startDate,
+      end_date: endDate,
+      format: 'json',
+      currency: 'USD'
     };
     
-    const formatCurrency = (value) => {
-      if (value === null || value === undefined) return '$0.00';
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      }).format(value);
+    incomeStatementData.value = await glStore.getFinancialStatement(incomeStatementParams);
+
+    // Fetch cash flow data
+    const cashFlowParams: FinancialStatementParams = {
+      report_type: 'cash-flow',
+      period: 'custom',
+      start_date: startDate,
+      end_date: endDate,
+      format: 'json',
+      currency: 'USD'
     };
     
-    const generateReport = async () => {
-      generating.value = true;
-      
-      try {
-        // TODO: Replace with actual API call to generate report
-        console.log('Generating report with params:', reportParams.value);
+    cashFlowData.value = await glStore.getFinancialStatement(cashFlowParams);
+    
+  } catch (error) {
+    console.error('Error fetching financial data:', error);
+    toast.error(t('error.fetchingFinancialData'));
+  } finally {
+    loading.value = false;
+  }
+};
+
+const handleExport = async () => {
+  try {
+    loading.value = true;
+    
+    const startDate = format(
+      typeof dateRange.value.start === 'string' 
+        ? new Date(dateRange.value.start) 
+        : dateRange.value.start, 
+      'yyyy-MM-dd'
+    );
+    
+    const endDate = format(
+      typeof dateRange.value.end === 'string' 
+        ? new Date(dateRange.value.end) 
+        : dateRange.value.end, 
+      'yyyy-MM-dd'
+    );
+
+    const params: FinancialStatementParams = {
+      report_type: activeTab.value,
+      period: 'custom',
+      start_date: startDate,
+      end_date: endDate,
+      format: selectedExportFormat.value,
+      currency: 'USD'
+    };
+
+    let data: any;
+    let filename = `${activeTab.value}-${startDate}-to-${endDate}`;
+
+    switch (selectedExportFormat.value) {
+      case 'pdf':
+        // Generate PDF using jsPDF
+        const doc = new jsPDF();
         
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        // Add title
+        doc.setFontSize(18);
+        doc.text(
+          `${activeTab.value} - ${startDate} to ${endDate}`.toUpperCase(),
+          14,
+          22
+        );
         
-        toast.add({
-          severity: 'success',
-          summary: 'Report Generated',
-          detail: `Your ${reportParams.value.report_type} report is ready for download`,
-          life: 3000
+        // Add table
+        doc.autoTable({
+          startY: 30,
+          head: [['Account', 'Amount']],
+          body: getExportData(),
+          theme: 'grid',
+          headStyles: {
+            fillColor: [41, 128, 185],
+            textColor: 255,
+            fontStyle: 'bold'
+          },
+          alternateRowStyles: {
+            fillColor: [245, 245, 245]
+          },
+          margin: { top: 10 }
         });
         
-        showReportDialog.value = false;
+        // Save the PDF
+        doc.save(`${filename}.pdf`);
+        break;
+        
+      case 'excel':
+      case 'csv':
+        data = await glStore.exportFinancialStatement(params);
+        
+        // Create download link
+        const blob = new Blob([data], { type: 'application/octet-stream' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${filename}.${selectedExportFormat.value}`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        a.remove();
+        break;
+    }
+    
+    showExportDialog.value = false;
+    toast.success(t('success.exportSuccessful'));
+    
+  } catch (error) {
+    console.error('Error exporting data:', error);
+    toast.error(t('error.exportFailed'));
+  } finally {
+    loading.value = false;
+  }
+};
+
+const getExportData = (): string[][] => {
+  switch (activeTab.value) {
+    case 'balance-sheet':
+      if (!balanceSheetData.value) return [];
+      
+      const balanceSheetRows: string[][] = [];
+      
+      // Add assets
+      balanceSheetRows.push(['Assets', '']);
+      balanceSheetData.value.assets.forEach(item => {
+        balanceSheetRows.push([
+          `${item.isHeader ? '' : '  '}${item.account}`,
+          formatCurrency(item.amount)
+        ]);
+      });
+      
+      // Add liabilities
+      balanceSheetRows.push(['', '']);
+      balanceSheetRows.push(['Liabilities', '']);
+      balanceSheetData.value.liabilities.forEach(item => {
+        balanceSheetRows.push([
+          `${item.isHeader ? '' : '  '}${item.account}`,
+          formatCurrency(item.amount)
+        ]);
+      });
+      
+      // Add equity
+      balanceSheetRows.push(['', '']);
+      balanceSheetRows.push(['Equity', '']);
+      balanceSheetData.value.equity.forEach(item => {
+        balanceSheetRows.push([
+          `${item.isHeader ? '' : '  '}${item.account}`,
+          formatCurrency(item.amount)
+        ]);
+      });
+      
+      // Add totals
+      balanceSheetRows.push(['', '']);
+      balanceSheetRows.push(['Total Assets', formatCurrency(totalAssets.value)]);
+      balanceSheetRows.push(['Total Liabilities & Equity', 
+        formatCurrency(totalLiabilities.value + totalEquity.value)]);
+      
+      return balanceSheetRows;
+      
+    case 'income-statement':
+      if (!incomeStatementData.value) return [];
+      
+      const incomeStatementRows: string[][] = [];
+      
+      // Add revenues
+      incomeStatementRows.push(['Revenues', '']);
+      incomeStatementData.value.revenues.forEach(item => {
+        incomeStatementRows.push([
+          `${item.isHeader ? '' : '  '}${item.account}`,
+          formatCurrency(item.amount)
+        ]);
+      });
+      
+      // Add expenses
+      incomeStatementRows.push(['', '']);
+      incomeStatementRows.push(['Expenses', '']);
+      incomeStatementData.value.expenses.forEach(item => {
+        incomeStatementRows.push([
+          `${item.isHeader ? '' : '  '}${item.account}`,
+          formatCurrency(item.amount)
+        ]);
+      });
+      
+      // Add net income
+      incomeStatementRows.push(['', '']);
+      incomeStatementRows.push(['Net Income', 
+        formatCurrency(incomeStatementData.value.netIncome)]);
+      
+      return incomeStatementRows;
+      
+    case 'cash-flow':
+      if (!cashFlowData.value) return [];
+      
+      const cashFlowRows: string[][] = [];
+      
+      // Add operating activities
+      cashFlowRows.push(['Operating Activities', '']);
+      cashFlowData.value.operatingActivities.forEach(item => {
+        cashFlowRows.push([
+          `${item.isHeader ? '' : '  '}${item.activity}`,
+          formatCurrency(item.amount)
+        ]);
+      });
+      
+      // Add investing activities
+      cashFlowRows.push(['', '']);
+      cashFlowRows.push(['Investing Activities', '']);
+      cashFlowData.value.investingActivities.forEach(item => {
+        cashFlowRows.push([
+          `${item.isHeader ? '' : '  '}${item.activity}`,
+          formatCurrency(item.amount)
+        ]);
+      });
+      
+      // Add financing activities
+      cashFlowRows.push(['', '']);
+      cashFlowRows.push(['Financing Activities', '']);
+      cashFlowData.value.financingActivities.forEach(item => {
+        cashFlowRows.push([
+          `${item.isHeader ? '' : '  '}${item.activity}`,
+          formatCurrency(item.amount)
+        ]);
+      });
+      
+      // Add summary
+      cashFlowRows.push(['', '']);
+      cashFlowRows.push(['Net Increase in Cash', 
+        formatCurrency(cashFlowData.value.netCashFlow)]);
+      cashFlowRows.push(['Cash at Beginning of Period', 
+        formatCurrency(cashFlowData.value.cashBeginning)]);
+      cashFlowRows.push(['Cash at End of Period', 
+        formatCurrency(cashFlowData.value.cashEnd)]);
+      
+      return cashFlowRows;
+      
+    default:
+      return [];
+  }
+};
+
+// Lifecycle hooks
+onMounted(() => {
+  fetchFinancialData();
+});
+
+// Watchers
+watch([() => dateRange.value.start, () => dateRange.value.end], () => {
+  if (dateRange.value.start && dateRange.value.end) {
+    fetchFinancialData();
+  }
+});
+  
+  setup() {
+    // Initialize composables
+    const { t } = useI18n();
+    const toast = useToast();
+    const glStore = useGLStore();
+    
+    // Refs
+    const loading = ref(false);
+    const generating = ref(false);
+    const activeTab = ref<ReportType>('balance-sheet');
+    const startDateMenu = ref(false);
+    const endDateMenu = ref(false);
+    
+    // Date range for reports
+    const dateRange = ref<DateRange>({
+      start: new Date(new Date().getFullYear(), 0, 1), // Start of current year
+      end: new Date() // Today
+    });
+    
+    // Format dates for display
+    const formattedStartDate = computed(() => {
+      return formatDate(dateRange.value.start);
+    });
+    
+    const formattedEndDate = computed(() => {
+      return formatDate(dateRange.value.end);
+    });
+    
+    // Report data
+    const balanceSheetData = ref<BalanceSheetData | null>(null);
+    const incomeStatementData = ref<IncomeStatementData | null>(null);
+    const cashFlowData = ref<CashFlowData | null>(null);
+    
+    // Export formats
+    const exportFormats = [
+      { text: 'PDF', value: 'pdf' },
+      { text: 'Excel', value: 'excel' },
+      { text: 'CSV', value: 'csv' }
+    ];
+    
+    const selectedExportFormat = ref<ExportFormat>('pdf');
+    
+    // Computed properties
+    const totalAssets = computed(() => balanceSheetData.value?.totalAssets || 0);
+    const totalLiabilities = computed(() => balanceSheetData.value?.totalLiabilities || 0);
+    const totalEquity = computed(() => balanceSheetData.value?.totalEquity || 0);
+    const netIncome = computed(() => incomeStatementData.value?.netIncome || 0);
+    const netCashFlow = computed(() => cashFlowData.value?.netCashFlow || 0);
+    const cashBeginning = computed(() => cashFlowData.value?.cashBeginning || 0);
+    const cashEnd = computed(() => cashFlowData.value?.cashEnd || 0);
+
+    // Format date for display
+    const formatDate = (date: Date | string): string => {
+      try {
+        const dateObj = typeof date === 'string' ? new Date(date) : date;
+        if (isNaN(dateObj.getTime())) return 'Invalid Date';
+        
+        return dateObj.toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'short', 
+          day: 'numeric' 
+        });
+      } catch (error) {
+        console.error('Error formatting date:', error);
+        return 'Invalid Date';
+      }
+    };
+    
+    // Format date range for display
+    const formatDateRange = (start: Date | string, end: Date | string): string => {
+      return `${formatDate(start)} - ${formatDate(end)}`;
+    };
+    
+    // Format currency
+    const formatCurrency = (value: number): string => {
+      try {
+        return new Intl.NumberFormat('en-US', {
+          style: 'currency',
+          currency: 'USD', // Default currency
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        }).format(value);
+      } catch (error) {
+        console.error('Error formatting currency:', error);
+        return '$0.00';
+      }
+    };
+
+    // Generate financial statement report
+    const generateReport = async () => {
+      generating.value = true;
+      try {
+        // Update report params with current date range
+        const reportParams = {
+          report_type: activeTab.value,
+          period: 'year',
+          start_date: dateRange.value.start.toISOString().split('T')[0],
+          end_date: dateRange.value.end.toISOString().split('T')[0],
+          format: selectedExportFormat.value,
+          currency: 'USD'
+        };
+        
+        // Call API to generate report
+        const response = await axios.get('/api/gl/financial-statements', {
+          params: reportParams,
+          responseType: 'blob'
+        });
+        
+        // Fetch financial statements
+        const fetchFinancialStatements = async () => {
+          if (!dateRange.value.start || !dateRange.value.end) return;
+          
+          loading.value = true;
+          
+          try {
+            // Convert dates to ISO strings for the API
+            const params = {
+              start_date: dateRange.value.start instanceof Date 
+                ? dateRange.value.start.toISOString().split('T')[0]
+                : dateRange.value.start,
+              end_date: dateRange.value.end instanceof Date
+                ? dateRange.value.end.toISOString().split('T')[0]
+                : dateRange.value.end
+            };
+            
+            // TODO: Replace with actual API calls
+            // const response = await glStore.fetchFinancialStatements(params);
+            // balanceSheetData.value = response.balanceSheet;
+            // incomeStatementData.value = response.incomeStatement;
+            // cashFlowData.value = response.cashFlow;
+            
+            // Mock data for now
+            balanceSheetData.value = {
+              assets: [
+                { account: 'Cash', amount: 10000 },
+                { account: 'Accounts Receivable', amount: 5000 },
+                { account: 'Total Assets', amount: 15000, isHeader: true }
+              ],
+              liabilities: [
+                { account: 'Accounts Payable', amount: 3000 },
+                { account: 'Total Liabilities', amount: 3000, isHeader: true }
+              ],
+              equity: [
+                { account: 'Retained Earnings', amount: 12000 },
+                { account: 'Total Equity', amount: 12000, isHeader: true }
+              ],
+              totalAssets: 15000,
+              totalLiabilities: 3000,
+              totalEquity: 12000,
+              asOfDate: new Date().toISOString()
+            };
+            
+            incomeStatementData.value = {
+              revenues: [
+                { account: 'Sales', amount: 50000 },
+                { account: 'Total Revenue', amount: 50000, isHeader: true }
+              ],
+              expenses: [
+                { account: 'Cost of Goods Sold', amount: 30000 },
+                { account: 'Operating Expenses', amount: 15000 },
+                { account: 'Total Expenses', amount: 45000, isHeader: true }
+              ],
+              grossProfit: 20000,
+              operatingIncome: 5000,
+              netIncome: 5000,
+              period: formatDateRange(dateRange.value.start, dateRange.value.end)
+            };
+            
+            cashFlowData.value = {
+              operatingActivities: [
+                { activity: 'Net Income', amount: 5000 },
+                { activity: 'Depreciation', amount: 2000 },
+                { activity: 'Net Cash from Operations', amount: 7000, isHeader: true }
+              ],
+              investingActivities: [
+                { activity: 'Capital Expenditures', amount: -3000 },
+                { activity: 'Net Cash from Investing', amount: -3000, isHeader: true }
+              ],
+              financingActivities: [
+                { activity: 'Debt Issued', amount: 2000 },
+                { activity: 'Net Cash from Financing', amount: 2000, isHeader: true }
+              ],
+              netCashFlow: 6000,
+              cashBeginning: 4000,
+              cashEnd: 10000,
+              period: formatDateRange(dateRange.value.start, dateRange.value.end)
+            };
+            
+          } catch (error) {
+            console.error('Error fetching financial statements:', error);
+            toast.error('Failed to load financial statements');
+          } finally {
+            loading.value = false;
+          }
+        };
+        
+        // Export statement to selected format
+        const exportStatement = (format: ExportFormat) => {
+          switch (format) {
+            case 'pdf':
+              exportToPdf(activeTab.value);
+              break;
+            case 'excel':
+              // TODO: Implement Excel export
+              toast.info('Export to Excel coming soon');
+              break;
+            case 'csv':
+              // TODO: Implement CSV export
+              toast.info('Export to CSV coming soon');
+              break;
+            default:
+              toast.error('Unsupported export format');
+          }
+        };
+        
+        // Export to PDF
+        const exportToPdf = (reportType: ReportType) => {
+          try {
+            const doc = new jsPDF();
+            const title = reportType.split('-').map(word => 
+              word.charAt(0).toUpperCase() + word.slice(1)
+            ).join(' ');
+            
+            // Add title and date range
+            doc.setFontSize(16);
+            doc.text(`${title} Report`, 14, 20);
+            doc.setFontSize(10);
+            doc.text(`Period: ${formatDateRange(dateRange.value.start, dateRange.value.end)}`, 14, 30);
+            
+            // Add content based on report type
+            let yPos = 50;
+            
+            switch (reportType) {
+              case 'balance-sheet':
+                if (balanceSheetData.value) {
+                  // Add Assets
+                  doc.setFontSize(12);
+                  doc.text('Assets', 14, yPos);
+                  yPos += 10;
+                  
+                  balanceSheetData.value.assets.forEach(item => {
+                    doc.setFont(item.isHeader ? 'bold' : 'normal');
+                    doc.text(item.account, 20, yPos);
+                    doc.text(formatCurrency(item.amount), 150, yPos, { align: 'right' });
+                    yPos += 10;
+                  });
+                  
+                  // Add Liabilities
+                  yPos += 10;
+                  doc.setFontSize(12);
+                  doc.text('Liabilities', 14, yPos);
+                  yPos += 10;
+                  
+                  balanceSheetData.value.liabilities.forEach(item => {
+                    doc.setFont(item.isHeader ? 'bold' : 'normal');
+                    doc.text(item.account, 20, yPos);
+                    doc.text(formatCurrency(item.amount), 150, yPos, { align: 'right' });
+                    yPos += 10;
+                  });
+                  
+                  // Add Equity
+                  yPos += 10;
+                  doc.setFontSize(12);
+                  doc.text('Equity', 14, yPos);
+                  yPos += 10;
+                  
+                  balanceSheetData.value.equity.forEach(item => {
+                    doc.setFont(item.isHeader ? 'bold' : 'normal');
+                    doc.text(item.account, 20, yPos);
+                    doc.text(formatCurrency(item.amount), 150, yPos, { align: 'right' });
+                    yPos += 10;
+                  });
+                  
+                  // Add totals
+                  yPos += 10;
+                  doc.setFont('bold');
+                  doc.text('Total Assets', 20, yPos);
+                  doc.text(formatCurrency(balanceSheetData.value.totalAssets), 150, yPos, { align: 'right' });
+                  
+                  yPos += 10;
+                  doc.text('Total Liabilities & Equity', 20, yPos);
+                  doc.text(
+                    formatCurrency(balanceSheetData.value.totalLiabilities + balanceSheetData.value.totalEquity), 
+                    150, 
+                    yPos, 
+                    { align: 'right' }
+                  );
+                }
+                break;
+                
+              // Add cases for other report types (income statement, cash flow)
+              
+              default:
+                doc.text('Report type not supported', 14, yPos);
+            }
+            
+            // Save the PDF
+            doc.save(`${title.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`);
+            
+            toast.success('Report exported successfully');
+          } catch (error) {
+            console.error('Error exporting to PDF:', error);
+            toast.error('Failed to export report');
+          }
+        };
+        
+        // Watch for date range changes
+        watch(() => [dateRange.value.start, dateRange.value.end], () => {
+          if (dateRange.value.start && dateRange.value.end) {
+            fetchFinancialStatements();
+          }
+        }, { immediate: true });
+        
+        // Initial data fetch
+        onMounted(() => {
+          fetchFinancialStatements();
+        });
+        
+        return {
+          balanceSheet,
+          incomeStatement,
+          cashFlowStatement,
+          trialBalance,
+          exportFormats,
+          selectedExportFormat,
+          formatDate,
+          formatCurrency,
+          exportStatement
+        };
       } catch (error) {
         console.error('Error generating report:', error);
         toast.add({
@@ -540,51 +1527,20 @@ export default {
       } finally {
         generating.value = false;
       }
+      formatDate,
+      formatCurrency,
+      exportStatement
     };
-    
-    const exportToPdf = (reportType) => {
-      console.log(`Exporting ${reportType} to PDF`);
-      // TODO: Implement PDF export
-      toast.add({
-        severity: 'info',
-        summary: 'Exporting',
-        detail: `Exporting ${reportType.replace('-', ' ')} to PDF`,
-        life: 2000
-      });
-    };
-    
-    // Initialize date range based on selected period
-    const updateDateRange = () => {
-      const today = new Date();
-      const start = new Date();
-      
-      switch (reportParams.value.period) {
-        case 'month':
-          start.setDate(1); // Start of current month
-          break;
-        case 'quarter':
-          start.setMonth(Math.floor(today.getMonth() / 3) * 3, 1); // Start of current quarter
-          break;
-        case 'year':
-          start.setMonth(0, 1); // Start of current year
-          break;
-        // For 'custom', use the existing dates
-      }
-      
-      reportParams.value.start_date = start;
-      reportParams.value.end_date = today;
-    };
-    
-    // Watch for period changes to update date range
-    onMounted(() => {
-      updateDateRange();
+  } catch (error) {
+    console.error('Error generating report:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to generate report',
+      life: 3000
     });
-    
-    return {
-      loading,
-      generating,
-      showReportDialog,
-      reportParams,
+  } finally {
+    generating.value = false;
       balanceSheetData,
       incomeStatementData,
       cashFlowData,

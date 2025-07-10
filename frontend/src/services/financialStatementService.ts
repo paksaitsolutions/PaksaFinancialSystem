@@ -37,32 +37,80 @@ export interface FinancialStatementLine {
   show_thousands_separator: boolean;
   decimal_places: number;
   children?: FinancialStatementLine[];
+  amount?: number;
+  amount_prev?: number;
+  amount_ytd?: number;
+  isHeader?: boolean;
 }
 
 export interface FinancialStatementRequest {
-  template_id: string;
+  template_id?: string;
   start_date?: string;
   end_date?: string;
+  as_of_date?: string;
   currency?: string;
   include_comparative?: boolean;
   include_budget?: boolean;
   include_ytd?: boolean;
+  include_notes?: boolean;
+  format_currency?: boolean;
 }
 
-export interface FinancialStatementResponse {
-  id: string;
-  template_id: string;
-  template_name: string;
-  statement_date: string;
-  start_date: string;
-  end_date: string;
-  currency: string;
-  data: FinancialStatementLine[];
+// Statement Types
+export interface BalanceSheet {
+  assets: FinancialStatementSection;
+  liabilities: FinancialStatementSection;
+  equity: FinancialStatementSection;
   metadata: {
+    as_of_date: string;
+    currency: string;
     generated_at: string;
-    generated_by: string;
-    parameters: Record<string, any>;
   };
+}
+
+export interface IncomeStatement {
+  revenue: FinancialStatementSection;
+  cogs: FinancialStatementSection;
+  expenses: FinancialStatementSection;
+  other_income: FinancialStatementSection;
+  other_expenses: FinancialStatementSection;
+  metadata: {
+    start_date: string;
+    end_date: string;
+    currency: string;
+    generated_at: string;
+  };
+}
+
+export interface CashFlowStatement {
+  operating_activities: FinancialStatementSection;
+  investing_activities: FinancialStatementSection;
+  financing_activities: FinancialStatementSection;
+  metadata: {
+    start_date: string;
+    end_date: string;
+    currency: string;
+    generated_at: string;
+  };
+}
+
+export interface FinancialStatementSection {
+  name: string;
+  total: number;
+  total_prev?: number;
+  total_ytd?: number;
+  lines: FinancialStatementLine[];
+}
+
+export interface FinancialStatementResponse<T = any> {
+  success: boolean;
+  data: {
+    statement: T;
+    template?: FinancialStatementTemplate;
+    generated_at: string;
+  };
+  message?: string;
+  error?: string;
 }
 
 // Template Management

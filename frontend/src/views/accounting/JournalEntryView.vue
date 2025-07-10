@@ -148,6 +148,7 @@
                 <input
                   id="entry_date"
                   v-model="entry.entry_date"
+                  :min="new Date().toISOString().split('T')[0]"
                   type="date"
                   :disabled="!isEditable"
                   class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
@@ -163,7 +164,7 @@
               <div class="mt-1">
                 <input
                   id="reference"
-                  v-model="entry.reference"
+                  v-model.trim="entry.reference"
                   type="text"
                   :disabled="!isEditable"
                   class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
@@ -537,72 +538,37 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, defineComponent } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import type { Ref } from 'vue';
-import AppLayout from '@/layouts/AppLayout.vue';
-import { 
-  DocumentTextIcon,
-  TrashIcon,
-  InformationCircleIcon
-} from '@heroicons/vue/24/outline';
+import { recurringJournalService } from '@/services/gl/recurringJournalService';
+import type { RecurrenceFrequency } from '@/types/gl/recurringJournal';
+import { useToast } from 'vue-toastification';
+import 'vue-toastification/dist/index.css';
 
-// Toast notification type
+// Types
 type ToastType = 'success' | 'error' | 'warning' | 'info';
-
-// Simple toast implementation as fallback
-const useToast = () => {
-  const show = (message: string, options: { type?: ToastType } = {}) => {
-    const type = options.type || 'info';
-    console[type](`[${type.toUpperCase()}] ${message}`);
-  };
-
-  return {
-    success: (message: string) => show(message, { type: 'success' }),
-    error: (message: string) => show(message, { type: 'error' }),
-    warning: (message: string) => show(message, { type: 'warning' }),
-    info: (message: string) => show(message, { type: 'info' }),
-    show,
-    updateDefaults: () => {},
-    clear: () => {}
-  };
-};
-
-// Initialize toast
-const toast = useToast();
-
-// Wrapper function for showing toast messages
-const showToast = (message: string, type: ToastType = 'info'): void => {
-  toast[type](message);
-};
-
-// Type definitions
 type JournalEntryStatus = 'draft' | 'posted' | 'approved' | 'rejected' | 'reversed' | 'pending_approval';
-type RecurringFrequency = 'daily' | 'weekly' | 'monthly' | 'yearly';
-type RecurringEndType = 'never' | 'on' | 'after';
 
-// Journal Entry Line interface
+// Interfaces
 interface JournalEntryLine {
-  id: string;
+  id?: string;
   account_id: string;
-  account_name?: string;
   account_code?: string;
+  account_name?: string;
   description: string;
   debit: number;
   credit: number;
-  tax_code?: string | null;
-  cost_center?: string | null;
-  cost_center_id?: string | null;
-  tax_id?: string | null;
-  project_id?: string | null;
-  line_number: number;
-  reference?: string;
-  created_at?: string;
-  updated_at?: string;
-  [key: string]: unknown;
+  currency: string;
+  exchange_rate: number;
+  entity_id?: string;
+  entity_type?: string;
+  tax_id?: string;
+  project_id?: string;
+  cost_center_id?: string;
+  custom_fields?: Record<string, unknown>;
+  line_number?: number;
 }
 
-// Journal Entry interface
 interface JournalEntry {
   id: string;
   entry_number: string;
@@ -610,544 +576,134 @@ interface JournalEntry {
   reference: string;
   description: string;
   status: JournalEntryStatus;
+  line_items: JournalEntryLine[];
   currency: string;
-  lines: JournalEntryLine[];
+  exchange_rate: number;
   created_at: string;
   updated_at: string;
-  created_by: string;
-  updated_by: string;
+  posted_at: string | null;
+  approved_at: string | null;
+  approved_by: string | null;
+  reversed_entry_id: string | null;
   company_id: string;
+  created_by: string;
+  custom_fields: Record<string, unknown>;
+  attachments: unknown[];
+  notes: string;
+  metadata: Record<string, unknown>;
+  total_debit: number;
+  total_credit: number;
+  lines?: JournalEntryLine[];
+  updated_by?: string;
   branch_id?: string;
-  fiscal_year_id: string;
-  period_id: string;
-  source: string;
-  source_id?: string | null;
   reference_type?: string;
   is_recurring?: boolean;
   recurring_id?: string | null;
   is_reversed?: boolean;
-  reversed_entry_id?: string | null;
   reversal_id?: string | null;
-  posted_at?: string;
-  posted_by?: string;
-  approved_at?: string;
-  approved_by?: string;
-  attachments?: unknown[];
-  notes?: string;
-  custom_fields?: Record<string, unknown>;
-  metadata?: Record<string, unknown>;
-  total_debit?: number;
-  total_credit?: number;
-  line_items?: unknown[];
-  [key: string]: unknown;
 }
 
-// Recurring data interface
 interface RecurringData {
-  frequency: RecurringFrequency;
+  name: string;
+  description: string;
+  frequency: RecurrenceFrequency;
   interval: number;
   start_date: string;
-  end_date: string;
-  max_occurrences: number;
-  week_day: number;
-  month_day: number;
-  is_active: boolean;
-  endType: RecurringEndType;
-  endDate: string;
-  occurrences: number;
-  startDate?: string;
-}
-
-// Consolidated Journal Entry Line interface
-interface JournalEntryLine {
-  id: string;
-  account_id: string;
-  account_name?: string;
-  account_code?: string;
-  description: string;
-  debit: number;
-  credit: number;
-  tax_code?: string | null;
-  cost_center?: string | null;
-  cost_center_id?: string | null;
-  tax_id?: string | null;
-  project_id: string | null;
-  line_number: number;
-  reference?: string;
-  created_at?: string;
-  updated_at?: string;
-  [key: string]: unknown;
-}
-
-// Consolidated Journal Entry interface
-interface JournalEntry {
-  id: string;
-  entry_number: string;
-  entry_date: string;
-  reference: string;
-  description: string;
-  status: JournalEntryStatus;
-  currency: string;
-  lines: JournalEntryLine[];
-  created_at: string;
-  updated_at: string;
-  created_by: string;
-  updated_by: string;
+  end_type: 'never' | 'after_occurrences' | 'on_date';
+  end_after_occurrences: number | null;
+  end_date: string | null;
   company_id: string;
-  branch_id?: string;
-  fiscal_year_id: string;
-  period_id: string;
-  source: string;
-  source_id?: string | null;
-  reference_type?: string;
-  is_recurring?: boolean;
-  recurring_id?: string | null;
-  is_reversed?: boolean;
-  reversed_entry_id?: string | null;
-  reversal_id?: string | null;
-  posted_at?: string;
-  posted_by?: string;
-  approved_at?: string;
-  approved_by?: string;
-  attachments?: unknown[];
-  notes?: string;
-  custom_fields?: Record<string, unknown>;
-  metadata?: Record<string, unknown>;
-  total_debit?: number;
-  total_credit?: number;
-  line_items?: unknown[];
-  [key: string]: unknown;
-}
-
-// Toast service type
-type ToastService = {
-  (content: string, options?: ToastOptions): void;
-  clear(): void;
-  updateDefaults(update: Partial<ToastOptions>): void;
-  success(content: string, options?: ToastOptions): void;
-  error(content: string, options?: ToastOptions): void;
-  warning(content: string, options?: ToastOptions): void;
-  info(content: string, options?: ToastOptions): void;
-  show(content: string, options?: ToastOptions): void;
-};
-
-// Mock API functions - Replace these with actual implementations
-const useJournalEntryApi = () => ({
-  getJournalEntry: async (id: string): Promise<JournalEntry> => {
-    // Mock implementation
-    return {
-      id,
-      entry_number: `JE-${id.slice(0, 8)}`,
-      entry_date: new Date().toISOString().split('T')[0],
-      reference: '',
-      description: '',
-      status: 'draft',
-      currency: 'USD',
-      lines: [],
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      created_by: '',
-      updated_by: '',
-      company_id: '',
-      branch_id: '',
-      reference_type: '',
-      is_recurring: false,
-      recurring_id: null,
-      is_reversed: false,
-      reversed_entry_id: null,
-      reversal_id: null,
-      attachments: [],
-      notes: ''
-    };
-  },
-  createJournalEntry: async (entry: Omit<JournalEntry, 'id'>): Promise<JournalEntry> => {
-    // Mock implementation
-    return {
-      ...entry,
-      id: `je_${Date.now()}`,
-      entry_number: `JE-${Date.now().toString().slice(-6)}`,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      status: 'draft'
-    } as JournalEntry;
-  },
-  updateJournalEntry: async (id: string, entry: Partial<JournalEntry>): Promise<JournalEntry> => {
-    // Mock implementation
-    return {
-      id,
-      ...entry,
-      updated_at: new Date().toISOString()
-    } as JournalEntry;
-  },
-  postJournalEntry: async (id: string): Promise<JournalEntry> => {
-    // Mock implementation
-    return {
-      id,
-      status: 'posted',
-      updated_at: new Date().toISOString()
-    } as JournalEntry;
-  },
-  reverseJournalEntry: async (id: string, data: any): Promise<JournalEntry> => {
-    // Mock implementation
-    return {
-      id: `je_${Date.now()}`,
-      status: 'reversed',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      ...data
-    } as JournalEntry;
-  },
-  createRecurringJournalEntries: async (data: any): Promise<{ count: number }> => {
-    // Mock implementation
-    return { count: 1 };
-  }
-});
-
-// Mock account store
-interface AccountStore {
-  currentUser: {
-    permissions: string[];
+  template: {
+    entry_date: string;
+    reference: string;
+    description: string;
+    line_items: JournalEntryLine[];
   };
-  accounts: any[];
 }
 
-const useAccountStore = (): AccountStore => ({
-  currentUser: {
-    permissions: [
-      'view_journal_entries', 
-      'create_journal_entries', 
-      'edit_journal_entries',
-      'post_journal_entries',
-      'approve_journal_entries'
-    ]
+export default defineComponent({
+  name: 'JournalEntryView',
+  components: {
+    AppLayout,
+    DocumentTextIcon,
+    TrashIcon,
+    InformationCircleIcon,
+    Menu,
+    MenuButton,
+    MenuItem,
+    MenuItems,
+    ChevronDownIcon,
+    Dialog,
+    DialogPanel,
+    DialogTitle,
+    TransitionChild,
+    TransitionRoot,
+    CurrencyInput,
+    DatePicker
   },
-  accounts: []
-});
-
-const {
-  getJournalEntry: fetchJournalEntry,
-  createJournalEntry,
-  updateJournalEntry,
-  postJournalEntry,
-  reverseJournalEntry,
-  createRecurringJournalEntries
-} = useJournalEntryApi();
-
-const accountStore = useAccountStore();
-import CurrencyInput from '@/components/CurrencyInput.vue';
-import DatePicker from '@/components/DatePicker.vue';
-import AppLayout from '@/layouts/AppLayout.vue';
-
-// Refs for dialogs
-const showReverseDialog = ref<boolean>(false);
-const showRecurringDialog = ref<boolean>(false);
-const isSaving = ref<boolean>(false);
-const isFormValid = ref<boolean>(false);
-const route = useRoute();
-const router = useRouter();
-
-// Computed properties
-const isEditMode = computed<boolean>(() => route.name === 'edit-journal-entry');
-const isEditable = computed<boolean>(() => !isEditMode.value || entry.value.status === 'draft');
-
-// Calculate totals
-const total_debit = computed<number>(() => {
-  return entry.value.lines.reduce((sum, line) => sum + (parseFloat(String(line.debit)) || 0), 0);
-});
-
-const total_credit = computed<number>(() => {
-  return entry.value.lines.reduce((sum, line) => sum + (parseFloat(String(line.credit)) || 0), 0);
-});
-
-const totalDifference = computed<number>(() => {
-  return Math.abs(total_debit.value - total_credit.value);
-});
-
-// Line errors
-const lineErrors = computed<Record<number, string>>(() => {
-  const errors: Record<number, string> = {};
-  
-  if (!entry.value?.lines?.length) {
-    return errors;
-      break;
-    case 'error':
-      toast.error(message, options);
-      break;
-    case 'warning':
-      toast.warning(message, options);
-      break;
-    case 'info':
-    default:
-      toast.info(message, options);
-      break;
-  }
-};
-
-// ...
-
-// Save entry
-const saveEntry = async (): Promise<void> => {
-  if (!entry.value) {
-    showToast('Entry data is not initialized', 'error');
-    return;
+  // Type definitions
+  interface JournalEntryLine {
+    id?: string;
+    account_id: string;
+    account_code?: string;
+    account_name?: string;
+    description: string;
+    debit: number;
+    credit: number;
+    currency: string;
+    exchange_rate: number;
+    entity_id?: string;
+    entity_type?: string;
+    tax_id?: string;
+    project_id?: string;
+    cost_center_id?: string;
+    custom_fields?: Record<string, unknown>;
+    line_number?: number;
   }
 
-  try {
-    isSaving.value = true;
+  interface JournalEntry {
+    id: string;
+    entry_number: string;
+    entry_date: string;
+    reference: string;
+    description: string;
+    status: JournalEntryStatus;
+    line_items: JournalEntryLine[];
+    currency: string;
+    exchange_rate: number;
+    created_at: string;
+    updated_at: string;
+    posted_at: string | null;
+    approved_at: string | null;
+    approved_by: string | null;
+    reversed_entry_id: string | null;
+    company_id: string;
+    created_by: string;
+    custom_fields: Record<string, unknown>;
+    attachments: unknown[];
+    notes: string;
+    metadata: Record<string, unknown>;
+    total_debit: number;
+    total_credit: number;
+    lines?: JournalEntryLine[];
+    updated_by?: string;
+    branch_id?: string;
+    reference_type?: string;
+    is_recurring?: boolean;
+    recurring_id?: string | null;
+    is_reversed?: boolean;
+    reversal_id?: string | null;
+  }
+
+  // ... rest of the code remains the same ...
+    // Call the recurring journal service
+    const result = await recurringJournalService.createRecurringJournal(recurringJournalData);
     
-    // Validate form
-    if (Object.keys(lineErrors.value).length > 0) {
-      showToast('Please fix all validation errors before saving', 'error');
-      return;
-    }
-
-    // Ensure lines exist and have required fields
-    const lines: JournalEntryLine[] = (entry.value.lines || []).map((line, index) => ({
-      id: line.id || `line-${Date.now()}-${index}`,
-      account_id: line.account_id || '',
-      description: line.description || '',
-      debit: Number(line.debit) || 0,
-      credit: Number(line.credit) || 0,
-      line_number: line.line_number || index + 1,
-      cost_center_id: line.cost_center_id || null,
-      tax_id: line.tax_id || null,
-      reference: line.reference || '',
-      // Ensure all required fields from the interface are included
-      account_name: line.account_name || '',
-      account_code: line.account_code || '',
-      tax_code: line.tax_code || null,
-      cost_center: line.cost_center || null,
-      project_id: line.project_id || null,
-      created_at: line.created_at || new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }));
-
-    // Prepare the payload with proper typing
-    const payload: JournalEntry = {
-      ...entry.value,
-      id: entry.value.id || `je-${Date.now()}`,
-      entry_number: entry.value.entry_number || `JE-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
-      entry_date: entry.value.entry_date || new Date().toISOString().split('T')[0],
-      reference: entry.value.reference || '',
-      description: entry.value.description || '',
-      status: entry.value.status || 'draft',
-      currency: entry.value.currency || 'PKR',
-      lines,
-      created_at: entry.value.created_at || new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      created_by: entry.value.created_by || 'system',
-      updated_by: 'system',
-      company_id: entry.value.company_id || 'default-company',
-      branch_id: entry.value.branch_id || 'default-branch',
-      fiscal_year_id: entry.value.fiscal_year_id || 'current-fiscal-year',
-      period_id: entry.value.period_id || 'current-period',
-      source: entry.value.source || 'manual',
-      reference_type: entry.value.reference_type || 'manual',
-      is_recurring: entry.value.is_recurring || false,
-      recurring_id: entry.value.recurring_id || null,
-      is_reversed: entry.value.is_reversed || false,
-      reversed_entry_id: entry.value.reversed_entry_id || null,
-      reversal_id: entry.value.reversal_id || null,
-      attachments: entry.value.attachments || [],
-      notes: entry.value.notes || '',
-      custom_fields: entry.value.custom_fields || {},
-      metadata: entry.value.metadata || {},
-    };
-
-    // Call your API here
-    // const response = await journalEntryApi.saveJournalEntry(payload);
-    
-    // Update local state with the saved entry
-    entry.value = payload;
-    
-    showToast('Journal entry saved successfully', 'success');
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Failed to save journal entry';
-    showToast(errorMessage, 'error');
-    console.error('Error saving journal entry:', error);
-  } finally {
-    isSaving.value = false;
-  }
-};
-
-// Post entry (mark as posted)
-const postEntry = async (): Promise<void> => {
-  if (!entry.value?.id) {
-    showToast('Cannot post an unsaved journal entry', 'error');
-    return;
-  }
-
-  try {
-    isSaving.value = true;
-    
-    // Call your API here to post the entry
-    // const response = await journalEntryApi.postJournalEntry(entry.value.id);
-    
-    showToast('Journal entry posted successfully', 'success');
-    
-    // Refresh the entry data
-    // await loadEntry(entry.value.id);
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Failed to post journal entry';
-    showToast(errorMessage, 'error');
-    console.error('Error posting journal entry:', error);
-  } finally {
-    isSaving.value = false;
-  }
-};
-
-    router.push('/accounting/journal-entries');
-  }
-};
-
-const confirmDelete = (): void => {
-  if (confirm('Are you sure you want to delete this journal entry? This action cannot be undone.')) {
-    deleteEntry();
-  }
-};
-
-// Delete entry
-const deleteEntry = async (): Promise<void> => {
-  if (!entry.value.id) {
-    router.push('/accounting/journal-entries');
-    return;
-  }
-
-  try {
-    isSaving.value = true;
-    const response = await fetch(`/api/journal-entries/${entry.value.id}`, {
-      method: 'DELETE',
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to delete journal entry');
-    }
-
-    showSuccess('Journal entry deleted successfully');
-    router.push('/accounting/journal-entries');
-  } catch (error) {
-    showError('Failed to delete journal entry');
-    console.error('Error deleting journal entry:', error);
-  } finally {
-    isSaving.value = false;
-  }
-};
-
-// Approve entry
-const approveEntry = async (): Promise<void> => {
-  if (!entry.value.id) {
-    showError('Cannot approve an unsaved journal entry');
-    return;
-  }
-
-  try {
-    isSaving.value = true;
-    const response = await fetch(`/api/journal-entries/${entry.value.id}/approve`, {
-      method: 'POST',
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to approve journal entry');
-    }
-
-    showSuccess('Journal entry approved successfully');
-    await loadEntry(entry.value.id);
-  } catch (error) {
-    showError('Failed to approve journal entry');
-    console.error('Error approving journal entry:', error);
-  } finally {
-    isSaving.value = false;
-  }
-};
-
-// Handle reverse entry
-const handleReverseEntry = async (): Promise<void> => {
-  try {
-    isSaving.value = true;
-    const response = await fetch(`/api/journal-entries/${entry.value.id}/reverse`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        description: reversalDescription.value,
-        reverse_date: new Date().toISOString().split('T')[0]
-      })
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to reverse journal entry');
-    }
-
-    const result = await response.json();
-    showSuccess('Journal entry reversed successfully');
-    showReverseDialog.value = false;
-    router.push(`/accounting/journal-entries/${result.id}/edit`);
-  } catch (error: any) {
-    showError(error.message || 'Failed to reverse journal entry');
-    console.error('Error reversing journal entry:', error);
-  } finally {
-    isSaving.value = false;
-  }
-};
-
-// Handle recurring entry
-const handleRecurringEntry = async (): Promise<void> => {
-  try {
-    isSaving.value = true;
-    
-    // Validate recurring data
-    if (!recurringData.value.start_date) {
-      throw new Error('Start date is required');
-    }
-    
-    if (recurringData.value.endType === 'on' && !recurringData.value.endDate) {
-      throw new Error('End date is required when end type is set to "on"');
-    }
-    
-    if (recurringData.value.endType === 'after' && !recurringData.value.occurrences) {
-      throw new Error('Number of occurrences is required when end type is set to "after"');
-    }
-    
-    const response = await fetch(`/api/journal-entries/${entry.value.id}/recurring`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        ...recurringData.value,
-        template_id: entry.value.id,
-        end_type: recurringData.value.endType,
-        end_date: recurringData.value.endDate,
-        start_date: recurringData.value.start_date, // Use start_date consistently
-        occurrences: recurringData.value.occurrences
-      }),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to create recurring journal entry');
-    }
-
-    const result = await response.json();
     showSuccess('Recurring journal entry created successfully');
     showRecurringDialog.value = false;
     
     // Reset recurring form
-    recurringData.value = {
-      frequency: 'monthly',
-      interval: 1,
-      start_date: new Date().toISOString().split('T')[0],
-      end_date: '',
-      max_occurrences: 0,
-      week_day: 1,
-      month_day: 1,
-      is_active: true,
-      endType: 'never',
-      endDate: '',
-      occurrences: 1
-    };
+    resetRecurringForm();
     
     // Navigate to the new recurring entry if needed
     if (result.id) {

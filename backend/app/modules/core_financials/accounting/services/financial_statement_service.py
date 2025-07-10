@@ -260,28 +260,55 @@ class FinancialStatementService(BaseService):
         Returns:
             Dictionary mapping account IDs to balance information
         """
+        from sqlalchemy import func, case
+        from decimal import Decimal
+        from ..models import Account, JournalEntry, JournalEntryLine
+        
+        # Get the period to ensure it exists
+        period = self.db.query(GLPeriod).filter(GLPeriod.id == period_id).first()
+        if not period:
+            raise PeriodNotFoundException(f"Period with ID {period_id} not found")
+        
+        # Query to get all account balances for the period
+        query = (
+            self.db.query(
+                Account.id,
+                Account.code,
+                Account.name,
+                Account.type,
+                func.sum(
+                    case(
+                        [
+                            (JournalEntryLine.is_debit == True, JournalEntryLine.amount),
+                            (JournalEntryLine.is_debit == False, -JournalEntryLine.amount)
+                        ],
+                        else_=0
+                    )
+                ).label('balance')
+            )
+            .join(JournalEntryLine, Account.id == JournalEntryLine.account_id)
+            .join(JournalEntry, JournalEntryLine.journal_entry_id == JournalEntry.id)
+            .filter(
+                JournalEntry.period_id == period_id,
+                JournalEntry.status == 'posted'
+            )
+            .group_by(Account.id, Account.code, Account.name, Account.type)
+        )
+        
+        # Execute the query and build the result dictionary
         balances = {}
-        
-        # Get all account balances for the period
-        period_balances = self.db.query(AccountBalance).filter(
-            AccountBalance.period_id == period_id
-        ).all()
-        
-        # Get account details for the balances
-        account_ids = [b.account_id for b in period_balances]
-        accounts = {a.id: a for a in self.db.query(Account).filter(Account.id.in_(account_ids)).all()}
-        
-        # Prepare the result dictionary
-        for balance in period_balances:
-            account = accounts.get(balance.account_id)
-            if account:
-                balances[balance.account_id] = {
-                    'account_id': balance.account_id,
-                    'account_code': account.code,
-                    'account_name': account.name,
-                    'balance': balance.closing_balance or Decimal('0')
-                }
-        
+        for account_id, code, name, acc_type, balance in query.all():
+            if balance is None:
+                balance = Decimal('0')
+                
+            balances[account_id] = {
+                'account_id': account_id,
+                'account_code': code,
+                'account_name': name,
+                'account_type': acc_type,
+                'balance': balance
+            }
+            
         return balances
     
     def _get_accounts_by_type(self, account_type: str) -> List[Account]:

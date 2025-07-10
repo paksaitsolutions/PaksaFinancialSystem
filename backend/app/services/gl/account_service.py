@@ -1,13 +1,13 @@
 """
 Service layer for Chart of Accounts management.
 """
-from datetime import datetime
-from decimal import Decimal
-from typing import List, Optional, Tuple, Dict, Any
+from datetime import datetime, date
+from decimal import Decimal, ROUND_HALF_UP
+from typing import List, Optional, Tuple, Dict, Any, Set
 from uuid import UUID, uuid4
 
-from sqlalchemy.orm import Session
-from sqlalchemy import func, and_, or_
+from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import func, and_, or_, case, select
 
 from app.core.security import get_password_hash
 from app.exceptions import (
@@ -38,8 +38,115 @@ class AccountService(BaseService):
     def __init__(self, db: Session):
         super().__init__(db, ChartOfAccounts)
     
+    def _validate_account_creation(self, account_data: AccountCreate) -> None:
+        """Validate account creation data."""
+        # Validate account type and sub-type compatibility
+        if account_data.account_type == AccountType.ASSET:
+            if account_data.sub_type not in [
+                AccountSubType.CURRENT_ASSET, 
+                AccountSubType.FIXED_ASSET,
+                AccountSubType.INVENTORY,
+                AccountSubType.RECEIVABLE,
+                AccountSubType.BANK,
+                AccountSubType.CASH
+            ]:
+                raise ValidationException(f"Invalid sub-type {account_data.sub_type} for asset account")
+        
+        # Add more validations for other account types...
+
+    def _validate_account_code(self, code: str, company_id: UUID, account_id: UUID = None) -> None:
+        """Validate account code uniqueness within company."""
+        query = self.db.query(ChartOfAccounts).filter(
+            ChartOfAccounts.code == code,
+            ChartOfAccounts.company_id == company_id,
+            ChartOfAccounts.is_active == True
+        )
+        
+        if account_id:
+            query = query.filter(ChartOfAccounts.id != account_id)
+        
+        if query.first():
+            raise BusinessRuleException(f"Account code {code} already exists in this company")
+
+    def _get_account_balance_query(self, account_id: UUID, as_of_date: date = None):
+        """Build a query to calculate account balance."""
+        # Base query for journal entries
+        query = self.db.query(
+            func.coalesce(
+                func.sum(
+                    case(
+                        [(JournalEntryLine.type == 'debit', JournalEntryLine.amount)],
+                        else_=0
+                    )
+                ),
+                0
+            ) - func.coalesce(
+                func.sum(
+                    case(
+                        [(JournalEntryLine.type == 'credit', JournalEntryLine.amount)],
+                        else_=0
+                    )
+                ),
+                0
+            )
+        ).filter(
+            JournalEntryLine.account_id == account_id,
+            JournalEntryLine.is_active == True
+        )
+        
+        # Apply date filter if provided
+        if as_of_date:
+            query = query.filter(JournalEntryLine.entry_date <= as_of_date)
+        
+        return query
+
+    def get_account_balance(self, account_id: UUID, as_of_date: date = None) -> Decimal:
+        """Get the current balance of an account."""
+        account = self.db.query(ChartOfAccounts).get(account_id)
+        if not account or not account.is_active:
+            raise NotFoundException(f"Account {account_id} not found")
+        
+        balance = self._get_account_balance_query(account_id, as_of_date).scalar() or Decimal('0')
+        
+        # For parent accounts, include children balances
+        if not account.is_leaf:
+            children_balance = self.get_children_balance(account_id, as_of_date)
+            balance += children_balance
+        
+        return balance.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
+    def get_children_balance(self, parent_id: UUID, as_of_date: date = None) -> Decimal:
+        """Calculate the total balance of all child accounts."""
+        children = self.db.query(ChartOfAccounts.id).filter(
+            ChartOfAccounts.parent_id == parent_id,
+            ChartOfAccounts.is_active == True
+        ).all()
+        
+        total_balance = Decimal('0')
+        for child in children:
+            child_balance = self.get_account_balance(child.id, as_of_date)
+            total_balance += child_balance
+        
+        return total_balance.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
+    def get_account_hierarchy(self, company_id: UUID) -> List[Dict[str, Any]]:
+        """Get the complete account hierarchy for a company."""
+        accounts = self.db.query(ChartOfAccounts).filter(
+            ChartOfAccounts.company_id == company_id,
+            ChartOfAccounts.is_active == True
+        ).order_by(ChartOfAccounts.code).all()
+        
+        # Build account map and root accounts list
+        account_map = {}
+            
     def create_account(self, account_data: AccountCreate, created_by: UUID) -> AccountResponse:
         """Create a new account in the chart of accounts."""
+        # Validate account data
+        self._validate_account_creation(account_data)
+        
+        # Validate account code uniqueness
+        self._validate_account_code(account_data.code, account_data.company_id)
+        
         # Validate parent account
         if account_data.parent_id:
             parent = self.db.query(ChartOfAccounts).get(account_data.parent_id)
@@ -60,22 +167,91 @@ class AccountService(BaseService):
         if existing:
             raise BusinessRuleException(f"Account code {account_data.code} already exists")
         
-        # Create the account
+        # Prepare account data with default values
         account_dict = account_data.dict(exclude_unset=True)
-        account_dict["created_by"] = created_by
-        account_dict["updated_by"] = created_by
-        
-        # Set default values
-        if "status" not in account_dict:
-            account_dict["status"] = AccountStatus.ACTIVE
+        account_dict.update({
+            "created_by": created_by,
+            "updated_by": created_by,
+            "status": account_dict.get("status", AccountStatus.ACTIVE),
+            "is_leaf": True,  # Default to leaf, will be updated if children added
+            "opening_balance": account_dict.get("opening_balance", Decimal('0.00')),
+            "current_balance": Decimal('0.00'),  # Will be calculated
+            "balance_as_of": datetime.utcnow().date()
+        })
         
         # Create the account
         account = ChartOfAccounts(**account_dict)
         self.db.add(account)
+        self.db.flush()  # Flush to get the account ID
+        
+        # Update parent's is_leaf status if applicable
+        if account.parent_id:
+            self._update_parent_leaf_status(account.parent_id, is_leaf=False)
+        
+        # Update account hierarchy path
+        self._update_account_hierarchy_path(account)
+        
+        # Calculate initial balance
+        self._update_account_balance(account.id)
+        
         self.db.commit()
         self.db.refresh(account)
         
         return AccountResponse.from_orm(account)
+    
+    def _update_parent_leaf_status(self, account_id: UUID, is_leaf: bool) -> None:
+        """Update the is_leaf status of a parent account."""
+        account = self.db.query(ChartOfAccounts).get(account_id)
+        if account and account.is_leaf != is_leaf:
+            account.is_leaf = is_leaf
+            account.updated_at = datetime.utcnow()
+            self.db.add(account)
+            self.db.flush()
+    
+    def _update_account_hierarchy_path(self, account: ChartOfAccounts) -> None:
+        """Update the hierarchy path for an account."""
+        if account.parent_id:
+            parent = self.db.query(ChartOfAccounts).get(account.parent_id)
+            account.hierarchy_path = f"{parent.hierarchy_path}.{account.id}"
+        else:
+            account.hierarchy_path = str(account.id)
+        
+        account.updated_at = datetime.utcnow()
+        self.db.add(account)
+        self.db.flush()
+        
+        # Update all descendants
+        self._update_descendants_hierarchy_path(account)
+    
+    def _update_descendants_hierarchy_path(self, account: ChartOfAccounts) -> None:
+        """Update hierarchy paths for all descendants of an account."""
+        children = self.db.query(ChartOfAccounts).filter(
+            ChartOfAccounts.parent_id == account.id,
+            ChartOfAccounts.is_active == True
+        ).all()
+        
+        for child in children:
+            child.hierarchy_path = f"{account.hierarchy_path}.{child.id}"
+            self.db.add(child)
+            self._update_descendants_hierarchy_path(child)
+    
+    def _update_account_balance(self, account_id: UUID) -> None:
+        """Update the current balance of an account."""
+        account = self.db.query(ChartOfAccounts).get(account_id)
+        if not account:
+            return
+        
+        # Calculate new balance
+        new_balance = self.get_account_balance(account_id)
+        
+        # Update account
+        account.current_balance = new_balance
+        account.balance_as_of = datetime.utcnow().date()
+        self.db.add(account)
+        
+        # Update parent accounts
+        if account.parent_id:
+            self._update_account_balance(account.parent_id)
     
     def update_account(
         self, 
