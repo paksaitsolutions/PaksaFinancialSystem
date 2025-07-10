@@ -1,53 +1,183 @@
 # Paksa Financial System
 
-**A Proprietary Project of Paksa IT Solutions**
+**A Comprehensive Enterprise Financial Management Solution by Paksa IT Solutions**
 
-The **Paksa Financial System** is a comprehensive, AI-accelerated financial management platform designed to streamline financial operations, ensure compliance, and provide actionable insights for organizations. Built on a modern, secure, and scalable architecture, it centralizes critical financial functions, offering unparalleled visibility and control over an enterprise's fiscal health.
+[![License: Proprietary](https://img.shields.io/badge/License-Proprietary-blue.svg)](https://paksa.com.pk)
+[![Python](https://img.shields.io/badge/Python-3.9%2B-blue)](https://python.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.104.1-009688?logo=fastapi)](https://fastapi.tiangolo.com)
+[![Vue.js](https://img.shields.io/badge/Vue.js-3.x-4FC08D?logo=vuedotjs)](https://vuejs.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-4169E1?logo=postgresql)](https://www.postgresql.org/)
 
-The entire system is developed in **Python**, leveraging AI-driven 'vibe coding' methodologies to accelerate the development lifecycle and enhance system reliability.
+## 🌟 Overview
 
----
+The **Paksa Financial System** is a comprehensive, AI-accelerated financial management platform designed to streamline financial operations, ensure compliance, and provide actionable insights for organizations of all sizes. Built on a modern, secure, and scalable architecture, it centralizes critical financial functions, offering unparalleled visibility and control over an enterprise's fiscal health.
 
 ## ✨ Key Features
 
-The system is built on a modular architecture, integrating the following core components:
+### Core Financial Modules
 
-* **General Ledger (GL):** The central financial hub for chart of accounts management, multi-currency transactions, budgeting, and AI-powered anomaly detection.
-* **Accounts Payable (AP):** Manages the entire procure-to-pay cycle, including vendor management, three-way matching, and automated payment processing.
-* **Accounts Receivable (AR)::** Handles customer invoicing, payment processing, automated dunning, dispute management, and collections.
-* **Cash Management:** Provides real-time cash positioning, AI-enhanced cash flow forecasting, and automated bank reconciliation.
-* **Fixed Assets:** Manages the complete asset lifecycle, from acquisition and depreciation to maintenance scheduling and disposal.
-* **Payroll:** Automates employee compensation, tax calculations and filings, and benefits administration with robust internal controls.
-* **Business Intelligence (BI) & AI:** Delivers actionable insights through interactive dashboards, advanced financial forecasting, and proactive fraud detection.
-* **Security & Compliance:** Features robust data encryption, granular role-based access control (RBAC), row-level security (RLS), and comprehensive audit trails to meet standards like SOX and PCI DSS.
-* **User & Profile Management:** Includes extensive settings for company profiles, user roles, employee data, and customer/vendor information.
+- **General Ledger (GL)**
+  - Chart of Accounts Management
+  - Multi-currency Transactions
+  - Budgeting & Forecasting
+  - Financial Reporting & Analytics
+  - AI-powered Anomaly Detection
+
+- **Accounts Payable (AP)**
+  - Vendor Management
+  - Invoice Processing
+  - Three-Way Matching
+  - Automated Payment Processing
+  - 1099 Reporting
+
+- **Accounts Receivable (AR)**
+  - Customer Invoicing
+  - Payment Processing
+  - Automated Dunning
+  - Dispute Management
+  - Collections
+
+- **Cash Management**
+  - Real-time Cash Positioning
+  - AI-enhanced Cash Flow Forecasting
+  - Bank Reconciliation
+  - Liquidity Planning
+
+- **Fixed Assets**
+  - Asset Lifecycle Management
+  - Depreciation Calculation
+  - Maintenance Scheduling
+  - Disposal Management
+
+- **Payroll**
+  - Employee Compensation
+  - Tax Calculations & Filings
+  - Benefits Administration
+  - Compliance Management
+
+### Advanced Features
+
+- **Business Intelligence & AI**
+  - Interactive Dashboards
+  - Advanced Financial Forecasting
+  - Predictive Analytics
+  - Fraud Detection
+
+- **Security & Compliance**
+  - End-to-End Encryption
+  - Role-Based Access Control (RBAC)
+  - Row-Level Security (RLS)
+  - Comprehensive Audit Trails
+  - SOX & PCI DSS Compliance
+
+- **Integration Capabilities**
+  - Banking APIs
+  - Payment Gateways
+  - E-commerce Platforms
+  - Third-party Services
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Python 3.9+
+- Node.js 16+
+- PostgreSQL 13+
+- Redis 6+
+- RabbitMQ 3.8+
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/paksaitsolutions/PaksaFinancialSystem.git
+   cd PaksaFinancialSystem
+   ```
+
+2. **Set up the backend**
+   ```bash
+   # Create and activate virtual environment
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+   # Install dependencies
+   pip install -r requirements.txt
+   ```
+
+3. **Set up the frontend**
+   ```bash
+   cd frontend
+   npm install
+   ```
+
+4. **Configure environment variables**
+   Create `.env` files in both root and frontend directories with required configurations.
+
+5. **Run database migrations**
+   ```bash
+   alembic upgrade head
+   ```
+
+### Running the Application
+
+1. **Start the backend server**
+   ```bash
+   uvicorn app.main:app --reload
+   ```
+
+2. **Start the frontend development server**
+   ```bash
+   cd frontend
+   npm run dev
+   ```
+
+3. **Access the application**
+   Open your browser and navigate to `http://localhost:3000`
+
+## 🛠️ Tech Stack
+
+### Backend
+- **Framework:** FastAPI
+- **Database:** PostgreSQL
+- **ORM:** SQLAlchemy Core & Django ORM
+- **Authentication:** JWT
+- **Caching:** Redis
+- **Message Queue:** RabbitMQ/Kafka
+- **Containerization:** Docker
+- **Orchestration:** Kubernetes
+
+### Frontend
+- **Framework:** Vue.js 3
+- **UI Library:** Vuetify 3
+- **State Management:** Pinia
+- **HTTP Client:** Axios
+- **Form Validation:** Vuelidate
+- **Internationalization:** Vue I18n
+
+## 📚 Documentation
+
+For detailed documentation, please refer to:
+- [API Documentation](https://api.paksafinancial.com/docs)
+- [User Guide](https://docs.paksafinancial.com/user-guide)
+- [Developer Documentation](https://docs.paksafinancial.com/developer-guide)
+
+## 🤝 Contributing
+
+We welcome contributions from the community. Please read our [Contributing Guidelines](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
+
+## 📄 License
+
+This project is proprietary and confidential. All rights reserved © 2025 Paksa IT Solutions.
+
+## 📞 Contact
+
+For inquiries, please contact us at [info@paksa.com.pk](mailto:info@paksa.com.pk) or visit our website at [https://paksa.com.pk](https://paksa.com.pk)
 
 ---
 
-## 🛠️ Tech Stack & Architecture
-
-Paksa is built with a modern, microservices-oriented architecture to ensure scalability, resilience, and maintainability.
-
-* **Backend:** Python
-* **API Framework:** FastAPI
-* **Database:** PostgreSQL (chosen for its ACID compliance and security features)
-* **ORM:** SQLAlchemy Core (for complex queries) & Django ORM (for rapid development)
-* **Deployment:** Docker & Kubernetes for containerization and orchestration
-* **Asynchronous Tasks:** RabbitMQ / Kafka for message queuing
-* **Caching:** Redis
-
----
-
-## 📦 Dependencies
-
-The following Python packages are required to run the Paksa Financial System:
-
-### Core Dependencies
-```
-fastapi==0.104.1
-uvicorn==0.24.0
-python-dotenv==1.0.0
-python-jose[cryptography]==3.3.0
+<div align="center">
+  Made with ❤️ by <a href="https://paksa.com.pk">Paksa IT Solutions</a>
+</div>
 passlib[bcrypt]==1.7.4
 python-multipart==0.0.6
 sqlalchemy==2.0.23
