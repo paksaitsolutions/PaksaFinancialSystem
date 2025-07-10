@@ -1,0 +1,178 @@
+# Default Tax Rules Configuration
+# This file contains default tax rules that will be loaded on service initialization
+
+rules:
+  # Standard VAT rates for various countries
+  - code: "VAT-EU-STANDARD"
+    name: "EU Standard VAT Rate"
+    description: "Standard VAT rate for EU countries"
+    type: "vat"
+    jurisdiction:
+      country_code: "EU"
+      is_eu: true
+      tax_authority: "European Commission"
+      authority_website: "https://ec.europa.eu/taxation_customs/business/vat/telecommunications-broadcasting-electronic-customers/vat-rates_en"
+    rates:
+      - rate: 21.0
+        effective_from: "2021-01-01"
+        description: "Standard EU VAT rate"
+        is_standard_rate: true
+    category: "vat"
+    tags: ["eu", "vat", "standard"]
+    accounting_code: "VAT-OUTPUT"
+    gl_account_code: "220010"
+
+  # US Sales Tax - California
+  - code: "US-CA-SALES"
+    name: "California State Sales Tax"
+    description: "California state sales tax"
+    type: "sales"
+    jurisdiction:
+      country_code: "US"
+      state_code: "CA"
+      tax_authority: "California Department of Tax and Fee Administration"
+      authority_website: "https://www.cdtfa.ca.gov/taxes-and-fees/"
+    rates:
+      - rate: 7.25
+        effective_from: "2017-01-01"
+        description: "Statewide base sales tax rate"
+        is_standard_rate: true
+    category: "sales"
+    tags: ["us", "california", "sales"]
+    accounting_code: "SALES-TAX-PAYABLE"
+    gl_account_code: "220020"
+
+  # US Sales Tax - New York
+  - code: "US-NY-SALES"
+    name: "New York State Sales Tax"
+    description: "New York state sales tax"
+    type: "sales"
+    jurisdiction:
+      country_code: "US"
+      state_code: "NY"
+      tax_authority: "New York State Department of Taxation and Finance"
+      authority_website: "https://www.tax.ny.gov/"
+    rates:
+      - rate: 4.0
+        effective_from: "2020-01-01"
+        description: "Statewide base sales tax rate"
+        is_standard_rate: true
+    category: "sales"
+    tags: ["us", "new-york", "sales"]
+    accounting_code: "SALES-TAX-PAYABLE"
+    gl_account_code: "220030"
+
+  # UK VAT
+  - code: "GB-VAT-STANDARD"
+    name: "UK Standard VAT Rate"
+    description: "United Kingdom standard VAT rate"
+    type: "vat"
+    jurisdiction:
+      country_code: "GB"
+      tax_authority: "HM Revenue & Customs"
+      authority_website: "https://www.gov.uk/topic/business-tax/vat"
+    rates:
+      - rate: 20.0
+        effective_from: "2011-01-04"
+        description: "Standard rate"
+        is_standard_rate: true
+      - rate: 5.0
+        effective_from: "2020-07-15"
+        effective_to: "2021-09-30"
+        description: "Temporary reduced rate for hospitality"
+        is_standard_rate: false
+    category: "vat"
+    tags: ["uk", "vat", "standard"]
+    accounting_code: "VAT-OUTPUT"
+    gl_account_code: "220040"
+
+  # UAE VAT
+  - code: "AE-VAT-STANDARD"
+    name: "UAE Standard VAT Rate"
+    description: "United Arab Emirates standard VAT rate"
+    type: "vat"
+    jurisdiction:
+      country_code: "AE"
+      tax_authority: "Federal Tax Authority"
+      authority_website: "https://www.tax.gov.ae/"
+    rates:
+      - rate: 5.0
+        effective_from: "2018-01-01"
+        description: "Standard rate"
+        is_standard_rate: true
+    category: "vat"
+    tags: ["uae", "vat", "standard"]
+    accounting_code: "VAT-OUTPUT"
+    gl_account_code: "220050"
+
+  # Saudi Arabia VAT
+  - code: "SA-VAT-STANDARD"
+    name: "Saudi Arabia Standard VAT Rate"
+    description: "Saudi Arabia standard VAT rate"
+    type: "vat"
+    jurisdiction:
+      country_code: "SA"
+      tax_authority: "Zakat, Tax and Customs Authority"
+      authority_website: "https://zatca.gov.sa/"
+    rates:
+      - rate: 15.0
+        effective_from: "2020-07-01"
+        description: "Standard rate (increased from 5%)"
+        is_standard_rate: true
+      - rate: 5.0
+        effective_from: "2018-01-01"
+        effective_to: "2020-06-30"
+        description: "Initial standard rate"
+        is_standard_rate: true
+    category: "vat"
+    tags: ["saudi-arabia", "vat", "standard"]
+    accounting_code: "VAT-OUTPUT"
+    gl_account_code: "220060"
+
+  # Pakistan Sales Tax
+  - code: "PK-SALES-STANDARD"
+    name: "Pakistan Standard Sales Tax Rate"
+    description: "Pakistan standard sales tax rate"
+    type: "sales"
+    jurisdiction:
+      country_code: "PK"
+      tax_authority: "Federal Board of Revenue"
+      authority_website: "https://fbr.gov.pk/"
+    rates:
+      - rate: 17.0
+        effective_from: "2019-07-01"
+        description: "Standard rate"
+        is_standard_rate: true
+    category: "sales"
+    tags: ["pakistan", "sales", "standard"]
+    accounting_code: "SALES-TAX-PAYABLE"
+    gl_account_code: "220070"
+
+# Example of a tax exemption
+exemptions:
+  - exemption_code: "NONPROFIT-EXEMPT"
+    description: "Tax exemption for registered non-profit organizations"
+    certificate_required: true
+    valid_from: "2000-01-01"
+    tax_types: ["sales", "vat"]
+    jurisdictions:
+      - country_code: "US"
+      - country_code: "CA"
+      - country_code: "GB"
+    metadata:
+      certificate_types: ["501(c)(3)", "Charity Commission"]
+      notes: "Must provide valid tax exemption certificate"
+
+  - exemption_code: "DIPLOMATIC-EXEMPT"
+    description: "Tax exemption for diplomatic missions and personnel"
+    certificate_required: true
+    valid_from: "2000-01-01"
+    tax_types: ["sales", "vat", "withholding"]
+    jurisdictions:
+      - country_code: "US"
+      - country_code: "GB"
+      - country_code: "FR"
+      - country_code: "DE"
+    metadata:
+      applicable_to: ["Embassies", "Consulates", "Diplomatic Staff"]
+      notes: "Requires valid diplomatic ID or tax exemption certificate"
