@@ -9,9 +9,10 @@
   },
   "dependencies": {
     "@vuelidate/core": "^2.0.3",
-    "@vuelidate/validators": "^2.0.3",
+    "@vuelidate/validators": "^2.0.4",
     "axios": "^1.4.0",
     "date-fns": "^2.30.0",
+    "dayjs": "^1.11.13",
     "file-saver": "^2.0.5",
     "jspdf": "^3.0.1",
     "jspdf-autotable": "^5.0.2",
@@ -23,6 +24,7 @@
     "vue-router": "^4.2.4",
     "vue-toast-notification": "^3.0.0",
     "vue-toastification": "^2.0.0-rc.5",
+    "vuex": "^4.0.2",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {

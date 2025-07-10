@@ -3,10 +3,29 @@
 **A Comprehensive Enterprise Financial Management Solution by Paksa IT Solutions**
 
 [![License: Proprietary](https://img.shields.io/badge/License-Proprietary-blue.svg)](https://paksa.com.pk)
+[![Documentation](https://img.shields.io/badge/Documentation-Read%20the%20docs-blue)](https://paksa.com/docs)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-blue)](https://python.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.104.1-009688?logo=fastapi)](https://fastapi.tiangolo.com)
+[![Vue.js](https://img.shields.io/badge/Vue.js-3.x-4FC08D?logo=vuedotjs)](https://vuejs.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-4169E1?logo=postgresql)](https://www.postgresql.org/)
+[![CI/CD](https://github.com/paksaitsolutions/PaksaFinancialSystem/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/paksaitsolutions/PaksaFinancialSystem/actions)
+
+[![License: Proprietary](https://img.shields.io/badge/License-Proprietary-blue.svg)](https://paksa.com.pk)
 [![Python](https://img.shields.io/badge/Python-3.9%2B-blue)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104.1-009688?logo=fastapi)](https://fastapi.tiangolo.com)
 [![Vue.js](https://img.shields.io/badge/Vue.js-3.x-4FC08D?logo=vuedotjs)](https://vuejs.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-4169E1?logo=postgresql)](https://www.postgresql.org/)
+
+## 📚 Documentation
+
+Explore our comprehensive documentation to get started with the Paksa Financial System:
+
+- [**User Guide**](docs/user_guide.md) - Learn how to use the system's features and functionality.
+- [**API Documentation**](docs/api/overview.md) - Reference for integrating with our RESTful API.
+- [**Developer Documentation**](docs/developer.md) - Setup, architecture, and contribution guidelines.
+- [**Architecture**](docs/architecture.md) - System design and technical architecture overview.
+- [**Implementation Plan**](docs/implementation_plan.md) - Roadmap and development progress.
+- [**BI Dashboard Specs**](docs/BI_DASHBOARD_SPECS.md) - Specifications for business intelligence dashboards.
 
 ## 🌟 Overview
 
@@ -163,21 +182,34 @@ For detailed documentation, please refer to:
 
 ## 🤝 Contributing
 
-We welcome contributions from the community. Please read our [Contributing Guidelines](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
+We welcome contributions from the community! Please read our [Contributing Guidelines](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md) for details on our development process.
+
+## 🐛 Reporting Issues
+
+If you encounter any issues, please [open an issue](https://github.com/paksaitsolutions/PaksaFinancialSystem/issues) on GitHub.
 
 ## 📄 License
 
-This project is proprietary and confidential. All rights reserved © 2025 Paksa IT Solutions.
+This project is proprietary software. All rights reserved by Paksa IT Solutions.
 
 ## 📞 Contact
 
-For inquiries, please contact us at [info@paksa.com.pk](mailto:info@paksa.com.pk) or visit our website at [https://paksa.com.pk](https://paksa.com.pk)
+- **Website:** [www.paksa.com.pk](https://www.paksa.com.pk)
+- **Email:** [info@paksa.com.pk](mailto:info@paksa.com.pk)
+- **Support:** [support@paksa.com.pk](mailto:support@paksa.com.pk)
+- **Sales:** [sales@paksa.com.pk](mailto:sales@paksa.com.pk)
+
+## 🌐 Connect With Us
+
+[![Twitter](https://img.shields.io/twitter/url?label=Follow%20%40PaksaIT&style=social&url=https%3A%2F%2Ftwitter.com%2FPaksaIT)](https://twitter.com/PaksaIT)
+[![LinkedIn](https://img.shields.io/badge/Connect-LinkedIn-0077B5?style=flat&logo=linkedin)](https://www.linkedin.com/company/paksa-it-solutions) or visit our website at [https://paksa.com.pk](https://paksa.com.pk)
 
 ---
 
 <div align="center">
   Made with ❤️ by <a href="https://paksa.com.pk">Paksa IT Solutions</a>
 </div>
+
 passlib[bcrypt]==1.7.4
 python-multipart==0.0.6
 sqlalchemy==2.0.23

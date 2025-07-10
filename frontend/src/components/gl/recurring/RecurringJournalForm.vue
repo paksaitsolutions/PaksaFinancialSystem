@@ -316,6 +316,19 @@
 <script setup lang="ts">
 import { ref, computed, reactive, watch, onMounted, defineProps, defineEmits, withDefaults } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useVuelidate } from '@vuelidate/core';
+import { required, minLength, maxLength, numeric, requiredIf, helpers } from '@vuelidate/validators';
+import dayjs from 'dayjs';
+import type { 
+  RecurrenceFrequency, 
+  RecurrenceEndType, 
+  RecurringJournalStatus,
+  RecurringJournal,
+  RecurringJournalCreate,
+  RecurringJournalUpdate,
+  RecurringJournalTemplate
+} from '@/types/gl/recurringJournal';
+import type { JournalEntryItem } from '@/types/gl/journalEntry';
 import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
 import { useToast } from 'vue-toastification';
@@ -355,6 +368,62 @@ export type { JournalEntryItem };
 
 type EndType = 'never' | 'on_date' | 'after_occurrences';
 type FrequencyType = 'daily' | 'weekly' | 'monthly' | 'yearly' | 'custom';
+
+// Frequency options for the form
+const frequencyOptions = [
+  { value: 'daily', text: 'Daily', description: 'Every day', defaultInterval: 1 },
+  { value: 'weekly', text: 'Weekly', description: 'Every week', defaultInterval: 1 },
+  { value: 'biweekly', text: 'Bi-weekly', description: 'Every 2 weeks', defaultInterval: 2 },
+  { value: 'monthly', text: 'Monthly', description: 'Every month', defaultInterval: 1 },
+  { value: 'quarterly', text: 'Quarterly', description: 'Every 3 months', defaultInterval: 3 },
+  { value: 'semi_annually', text: 'Semi-annually', description: 'Every 6 months', defaultInterval: 6 },
+  { value: 'annually', text: 'Annually', description: 'Every year', defaultInterval: 1 },
+  { value: 'custom', text: 'Custom', description: 'Custom interval', defaultInterval: 1 }
+] as const;
+
+// Status options for the form
+const statusOptions = [
+  { value: 'active', text: 'Active' },
+  { value: 'paused', text: 'Paused' },
+  { value: 'completed', text: 'Completed' },
+  { value: 'cancelled', text: 'Cancelled' }
+] as const;
+
+// Day of week options for weekly scheduling
+const dayOfWeekOptions = [
+  { value: 0, text: 'Sunday' },
+  { value: 1, text: 'Monday' },
+  { value: 2, text: 'Tuesday' },
+  { value: 3, text: 'Wednesday' },
+  { value: 4, text: 'Thursday' },
+  { value: 5, text: 'Friday' },
+  { value: 6, text: 'Saturday' }
+] as const;
+
+// Month options for annual scheduling
+const monthOptions = [
+  { value: 0, text: 'January' },
+  { value: 1, text: 'February' },
+  { value: 2, text: 'March' },
+  { value: 3, text: 'April' },
+  { value: 4, text: 'May' },
+  { value: 5, text: 'June' },
+  { value: 6, text: 'July' },
+  { value: 7, text: 'August' },
+  { value: 8, text: 'September' },
+  { value: 9, text: 'October' },
+  { value: 10, text: 'November' },
+  { value: 11, text: 'December' }
+] as const;
+
+// Week of month options for monthly scheduling
+const weekOfMonthOptions = [
+  { value: 'first', text: 'First' },
+  { value: 'second', text: 'Second' },
+  { value: 'third', text: 'Third' },
+  { value: 'fourth', text: 'Fourth' },
+  { value: 'last', text: 'Last' }
+] as const;
 
 // Define FrequencyOption interface
 interface FrequencyOption {
@@ -457,6 +526,7 @@ export interface FormData {
 const props = withDefaults(defineProps<{
   journalId?: string;
   isEdit?: boolean;
+  initialData?: Partial<RecurringJournal>;
   initialData?: Partial<FormData>;
   loading?: boolean;
   saving?: boolean;
@@ -480,17 +550,28 @@ const emit = defineEmits<{
   (e: 'update:form-valid', isValid: boolean): void;
 }>();
 
-// Form validation rules using Vuelidate's helpers.withMessage for i18n
+// Form validation rules
 const { t } = useI18n();
 const store = useStore();
 const router = useRouter();
 const toast = useToast();
-  };
 
+const rules = computed(() => {
+  const { t } = useI18n();
+  
+  // Custom validators
+  const validDate = (value: string) => !value || dayjs(value).isValid();
+  const futureDate = (value: string) => !value || dayjs(value).isAfter(dayjs());
+  const minValue = (min: number) => (value: number) => value >= min;
+  const maxValue = (max: number) => (value: number) => value <= max;
+  
   return {
     name: {
-      required: withMessage(t('validation.required', { field: t('gl.recurring_journals.fields.name') }), required),
-      minLength: withMessage(
+      required: helpers.withMessage(
+        t('validation.required', { field: t('gl.recurring_journals.fields.name') }), 
+        required
+      ),
+      minLength: helpers.withMessage(
         t('validation.min_length', { field: t('gl.recurring_journals.fields.name'), min: 3 }),
         minLength(3)
       ),
@@ -583,8 +664,14 @@ const toast = useToast();
     },
     template: {
       journal_date: {
-        required: helpers.withMessage(t('validation.required', { field: t('gl.journal_entries.fields.journal_date') }), required),
-        validDate: helpers.withMessage(t('validation.invalid_date'), (value: string) => !value || dayjs(value).isValid())
+        required: helpers.withMessage(
+          t('validation.required', { field: t('gl.journal_entries.fields.journal_date') }), 
+          required
+        ),
+        validDate: helpers.withMessage(
+          t('validation.invalid_date'), 
+          validDate
+        )
       },
       reference: {
         required: helpers.withMessage(t('validation.required', { field: t('gl.journal_entries.fields.reference') }), required),
