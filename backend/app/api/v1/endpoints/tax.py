@@ -584,5 +584,321 @@ async def delete_tax_rule(
             detail="An error occurred while deleting the tax rule"
         )
 
-# Similar endpoints for TaxExemption CRUD operations would be implemented here
-# Following the same pattern as the tax rules endpoints
+# Tax Exemption Endpoints
+
+@router.get("/exemptions", response_model=PaginatedResponse[TaxExemptionResponse])
+async def list_tax_exemptions(
+    request: Request,
+    tax_type: Optional[TaxType] = None,
+    country_code: Optional[str] = None,
+    state_code: Optional[str] = None,
+    is_active: Optional[bool] = None,
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(20, ge=1, le=100, description="Items per page"),
+    current_user: User = Depends(get_current_active_user)
+):
+    """
+    List tax exemptions with filtering and pagination.
+    
+    This endpoint allows filtering tax exemptions by various criteria such as tax type,
+    jurisdiction, and active status. Results are paginated for easier consumption.
+    """
+    try:
+        # In a real implementation, you would query the database here
+        # This is a simplified example
+        from ....crud.tax_exemption import tax_exemption
+        from ....core.tax.tax_exemption_service import TaxExemptionService
+        
+        db = request.app.state.db
+        service = TaxExemptionService(db)
+        
+        # Get paginated results
+        skip = (page - 1) * page_size
+        
+        # Get available exemptions based on filters
+        exemptions = service.get_available_exemptions(
+            tax_type=tax_type.value if tax_type else None,
+            country_code=country_code,
+            state_code=state_code,
+            company_id=str(current_user.company_id) if hasattr(current_user, 'company_id') else None,
+            skip=skip,
+            limit=page_size
+        )
+        
+        # Get total count for pagination
+        total = len(exemptions)  # In a real implementation, you would get the total count from the database
+        
+        # Convert to response models
+        items = [
+            TaxExemptionResponse(
+                id=str(item.id),
+                exemption_code=item.exemption_code,
+                description=item.description,
+                certificate_required=item.certificate_required,
+                valid_from=item.valid_from,
+                valid_to=item.valid_to,
+                tax_types=item.tax_types,
+                jurisdictions=item.jurisdictions,
+                metadata=item.metadata,
+                is_active=item.is_active,
+                created_at=item.created_at,
+                updated_at=item.updated_at,
+                created_by=str(item.created_by),
+                updated_by=str(item.updated_by) if item.updated_by else None
+            ) for item in exemptions
+        ]
+        
+        return PaginatedResponse(
+            items=items,
+            total=total,
+            page=page,
+            page_size=page_size
+        )
+        
+    except Exception as e:
+        logger.error(f"Error listing tax exemptions: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error retrieving tax exemptions"
+        )
+
+@router.get("/exemptions/{exemption_id}", response_model=TaxExemptionResponse)
+async def get_tax_exemption(
+    request: Request,
+    exemption_id: str,
+    current_user: User = Depends(get_current_active_user)
+):
+    """
+    Get a specific tax exemption by its ID.
+    
+    This endpoint retrieves detailed information about a specific tax exemption,
+    including its validity period and applicable jurisdictions.
+    """
+    try:
+        from ....crud.tax_exemption import tax_exemption
+        from ....core.tax.tax_exemption_service import TaxExemptionService
+        
+        db = request.app.state.db
+        service = TaxExemptionService(db)
+        
+        # In a real implementation, you would get the exemption from the database
+        exemption = tax_exemption.get(db, id=exemption_id)
+        if not exemption:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Tax exemption not found"
+            )
+            
+        # Check if user has permission to view this exemption
+        if (hasattr(current_user, 'company_id') and 
+            exemption.company_id and 
+            str(exemption.company_id) != str(current_user.company_id)):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to access this tax exemption"
+            )
+            
+        return TaxExemptionResponse(
+            id=str(exemption.id),
+            exemption_code=exemption.exemption_code,
+            description=exemption.description,
+            certificate_required=exemption.certificate_required,
+            valid_from=exemption.valid_from,
+            valid_to=exemption.valid_to,
+            tax_types=exemption.tax_types,
+            jurisdictions=exemption.jurisdictions,
+            metadata=exemption.metadata,
+            is_active=exemption.is_active,
+            created_at=exemption.created_at,
+            updated_at=exemption.updated_at,
+            created_by=str(exemption.created_by),
+            updated_by=str(exemption.updated_by) if exemption.updated_by else None
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error retrieving tax exemption: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error retrieving tax exemption"
+        )
+
+@router.post("/exemptions", response_model=TaxExemptionResponse, status_code=status.HTTP_201_CREATED)
+@role_required(["admin", "finance_manager"])
+async def create_tax_exemption(
+    request: Request,
+    exemption_data: TaxExemptionCreate,
+    current_user: User = Depends(get_current_active_user)
+):
+    """
+    Create a new tax exemption.
+    
+    This endpoint allows administrators to define new tax exemptions with specific
+    validity periods, applicable tax types, and jurisdictions.
+    """
+    try:
+        from ....crud.tax_exemption import tax_exemption
+        from ....core.tax.tax_exemption_service import TaxExemptionService
+        
+        db = request.app.state.db
+        service = TaxExemptionService(db)
+        
+        # Add company ID if the user is associated with a company
+        if hasattr(current_user, 'company_id') and current_user.company_id:
+            exemption_data.company_id = current_user.company_id
+            
+        # Create the exemption
+        exemption = service.create_exemption(
+            exemption_in=exemption_data,
+            created_by=str(current_user.id)
+        )
+        
+        return TaxExemptionResponse(
+            id=str(exemption.id),
+            exemption_code=exemption.exemption_code,
+            description=exemption.description,
+            certificate_required=exemption.certificate_required,
+            valid_from=exemption.valid_from,
+            valid_to=exemption.valid_to,
+            tax_types=exemption.tax_types,
+            jurisdictions=exemption.jurisdictions,
+            metadata=exemption.metadata,
+            is_active=exemption.is_active,
+            created_at=exemption.created_at,
+            updated_at=exemption.updated_at,
+            created_by=str(exemption.created_by),
+            updated_by=str(exemption.updated_by) if exemption.updated_by else None
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating tax exemption: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error creating tax exemption"
+        )
+
+@router.put("/exemptions/{exemption_id}", response_model=TaxExemptionResponse)
+@role_required(["admin", "finance_manager"])
+async def update_tax_exemption(
+    request: Request,
+    exemption_id: str,
+    exemption_data: TaxExemptionUpdate,
+    current_user: User = Depends(get_current_active_user)
+):
+    """
+    Update an existing tax exemption.
+    
+    This endpoint allows updating the details of an existing tax exemption,
+    such as its description, validity period, and applicable tax types.
+    """
+    try:
+        from ....crud.tax_exemption import tax_exemption
+        from ....core.tax.tax_exemption_service import TaxExemptionService
+        
+        db = request.app.state.db
+        service = TaxExemptionService(db)
+        
+        # Get the existing exemption
+        existing = tax_exemption.get(db, id=exemption_id)
+        if not existing:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Tax exemption not found"
+            )
+            
+        # Check if user has permission to update this exemption
+        if (hasattr(current_user, 'company_id') and 
+            existing.company_id and 
+            str(existing.company_id) != str(current_user.company_id)):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to update this tax exemption"
+            )
+            
+        # Update the exemption
+        updated = service.update_exemption(
+            exemption_id=exemption_id,
+            exemption_in=exemption_data,
+            updated_by=str(current_user.id)
+        )
+        
+        return TaxExemptionResponse(
+            id=str(updated.id),
+            exemption_code=updated.exemption_code,
+            description=updated.description,
+            certificate_required=updated.certificate_required,
+            valid_from=updated.valid_from,
+            valid_to=updated.valid_to,
+            tax_types=updated.tax_types,
+            jurisdictions=updated.jurisdictions,
+            metadata=updated.metadata,
+            is_active=updated.is_active,
+            created_at=updated.created_at,
+            updated_at=updated.updated_at,
+            created_by=str(updated.created_by),
+            updated_by=str(updated.updated_by) if updated.updated_by else None
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating tax exemption: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error updating tax exemption"
+        )
+
+@router.delete("/exemptions/{exemption_id}", status_code=status.HTTP_204_NO_CONTENT)
+@role_required(["admin", "finance_manager"])
+async def delete_tax_exemption(
+    request: Request,
+    exemption_id: str,
+    current_user: User = Depends(get_current_active_user)
+):
+    """
+    Delete a tax exemption.
+    
+    This endpoint allows administrators to delete an existing tax exemption.
+    In a production environment, you might want to implement soft delete
+    or archive functionality instead of permanent deletion.
+    """
+    try:
+        from ....crud.tax_exemption import tax_exemption
+        from ....core.tax.tax_exemption_service import TaxExemptionService
+        
+        db = request.app.state.db
+        service = TaxExemptionService(db)
+        
+        # Get the existing exemption
+        existing = tax_exemption.get(db, id=exemption_id)
+        if not existing:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Tax exemption not found"
+            )
+            
+        # Check if user has permission to delete this exemption
+        if (hasattr(current_user, 'company_id') and 
+            existing.company_id and 
+            str(existing.company_id) != str(current_user.company_id)):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to delete this tax exemption"
+            )
+            
+        # Delete the exemption
+        service.delete_exemption(exemption_id=exemption_id)
+        
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting tax exemption: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error deleting tax exemption"
+        )

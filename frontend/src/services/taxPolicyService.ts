@@ -125,16 +125,100 @@ class TaxPolicyService {
     }
   }
   
-  // Tax Exemptions CRUD (similar to tax rules)
-  async getTaxExemptions(): Promise<PaginatedResponse<TaxExemption>> {
+  // Tax Exemptions CRUD
+  async getTaxExemptions(
+    params: {
+      search?: string;
+      taxTypes?: string[];
+      countryCode?: string;
+      stateCode?: string;
+      isActive?: boolean;
+      page?: number;
+      pageSize?: number;
+      sortBy?: string;
+      descending?: boolean;
+    } = {}
+  ): Promise<PaginatedResponse<TaxExemption>> {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/tax/exemptions`, {
+        params: {
+          ...params,
+          taxTypes: params.taxTypes?.join(','),
+        },
+        headers: authHeader()
+      });
+      return response.data;
+    } catch (error) {
+      this.handleError(error, 'Error fetching tax exemptions');
+      throw error;
+    }
+  }
+
+  async getTaxExemption(id: string): Promise<TaxExemption> {
     try {
       const response = await axios.get(
-        `${API_BASE_URL}/tax/exemptions`,
+        `${API_BASE_URL}/tax/exemptions/${id}`,
         { headers: authHeader() }
       );
       return response.data;
     } catch (error) {
-      this.handleError(error, 'Error fetching tax exemptions');
+      this.handleError(error, `Error fetching tax exemption ${id}`);
+      throw error;
+    }
+  }
+
+  async createTaxExemption(exemptionData: Omit<TaxExemption, 'id' | 'createdAt' | 'updatedAt' | 'createdBy' | 'updatedBy'>): Promise<TaxExemption> {
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/tax/exemptions`,
+        exemptionData,
+        { headers: authHeader() }
+      );
+      return response.data;
+    } catch (error) {
+      this.handleError(error, 'Error creating tax exemption');
+      throw error;
+    }
+  }
+
+  async updateTaxExemption(id: string, exemptionData: Partial<Omit<TaxExemption, 'id' | 'createdAt' | 'updatedAt' | 'createdBy' | 'updatedBy'>>): Promise<TaxExemption> {
+    try {
+      const response = await axios.put(
+        `${API_BASE_URL}/tax/exemptions/${id}`,
+        exemptionData,
+        { headers: authHeader() }
+      );
+      return response.data;
+    } catch (error) {
+      this.handleError(error, `Error updating tax exemption ${id}`);
+      throw error;
+    }
+  }
+
+  async deleteTaxExemption(id: string): Promise<void> {
+    try {
+      await axios.delete(
+        `${API_BASE_URL}/tax/exemptions/${id}`,
+        { headers: authHeader() }
+      );
+    } catch (error) {
+      this.handleError(error, `Error deleting tax exemption ${id}`);
+      throw error;
+    }
+  }
+
+  async validateExemptionCode(code: string, id?: string): Promise<boolean> {
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/tax/exemptions/validate-code`,
+        {
+          params: { code, id },
+          headers: authHeader()
+        }
+      );
+      return response.data.valid;
+    } catch (error) {
+      this.handleError(error, 'Error validating exemption code');
       throw error;
     }
   }

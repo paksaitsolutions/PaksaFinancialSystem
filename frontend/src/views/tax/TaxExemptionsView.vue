@@ -13,6 +13,7 @@
         <v-btn
           color="primary"
           prepend-icon="mdi-plus"
+          :loading="loading"
           @click="showCreateDialog = true"
         >
           New Exemption
@@ -22,6 +23,7 @@
           class="ml-2"
           prepend-icon="mdi-cog"
           to="/finance/tax/policy"
+          :disabled="loading"
         >
           Tax Rules
         </v-btn>
@@ -39,8 +41,10 @@
               variant="outlined"
               hide-details
               clearable
+              :disabled="loading"
               prepend-inner-icon="mdi-magnify"
-              @update:model-value="loadTaxExemptions"
+              @update:model-value="debouncedLoadTaxExemptions"
+              @keyup.enter="loadTaxExemptions"
             />
           </v-col>
           <v-col cols="12" sm="6" md="3">
@@ -53,6 +57,7 @@
               density="comfortable"
               variant="outlined"
               hide-details
+              :disabled="loading"
               multiple
               chips
               clearable
@@ -63,6 +68,7 @@
                   v-if="index < 2"
                   size="small"
                   class="mr-2"
+                  :color="getTaxTypeColor(item.raw.type)"
                 >
                   {{ item.title }}
                 </v-chip>
@@ -85,6 +91,7 @@
               density="comfortable"
               variant="outlined"
               hide-details
+              :disabled="loading"
               clearable
               @update:model-value="onCountryChange"
             />
@@ -99,6 +106,7 @@
               density="comfortable"
               variant="outlined"
               hide-details
+              :disabled="loading"
               clearable
               @update:model-value="loadTaxExemptions"
             />
@@ -107,16 +115,41 @@
 
         <v-data-table
           :headers="headers"
-          :items="taxExemptions.items"
+          :items="exemptions"
+          :items-per-page="pagination.itemsPerPage"
+          :page="pagination.page"
+          :items-length="totalItems"
           :loading="loading"
-          :items-per-page="filters.pageSize"
-          :page="filters.page"
-          :items-length="taxExemptions.total"
-          :server-items-length="taxExemptions.total"
+          :loading-text="loading ? 'Loading tax exemptions...' : 'No data available'"
+          :footer-props="{
+            'items-per-page-options': [10, 25, 50, 100],
+            'show-current-page': true,
+            'show-first-last-page': true
+          }"
+          class="elevation-1"
           @update:options="onTableOptionsChange"
         >
           <template #item.exemptionCode="{ item }">
-            <span class="font-weight-medium">{{ item.raw.exemptionCode }}</span>
+            <v-tooltip location="top">
+              <template #activator="{ props }">
+                <span 
+                  v-bind="props"
+                  class="font-weight-medium d-inline-flex align-center"
+                  :class="{ 'text-primary': isExemptionActive(item.raw) }"
+                >
+                  {{ item.raw.exemptionCode }}
+                  <v-icon 
+                    v-if="isExemptionActive(item.raw)" 
+                    color="success" 
+                    size="small" 
+                    class="ml-1"
+                  >
+                    mdi-check-circle
+                  </v-icon>
+                </span>
+              </template>
+              <span>{{ isExemptionActive(item.raw) ? 'Active' : 'Inactive' }}</span>
+            </v-tooltip>
           </template>
 
           <template #item.description="{ item }">
@@ -206,7 +239,7 @@
     <!-- Create/Edit Dialog -->
     <TaxExemptionFormDialog
       v-model="showCreateDialog"
-      :exemption="editingExemption"
+      :exemption="selectedExemption"
       :countries="countries"
       :states="states"
       :tax-types="availableTaxTypes"
@@ -218,7 +251,7 @@
     <ConfirmDialog
       v-model="showDeleteDialog"
       title="Delete Tax Exemption"
-      :message="`Are you sure you want to delete the exemption '${deletingExemption?.exemptionCode}'?`"
+      :message="`Are you sure you want to delete the exemption '${selectedExemption?.exemptionCode}'?`"
       confirm-text="Delete"
       confirm-color="error"
       @confirm="deleteExemption"
@@ -227,170 +260,298 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useToast } from 'vue-toastification';
-import { VDataTable } from 'vuetify/labs/VDataTable';
+import { taxPolicyService } from '@/services/taxPolicyService';
+import { debounce } from 'lodash-es';
 import PageHeader from '@/components/layout/PageHeader.vue';
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue';
 import TaxExemptionFormDialog from '@/components/tax/TaxExemptionFormDialog.vue';
-import { taxPolicyService } from '@/services/taxPolicyService';
-import type { TaxExemption, TaxType } from '@/types/tax';
-import { format } from 'date-fns';
+import type { TaxExemption } from '@/types/tax';
 
 const router = useRouter();
 const toast = useToast();
 
-// Data
+// State
+const exemptions = ref<TaxExemption[]>([]);
 const loading = ref(false);
-const taxExemptions = ref<{ items: TaxExemption[]; total: number }>({ items: [], total: 0 });
+const showCreateDialog = ref(false);
+const showDeleteDialog = ref(false);
+const selectedExemption = ref<TaxExemption | null>(null);
+const deletingId = ref<string | null>(null);
+
+// Filter state
 const filters = ref({
   search: '',
   taxTypes: [] as string[],
-  countryCode: '',
-  stateCode: '',
-  page: 1,
-  pageSize: 10,
-  sortBy: 'exemptionCode',
-  sortOrder: 'asc' as 'asc' | 'desc',
+  countryCode: null as string | null,
+  stateCode: null as string | null,
+  isActive: true as boolean | null
 });
 
-// Form dialogs
-const showCreateDialog = ref(false);
-const editingExemption = ref<TaxExemption | null>(null);
-const showDeleteDialog = ref(false);
-const deletingExemption = ref<TaxExemption | null>(null);
+// Pagination state
+const pagination = ref({
+  page: 1,
+  itemsPerPage: 10,
+  totalItems: 0,
+  sortBy: 'createdAt',
+  descending: true
+});
 
-// Available tax types for filtering
-const availableTaxTypes = [
-  { type: 'sales', name: 'Sales Tax' },
-  { type: 'vat', name: 'VAT' },
-  { type: 'gst', name: 'GST' },
-  { type: 'income', name: 'Income Tax' },
-  { type: 'withholding', name: 'Withholding Tax' },
-  { type: 'excise', name: 'Excise Tax' },
-  { type: 'custom', name: 'Custom Tax' },
-];
-
-// TODO: Replace with actual country/state data from an API or i18n
-const countries = [
+// Countries and states data - consider moving to a shared constants file
+const countries = ref([
   { code: 'US', name: 'United States' },
-  { code: 'GB', name: 'United Kingdom' },
   { code: 'CA', name: 'Canada' },
-  { code: 'AU', name: 'Australia' },
-  { code: 'DE', name: 'Germany' },
-  { code: 'FR', name: 'France' },
+  { code: 'GB', name: 'United Kingdom' },
   { code: 'PK', name: 'Pakistan' },
   { code: 'SA', name: 'Saudi Arabia' },
   { code: 'AE', name: 'United Arab Emirates' },
+  { code: 'IN', name: 'India' },
+  { code: 'CN', name: 'China' },
+  { code: 'JP', name: 'Japan' },
+  { code: 'KR', name: 'South Korea' },
+  { code: 'FR', name: 'France' },
+  { code: 'DE', name: 'Germany' },
+  { code: 'IT', name: 'Italy' },
+  { code: 'ES', name: 'Spain' }
+]);
+
+// US States as an example - consider a more comprehensive solution
+const usStates = [
+  { code: 'AL', name: 'Alabama' }, { code: 'AK', name: 'Alaska' }, { code: 'AZ', name: 'Arizona' },
+  { code: 'AR', name: 'Arkansas' }, { code: 'CA', name: 'California' }, { code: 'CO', name: 'Colorado' },
+  // Add more states as needed
 ];
 
-const states = ref<{ code: string; name: string }[]>([]);
+const states = ref<Array<{code: string; name: string}>>([]);
 
-// Table headers
+const availableTaxTypes = ref([
+  { type: 'sales', name: 'Sales Tax' },
+  { type: 'vat', name: 'VAT' },
+  { type: 'gst', name: 'GST' },
+  { type: 'withholding', name: 'Withholding Tax' },
+  { type: 'income', name: 'Income Tax' },
+  { type: 'excise', name: 'Excise Tax' },
+  { type: 'custom', name: 'Custom Tax' }
+]);
+
 const headers = [
-  { title: 'Exemption Code', key: 'exemptionCode', sortable: true },
-  { title: 'Description', key: 'description', sortable: true },
-  { title: 'Tax Types', key: 'taxTypes', sortable: false },
-  { title: 'Certificate Required', key: 'certificateRequired', sortable: true, align: 'center' },
-  { title: 'Validity', key: 'validity', sortable: true },
-  { title: 'Status', key: 'status', sortable: true },
-  { title: 'Actions', key: 'actions', sortable: false, align: 'end' },
+  { 
+    title: 'Exemption Code', 
+    key: 'exemptionCode', 
+    sortable: true,
+    width: '15%'
+  },
+  { 
+    title: 'Description', 
+    key: 'description', 
+    sortable: true,
+    width: '25%'
+  },
+  { 
+    title: 'Tax Types', 
+    key: 'taxTypes', 
+    sortable: false,
+    width: '20%'
+  },
+  { 
+    title: 'Valid From', 
+    key: 'validFrom', 
+    sortable: true,
+    width: '10%'
+  },
+  { 
+    title: 'Valid To', 
+    key: 'validTo', 
+    sortable: true,
+    width: '10%'
+  },
+  { 
+    title: 'Status', 
+    key: 'status', 
+    sortable: true,
+    width: '10%',
+    align: 'center'
+  },
+  { 
+    title: 'Actions', 
+    key: 'actions', 
+    sortable: false, 
+    align: 'end',
+    width: '10%'
+  }
 ];
+
+// Debounced search
+const debouncedLoadTaxExemptions = debounce(loadTaxExemptions, 500);
 
 // Computed
 const isExemptionActive = (exemption: TaxExemption): boolean => {
-  const now = new Date();
+  if (!exemption) return false;
+  const today = new Date();
   const validFrom = new Date(exemption.validFrom);
   const validTo = exemption.validTo ? new Date(exemption.validTo) : null;
   
-  return validFrom <= now && (!validTo || validTo >= now);
+  return validFrom <= today && (!validTo || validTo >= today);
 };
 
-// Methods
-const loadTaxExemptions = async () => {
+// Format tax types for display
+const formatTaxTypes = (types: string[]): string => {
+  if (!types || types.length === 0) return '—';
+  return types.map(type => {
+    const found = availableTaxTypes.value.find(t => t.type === type);
+    return found ? found.name : type;
+  }).join(', ');
+};
+
+// Get color for tax type badge
+const getTaxTypeColor = (type: string): string => {
+  const colors: Record<string, string> = {
+    sales: 'blue',
+    vat: 'green',
+    gst: 'teal',
+    withholding: 'orange',
+    income: 'purple',
+    excise: 'red',
+    custom: 'indigo'
+  };
+  return colors[type] || 'grey';
+};
+
+// Format date for display
+const formatDate = (dateString: string): string => {
+  if (!dateString) return '—';
   try {
-    loading.value = true;
-    const response = await taxPolicyService.getTaxExemptions({
-      search: filters.value.search,
-      taxTypes: filters.value.taxTypes,
-      countryCode: filters.value.countryCode,
-      stateCode: filters.value.stateCode,
-      page: filters.value.page,
-      pageSize: filters.value.pageSize,
-      sortBy: filters.value.sortBy,
-      sortOrder: filters.value.sortOrder,
-    });
-    taxExemptions.value = response;
-  } catch (error) {
-    console.error('Failed to load tax exemptions:', error);
-    toast.error('Failed to load tax exemptions');
-  } finally {
-    loading.value = false;
+    return new Date(dateString).toLocaleDateString();
+  } catch (e) {
+    return '—';
   }
 };
 
-const onCountryChange = async (countryCode: string) => {
+// Get status text for exemption
+const getStatusText = (exemption: TaxExemption): string => {
+  if (!isExemptionActive(exemption)) return 'Inactive';
+  if (exemption.validTo) {
+    const daysLeft = Math.ceil((new Date(exemption.validTo).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+    if (daysLeft <= 7) return 'Expiring';
+  }
+  return 'Active';
+};
+
+// Get status color for exemption
+const getStatusColor = (exemption: TaxExemption): string => {
+  if (!isExemptionActive(exemption)) return 'grey';
+  if (exemption.validTo) {
+    const daysLeft = Math.ceil((new Date(exemption.validTo).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+    if (daysLeft <= 7) return 'orange';
+  }
+  return 'success';
+};
+
+// Load tax exemptions with proper typing
+const loadTaxExemptions = debounce(async () => {
+  try {
+    loading.value = true;
+    
+    // Build query parameters
+    const params: Record<string, any> = {
+      page: pagination.value.page,
+      limit: pagination.value.itemsPerPage,
+      sortBy: pagination.value.sortBy,
+      sortOrder: pagination.value.descending ? 'desc' : 'asc',
+      ...(filters.value.search && { search: filters.value.search }),
+      ...(filters.value.taxTypes?.length && { taxTypes: filters.value.taxTypes }),
+      ...(filters.value.countryCode && { countryCode: filters.value.countryCode }),
+      ...(filters.value.stateCode && { stateCode: filters.value.stateCode }),
+    };
+
+    // Only include isActive in params if it's not null
+    if (filters.value.isActive !== null) {
+      params.isActive = filters.value.isActive;
+    }
+
+    // Make API call
+    const response = await taxPolicyService.getTaxExemptions(params);
+    
+    // Update state with response data
+    exemptions.value = response.data || [];
+    pagination.value.totalItems = response.meta?.total || 0;
+  } catch (error) {
+    console.error('Error loading tax exemptions:', error);
+    toast.error('Failed to load tax exemptions. Please try again.');
+  } finally {
+    loading.value = false;
+  }
+}, 300);
+
+const onCountryChange = (countryCode: string | null) => {
   // Reset state when country changes
-  filters.value.stateCode = '';
+  filters.value.stateCode = null;
   
   // Load states for the selected country
-  // In a real app, this would be an API call
   if (countryCode === 'US') {
-    states.value = [
-      { code: 'CA', name: 'California' },
-      { code: 'NY', name: 'New York' },
-      { code: 'TX', name: 'Texas' },
-    ];
+    states.value = usStates;
   } else if (countryCode === 'CA') {
     states.value = [
       { code: 'ON', name: 'Ontario' },
       { code: 'QC', name: 'Quebec' },
       { code: 'BC', name: 'British Columbia' },
+      { code: 'AB', name: 'Alberta' },
+      { code: 'MB', name: 'Manitoba' }
+    ];
+  } else if (countryCode === 'GB') {
+    states.value = [
+      { code: 'ENG', name: 'England' },
+      { code: 'SCT', name: 'Scotland' },
+      { code: 'WLS', name: 'Wales' },
+      { code: 'NIR', name: 'Northern Ireland' }
     ];
   } else {
     states.value = [];
   }
   
-  await loadTaxExemptions();
+  loadTaxExemptions();
 };
 
-const onTableOptionsChange = ({ page, itemsPerPage, sortBy }: any) => {
-  filters.value.page = page;
-  filters.value.pageSize = itemsPerPage;
+const onTableOptionsChange = (options: any) => {
+  if (options.page !== undefined) pagination.value.page = options.page;
+  if (options.itemsPerPage !== undefined) pagination.value.itemsPerPage = options.itemsPerPage;
   
-  if (sortBy && sortBy.length > 0) {
-    filters.value.sortBy = sortBy[0].key;
-    filters.value.sortOrder = sortBy[0].order;
+  if (options.sortBy?.length) {
+    pagination.value.sortBy = options.sortBy[0].key;
+    pagination.value.descending = options.sortDesc?.[0] ?? false;
   }
   
   loadTaxExemptions();
 };
 
 const editExemption = (exemption: TaxExemption) => {
-  editingExemption.value = { ...exemption };
+  selectedExemption.value = { ...exemption };
   showCreateDialog.value = true;
 };
 
 const confirmDelete = (exemption: TaxExemption) => {
-  deletingExemption.value = exemption;
+  selectedExemption.value = exemption;
   showDeleteDialog.value = true;
 };
 
 const deleteExemption = async () => {
-  if (!deletingExemption.value) return;
+  if (!selectedExemption.value) return;
   
   try {
-    // TODO: Implement delete exemption in service
-    // await taxPolicyService.deleteTaxExemption(deletingExemption.value.id);
+    deletingId.value = selectedExemption.value.id;
+    await taxPolicyService.deleteTaxExemption(selectedExemption.value.id);
+    
     toast.success('Tax exemption deleted successfully');
-    loadTaxExemptions();
-  } catch (error) {
-    console.error('Failed to delete tax exemption:', error);
-    toast.error('Failed to delete tax exemption');
-  } finally {
+    await loadTaxExemptions();
     showDeleteDialog.value = false;
-    deletingExemption.value = null;
+    selectedExemption.value = null;
+  } catch (error) {
+    console.error('Error deleting tax exemption:', error);
+    toast.error('Failed to delete tax exemption. Please try again.');
+  } finally {
+    deletingId.value = null;
   }
 };
 
@@ -400,8 +561,48 @@ const onExemptionSaved = (savedExemption: TaxExemption) => {
 };
 
 const onDialogClosed = () => {
-  editingExemption.value = null;
+  selectedExemption.value = null;
 };
+
+// Watch for filter changes with debouncing
+const debouncedFilterChange = debounce(() => {
+  pagination.value.page = 1; // Reset to first page when filters change
+  loadTaxExemptions();
+}, 500);
+
+watch(
+  () => [
+    filters.value.search,
+    filters.value.taxTypes,
+    filters.value.countryCode,
+    filters.value.stateCode,
+    filters.value.isActive
+  ],
+  () => {
+    debouncedFilterChange();
+  },
+  { deep: true }
+);
+
+// Watch for pagination changes with debouncing
+const debouncedPaginationChange = debounce(() => {
+  if (!loading.value) {
+    loadTaxExemptions();
+  }
+}, 300);
+
+watch(
+  [
+    () => pagination.value.page,
+    () => pagination.value.itemsPerPage,
+    () => pagination.value.sortBy,
+    () => pagination.value.descending
+  ],
+  () => {
+    debouncedPaginationChange();
+  },
+  { immediate: true }
+);
 
 // Utility methods
 const formatTaxType = (type: string) => {
@@ -410,12 +611,24 @@ const formatTaxType = (type: string) => {
     vat: 'VAT',
     gst: 'GST',
     income: 'Income Tax',
-    withholding: 'Withholding',
+    withholding: 'Withholding Tax',
     excise: 'Excise Tax',
-    custom: 'Custom',
+    custom: 'Custom Tax'
   };
   return typeMap[type] || type;
 };
+
+// Export the utility functions so they can be used in the template
+const utils = {
+  formatTaxType,
+  formatDate,
+  getStatusText,
+  getStatusColor
+};
+
+defineExpose({
+  utils
+});
 
 const getTaxTypeColor = (type: string) => {
   const colorMap: Record<string, string> = {
