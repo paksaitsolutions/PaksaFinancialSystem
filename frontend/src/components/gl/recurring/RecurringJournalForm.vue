@@ -1,767 +1,552 @@
-<template>
-  <v-form
-    ref="form"
-    v-model="formValid"
-    lazy-validation
-    @submit.prevent="handleSubmit"
-  >
-    <v-card>
-      <v-card-title class="d-flex align-center">
-        <v-icon left>mdi-calendar-refresh</v-icon>
-        {{ isEdit ? $t('gl.recurring_journals.edit_title') : $t('gl.recurring_journals.create_title') }}
-      </v-card-title>
-
-      <v-card-text>
-        <v-stepper v-model="step" vertical>
-          <v-stepper-step
-            :complete="step > 1"
-            step="1"
-            :editable="editable"
-            :rules="[() => !v$.name.$error]"
-          >
-            {{ $t('gl.recurring_journals.steps.basic_info') }}
-            <small v-if="step > 1">{{ formData.name }}</small>
-          </v-stepper-step>
-
-          <v-stepper-content step="1">
-            <v-row>
-              <v-col cols="12" md="8">
-                <v-text-field
-                  v-model="formData.name"
-                  :label="$t('gl.recurring_journals.fields.name')"
-                  :error-messages="getErrorMessages(v$.name)"
-                  :disabled="!editable"
-                  required
-                  outlined
-                  dense
-                  @input="v$.name.$touch()"
-                  @blur="v$.name.$touch()"
-                ></v-text-field>
-              </v-col>
-
-              <v-col cols="12" md="4">
-                <v-select
-                  v-model="formData.status"
-                  :items="statusOptions"
-                  :label="$t('gl.recurring_journals.fields.status')"
-                  :error-messages="getErrorMessages(v$.status)"
-                  :disabled="!editable || isEdit"
-                  item-text="text"
-                  item-value="value"
-                  outlined
-                  dense
-                  @input="v$.status.$touch()"
-                  @blur="v$.status.$touch()"
-                ></v-select>
-              </v-col>
-
-              <v-col cols="12">
-                <v-textarea
-                  v-model="formData.description"
-                  :label="$t('gl.recurring_journals.fields.description')"
-                  :error-messages="getErrorMessages(v$.description)"
-                  :disabled="!editable"
-                  rows="2"
-                  outlined
-                  auto-grow
-                  @input="v$.description.$touch()"
-                  @blur="v$.description.$touch()"
-                ></v-textarea>
-              </v-col>
-            </v-row>
-
-            <v-btn
-              color="primary"
-              @click="step = 2"
-              :disabled="v$.$invalid"
-            >
-              {{ $t('common.next') }}
-              <v-icon right>mdi-arrow-right</v-icon>
-            </v-btn>
-          </v-stepper-content>
-
-          <v-stepper-step
-            :complete="step > 2"
-            step="2"
-            :editable="editable"
-            :rules="[() => !v$.frequency.$error && !v$.start_date.$error]"
-          >
-            {{ $t('gl.recurring_journals.steps.schedule') }}
-            <small v-if="step > 2">
-              {{ formatScheduleSummary }}
-            </small>
-          </v-stepper-step>
-
-          <v-stepper-content step="2">
-            <v-row>
-              <v-col cols="12" md="6">
-                <v-select
-                  v-model="formData.frequency"
-                  :items="frequencyOptions"
-                  :label="$t('gl.recurring_journals.fields.frequency')"
-                  :error-messages="getErrorMessages(v$.frequency)"
-                  :disabled="!editable"
-                  item-text="text"
-                  item-value="value"
-                  outlined
-                  dense
-                  @change="onFrequencyChange"
-                ></v-select>
-              </v-col>
-
-              <v-col cols="12" md="6" v-if="showInterval">
-                <v-text-field
-                  v-model.number="formData.interval"
-                  :label="$t('gl.recurring_journals.fields.interval')"
-                  :error-messages="getErrorMessages(v$.interval)"
-                  :disabled="!editable"
-                  type="number"
-                  min="1"
-                  outlined
-                  dense
-                  @input="v$.interval.$touch()"
-                  @blur="v$.interval.$touch()"
-                ></v-text-field>
-              </v-col>
-
-              <v-col cols="12" md="6">
-                <v-menu
-                  v-model="startDateMenu"
-                  :close-on-content-click="false"
-                  :nudge-right="40"
-                  transition="scale-transition"
-                  offset-y
-                  min-width="auto"
-                >
-                  <template v-slot:activator="{ on, attrs }">
-                    <v-text-field
-                      v-model="formData.start_date"
-                      :label="$t('gl.recurring_journals.fields.start_date')"
-                      :error-messages="getErrorMessages(v$.start_date)"
-                      :disabled="!editable"
-                      prepend-inner-icon="mdi-calendar"
-                      readonly
-                      outlined
-                      dense
-                      v-bind="attrs"
-                      v-on="on"
-                      @input="v$.start_date.$touch()"
-                      @blur="v$.start_date.$touch()"
-                    ></v-text-field>
-                  </template>
-                  <v-date-picker
-                    v-model="formData.start_date"
-                    @input="startDateMenu = false"
-                    :min="$dayjs().format('YYYY-MM-DD')"
-                  ></v-date-picker>
-                </v-menu>
-              </v-col>
-
-              <v-col cols="12" md="6">
-                <v-select
-                  v-model="formData.end_type"
-                  :items="endTypeOptions"
-                  :label="$t('gl.recurring_journals.fields.end_type')"
-                  :error-messages="getErrorMessages(v$.end_type)"
-                  :disabled="!editable"
-                  item-text="text"
-                  item-value="value"
-                  outlined
-                  dense
-                  @change="onEndTypeChange"
-                ></v-select>
-              </v-col>
-
-              <v-col cols="12" md="6" v-if="formData.end_type === 'on_date'">
-                <v-menu
-                  v-model="endDateMenu"
-                  :close-on-content-click="false"
-                  :nudge-right="40"
-                  transition="scale-transition"
-                  offset-y
-                  min-width="auto"
-                >
-                  <template v-slot:activator="{ on, attrs }">
-                    <v-text-field
-                      v-model="formData.end_date"
-                      :label="$t('gl.recurring_journals.fields.end_date')"
-                      :error-messages="getErrorMessages(v$.end_date)"
-                      :disabled="!editable"
-                      prepend-inner-icon="mdi-calendar"
-                      readonly
-                      outlined
-                      dense
-                      v-bind="attrs"
-                      v-on="on"
-                      @input="v$.end_date.$touch()"
-                      @blur="v$.end_date.$touch()"
-                    ></v-text-field>
-                  </template>
-                  <v-date-picker
-                    v-model="formData.end_date"
-                    @input="endDateMenu = false"
-                    :min="formData.start_date || $dayjs().format('YYYY-MM-DD')"
-                  ></v-date-picker>
-                </v-menu>
-              </v-col>
-
-              <v-col cols="12" md="6" v-if="formData.end_type === 'after_occurrences'">
-                <v-text-field
-                  v-model.number="formData.end_after_occurrences"
-                  :label="$t('gl.recurring_journals.fields.end_after_occurrences')"
-                  :error-messages="getErrorMessages(v$.end_after_occurrences)"
-                  :disabled="!editable"
-                  type="number"
-                  min="1"
-                  outlined
-                  dense
-                  @input="v$.end_after_occurrences.$touch()"
-                  @blur="v$.end_after_occurrences.$touch()"
-                ></v-text-field>
-              </v-col>
-            </v-row>
-
-            <v-alert
-              v-if="nextOccurrences.length > 0"
-              type="info"
-              outlined
-              dense
-              class="mb-4"
-            >
-              <div class="d-flex align-center">
-                <v-icon left>mdi-information</v-icon>
-                <span>{{ $t('gl.recurring_journals.next_occurrences') }}:</span>
-              </div>
-              <v-chip
-                v-for="(date, index) in nextOccurrences"
-                :key="index"
-                small
-                class="ma-1"
-                :color="isPastDate(date) ? 'grey lighten-2' : 'primary lighten-4'"
-              >
-                {{ formatReadableDate(date) }}
-              </v-chip>
-              <span v-if="nextOccurrences.length >= 5" class="caption ml-2">
-                {{ $t('gl.recurring_journals.and_more', { count: nextOccurrences.length - 5 }) }}
-              </span>
-            </v-alert>
-
-            <div class="d-flex justify-space-between">
-              <v-btn text @click="step = 1">
-                <v-icon left>mdi-arrow-left</v-icon>
-                {{ $t('common.back') }}
-              </v-btn>
-              <v-btn
-                color="primary"
-                @click="step = 3"
-                :disabled="v$.$invalid"
-              >
-                {{ $t('common.next') }}
-                <v-icon right>mdi-arrow-right</v-icon>
-              </v-btn>
-            </div>
-          </v-stepper-content>
-
-          <v-stepper-step
-            :complete="step > 3"
-            step="3"
-            :editable="editable"
-            :rules="[() => !v$.template.journal_date.$error && !v$.template.reference.$error && !v$.template.items.$error]"
-          >
-            {{ $t('gl.recurring_journals.steps.journal_template') }}
-            <small v-if="step > 3">{{ journalTemplateSummary }}</small>
-          </v-stepper-step>
-
-          <v-stepper-content step="3">
-            <journal-entry-form
-              ref="journalForm"
-              v-model="formData.template"
-              :editable="editable"
-              :show-actions="false"
-              @valid="onJournalFormValid"
-            />
-
-            <div class="d-flex justify-space-between mt-4">
-              <v-btn text @click="step = 2">
-                <v-icon left>mdi-arrow-left</v-icon>
-                {{ $t('common.back') }}
-              </v-btn>
-              <div>
-                <v-btn
-                  text
-                  @click="saveDraft"
-                  :loading="saving"
-                  class="mr-2"
-                  v-if="!isEdit"
-                >
-                  {{ $t('common.save_draft') }}
-                </v-btn>
-                <v-btn
-                  color="primary"
-                  @click="handleSubmit"
-                  :loading="saving"
-                  :disabled="!journalFormValid || v$.$invalid"
-                >
-                  {{ isEdit ? $t('common.save') : $t('common.create') }}
-                </v-btn>
-              </div>
-            </div>
-          </v-stepper-content>
-        </v-stepper>
-      </v-card-text>
-    </v-card>
-  </v-form>
-</template>
-
 <script setup lang="ts">
-import { ref, computed, reactive, watch, onMounted, defineProps, defineEmits, withDefaults } from 'vue';
+import { ref, computed, reactive, watch, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useVuelidate } from '@vuelidate/core';
-import { required, minLength, maxLength, numeric, requiredIf, helpers } from '@vuelidate/validators';
+import { required, requiredIf, numeric, minValue, minLength, helpers } from '@vuelidate/validators';
 import dayjs from 'dayjs';
-import type { 
-  RecurrenceFrequency, 
-  RecurrenceEndType, 
-  RecurringJournalStatus,
-  RecurringJournal,
-  RecurringJournalCreate,
-  RecurringJournalUpdate,
-  RecurringJournalTemplate
-} from '@/types/gl/recurringJournal';
-import type { JournalEntryItem } from '@/types/gl/journalEntry';
-import { useRouter } from 'vue-router';
-import { useStore } from 'vuex';
-import { useToast } from 'vue-toastification';
-import useVuelidate from '@vuelidate/core';
-import type { ValidationRule } from '@vuelidate/core';
-import { 
-  required, 
-  minLength, 
-  maxLength, 
-  minValue, 
-  maxValue, 
-  numeric, 
-  helpers 
-} from '@vuelidate/validators';
-import dayjs from 'dayjs';
-import customParseFormat from 'dayjs/plugin/customParseFormat';
-import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
-import JournalEntryForm from '@/components/gl/JournalEntryForm.vue';
+import utc from 'dayjs/plugin/utc';
+import { useToast } from 'primevue/usetoast';
+import type { JournalEntryItem as BaseJournalEntryItem } from '@/types/gl/journalEntry';
 
-// Configure dayjs plugins
-dayjs.extend(customParseFormat);
+declare module '@vuelidate/core' {
+  interface ValidationArgs {
+    $lazy?: boolean;
+    $autoDirty?: boolean;
+    $stopPropagation?: boolean;
+    $each?: any;
+    $invalid?: boolean;
+    $errors?: any[];
+    $error?: boolean;
+  }
+}
+
+// Extend dayjs with plugins
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-// Import types
-import type { 
-  RecurrenceFrequency, 
-  RecurrenceEndType, 
-  RecurringJournalStatus as RJStatus,
-  RecurringJournal as RecurringJournalType,
-  JournalEntryItem
-} from '@/types/gl/recurringJournal';
+// Component props
+const props = defineProps<{
+  journal?: RecurringJournalTemplate;
+  journalId?: string; // Add missing prop
+  isEdit?: boolean;
+  loading?: boolean;
+  saving?: boolean;
+  readonly?: boolean;
+  modelValue?: boolean; // Add missing prop for v-model support
+}>();
 
-// Re-export types for external use
-export type { JournalEntryItem };
+// Component emits
+const emit = defineEmits<{
+  (e: 'save', journal: RecurringJournalTemplate): void;
+  (e: 'update:modelValue', value: boolean): void;
+  (e: 'cancel'): void;
+  (e: 'saved'): void; // Add missing event
+  (e: 'update:journal', value: RecurringJournalTemplate): void; // Add missing event
+}>();
 
-type EndType = 'never' | 'on_date' | 'after_occurrences';
-type FrequencyType = 'daily' | 'weekly' | 'monthly' | 'yearly' | 'custom';
+// Types
+type RecurrenceFrequency = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly';
+type RecurrenceEndType = 'never' | 'on_date' | 'after_occurrences';
+type RecurringJournalStatus = 'draft' | 'active' | 'paused' | 'completed' | 'cancelled';
 
-// Frequency options for the form
-const frequencyOptions = [
-  { value: 'daily', text: 'Daily', description: 'Every day', defaultInterval: 1 },
-  { value: 'weekly', text: 'Weekly', description: 'Every week', defaultInterval: 1 },
-  { value: 'biweekly', text: 'Bi-weekly', description: 'Every 2 weeks', defaultInterval: 2 },
-  { value: 'monthly', text: 'Monthly', description: 'Every month', defaultInterval: 1 },
-  { value: 'quarterly', text: 'Quarterly', description: 'Every 3 months', defaultInterval: 3 },
-  { value: 'semi_annually', text: 'Semi-annually', description: 'Every 6 months', defaultInterval: 6 },
-  { value: 'annually', text: 'Annually', description: 'Every year', defaultInterval: 1 },
-  { value: 'custom', text: 'Custom', description: 'Custom interval', defaultInterval: 1 }
-] as const;
-
-// Status options for the form
-const statusOptions = [
-  { value: 'active', text: 'Active' },
-  { value: 'paused', text: 'Paused' },
-  { value: 'completed', text: 'Completed' },
-  { value: 'cancelled', text: 'Cancelled' }
-] as const;
-
-// Day of week options for weekly scheduling
-const dayOfWeekOptions = [
-  { value: 0, text: 'Sunday' },
-  { value: 1, text: 'Monday' },
-  { value: 2, text: 'Tuesday' },
-  { value: 3, text: 'Wednesday' },
-  { value: 4, text: 'Thursday' },
-  { value: 5, text: 'Friday' },
-  { value: 6, text: 'Saturday' }
-] as const;
-
-// Month options for annual scheduling
-const monthOptions = [
-  { value: 0, text: 'January' },
-  { value: 1, text: 'February' },
-  { value: 2, text: 'March' },
-  { value: 3, text: 'April' },
-  { value: 4, text: 'May' },
-  { value: 5, text: 'June' },
-  { value: 6, text: 'July' },
-  { value: 7, text: 'August' },
-  { value: 8, text: 'September' },
-  { value: 9, text: 'October' },
-  { value: 10, text: 'November' },
-  { value: 11, text: 'December' }
-] as const;
-
-// Week of month options for monthly scheduling
-const weekOfMonthOptions = [
-  { value: 'first', text: 'First' },
-  { value: 'second', text: 'Second' },
-  { value: 'third', text: 'Third' },
-  { value: 'fourth', text: 'Fourth' },
-  { value: 'last', text: 'Last' }
-] as const;
-
-// Define FrequencyOption interface
-interface FrequencyOption {
-  text: string;
-  value: RecurrenceFrequency;
+// Define the base journal entry item interface
+export interface BaseJournalEntryItem {
+  id: string;
+  account_id: string;
+  account_name: string;
   description: string;
+  amount: number;
+  type: 'debit' | 'credit';
+  cost_center_id?: string | null;
+  department_id?: string | null;
+  project_id?: string | null;
+  tax_rate_id?: string | null;
+  tax_amount?: number | null;
+  line_item_order: number;
+  currency?: string;
+  exchange_rate?: number;
+  metadata?: Record<string, any>;
 }
 
-// Define StatusOption interface
-interface StatusOption {
-  text: string;
-  value: string;
-  color: string;
+// Extend the base JournalEntryItem with form-specific properties
+interface JournalEntryItem extends Omit<BaseJournalEntryItem, 'type' | 'amount'> {
+  debit: number | null;
+  credit: number | null;
+  account_id: string; // Make account_id required
 }
 
-// Define WeeklyDayOption interface
-interface WeeklyDayOption {
-  text: string;
-  value: number;
-  abbr: string;
-}
-
-// Define MonthlyOption interface
-interface MonthlyOption {
-  text: string;
-  value: 'day' | 'first' | 'last' | 'weekday' | 'weekend_day';
-}
-
-// Define WeekdayOption interface
-interface WeekdayOption {
-  text: string;
-  value: number;
-  abbr: string;
-}
-
-// Define JournalEntryTemplate interface
-export interface JournalEntryTemplate {
+interface RecurringJournalTemplate {
   id?: string;
   name: string;
-  description?: string | null;
-  status: 'active' | 'inactive' | 'draft';
-  template_data: {
-    entry_date: string;
+  description: string;
+  frequency: RecurrenceFrequency;
+  interval: number;
+  start_date: string;
+  end_type: RecurrenceEndType;
+  end_date: string | null;
+  end_after_occurrences: number | null;
+  status: RecurringJournalStatus;
+  last_run_date: string | null;
+  next_run_date: string | null;
+  total_occurrences: number | null;
+  processed_occurrences: number;
+  template: {
+    description: string;
     reference: string;
-    currency: string;
-    exchange_rate: number;
-    memo?: string;
-    items: JournalEntryItem[];
+    journal_date: string;
+    entries: JournalEntryItem[];
   };
   created_at?: string;
   updated_at?: string;
   created_by?: string;
   updated_by?: string;
-  company_id?: string;
-  is_recurring: boolean;
-  recurring_settings?: RecurringSettings;
+  timezone?: string;
 }
 
-// Define RecurringSettings interface
-export interface RecurringSettings {
-  frequency: RecurrenceFrequency;
-  interval: number;
-  start_date: string;
-  end_type: EndType;
-  end_date?: string | null;
-  end_after_occurrences?: number | null;
-  week_days?: number[];
-  month_day?: number;
-  month_week?: number;
-  month_weekday?: number;
-  last_occurrence?: string | null;
-  next_occurrence?: string | null;
-  timezone: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-// Define form data interface
-export interface FormData {
-  id?: string;
+interface RecurringJournalForm {
   name: string;
   description: string;
-  status: 'active' | 'inactive' | 'draft';
   frequency: RecurrenceFrequency;
   interval: number;
   start_date: string;
-  end_type: EndType;
+  end_type: RecurrenceEndType;
   end_date: string | null;
   end_after_occurrences: number | null;
-  week_days: number[];
-  month_day: number | null;
-  month_week: number | null;
-  month_weekday: number | null;
-  timezone: string;
-  template: JournalEntryTemplate | null;
-  created_at?: string;
+  status: RecurringJournalStatus;
+  template: {
+    description: string;
+    reference: string;
+    journal_date: string;
+    entries: JournalEntryItem[];
+  };
+  timezone?: string;
 }
 
-// Component props
-const props = withDefaults(defineProps<{
-  journalId?: string;
-  isEdit?: boolean;
-  initialData?: Partial<RecurringJournal>;
-  initialData?: Partial<FormData>;
-  loading?: boolean;
-  saving?: boolean;
-  readonly?: boolean;
-  disabled?: boolean;
-}>(), {
-  isEdit: false,
-  loading: false,
-  saving: false,
-  readonly: false,
-  disabled: false
-});
-
-// Component emits
-const emit = defineEmits<{
-  (e: 'update:modelValue', value: Partial<FormData>): void;
-  (e: 'submit', value: FormData): void;
-  (e: 'cancel'): void;
-  (e: 'update:step', step: number): void;
-  (e: 'update:editable', editable: boolean): void;
-  (e: 'update:form-valid', isValid: boolean): void;
-}>();
-
-// Form validation rules
+// Composition API
 const { t } = useI18n();
-const store = useStore();
-const router = useRouter();
 const toast = useToast();
 
-const rules = computed(() => {
-  const { t } = useI18n();
-  
-  // Custom validators
-  const validDate = (value: string) => !value || dayjs(value).isValid();
-  const futureDate = (value: string) => !value || dayjs(value).isAfter(dayjs());
-  const minValue = (min: number) => (value: number) => value >= min;
-  const maxValue = (max: number) => (value: number) => value <= max;
-  
-  return {
-    name: {
-      required: helpers.withMessage(
-        t('validation.required', { field: t('gl.recurring_journals.fields.name') }), 
-        required
-      ),
-      minLength: helpers.withMessage(
-        t('validation.min_length', { field: t('gl.recurring_journals.fields.name'), min: 3 }),
-        minLength(3)
-      ),
-      maxLength: withMessage(
-        t('validation.max_length', { field: t('gl.recurring_journals.fields.name'), max: 100 }),
-        maxLength(100)
-      )
-    },
-    description: {
-      maxLength: withMessage(
-        t('validation.max_length', { field: t('gl.recurring_journals.fields.description'), max: 500 }),
-        maxLength(500)
-      )
-    },
-    frequency: {
-      required: withMessage(t('validation.required', { field: t('gl.recurring_journals.fields.frequency') }), required)
-    },
-    interval: {
-      required: withMessage(t('validation.required', { field: t('gl.recurring_journals.fields.interval') }), required),
-      minValue: withMessage(
-        t('validation.min_value', { field: t('gl.recurring_journals.fields.interval'), min: 1 }),
-        minValue(1)
-      ),
-      maxValue: withMessage(
-        t('validation.max_value', { field: t('gl.recurring_journals.fields.interval'), max: 366 }),
-        maxValue(366)
-      )
-    },
-    start_date: {
-      required: helpers.withMessage(t('validation.required', { field: t('gl.recurring_journals.fields.start_date') }), required),
-      validDate: helpers.withMessage(
-        t('validation.invalid_date'),
-        (value: string) => !value || dayjs(value).isValid()
-      )
-    },
-    end_date: {
-      required: withMessage(
-        t('validation.required_if', {
-          field: t('gl.recurring_journals.fields.end_date'),
-          other: t('gl.recurring_journals.fields.end_type'),
-          value: t('gl.recurring_journals.end_types.on_date')
-        }),
-        (value: string | null, siblings: any) => {
-          return siblings.end_type !== 'on_date' || !!value;
-        }
-      ),
-      isFutureDate: withMessage(
-        t('validation.future_date', { field: t('gl.recurring_journals.fields.end_date') }),
-        (value: string | null, siblings: any) => {
-          if (!value || siblings.end_type !== 'on_date') return true;
-          return new Date(value) > new Date();
-        }
-      ),
-      afterStartDate: withMessage(
-        t('validation.after_date', {
-          field: t('gl.recurring_journals.fields.end_date'),
-          other: t('gl.recurring_journals.fields.start_date')
-        }),
-        (value: string | null, siblings: any) => {
-          if (!value || !siblings.start_date || siblings.end_type !== 'on_date') return true;
-          return new Date(value) > new Date(siblings.start_date);
-        }
-      )
-    },
-    end_after_occurrences: {
-      required: withMessage(
-        t('validation.required_if', {
-          field: t('gl.recurring_journals.fields.end_after_occurrences'),
-          other: t('gl.recurring_journals.fields.end_type'),
-          value: t('gl.recurring_journals.end_types.after_occurrences')
-        }),
-        (value: number | null, siblings: any) => {
-          return siblings.end_type !== 'after_occurrences' || value !== null;
-        }
-      ),
-      minValue: withMessage(
-        t('validation.min_value', { field: t('gl.recurring_journals.fields.end_after_occurrences'), min: 1 }),
-        (value: number | null, siblings: any) => {
-          if (siblings.end_type !== 'after_occurrences' || value === null) return true;
-          return value >= 1;
-        }
-      ),
-      maxValue: withMessage(
-        t('validation.max_value', { field: t('gl.recurring_journals.fields.end_after_occurrences'), max: 999 }),
-        (value: number | null, siblings: any) => {
-          if (siblings.end_type !== 'after_occurrences' || value === null) return true;
-          return value <= 999;
-        }
-      )
-    },
-    template: {
-      journal_date: {
-        required: helpers.withMessage(
-          t('validation.required', { field: t('gl.journal_entries.fields.journal_date') }), 
-          required
-        ),
-        validDate: helpers.withMessage(
-          t('validation.invalid_date'), 
-          validDate
-        )
-      },
-      reference: {
-        required: helpers.withMessage(t('validation.required', { field: t('gl.journal_entries.fields.reference') }), required),
-        maxLength: helpers.withMessage(
-          t('validation.max_length', { field: t('gl.journal_entries.fields.reference'), max: 50 }),
-          maxLength(50)
-        )
-      },
-      memo: {
-        maxLength: helpers.withMessage(
-          t('validation.max_length', { field: t('gl.journal_entries.fields.memo'), max: 255 }),
-          maxLength(255)
-        )
-      },
-      items: {
-        required: helpers.withMessage(t('validation.required', { field: t('gl.journal_entries.fields.items') }), (items: JournalEntryItem[]) => items && items.length > 0),
-        minLength: helpers.withMessage(
-          t('validation.min_items', { field: t('gl.journal_entries.fields.items'), min: 2 }),
-          (items: JournalEntryItem[]) => items.length >= 2
-        ),
-        validItems: helpers.withMessage(
-          t('gl.journal_entries.validation.balanced_entries'),
-          (items: JournalEntryItem[]) => {
-            if (!items || items.length < 2) return false;
-          required: helpers.withMessage(t('validation.required', { field: t('gl.journal_entries.fields.reference') }), required),
-          maxLength: helpers.withMessage(
-            t('validation.max_length', { field: t('gl.journal_entries.fields.reference'), max: 50 }),
-            maxLength(50)
-          )
+// API functions (mocked - should be imported from service)
+const createRecurringJournal = async (data: RecurringJournalTemplate) => {
+  // Implementation should be in a service
+  console.log('Creating recurring journal:', data);
+  return Promise.resolve({ data: { ...data, id: 'new-id' } });
+};
+
+const updateRecurringJournal = async (id: string, data: RecurringJournalTemplate) => {
+  // Implementation should be in a service
+  console.log('Updating recurring journal:', id, data);
+  return Promise.resolve({ data: { ...data, id } });
+};
+
+// Form state with proper typing
+const form = reactive<RecurringJournalForm>({
+  name: '',
+  description: '',
+  frequency: 'monthly',
+  interval: 1,
+  start_date: dayjs().format('YYYY-MM-DD'),
+  end_type: 'never',
+  end_date: null,
+  end_after_occurrences: null,
+  status: 'draft',
+  template: {
+    description: '',
+    reference: '',
+    journal_date: dayjs().format('YYYY-MM-DD'),
+    entries: [
+      {
+        id: `entry-${Date.now()}-1`,
+        account_id: '',
+        account_name: '',
+        description: '',
+        debit: null,
+        credit: null,
+        amount: 0,
+        type: 'debit',
+        line_item_order: 1,
+        cost_center_id: null,
+        department_id: null,
+        project_id: null,
+        tax_rate_id: null,
+        tax_amount: null,
+        currency: 'USD',
+        exchange_rate: 1,
+        metadata: {}
+      }
+    ]
+  },
+  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+});
+
+// Form state
+const formValid = ref(false);
+const step = ref(1);
+const editable = computed(() => !props.readonly);
+const isFormDirty = ref(false);
+const generating = ref(false);
+const showReportDialog = ref(false);
+
+// Computed properties
+const totalDebit = computed((): number => {
+  return form.template.entries.reduce((sum: number, entry: JournalEntryItem) => {
+    return sum + (entry.debit || 0);
+  }, 0);
+});
+
+const totalCredit = computed((): number => {
+  return form.template.entries.reduce((sum: number, entry: JournalEntryItem) => {
+    return sum + (entry.credit || 0);
+  }, 0);
+});
+
+const isBalanced = computed((): boolean => {
+  return Math.abs(totalDebit.value - totalCredit.value) < 0.01; // Allow for floating point precision
+});
+
+// Next occurrence calculations
+const nextOccurrences = computed(() => {
+  if (form.start_date && form.frequency) {
+    return calculateNextOccurrences();
+  }
+  return [];
+});
+
+// Vuelidate setup with proper typing
+const rules = {
+  $autoDirty: true,
+  name: { required },
+  description: { required },
+  frequency: { required },
+  interval: {
+    required,
+    numeric,
+    minValue: minValue(1)
+  },
+  start_date: { required },
+  end_type: { required },
+  end_date: {
+    required: requiredIf((form: RecurringJournalForm) => form.end_type === 'on_date'),
+    validDate: (value: string | null) => {
+      if (!value) return true;
+      return !isPastDate(value);
+    }
+  },
+  end_after_occurrences: {
+    required: requiredIf((form: RecurringJournalForm) => form.end_type === 'after_occurrences'),
+    numeric,
+    minValue: minValue(1)
+  },
+  status: { required },
+  template: {
+    description: { required },
+    reference: { required },
+    journal_date: { required },
+    entries: {
+      required,
+      minLength: minLength(1),
+      $each: helpers.forEach({
+        account_id: { required },
+        description: { required },
+        debit: {
+          required: requiredIf((entry: JournalEntryItem) => !entry.credit || entry.credit <= 0),
+          validAmount: (value: number | null, siblings: { credit: number | null }) => {
+            if (value === null && siblings.credit === null) return false;
+            if (value !== null && siblings.credit !== null) return false;
+            if (value !== null && value < 0) return false;
+            return true;
+          }
         },
-        memo: {
-          maxLength: helpers.withMessage(
-            t('validation.max_length', { field: t('gl.journal_entries.fields.memo'), max: 255 }),
-            maxLength(255)
-          )
-        },
-        items: {
-          required: helpers.withMessage(t('validation.required', { field: t('gl.journal_entries.fields.items') }), (items: JournalEntryItem[]) => items && items.length > 0),
-          minLength: helpers.withMessage(
-            t('validation.min_items', { field: t('gl.journal_entries.fields.items'), min: 2 }),
-            (items: JournalEntryItem[]) => items.length >= 2
-          ),
-          validItems: helpers.withMessage(
-            t('gl.journal_entries.validation.balanced_entries'),
-            (items: JournalEntryItem[]) => {
-              if (!items || items.length < 2) return false;
-
-              const totalDebit = items
-                .filter(item => item.type === 'debit')
-                .reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
-
-              const totalCredit = items
-                .filter(item => item.type === 'credit')
-                .reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
-
-              return Math.abs(totalDebit - totalCredit) < 0.01;
-            }
-          ),
-          $each: helpers.forEach({ // Apply rules to each item in the array
-            account_id: {
-              required: helpers.withMessage(t('validation.required', { field: t('gl.journal_entries.fields.account') }), required)
-            },
-            amount: {
-              required: helpers.withMessage(t('validation.required', { field: t('gl.journal_entries.fields.amount') }), required),
-              numeric: helpers.withMessage(t('validation.numeric', { field: t('gl.journal_entries.fields.amount') }), numeric),
-              minValue: helpers.withMessage(t('validation.minValue', { field: t('gl.journal_entries.fields.amount'), min: 0.01 }), minValue(0.01))
-            },
-            description: {
-              maxLength: helpers.withMessage(
-                t('validation.max_length', { field: t('gl.journal_entries.fields.description'), max: 255 }),
-                maxLength(255)
-              )
-            }
-          })
+        credit: {
+          required: requiredIf((entry: JournalEntryItem) => !entry.debit || entry.debit <= 0),
+          validAmount: (value: number | null, siblings: { debit: number | null }) => {
+            if (value === null && siblings.debit === null) return false;
+            if (value !== null && siblings.debit !== null) return false;
+            if (value !== null && value < 0) return false;
+            return true;
+          }
         }
+      })
+    }
+  }
+};
+
+const v$ = useVuelidate(rules, form, { $autoDirty: true });
+
+// Custom validation rules
+const validEntry = (entry: JournalEntryItem) => {
+  return (entry.debit !== null && entry.debit > 0) || (entry.credit !== null && entry.credit > 0);
+};
+
+const validAccount = (entry: JournalEntryItem) => {
+  return !!entry.account_id;
+};
+
+const hasValidEntries = (entries: JournalEntryItem[]) => {
+  return entries.some(entry => validEntry(entry));
+};
+
+// Error message formatter
+const getErrorMessages = (errors: any[]): string => {
+  return errors.map(err => err.$message).join(', ');
+};
+
+// Form submission handler
+const submitForm = async () => {
+  const isValid = await v$.value.$validate();
+  if (!isValid) {
+    const errorMessages = [];
+    
+    // Collect all validation errors
+    if (v$.value.$errors.length) {
+      v$.value.$errors.forEach(error => {
+        errorMessages.push(`${error.$property}: ${error.$message}`);
+      });
+    }
+    
+    toast.error(`Please fix the following errors: ${errorMessages.join(', ')}`);
+    return;
+  }
+
+  try {
+    // Create a clean payload with only the necessary fields
+    const payload: RecurringJournalTemplate = {
+      ...form,
+      id: props.journalId || undefined,
+      template: {
+        ...form.template,
+        entries: form.template.entries.map((entry, index) => ({
+          ...entry,
+          amount: entry.debit || entry.credit || 0,
+          type: entry.debit ? 'debit' : 'credit',
+          line_item_order: index + 1,
+          // Ensure all required fields are included
+          account_name: entry.account_name || '',
+          description: entry.description || '',
+          cost_center_id: entry.cost_center_id || null,
+          department_id: entry.department_id || null,
+          project_id: entry.project_id || null,
+          tax_rate_id: entry.tax_rate_id || null,
+          tax_amount: entry.tax_amount || null,
+          currency: entry.currency || 'USD',
+          exchange_rate: entry.exchange_rate || 1,
+          metadata: entry.metadata || {}
+        }))
+      }
+    };
+
+    if (props.journalId) {
+      const response = await updateRecurringJournal(props.journalId, payload);
+      toast.success('Recurring journal updated successfully');
+      emit('update:journal', response.data);
+    } else {
+      const response = await createRecurringJournal(payload);
+      toast.success('Recurring journal created successfully');
+      emit('saved', response.data);
+    }
+    
+    emit('update:modelValue', false);
+  } catch (error) {
+    console.error('Error saving recurring journal:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Failed to save recurring journal';
+    toast.error(errorMessage);
+  }
+};
+
+// Add a new journal entry
+const addJournalEntry = () => {
+  const newEntry: JournalEntryItem = {
+    id: `entry-${Date.now()}-${form.template.entries.length}`,
+    account_id: '',
+    account_name: '',
+    description: '',
+    debit: null,
+    credit: null,
+    amount: 0,
+    type: 'debit',
+    line_item_order: form.template.entries.length + 1,
+    cost_center_id: null,
+    department_id: null,
+    project_id: null,
+    tax_rate_id: null,
+    tax_amount: null,
+    currency: 'USD',
+    exchange_rate: 1,
+    metadata: {}
+  };
+  form.template.entries.push(newEntry);
+  isFormDirty.value = true;
+};
+
+// Remove a journal entry
+const removeJournalEntry = (index: number) => {
+  if (form.template.entries.length > 1) {
+    form.template.entries.splice(index, 1);
+    isFormDirty.value = true;
+  } else {
+    toast.warning('At least one journal entry is required');
+  }
+};
+
+// Handle amount changes to ensure only one of debit/credit is set
+const handleAmountChange = (entry: JournalEntryItem, field: 'debit' | 'credit') => {
+  const value = parseFloat(entry[field] as any) || 0;
+  
+  if (field === 'debit' && value > 0) {
+    entry.credit = null;
+    entry.amount = value;
+    entry.type = 'debit';
+  } else if (field === 'credit' && value > 0) {
+    entry.debit = null;
+    entry.amount = value;
+    entry.type = 'credit';
+  } else {
+    // If value is 0 or empty, clear both
+    entry.debit = null;
+    entry.credit = null;
+    entry.amount = 0;
+    entry.type = 'debit';
+  }
+  
+  isFormDirty.value = true;
+};
+
+// Calculate next occurrences based on recurrence rules
+const calculateNextOccurrences = () => {
+  // Implementation should calculate next X occurrences based on frequency, interval, etc.
+  // This is a simplified version
+  const occurrences = [];
+  let currentDate = dayjs(form.start_date);
+  
+  for (let i = 0; i < 5; i++) { // Show next 5 occurrences
+    occurrences.push(currentDate.format('YYYY-MM-DD'));
+    
+    // Increment based on frequency
+    switch (form.frequency) {
+      case 'daily':
+        currentDate = currentDate.add(form.interval, 'day');
+        break;
+      case 'weekly':
+        currentDate = currentDate.add(form.interval, 'week');
+        break;
+      case 'monthly':
+        currentDate = currentDate.add(form.interval, 'month');
+        break;
+      case 'quarterly':
+        currentDate = currentDate.add(form.interval * 3, 'month');
+        break;
+      case 'yearly':
+        currentDate = currentDate.add(form.interval, 'year');
+        break;
+    }
+  }
+  
+  return occurrences;
+};
+
+// Check if a date is in the past
+const isPastDate = (dateString: string): boolean => {
+  return dayjs(dateString).isBefore(dayjs().startOf('day'));
+};
+
+// Initialize form when component is mounted or when journal prop changes
+watch(() => props.journal, (newJournal: RecurringJournalTemplate | undefined) => {
+  if (newJournal) {
+    Object.assign(form, {
+      ...newJournal,
+      // Ensure all required fields are set
+      template: {
+        ...newJournal.template,
+        entries: newJournal.template.entries.map(entry => ({
+          ...entry,
+          debit: entry.debit || null,
+          credit: entry.credit || null
+        }))
       }
     });
+    
+    // Recalculate next occurrences when journal is loaded
+    calculateNextOccurrences();
+  }
+}, { immediate: true });
 
-    const rules = computed(() => createRules(t));
-    const v$ = useVuelidate(rules, formData);
+// Watch for form changes to update dirty state
+watch(() => JSON.parse(JSON.stringify(form)), () => {
+  isFormDirty.value = true;
+}, { deep: true });
 
-    // Options for form dropdowns
-    // Explicitly type the array elements to match RecurrenceFrequency
-    const frequencyOptions = computed<Array<{ text: string; value: RecurrenceFrequency }>>(() => [
-      { text: t('gl.recurring_journals.frequencies.daily'), value: 'daily' },
-      { text: t('gl.recurring_journals.frequencies.weekly'), value: 'weekly' },
-      { text: t('gl.recurring_journals.frequencies.biweekly'), value: 'biweekly' },
-      { text: t('gl.recurring_journals.frequencies.monthly'), value: 'monthly' },
+// Watch for changes that affect next occurrences
+watch([
+  () => form.start_date,
+  () => form.frequency,
+  () => form.interval,
+  () => form.end_type,
+  () => form.end_date,
+  () => form.end_after_occurrences
+], calculateNextOccurrences);
+
+// Initialize next occurrences when component is mounted
+onMounted(() => {
+  calculateNextOccurrences();
+});
 </script>
 
 <style scoped>
-/* Add component-specific styles here if needed */
+.v-stepper {
+  background: transparent;
+  box-shadow: none;
+}
+
+.v-stepper__step {
+  padding: 12px 24px 12px 12px;
+}
+
+.v-stepper__step--complete {
+  background-color: rgba(var(--v-primary-base), 0.1);
+}
+
+.v-stepper__step--editable {
+  cursor: pointer;
+}
+
+.v-stepper__step--error {
+  border-left: 4px solid var(--v-error-base);
+}
+
+.v-stepper__content {
+  margin-left: 24px;
+  padding-left: 20px;
+  border-left: 1px dashed rgba(0, 0, 0, 0.12);
+}
+
+.v-stepper:not(.v-stepper--vertical) .v-stepper__label {
+  display: flex;
+  align-items: center;
+}
+
+.v-stepper__step__step {
+  margin-right: 12px;
+}
+
+.v-stepper__step small {
+  display: block;
+  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.6);
+  margin-top: 4px;
+  white-space: normal;
+  line-height: 1.2;
+}
+
+/* Responsive adjustments */
+@media (max-width: 960px) {
+  .v-stepper__step {
+    padding: 8px 16px 8px 8px;
+  }
+  
+  .v-stepper__content {
+    margin-left: 16px;
+    padding-left: 16px;
+  }
+}
 </style>

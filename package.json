@@ -1,6 +1,7 @@
 {
   "devDependencies": {
     "@types/node": "^24.0.10",
+    "@types/vue-i18n": "^7.0.0",
     "@vitejs/plugin-vue": "^6.0.0",
     "@vue/compiler-sfc": "^3.5.17"
   },

@@ -9,6 +9,7 @@ import SettingsView from '@/views/compliance/SettingsView.vue';
 // Financial Statements
 const FinancialStatementsView = () => import('@/views/accounting/gl/financial-statements/FinancialStatementsView.vue');
 const FinancialStatementTemplatesView = () => import('@/views/accounting/gl/financial-statement-templates/FinancialStatementTemplatesView.vue');
+const TrialBalanceView = () => import('@/views/gl/reports/TrialBalanceView.vue');
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -32,6 +33,12 @@ const routes: Array<RouteRecordRaw> = [
     name: 'FinancialStatementTemplates',
     component: FinancialStatementTemplatesView,
     meta: { requiresAuth: true, title: 'Financial Statement Templates' },
+  },
+  {
+    path: '/accounting/trial-balance',
+    name: 'TrialBalance',
+    component: TrialBalanceView,
+    meta: { requiresAuth: true, title: 'Trial Balance' },
   },
   // Compliance Routes
   {
