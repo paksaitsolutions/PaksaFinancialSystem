@@ -9,6 +9,16 @@ import SettingsView from '@/views/compliance/SettingsView.vue';
 // Financial Statements
 const FinancialStatementsView = () => import('@/views/accounting/gl/financial-statements/FinancialStatementsView.vue');
 const FinancialStatementTemplatesView = () => import('@/views/accounting/gl/financial-statement-templates/FinancialStatementTemplatesView.vue');
+// Accounts Receivable
+const InvoicesView = () => import('@/views/accounts-receivable/InvoicesView.vue');
+const InvoiceForm = () => import('@/views/accounts-receivable/InvoiceForm.vue');
+const ARDashboard = () => import('@/views/accounts-receivable/ARDashboard.vue');
+const InvoiceDetailView = () => import('@/views/accounts-receivable/InvoiceDetailView.vue');
+// Accounts Payable
+const BillsView = () => import('@/views/accounts-payable/BillsView.vue');
+const BillForm = () => import('@/views/accounts-payable/BillForm.vue');
+const APDashboard = () => import('@/views/accounts-payable/APDashboard.vue');
+const BillDetailView = () => import('@/views/accounts-payable/BillDetailView.vue');
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -69,6 +79,52 @@ const routes: Array<RouteRecordRaw> = [
     name: 'ComplianceSettings',
     component: SettingsView,
     meta: { requiresAuth: true, title: 'Compliance Settings' },
+  },
+  // Accounts Receivable Routes
+  {
+    path: '/accounts-receivable/invoices',
+    name: 'Invoices',
+    component: InvoicesView,
+    meta: { requiresAuth: true, title: 'Invoices' },
+  },
+  {
+    path: '/accounts-receivable/dashboard',
+    name: 'ARDashboard',
+    component: ARDashboard,
+    meta: { requiresAuth: true, title: 'AR Dashboard' },
+  },
+  {
+    path: '/accounts-receivable/invoices/:id',
+    name: 'InvoiceDetail',
+    component: InvoiceDetailView,
+    meta: { requiresAuth: true, title: 'Invoice Detail' },
+    props: true,
+  },
+  // Accounts Payable Routes
+  {
+    path: '/accounts-payable/bills',
+    name: 'Bills',
+    component: BillsView,
+    meta: { requiresAuth: true, title: 'Bills' },
+  },
+  {
+    path: '/accounts-payable/dashboard',
+    name: 'APDashboard',
+    component: APDashboard,
+    meta: { requiresAuth: true, title: 'AP Dashboard' },
+  },
+  {
+    path: '/accounts-payable/bills/:id',
+    name: 'BillDetail',
+    component: BillDetailView,
+    meta: { requiresAuth: true, title: 'Bill Detail' },
+    props: true,
+  },
+  // BI Dashboard Route
+  {
+    path: '/bi-dashboard',
+    name: 'BIDashboard',
+    component: () => import('@/views/accounting/bi/BIDashboardView.vue'),
   },
 ];
 

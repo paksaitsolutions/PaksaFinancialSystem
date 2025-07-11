@@ -379,3 +379,16 @@ class AssetValuationReportRequest(BaseModel):
     category_id: Optional[UUID] = Field(None, description="Filter by asset category")
     department: Optional[str] = Field(None, description="Filter by department")
     location: Optional[str] = Field(None, description="Filter by location")
+
+
+class FixedAssetsReport(BaseModel):
+    summary: dict
+
+
+class AssetDisposalRequest(BaseModel):
+    asset_id: str
+
+
+class AssetDisposalResult(BaseModel):
+    asset_id: str
+    status: str

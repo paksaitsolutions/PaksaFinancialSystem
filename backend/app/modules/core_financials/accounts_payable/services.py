@@ -77,6 +77,38 @@ class BillService:
             raise BillNotFoundException(str(bill_id))
         return bill
 
+    async def validate_three_way_match(self, bill_id: uuid.UUID, purchase_order_id: uuid.UUID, receipt_id: uuid.UUID) -> schemas.ThreeWayMatchResult:
+        """
+        Validates three-way match between bill, purchase order, and receipt.
+        Returns match result and list of mismatches.
+        """
+        # Fetch bill
+        bill = await self.db.get(models.Bill, bill_id)
+        if not bill:
+            raise InvalidBillOperationException("Bill not found.")
+        # Fetch purchase order (stub: replace with actual PO fetch)
+        purchase_order = None # TODO: Implement PO fetch
+        # Fetch receipt (stub: replace with actual receipt fetch)
+        receipt = None # TODO: Implement receipt fetch
+        mismatches = []
+        matched = True
+        # Example checks (expand as needed):
+        # 1. Vendor match
+        # 2. Amount match
+        # 3. Line items match
+        # For now, stub logic
+        if not purchase_order or not receipt:
+            matched = False
+            mismatches.append("Purchase order or receipt not found.")
+        # TODO: Add detailed matching logic
+        return schemas.ThreeWayMatchResult(
+            bill_id=bill_id,
+            purchase_order_id=purchase_order_id,
+            receipt_id=receipt_id,
+            matched=matched,
+            mismatches=mismatches if not matched else None
+        )
+
 class PaymentService:
     """Service for managing payments to vendors."""
     def __init__(self, db_session: AsyncSession):

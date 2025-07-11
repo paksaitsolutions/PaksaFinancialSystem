@@ -30,3 +30,11 @@ api_router.include_router(compliance_router, prefix="/compliance", tags=["compli
 # Include the Procurement endpoints
 from ...modules.extended_financials.procurement import router as procurement_router
 api_router.include_router(procurement_router, prefix="/procurement", tags=["procurement"])
+
+# Include the BI Reporting endpoints
+from app.modules.cross_cutting.bi_reporting.api.endpoints import router as bi_reporting_router
+api_router.include_router(bi_reporting_router)
+
+# Include the AI/ML endpoints
+from app.modules.cross_cutting.ai_ml.api.endpoints import router as ai_ml_router
+api_router.include_router(ai_ml_router)

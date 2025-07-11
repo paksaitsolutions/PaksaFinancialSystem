@@ -27,6 +27,34 @@ The Paksa Financial System is a comprehensive, AI-accelerated financial manageme
 - **Document Management System (DMS)**: Centralized/secure document storage, OCR search, e-signature.
 - **Advanced Financial Reporting & Consolidation**: Financial statement consolidation, M&A accounting, segment reporting.
 
+## IV. Implementation Status (July 2025)
+
+### Core Financial Modules
+- General Ledger (GL): CRUD endpoints and business logic implemented; multi-currency, budgeting, and consolidation pending.
+- Accounts Payable (AP): Vendor, bill, and payment endpoints implemented; reporting and advanced workflows pending.
+- Accounts Receivable (AR): Invoice, payment, credit note, and reporting endpoints implemented; dunning and dispute management pending.
+- Cash Management: Full CRUD, reporting, import, and health check endpoints implemented; forecasting and advanced reconciliation pending.
+- Fixed Assets: Asset, category, depreciation, maintenance endpoints implemented; disposal and reporting enhancements pending.
+- Payroll: Pay period, pay run, employee endpoints implemented; tax filings, benefits, and self-service portal pending.
+
+### Cross-Cutting & System-Wide Modules
+- BI & Reporting: Endpoints and dashboards pending.
+- AI/ML Integration: Not started.
+- Security & Internal Controls: Basic RBAC and audit logging present; advanced controls pending.
+- Compliance Management: Endpoints and reporting pending.
+- System Administration & Settings: Basic user/role management present; approval workflows pending.
+- Audit & Logging: Basic audit trails present; immutable logging enhancements pending.
+
+### Extended Financial & Operational Modules
+- Project Accounting, Inventory Management, Procurement, Treasury Management, DMS, Advanced Reporting: Scaffolding present; endpoints and business logic pending.
+
+### DevOps & Architecture
+- Docker, CI/CD, monitoring, and logging configured; further automation and scaling in progress.
+
+### Testing & Documentation
+- Unit and integration tests present for core modules; coverage for new endpoints needed.
+- Documentation updated for implemented modules; further updates required as new features are added.
+
 ## Technical Architecture
 
 ### Backend

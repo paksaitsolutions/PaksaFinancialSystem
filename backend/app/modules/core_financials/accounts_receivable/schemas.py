@@ -62,6 +62,8 @@ class InvoiceBase(BaseSchema):
     po_number: Optional[str] = None
     terms: Optional[str] = None
     notes: Optional[str] = None
+    dunning_schedule: Optional[dict] = None
+    dispute_status: Optional[str] = None
     invoice_items: List[InvoiceItemCreate]
 
 
@@ -208,6 +210,10 @@ class PaymentSummary(BaseSchema):
     payment_methods: dict[str, Decimal]  # method -> amount
 
 
+class ARReport(BaseModel):
+    summary: dict
+
+
 # Enums for filtering
 class InvoiceStatusFilter(str, Enum):
     """Invoice status filter options."""
@@ -257,3 +263,26 @@ class PaymentWebhookData(BaseModel):
     transaction_id: Optional[str] = None
     processed_at: datetime
     metadata: Optional[dict] = None
+
+
+class DunningSchedule(BaseModel):
+    steps: List[dict] # Each step: {"date": date, "action": str, "status": str}
+
+
+class DunningAction(BaseModel):
+    invoice_id: UUID
+    action: str
+    date: date
+
+
+class DisputeAction(BaseModel):
+    invoice_id: UUID
+    action: str
+    reason: Optional[str] = None
+    date: Optional[date] = None
+
+
+class DisputeResult(BaseModel):
+    invoice_id: UUID
+    status: str
+    resolution: Optional[str] = None

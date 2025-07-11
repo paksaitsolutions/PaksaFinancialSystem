@@ -390,3 +390,11 @@ class BankAccountStatementResponse(BaseModel):
     
     class Config:
         orm_mode = True
+
+
+class CashForecast(BaseModel):
+    forecast: list
+
+
+class EnhancedReconciliationReport(BaseModel):
+    details: list

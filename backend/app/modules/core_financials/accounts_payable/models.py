@@ -58,6 +58,8 @@ class Bill(Base):
     currency: Mapped[str] = mapped_column(String(3), nullable=False, default='USD')
     status: Mapped[BillStatus] = mapped_column(SQLEnum(BillStatus), nullable=False, default=BillStatus.DRAFT)
     notes: Mapped[Optional[str]] = mapped_column(Text)
+    purchase_order_id: Mapped[Optional[uuid.UUID]] = mapped_column(PG_UUID(as_uuid=True), nullable=True) # For three-way matching
+    receipt_id: Mapped[Optional[uuid.UUID]] = mapped_column(PG_UUID(as_uuid=True), nullable=True) # For three-way matching
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 

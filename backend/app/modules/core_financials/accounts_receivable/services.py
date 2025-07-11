@@ -124,6 +124,26 @@ class InvoiceService:
     async def void_invoice(self, **kwargs):
         pass
 
+    async def update_dunning_schedule(self, invoice_id: UUID, dunning_action: schemas.DunningAction) -> schemas.DunningSchedule:
+        invoice = await self.db.get(models.Invoice, invoice_id)
+        if not invoice:
+            raise NotFoundError("Invoice not found.")
+        schedule = invoice.dunning_schedule or {"steps": []}
+        schedule["steps"].append({"date": str(dunning_action.date), "action": dunning_action.action, "status": "pending"})
+        invoice.dunning_schedule = schedule
+        await self.db.commit()
+        await self.db.refresh(invoice)
+        return schemas.DunningSchedule(steps=schedule["steps"])
+
+    async def update_dispute_status(self, invoice_id: UUID, dispute_action: schemas.DisputeAction) -> schemas.DisputeResult:
+        invoice = await self.db.get(models.Invoice, invoice_id)
+        if not invoice:
+            raise NotFoundError("Invoice not found.")
+        invoice.dispute_status = dispute_action.action
+        await self.db.commit()
+        await self.db.refresh(invoice)
+        return schemas.DisputeResult(invoice_id=invoice_id, status=invoice.dispute_status, resolution=dispute_action.reason)
+
 
 class PaymentService:
     def __init__(self, db: AsyncSession):

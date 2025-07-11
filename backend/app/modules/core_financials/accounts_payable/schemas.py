@@ -69,6 +69,8 @@ class BillBase(BaseModel):
     due_date: date
     currency: str = Field('USD', max_length=3)
     notes: Optional[str] = None
+    purchase_order_id: Optional[uuid.UUID] = None
+    receipt_id: Optional[uuid.UUID] = None
 
 class BillCreate(BillBase):
     line_items: List[BillLineItemCreate]
@@ -134,3 +136,22 @@ class Payment(PaymentBase):
 
     class Config:
         orm_mode = True
+
+class ThreeWayMatchRequest(BaseModel):
+    bill_id: uuid.UUID
+    purchase_order_id: uuid.UUID
+    receipt_id: uuid.UUID
+
+class ThreeWayMatchResult(BaseModel):
+    bill_id: uuid.UUID
+    purchase_order_id: uuid.UUID
+    receipt_id: uuid.UUID
+    matched: bool
+    mismatches: Optional[List[str]] = None
+
+# ================================================
+#                AP Report Schemas
+# ================================================
+
+class APReport(BaseModel):
+    summary: dict

@@ -5,6 +5,7 @@ import pytest
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from uuid import uuid4, UUID
+import uuid
 
 from fastapi import status
 from fastapi.testclient import TestClient
@@ -391,3 +392,24 @@ class TestReportsAPI:
             assert "days_61_90" in customer
             assert "days_over_90" in customer
             assert "total" in customer
+
+class TestDunningDisputeAPI:
+    """Test cases for Dunning and Dispute API endpoints."""
+    
+    @pytest.mark.asyncio
+    async def test_update_dunning_schedule(self, async_db_session):
+        invoice_id = uuid.uuid4()
+        service = services.InvoiceService(async_db_session)
+        action = schemas.DunningAction(invoice_id=invoice_id, action="Send Reminder", date="2025-07-11")
+        schedule = await service.update_dunning_schedule(invoice_id, action)
+        assert isinstance(schedule, schemas.DunningSchedule)
+        assert schedule.steps[-1]["action"] == "Send Reminder"
+
+    @pytest.mark.asyncio
+    async def test_update_dispute_status(self, async_db_session):
+        invoice_id = uuid.uuid4()
+        service = services.InvoiceService(async_db_session)
+        action = schemas.DisputeAction(invoice_id=invoice_id, action="Under Review", reason="Customer claims error")
+        result = await service.update_dispute_status(invoice_id, action)
+        assert isinstance(result, schemas.DisputeResult)
+        assert result.status == "Under Review"

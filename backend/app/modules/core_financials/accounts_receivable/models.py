@@ -107,6 +107,10 @@ class Invoice(Base):
     created_by_id: Mapped[Optional[UUID]] = mapped_column(PG_UUID(as_uuid=True), ForeignKey('users.id'))
     updated_by_id: Mapped[Optional[UUID]] = mapped_column(PG_UUID(as_uuid=True), ForeignKey('users.id'))
     
+    # Dunning and dispute management
+    dunning_schedule: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSONB, nullable=True) # Dunning schedule
+    dispute_status: Mapped[Optional[str]] = mapped_column(String(30), nullable=True) # Dispute status
+    
     # Constraints
     __table_args__ = (
         CheckConstraint('total_amount = subtotal + tax_amount - discount_amount', name='check_invoice_amounts'),
