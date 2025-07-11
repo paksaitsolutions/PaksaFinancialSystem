@@ -555,7 +555,13 @@ export function useEncryptionManagement() {
     handleKeySelect: (event: { data: EncryptionKey | null }) => {
       selectedKey.value = event.data ? { ...event.data } : null;
     },
+
     handleKeyUnselect: () => {
       selectedKey.value = null;
     }
   };
+
+export default {
+  // ...other options and methods
+  ...yourOptionsObject // Replace with actual object name if needed
+};
