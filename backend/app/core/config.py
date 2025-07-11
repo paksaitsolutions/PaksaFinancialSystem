@@ -9,13 +9,12 @@ from pydantic import (
     BaseModel,
     BaseSettings,
     Field,
-    HttpUrl,
-    PostgresDsn,
     ValidationError,
     field_validator,
     model_validator,
     validator,
     GetCoreSchemaHandler,
+    EmailStr,
 )
 from pydantic_core import core_schema
 from urllib.parse import urlparse, quote_plus
@@ -74,7 +73,7 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     
     # CORS
-    BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = [
+    BACKEND_CORS_ORIGINS: List[str] = [
         "http://localhost:3000",  # Default React dev server
         "http://localhost:8000",  # Default FastAPI dev server
     ]
