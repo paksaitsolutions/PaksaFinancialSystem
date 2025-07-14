@@ -168,6 +168,19 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/TestHome.vue'),
     meta: { title: 'Asset Maintenance' },
   },
+  // Tax Routes
+  {
+    path: '/tax/exemption-certificate',
+    name: 'TaxExemptionCertificate',
+    component: () => import('@/views/tax/TaxExemptionCertificate.vue'),
+    meta: { title: 'Tax Exemption Certificate' },
+  },
+  {
+    path: '/tax/policy',
+    name: 'TaxPolicy',
+    component: () => import('@/views/TestHome.vue'),
+    meta: { title: 'Tax Policy' },
+  },
 ];
 
 const router = createRouter({

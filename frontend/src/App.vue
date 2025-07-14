@@ -56,6 +56,13 @@
               <router-link to="/assets/maintenance" class="dropdown-item">Maintenance</router-link>
             </div>
           </div>
+          <div class="nav-dropdown">
+            <span class="nav-link dropdown-toggle">Tax</span>
+            <div class="dropdown-menu">
+              <router-link to="/tax/exemption-certificate" class="dropdown-item">Tax Exemption Certificate</router-link>
+              <router-link to="/tax/policy" class="dropdown-item">Tax Policy</router-link>
+            </div>
+          </div>
           <router-link to="/reports" class="nav-link">Reports</router-link>
         </div>
       </div>
