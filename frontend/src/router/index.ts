@@ -33,13 +33,13 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/ap/vendors',
     name: 'Vendors',
-    component: () => import('@/views/TestHome.vue'),
+    component: () => import('@/views/ap/Vendors.vue'),
     meta: { title: 'Vendors' },
   },
   {
     path: '/ap/invoices',
     name: 'APInvoices',
-    component: () => import('@/views/TestHome.vue'),
+    component: () => import('@/views/ap/Invoices.vue'),
     meta: { title: 'AP Invoices' },
   },
   // Accounts Receivable
@@ -135,7 +135,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/ap/payments',
     name: 'APPayments',
-    component: () => import('@/views/TestHome.vue'),
+    component: () => import('@/views/ap/Payments.vue'),
     meta: { title: 'AP Payments' },
   },
   {
