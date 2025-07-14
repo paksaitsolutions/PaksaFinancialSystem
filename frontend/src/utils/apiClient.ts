@@ -1,5 +1,5 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse, type AxiosError } from 'axios';
-import { useAuthStore } from '@/stores/auth';
+import { useAuthStore } from '@/store/auth';
 
 export class ApiClient {
   private static instance: ApiClient;
@@ -7,7 +7,7 @@ export class ApiClient {
 
   private constructor() {
     this.axiosInstance = axios.create({
-      baseURL: (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:8000/api',
+      baseURL: (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:8000',
       headers: {
         'Content-Type': 'application/json',
       },

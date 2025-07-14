@@ -1,15 +1,4 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
-import DashboardView from '@/views/compliance/DashboardView.vue';
-import EventsView from '@/views/compliance/security/EventsView.vue';
-import PoliciesView from '@/views/compliance/security/PoliciesView.vue';
-import EncryptionView from '@/views/compliance/security/EncryptionView.vue';
-import EncryptionKeysView from '@/views/compliance/security/EncryptionKeysView.vue';
-import SettingsView from '@/views/compliance/SettingsView.vue';
-
-// Financial Statements
-const FinancialStatementsView = () => import('@/views/accounting/gl/financial-statements/FinancialStatementsView.vue');
-const FinancialStatementTemplatesView = () => import('@/views/accounting/gl/financial-statement-templates/FinancialStatementTemplatesView.vue');
-const TrialBalanceView = () => import('@/views/gl/reports/TrialBalanceView.vue');
 
 // Tax
 const TaxExemptionCertificatesView = () => import('@/views/tax/TaxExemptionCertificatesView.vue');
@@ -17,29 +6,100 @@ const TaxExemptionCertificatesView = () => import('@/views/tax/TaxExemptionCerti
 const routes: Array<RouteRecordRaw> = [
   {
     path: '/',
-    redirect: '/accounting/financial-statements',
-  },
-  // Accounting Routes
-  {
-    path: '/accounting',
-    redirect: '/accounting/financial-statements',
-    meta: { requiresAuth: true },
+    name: 'Home',
+    component: () => import('@/views/TestHome.vue'),
+    meta: { title: 'Home' },
   },
   {
-    path: '/accounting/financial-statements',
-    name: 'FinancialStatements',
-    component: FinancialStatementsView,
-    meta: { requiresAuth: true, title: 'Financial Statements' },
+    path: '/dashboard',
+    name: 'Dashboard',
+    component: () => import('@/views/Dashboard.vue'),
+    meta: { title: 'Dashboard' },
+  },
+  // General Ledger
+  {
+    path: '/gl/accounts',
+    name: 'ChartOfAccounts',
+    component: () => import('@/views/gl/ChartOfAccounts.vue'),
+    meta: { title: 'Chart of Accounts' },
   },
   {
-    path: '/accounting/financial-statement-templates',
-    name: 'FinancialStatementTemplates',
-    component: FinancialStatementTemplatesView,
-    meta: { requiresAuth: true, title: 'Financial Statement Templates' },
+    path: '/gl/journal-entries',
+    name: 'JournalEntries',
+    component: () => import('@/views/TestHome.vue'),
+    meta: { title: 'Journal Entries' },
+  },
+  // Accounts Payable
+  {
+    path: '/ap/vendors',
+    name: 'Vendors',
+    component: () => import('@/views/TestHome.vue'),
+    meta: { title: 'Vendors' },
   },
   {
-    path: '/accounting/trial-balance',
+    path: '/ap/invoices',
+    name: 'APInvoices',
+    component: () => import('@/views/TestHome.vue'),
+    meta: { title: 'AP Invoices' },
+  },
+  // Accounts Receivable
+  {
+    path: '/ar/customers',
+    name: 'Customers',
+    component: () => import('@/views/TestHome.vue'),
+    meta: { title: 'Customers' },
+  },
+  {
+    path: '/ar/invoices',
+    name: 'ARInvoices',
+    component: () => import('@/views/TestHome.vue'),
+    meta: { title: 'AR Invoices' },
+  },
+  // Payroll
+  {
+    path: '/payroll/employees',
+    name: 'Employees',
+    component: () => import('@/views/TestHome.vue'),
+    meta: { title: 'Employees' },
+  },
+  {
+    path: '/payroll/process',
+    name: 'PayrollProcess',
+    component: () => import('@/views/TestHome.vue'),
+    meta: { title: 'Process Payroll' },
+  },
+  // Cash Management
+  {
+    path: '/cash/accounts',
+    name: 'BankAccounts',
+    component: () => import('@/views/TestHome.vue'),
+    meta: { title: 'Bank Accounts' },
+  },
+  {
+    path: '/cash/reconciliation',
+    name: 'BankReconciliation',
+    component: () => import('@/views/TestHome.vue'),
+    meta: { title: 'Bank Reconciliation' },
+  },
+  // Fixed Assets
+  {
+    path: '/assets/list',
+    name: 'AssetList',
+    component: () => import('@/views/TestHome.vue'),
+    meta: { title: 'Fixed Assets' },
+  },
+  // Reports
+  {
+    path: '/reports',
+    name: 'Reports',
+    component: () => import('@/views/TestHome.vue'),
+    meta: { title: 'Reports' },
+  },
+  // Additional routes
+  {
+    path: '/gl/trial-balance',
     name: 'TrialBalance',
+<<<<<<< HEAD
     component: TrialBalanceView,
     meta: { requiresAuth: true, title: 'Trial Balance' },
   },
@@ -63,36 +123,46 @@ const routes: Array<RouteRecordRaw> = [
     name: 'ComplianceDashboard',
     component: DashboardView,
     meta: { requiresAuth: true, title: 'Compliance Dashboard' },
+=======
+    component: () => import('@/views/TestHome.vue'),
+    meta: { title: 'Trial Balance' },
+>>>>>>> 888d2a53a17ad29675da32aa79cfc5d5c6438561
   },
   {
-    path: '/compliance/security/events',
-    name: 'SecurityEvents',
-    component: EventsView,
-    meta: { requiresAuth: true, title: 'Security Events' },
+    path: '/ap/payments',
+    name: 'APPayments',
+    component: () => import('@/views/TestHome.vue'),
+    meta: { title: 'AP Payments' },
   },
   {
-    path: '/compliance/security/policies',
-    name: 'SecurityPolicies',
-    component: PoliciesView,
-    meta: { requiresAuth: true, title: 'Security Policies' },
+    path: '/ar/payments',
+    name: 'ARPayments',
+    component: () => import('@/views/TestHome.vue'),
+    meta: { title: 'AR Payments' },
   },
   {
-    path: '/compliance/security/encryption',
-    name: 'SecurityEncryption',
-    component: EncryptionView,
-    meta: { requiresAuth: true, title: 'Encryption' },
+    path: '/payroll/reports',
+    name: 'PayrollReports',
+    component: () => import('@/views/TestHome.vue'),
+    meta: { title: 'Payroll Reports' },
   },
   {
-    path: '/compliance/security/encryption-keys',
-    name: 'SecurityEncryptionKeys',
-    component: EncryptionKeysView,
-    meta: { requiresAuth: true, title: 'Encryption Keys' },
+    path: '/cash/forecast',
+    name: 'CashForecast',
+    component: () => import('@/views/TestHome.vue'),
+    meta: { title: 'Cash Forecast' },
   },
   {
-    path: '/compliance/settings',
-    name: 'ComplianceSettings',
-    component: SettingsView,
-    meta: { requiresAuth: true, title: 'Compliance Settings' },
+    path: '/assets/depreciation',
+    name: 'AssetDepreciation',
+    component: () => import('@/views/TestHome.vue'),
+    meta: { title: 'Asset Depreciation' },
+  },
+  {
+    path: '/assets/maintenance',
+    name: 'AssetMaintenance',
+    component: () => import('@/views/TestHome.vue'),
+    meta: { title: 'Asset Maintenance' },
   },
 ];
 
