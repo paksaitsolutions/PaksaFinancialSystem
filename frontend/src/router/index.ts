@@ -11,6 +11,9 @@ const FinancialStatementsView = () => import('@/views/accounting/gl/financial-st
 const FinancialStatementTemplatesView = () => import('@/views/accounting/gl/financial-statement-templates/FinancialStatementTemplatesView.vue');
 const TrialBalanceView = () => import('@/views/gl/reports/TrialBalanceView.vue');
 
+// Tax
+const TaxExemptionCertificatesView = () => import('@/views/tax/TaxExemptionCertificatesView.vue');
+
 const routes: Array<RouteRecordRaw> = [
   {
     path: '/',
@@ -39,6 +42,20 @@ const routes: Array<RouteRecordRaw> = [
     name: 'TrialBalance',
     component: TrialBalanceView,
     meta: { requiresAuth: true, title: 'Trial Balance' },
+  },
+  // Tax Routes
+  {
+    path: '/tax/exemption-certificates',
+    name: 'TaxExemptionCertificates',
+    component: TaxExemptionCertificatesView,
+    meta: { 
+      requiresAuth: true, 
+      title: 'Tax Exemption Certificates',
+      breadcrumb: [
+        { title: 'Tax', to: { name: 'TaxExemptionCertificates' } },
+        { title: 'Exemption Certificates' }
+      ]
+    },
   },
   // Compliance Routes
   {

@@ -205,6 +205,25 @@ const menuItems = ref<SidebarMenuItem[]>([
     ]
   },
   {
+    label: 'Tax',
+    icon: 'pi pi-percentage',
+    visible: authStore.hasAnyPermission([
+      'view_tax_exemption_certificates',
+      'manage_tax_exemption_certificates'
+    ]),
+    items: [
+      {
+        label: 'Exemption Certificates',
+        icon: 'pi pi-file-pdf',
+        route: '/tax/exemption-certificates',
+        visible: authStore.hasAnyPermission([
+          'view_tax_exemption_certificates',
+          'manage_tax_exemption_certificates'
+        ])
+      }
+    ]
+  },
+  {
     label: 'Reports',
     icon: 'pi pi-chart-line',
     route: '/reports',
