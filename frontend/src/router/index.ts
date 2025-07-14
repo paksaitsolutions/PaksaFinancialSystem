@@ -23,7 +23,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/gl/journal-entries',
     name: 'JournalEntries',
-    component: () => import('@/views/TestHome.vue'),
+    component: () => import('@/views/gl/JournalEntries.vue'),
     meta: { title: 'Journal Entries' },
   },
   // Accounts Payable
@@ -96,7 +96,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/gl/trial-balance',
     name: 'TrialBalance',
-    component: () => import('@/views/TestHome.vue'),
+    component: () => import('@/views/gl/TrialBalance.vue'),
     meta: { title: 'Trial Balance' },
   },
   {
