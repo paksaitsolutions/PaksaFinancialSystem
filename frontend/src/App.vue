@@ -22,6 +22,7 @@
               <router-link to="/ap/vendors" class="dropdown-item">Vendors</router-link>
               <router-link to="/ap/invoices" class="dropdown-item">AP Invoices</router-link>
               <router-link to="/ap/payments" class="dropdown-item">Payments</router-link>
+              <router-link to="/ap/analytics" class="dropdown-item">Analytics</router-link>
             </div>
           </div>
           <div class="nav-dropdown">
@@ -215,4 +216,9 @@ body {
     min-width: 200px;
   }
 }
+</style>
+
+<style>
+@import './assets/styles/ap-advanced.css';
+@import './assets/styles/ap-analytics.css';
 </style>

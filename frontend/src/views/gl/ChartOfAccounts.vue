@@ -223,16 +223,68 @@ const accountForm = ref({
 })
 
 const accounts = ref([
-  { id: 1, code: '1000', name: 'Cash', type: 'Current Asset', category: 'asset', balance: 50000, status: 'active' },
-  { id: 2, code: '1200', name: 'Accounts Receivable', type: 'Current Asset', category: 'asset', balance: 25000, status: 'active' },
-  { id: 3, code: '1500', name: 'Inventory', type: 'Current Asset', category: 'asset', balance: 75000, status: 'active' },
-  { id: 4, code: '1700', name: 'Equipment', type: 'Fixed Asset', category: 'asset', balance: 100000, status: 'active' },
-  { id: 5, code: '2000', name: 'Accounts Payable', type: 'Current Liability', category: 'liability', balance: 15000, status: 'active' },
-  { id: 6, code: '2500', name: 'Notes Payable', type: 'Long-term Liability', category: 'liability', balance: 50000, status: 'active' },
-  { id: 7, code: '3000', name: 'Owner\'s Capital', type: 'Equity', category: 'equity', balance: 150000, status: 'active' },
-  { id: 8, code: '4000', name: 'Sales Revenue', type: 'Revenue', category: 'revenue', balance: 85000, status: 'active' },
-  { id: 9, code: '5000', name: 'Cost of Goods Sold', type: 'Cost of Goods Sold', category: 'expense', balance: 45000, status: 'active' },
-  { id: 10, code: '6000', name: 'Rent Expense', type: 'Operating Expense', category: 'expense', balance: 12000, status: 'active' }
+  // Assets
+  { id: 1, code: '1010', name: 'Cash in Hand', type: 'Current Asset', category: 'asset', balance: 50000, status: 'active' },
+  { id: 2, code: '1020', name: 'Cash in Bank - Local (PKR)', type: 'Current Asset', category: 'asset', balance: 2500000, status: 'active' },
+  { id: 3, code: '1021', name: 'Cash in Bank - USD (International)', type: 'Current Asset', category: 'asset', balance: 150000, status: 'active' },
+  { id: 4, code: '1022', name: 'Cash in Bank - SAR (KSA)', type: 'Current Asset', category: 'asset', balance: 75000, status: 'active' },
+  { id: 5, code: '1030', name: 'Accounts Receivable (COD Payments Pending)', type: 'Current Asset', category: 'asset', balance: 125000, status: 'active' },
+  { id: 6, code: '1031', name: 'COD Receivable - FedEx', type: 'Current Asset', category: 'asset', balance: 35000, status: 'active' },
+  { id: 7, code: '1032', name: 'COD Receivable - DHL', type: 'Current Asset', category: 'asset', balance: 28000, status: 'active' },
+  { id: 8, code: '1033', name: 'COD Receivable - TCS', type: 'Current Asset', category: 'asset', balance: 22000, status: 'active' },
+  { id: 9, code: '1034', name: 'COD Receivable - LCS', type: 'Current Asset', category: 'asset', balance: 18000, status: 'active' },
+  { id: 10, code: '1040', name: 'Inventory - Raw Materials (Fabric, Accessories)', type: 'Current Asset', category: 'asset', balance: 300000, status: 'active' },
+  { id: 11, code: '1045', name: 'Inventory - Finished Goods (Products Ready for Sale)', type: 'Current Asset', category: 'asset', balance: 450000, status: 'active' },
+  { id: 12, code: '1050', name: 'Prepaid Expenses (Logistics, Marketing Prepayments)', type: 'Current Asset', category: 'asset', balance: 85000, status: 'active' },
+  { id: 13, code: '1200', name: 'Office Equipment', type: 'Fixed Asset', category: 'asset', balance: 120000, status: 'active' },
+  { id: 14, code: '1220', name: 'Software Development Costs', type: 'Fixed Asset', category: 'asset', balance: 95000, status: 'active' },
+  { id: 15, code: '1230', name: 'Vehicles (Logistics)', type: 'Fixed Asset', category: 'asset', balance: 180000, status: 'active' },
+  
+  // Liabilities
+  { id: 16, code: '2010', name: 'Accounts Payable - Local Vendors', type: 'Current Liability', category: 'liability', balance: 180000, status: 'active' },
+  { id: 17, code: '2020', name: 'Accounts Payable - International Vendors', type: 'Current Liability', category: 'liability', balance: 95000, status: 'active' },
+  { id: 18, code: '2030', name: 'Salaries Payable', type: 'Current Liability', category: 'liability', balance: 85000, status: 'active' },
+  { id: 19, code: '2040', name: 'Tax Payable (Income Tax, VAT, Zakat)', type: 'Current Liability', category: 'liability', balance: 125000, status: 'active' },
+  { id: 20, code: '2050', name: 'Logistics Payable (Courier Partner Fees)', type: 'Current Liability', category: 'liability', balance: 45000, status: 'active' },
+  { id: 21, code: '2060', name: 'Customer Refunds Payable', type: 'Current Liability', category: 'liability', balance: 32000, status: 'active' },
+  { id: 22, code: '2200', name: 'Loans Payable', type: 'Long-term Liability', category: 'liability', balance: 500000, status: 'active' },
+  
+  // Equity
+  { id: 23, code: '3010', name: 'Owner\'s Equity - Partner(s)', type: 'Equity', category: 'equity', balance: 800000, status: 'active' },
+  { id: 24, code: '3020', name: 'Investor\'s Equity - Investor(s)', type: 'Equity', category: 'equity', balance: 600000, status: 'active' },
+  { id: 25, code: '3030', name: 'Retained Earnings', type: 'Equity', category: 'equity', balance: 1500000, status: 'active' },
+  
+  // Revenue
+  { id: 26, code: '4010', name: 'Sales - Local (Pakistan)', type: 'Revenue', category: 'revenue', balance: 2800000, status: 'active' },
+  { id: 27, code: '4020', name: 'Sales - International (USA)', type: 'Revenue', category: 'revenue', balance: 1200000, status: 'active' },
+  { id: 28, code: '4030', name: 'Sales - Middle East (KSA, UAE)', type: 'Revenue', category: 'revenue', balance: 800000, status: 'active' },
+  { id: 29, code: '4040', name: 'Sales - Southeast Asia (India, Bangladesh)', type: 'Revenue', category: 'revenue', balance: 450000, status: 'active' },
+  { id: 30, code: '4110', name: 'Interest Income', type: 'Other Income', category: 'revenue', balance: 25000, status: 'active' },
+  { id: 31, code: '4120', name: 'Discounts Received', type: 'Other Income', category: 'revenue', balance: 18000, status: 'active' },
+  
+  // COGS
+  { id: 32, code: '5010', name: 'Raw Material Costs (Fabric, Thread, Accessories)', type: 'Cost of Goods Sold', category: 'expense', balance: 800000, status: 'active' },
+  { id: 33, code: '5020', name: 'Manufacturing Labor (Pattern Makers, Designers)', type: 'Cost of Goods Sold', category: 'expense', balance: 350000, status: 'active' },
+  { id: 34, code: '5030', name: 'Direct Overheads (Production Utilities)', type: 'Cost of Goods Sold', category: 'expense', balance: 125000, status: 'active' },
+  { id: 35, code: '5040', name: 'Freight Inwards (Import Costs for Raw Materials)', type: 'Cost of Goods Sold', category: 'expense', balance: 95000, status: 'active' },
+  
+  // Operating Expenses
+  { id: 36, code: '6010', name: 'Digital Advertising (Google, Meta, TikTok Ads)', type: 'Operating Expense', category: 'expense', balance: 150000, status: 'active' },
+  { id: 37, code: '6020', name: 'Marketplace Fees (Amazon, Noon, eBay)', type: 'Operating Expense', category: 'expense', balance: 95000, status: 'active' },
+  { id: 38, code: '6030', name: 'Discounts and Promotions', type: 'Operating Expense', category: 'expense', balance: 75000, status: 'active' },
+  { id: 39, code: '6040', name: 'Influencer and Affiliate Marketing Costs', type: 'Operating Expense', category: 'expense', balance: 65000, status: 'active' },
+  { id: 40, code: '6110', name: 'Salaries and Wages', type: 'Operating Expense', category: 'expense', balance: 450000, status: 'active' },
+  { id: 41, code: '6120', name: 'Rent and Utilities (Office and Warehouse)', type: 'Operating Expense', category: 'expense', balance: 120000, status: 'active' },
+  { id: 42, code: '6130', name: 'Software Subscriptions (Shopify, ERP, SMM Tools)', type: 'Operating Expense', category: 'expense', balance: 35000, status: 'active' },
+  { id: 43, code: '6140', name: 'Legal and Professional Fees', type: 'Operating Expense', category: 'expense', balance: 45000, status: 'active' },
+  { id: 44, code: '6210', name: 'Local Delivery Charges (Pakistan)', type: 'Operating Expense', category: 'expense', balance: 85000, status: 'active' },
+  { id: 45, code: '6220', name: 'International Shipping Costs (FedEx, DHL)', type: 'Operating Expense', category: 'expense', balance: 125000, status: 'active' },
+  
+  // Taxes
+  { id: 46, code: '7010', name: 'Income Tax (Corporate Tax)', type: 'Tax Expense', category: 'expense', balance: 180000, status: 'active' },
+  { id: 47, code: '7020', name: 'Sales Tax Payable (USA, PK, KSA)', type: 'Tax Expense', category: 'expense', balance: 95000, status: 'active' },
+  { id: 48, code: '7030', name: 'VAT Payable (KSA)', type: 'Tax Expense', category: 'expense', balance: 45000, status: 'active' },
+  { id: 49, code: '7040', name: 'Zakat Payable (KSA)', type: 'Tax Expense', category: 'expense', balance: 25000, status: 'active' }
 ])
 
 const filteredAccounts = computed(() => {
