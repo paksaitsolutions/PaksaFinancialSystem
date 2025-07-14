@@ -34,6 +34,36 @@
 
     <!-- Pay Run Details -->
     <template v-else>
+      <!-- Tax Summary Card -->
+      <v-card class="mb-6">
+        <v-card-title class="text-subtitle-1 font-weight-bold">
+          Tax Summary
+        </v-card-title>
+        <v-card-text>
+          <v-row>
+            <v-col cols="12" md="4">
+              <div class="text-subtitle-2">Total Tax Amount</div>
+              <div class="text-h6 font-weight-bold">
+                {{ formatCurrency(payRun.taxAmount) }}
+              </div>
+            </v-col>
+            <v-col cols="12" md="4">
+              <div class="text-subtitle-2">Tax Breakdown</div>
+              <div v-for="(amount, bracket) in payRun.taxBreakdown" :key="bracket" class="text-caption">
+                {{ bracket }}: {{ formatCurrency(amount) }}
+              </div>
+            </v-col>
+            <v-col cols="12" md="4">
+              <div class="text-subtitle-2">Exemptions</div>
+              <div v-for="(amount, exemption) in payRun.exemptions" :key="exemption" class="text-caption">
+                {{ exemption }}: {{ formatCurrency(amount) }}
+              </div>
+            </v-col>
+          </v-row>
+        </v-card-text>
+      </v-card>
+
+      <!-- Pay Run Details -->
       <!-- Header -->
       <v-row class="mb-4" align="center">
         <v-col cols="12" sm="6" md="8">
@@ -475,20 +505,21 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useTaxPolicyStore } from '@/stores/tax/policy';
+import { taxCalculationService } from '@/services/tax/taxCalculationService';
 import { usePayrollStore } from '@/stores/payroll';
 import { useSnackbar } from '@/composables/useSnackbar';
 import { formatDate, formatCurrency, formatDateTime } from '@/utils/formatters';
 
 const route = useRoute();
 const router = useRouter();
-const payrollStore = usePayrollStore();
-const { showSuccess, showError } = useSnackbar();
-
-// State
 const isLoading = ref(true);
 const error = ref<string | null>(null);
-const activeTab = ref('summary');
 const payRun = ref<any>(null);
+const taxPolicyStore = useTaxPolicyStore();
+
+// State
+const activeTab = ref('summary');
 const auditLogs = ref<any[]>([]);
 
 // Table headers
@@ -581,8 +612,22 @@ async function fetchPayRun() {
     isLoading.value = true;
     error.value = null;
     
+    // Fetch tax policy first
+    await taxPolicyStore.fetchPolicy();
+    
     const response = await payrollStore.getPayRunById(route.params.id as string);
     payRun.value = response;
+    
+    // Calculate tax details if not already present
+    if (!response.taxAmount || !response.taxBreakdown) {
+      const taxResult = taxCalculationService.calculatePayRunTax(response);
+      payRun.value = {
+        ...response,
+        taxAmount: taxResult.taxAmount,
+        taxBreakdown: taxResult.taxBreakdown,
+        exemptions: taxResult.exemptions
+      };
+    }
   } catch (err: any) {
     console.error('Error fetching pay run:', err);
     error.value = err.message || 'Failed to load pay run details';

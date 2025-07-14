@@ -216,14 +216,53 @@
             </v-card-text>
           </v-card>
         </v-window-item>
+        <v-window-item :value="3">
+          <v-card variant="flat" class="rounded-0">
+            <v-card-title class="text-subtitle-1 font-weight-bold">
+              Review and Submit
+            </v-card-title>
+            <v-divider></v-divider>
+            <v-card-text class="pt-6">
+              <v-row>
+                <v-col cols="12">
+                  <v-card class="pa-4 mb-4">
+                    <v-card-title class="text-subtitle-1 font-weight-bold">
+                      Tax Summary
+                    </v-card-title>
+                    <v-divider class="mb-4"></v-divider>
+                    <v-row>
+                      <v-col cols="12" md="6">
+                        <v-card-text class="pa-0">
+                          <div class="text-subtitle-2">Total Employees: {{ payRun.employeeCount }}</div>
+                          <div class="text-subtitle-2">Total Amount: {{ formatCurrency(payRun.totalAmount) }}</div>
+                        </v-card-text>
+                      </v-col>
+                      <v-col cols="12" md="6">
+                        <v-card-text class="pa-0">
+                          <div class="text-subtitle-2">Total Tax: {{ formatCurrency(payRun.taxAmount) }}</div>
+                          <div class="text-subtitle-2">Tax Breakdown:</div>
+                          <div v-for="(amount, bracket) in payRun.taxBreakdown" :key="bracket" class="text-caption">
+                            {{ bracket }}: {{ formatCurrency(amount) }}
+                          </div>
+                        </v-card-text>
+                      </v-col>
+                    </v-row>
+                  </v-card>
+                </v-col>
+              </v-row>
+            </v-card-text>
+          </v-card>
+        </v-window-item>
       </v-window>
     </v-form>
   </v-container>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import { useTaxPolicyStore } from '@/stores/tax/policy';
+import { taxCalculationService } from '@/services/tax/taxCalculationService';
 import { useSnackbar } from '@/composables/useSnackbar';
 import { formatDate } from '@/utils/formatters';
 
@@ -252,6 +291,11 @@ const payRun = ref({
   payFrequency: 'monthly',
   notes: '',
   status: 'draft',
+  employeeCount: 0,
+  totalAmount: 0,
+  taxAmount: 0,
+  taxBreakdown: {},
+  exemptions: {},
   employeeIds: [] as string[],
   earnings: [],
   deductions: [],
@@ -323,6 +367,26 @@ const updatePayPeriodDates = () => {
   }
 };
 
+const calculateTotalTax = () => {
+  if (!payRun.value.employeeCount || !payRun.value.totalAmount) return;
+  
+  const mockPayslips = Array(payRun.value.employeeCount).fill({
+    gross_income: payRun.value.totalAmount / payRun.value.employeeCount,
+    earnings: []
+  });
+
+  const mockPayRun = {
+    payslips: mockPayslips,
+    period_start: payRun.value.payPeriodStartDate,
+    period_end: payRun.value.payPeriodEndDate
+  };
+
+  const taxResult = taxCalculationService.calculatePayRunTax(mockPayRun);
+  payRun.value.taxAmount = taxResult.taxAmount;
+  payRun.value.taxBreakdown = taxResult.taxBreakdown;
+  payRun.value.exemptions = taxResult.exemptions;
+};
+
 const nextStep = async () => {
   const { valid } = await form.value.validate();
   if (valid) {
@@ -335,19 +399,27 @@ const prevStep = () => {
 };
 
 const submitPayRun = async () => {
-  isSubmitting.value = true;
   try {
-    // TODO: Implement API call to submit pay run
-    console.log('Submitting pay run:', payRun.value);
+    isSubmitting.value = true;
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    showSuccess('Pay run created successfully');
-    router.push({ name: 'payroll-runs' });
+    // Calculate tax before submission
+    calculateTotalTax();
+
+    const response = await payrollService.createPayRun({
+      period_id: payRun.value.payPeriodStartDate,
+      notes: payRun.value.notes,
+      tax_policy_id: useTaxPolicyStore().getCurrentPolicy()?.id,
+      custom_tax_rates: useTaxPolicyStore().getTaxRates(),
+      custom_exemptions: useTaxPolicyStore().getTaxExemptions()
+    });
+
+    router.push({ name: 'payroll-run-details', params: { id: response.id } });
   } catch (error) {
     console.error('Error creating pay run:', error);
-    showError('Failed to create pay run. Please try again.');
+    snackbar.value = {
+      message: 'Failed to create pay run. Please try again.',
+      color: 'error'
+    };
   } finally {
     isSubmitting.value = false;
   }
@@ -355,6 +427,17 @@ const submitPayRun = async () => {
 
 // Initialize form with default values
 onMounted(() => {
+  // Initialize tax policy store
+  const taxPolicyStore = useTaxPolicyStore();
+  taxPolicyStore.fetchPolicy();
+
+  // Watch for tax policy changes
+  watch(() => taxPolicyStore.getCurrentPolicy(), (newPolicy) => {
+    if (newPolicy) {
+      calculateTotalTax();
+    }
+  });
+
   const today = new Date();
   const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
   const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
