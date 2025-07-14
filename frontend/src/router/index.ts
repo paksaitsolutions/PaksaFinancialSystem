@@ -26,7 +26,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/gl/journal-entries',
     name: 'JournalEntries',
-    component: () => import('@/views/TestHome.vue'),
+    component: () => import('@/views/gl/JournalEntries.vue'),
     meta: { title: 'Journal Entries' },
   },
   // Accounts Payable
@@ -100,6 +100,7 @@ const routes: Array<RouteRecordRaw> = [
     path: '/gl/trial-balance',
     name: 'TrialBalance',
 <<<<<<< HEAD
+<<<<<<< HEAD
     component: TrialBalanceView,
     meta: { requiresAuth: true, title: 'Trial Balance' },
   },
@@ -125,6 +126,9 @@ const routes: Array<RouteRecordRaw> = [
     meta: { requiresAuth: true, title: 'Compliance Dashboard' },
 =======
     component: () => import('@/views/TestHome.vue'),
+=======
+    component: () => import('@/views/gl/TrialBalance.vue'),
+>>>>>>> 021863356a857d56e2ff0145177f3e07ebeca70b
     meta: { title: 'Trial Balance' },
 >>>>>>> 888d2a53a17ad29675da32aa79cfc5d5c6438561
   },

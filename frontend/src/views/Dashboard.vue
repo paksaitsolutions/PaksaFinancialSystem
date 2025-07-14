@@ -1,114 +1,144 @@
 <template>
   <div class="dashboard">
-    <v-container fluid>
-      <!-- Header -->
-      <v-row class="mb-4">
-        <v-col cols="12">
-          <h1 class="text-h4 font-weight-bold">Financial Dashboard</h1>
-          <p class="text-subtitle-1 text-grey-600">
-            Welcome to Paksa Financial System
-          </p>
-        </v-col>
-      </v-row>
+    <!-- Header Section -->
+    <div class="dashboard-header">
+      <div class="container">
+        <div class="header-content">
+          <div>
+            <h1>Financial Dashboard</h1>
+            <p>Welcome to Paksa Financial System - {{ getCurrentDate() }}</p>
+          </div>
+          <div class="header-actions">
+            <button class="btn btn-primary">Export Report</button>
+            <button class="btn btn-secondary">Settings</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
+    <div class="container">
       <!-- Key Metrics Cards -->
-      <v-row class="mb-6">
-        <v-col cols="12" sm="6" md="3">
-          <MetricCard
-            title="Total Assets"
-            :value="formatCurrency(metrics.totalAssets)"
-            icon="mdi-bank"
-            color="blue"
-            :trend="metrics.assetsTrend"
-          />
-        </v-col>
-        
-        <v-col cols="12" sm="6" md="3">
-          <MetricCard
-            title="Total Liabilities"
-            :value="formatCurrency(metrics.totalLiabilities)"
-            icon="mdi-credit-card"
-            color="red"
-            :trend="metrics.liabilitiesTrend"
-          />
-        </v-col>
-        
-        <v-col cols="12" sm="6" md="3">
-          <MetricCard
-            title="Monthly Revenue"
-            :value="formatCurrency(metrics.monthlyRevenue)"
-            icon="mdi-trending-up"
-            color="green"
-            :trend="metrics.revenueTrend"
-          />
-        </v-col>
-        
-        <v-col cols="12" sm="6" md="3">
-          <MetricCard
-            title="Monthly Expenses"
-            :value="formatCurrency(metrics.monthlyExpenses)"
-            icon="mdi-trending-down"
-            color="orange"
-            :trend="metrics.expensesTrend"
-          />
-        </v-col>
-      </v-row>
+      <div class="metrics-section">
+        <div class="metrics-grid">
+          <div class="metric-card blue">
+            <div class="metric-icon">💰</div>
+            <div class="metric-content">
+              <h3>{{ formatCurrency(metrics.totalAssets) }}</h3>
+              <p>Total Assets</p>
+              <span class="trend positive">↗ +{{ metrics.assetsTrend }}%</span>
+            </div>
+          </div>
+          
+          <div class="metric-card red">
+            <div class="metric-icon">💳</div>
+            <div class="metric-content">
+              <h3>{{ formatCurrency(metrics.totalLiabilities) }}</h3>
+              <p>Total Liabilities</p>
+              <span class="trend negative">↘ {{ metrics.liabilitiesTrend }}%</span>
+            </div>
+          </div>
+          
+          <div class="metric-card green">
+            <div class="metric-icon">📈</div>
+            <div class="metric-content">
+              <h3>{{ formatCurrency(metrics.monthlyRevenue) }}</h3>
+              <p>Monthly Revenue</p>
+              <span class="trend positive">↗ +{{ metrics.revenueTrend }}%</span>
+            </div>
+          </div>
+          
+          <div class="metric-card orange">
+            <div class="metric-icon">📉</div>
+            <div class="metric-content">
+              <h3>{{ formatCurrency(metrics.monthlyExpenses) }}</h3>
+              <p>Monthly Expenses</p>
+              <span class="trend positive">↗ +{{ metrics.expensesTrend }}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
 
-      <!-- Charts Row -->
-      <v-row class="mb-6">
-        <v-col cols="12" md="8">
-          <v-card>
-            <v-card-title>Cash Flow Trend</v-card-title>
-            <v-card-text>
-              <CashFlowChart :data="cashFlowData" />
-            </v-card-text>
-          </v-card>
-        </v-col>
-        
-        <v-col cols="12" md="4">
-          <v-card>
-            <v-card-title>Account Balance Distribution</v-card-title>
-            <v-card-text>
-              <AccountBalanceChart :data="balanceData" />
-            </v-card-text>
-          </v-card>
-        </v-col>
-      </v-row>
+      <!-- Charts Section -->
+      <div class="charts-section">
+        <div class="charts-grid">
+          <div class="chart-card large">
+            <div class="card-header">
+              <h3>Cash Flow Analysis</h3>
+              <select class="period-selector">
+                <option>Last 6 Months</option>
+                <option>Last Year</option>
+              </select>
+            </div>
+            <div class="chart-container">
+              <canvas id="cashFlowChart" width="600" height="300"></canvas>
+            </div>
+          </div>
+          
+          <div class="chart-card">
+            <div class="card-header">
+              <h3>Account Distribution</h3>
+            </div>
+            <div class="chart-container">
+              <canvas id="pieChart" width="300" height="300"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
 
-      <!-- Recent Transactions and Quick Actions -->
-      <v-row>
-        <v-col cols="12" md="8">
-          <v-card>
-            <v-card-title class="d-flex justify-space-between">
-              <span>Recent Transactions</span>
-              <v-btn variant="text" size="small" to="/gl/journal-entries">View All</v-btn>
-            </v-card-title>
-            <v-card-text>
-              <RecentTransactions :transactions="recentTransactions" />
-            </v-card-text>
-          </v-card>
-        </v-col>
-        
-        <v-col cols="12" md="4">
-          <v-card>
-            <v-card-title>Quick Actions</v-card-title>
-            <v-card-text>
-              <QuickActions />
-            </v-card-text>
-          </v-card>
-        </v-col>
-      </v-row>
-    </v-container>
+      <!-- Bottom Section -->
+      <div class="bottom-section">
+        <div class="bottom-grid">
+          <!-- Recent Transactions -->
+          <div class="transactions-card">
+            <div class="card-header">
+              <h3>Recent Transactions</h3>
+              <button class="btn-link" @click="$router.push('/gl/journal-entries')">View All</button>
+            </div>
+            <div class="transactions-list">
+              <div v-for="transaction in recentTransactions" :key="transaction.id" class="transaction-item">
+                <div class="transaction-info">
+                  <div class="transaction-desc">{{ transaction.description }}</div>
+                  <div class="transaction-date">{{ transaction.date }}</div>
+                </div>
+                <div class="transaction-amount" :class="transaction.amount > 0 ? 'positive' : 'negative'">
+                  {{ formatCurrency(transaction.amount) }}
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Quick Actions -->
+          <div class="actions-card">
+            <div class="card-header">
+              <h3>Quick Actions</h3>
+            </div>
+            <div class="actions-grid">
+              <button class="action-btn" @click="$router.push('/gl/journal-entries')">
+                <span class="action-icon">➕</span>
+                <span>New Entry</span>
+              </button>
+              <button class="action-btn" @click="$router.push('/gl/accounts')">
+                <span class="action-icon">📋</span>
+                <span>Accounts</span>
+              </button>
+              <button class="action-btn" @click="$router.push('/reports')">
+                <span class="action-icon">📊</span>
+                <span>Reports</span>
+              </button>
+              <button class="action-btn" @click="$router.push('/payroll/process')">
+                <span class="action-icon">💼</span>
+                <span>Payroll</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import MetricCard from '@/components/common/MetricCard.vue'
-import CashFlowChart from '@/components/charts/CashFlowChart.vue'
-import AccountBalanceChart from '@/components/charts/AccountBalanceChart.vue'
-import RecentTransactions from '@/components/common/RecentTransactions.vue'
-import QuickActions from '@/components/common/QuickActions.vue'
 
 const metrics = ref({
   totalAssets: 1250000,
@@ -171,17 +201,367 @@ const loadDashboardData = async () => {
   console.log('Loading dashboard data...')
 }
 
+const getCurrentDate = () => {
+  return new Date().toLocaleDateString('en-US', { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  })
+}
+
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD'
   }).format(amount)
 }
+
+onMounted(() => {
+  drawCharts()
+})
+
+const drawCharts = () => {
+  // Cash Flow Chart
+  const cashCanvas = document.getElementById('cashFlowChart') as HTMLCanvasElement
+  if (cashCanvas) {
+    const ctx = cashCanvas.getContext('2d')
+    if (ctx) {
+      ctx.clearRect(0, 0, cashCanvas.width, cashCanvas.height)
+      
+      // Draw chart background
+      ctx.fillStyle = '#f8f9fa'
+      ctx.fillRect(0, 0, cashCanvas.width, cashCanvas.height)
+      
+      // Draw chart data
+      const data = [120000, 135000, 125000, 140000, 155000, 145000]
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']
+      
+      ctx.strokeStyle = '#1976D2'
+      ctx.lineWidth = 3
+      ctx.beginPath()
+      
+      data.forEach((value, index) => {
+        const x = (index * 100) + 50
+        const y = 250 - (value / 1000)
+        
+        if (index === 0) ctx.moveTo(x, y)
+        else ctx.lineTo(x, y)
+        
+        // Draw points
+        ctx.fillStyle = '#1976D2'
+        ctx.beginPath()
+        ctx.arc(x, y, 4, 0, 2 * Math.PI)
+        ctx.fill()
+      })
+      
+      ctx.stroke()
+    }
+  }
+  
+  // Pie Chart
+  const pieCanvas = document.getElementById('pieChart') as HTMLCanvasElement
+  if (pieCanvas) {
+    const ctx = pieCanvas.getContext('2d')
+    if (ctx) {
+      const centerX = 150
+      const centerY = 150
+      const radius = 100
+      
+      const data = [250000, 180000, 320000, 500000]
+      const colors = ['#2196F3', '#4CAF50', '#FF9800', '#9C27B0']
+      const total = data.reduce((a, b) => a + b, 0)
+      
+      let currentAngle = 0
+      
+      data.forEach((value, index) => {
+        const sliceAngle = (value / total) * 2 * Math.PI
+        
+        ctx.beginPath()
+        ctx.moveTo(centerX, centerY)
+        ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + sliceAngle)
+        ctx.closePath()
+        ctx.fillStyle = colors[index]
+        ctx.fill()
+        
+        currentAngle += sliceAngle
+      })
+    }
+  }
+}
 </script>
 
 <style scoped>
 .dashboard {
   min-height: 100vh;
-  background-color: #f5f5f5;
+  background: #f5f7fa;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Header */
+.dashboard-header {
+  background: white;
+  border-bottom: 1px solid #e0e6ed;
+  padding: 20px 0;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-content h1 {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin: 0;
+}
+
+.header-content p {
+  color: #718096;
+  margin: 5px 0 0 0;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: #1976D2;
+  color: white;
+}
+
+.btn-secondary {
+  background: #e2e8f0;
+  color: #4a5568;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+/* Metrics */
+.metrics-section {
+  margin: 30px 0;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.metric-card {
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: transform 0.2s;
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+}
+
+.metric-icon {
+  font-size: 2.5rem;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+}
+
+.metric-card.blue .metric-icon { background: #e3f2fd; }
+.metric-card.red .metric-icon { background: #ffebee; }
+.metric-card.green .metric-icon { background: #e8f5e8; }
+.metric-card.orange .metric-icon { background: #fff3e0; }
+
+.metric-content h3 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0;
+  color: #2d3748;
+}
+
+.metric-content p {
+  color: #718096;
+  margin: 4px 0;
+  font-size: 0.9rem;
+}
+
+.trend {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.trend.positive { color: #38a169; }
+.trend.negative { color: #e53e3e; }
+
+/* Charts */
+.charts-section {
+  margin: 30px 0;
+}
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+}
+
+.chart-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  padding: 24px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.card-header h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin: 0;
+}
+
+.period-selector {
+  padding: 6px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: white;
+}
+
+.chart-container {
+  display: flex;
+  justify-content: center;
+}
+
+/* Bottom Section */
+.bottom-section {
+  margin: 30px 0;
+}
+
+.bottom-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+}
+
+.transactions-card,
+.actions-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  padding: 24px;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: #1976D2;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.transactions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.transaction-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #f7fafc;
+}
+
+.transaction-desc {
+  font-weight: 500;
+  color: #2d3748;
+}
+
+.transaction-date {
+  font-size: 0.8rem;
+  color: #718096;
+}
+
+.transaction-amount {
+  font-weight: 600;
+}
+
+.transaction-amount.positive { color: #38a169; }
+.transaction-amount.negative { color: #e53e3e; }
+
+.actions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 20px;
+  background: #f7fafc;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.action-btn:hover {
+  background: #edf2f7;
+  transform: translateY(-1px);
+}
+
+.action-icon {
+  font-size: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .header-content {
+    flex-direction: column;
+    gap: 16px;
+    text-align: center;
+  }
+  
+  .charts-grid,
+  .bottom-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
