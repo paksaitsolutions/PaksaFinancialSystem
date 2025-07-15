@@ -20,6 +20,35 @@
       </v-col>
     </v-row>
 
+    <!-- Tax Summary Card -->
+    <v-card class="mb-6">
+      <v-card-title class="text-subtitle-1 font-weight-bold">
+        Total Tax Summary
+      </v-card-title>
+      <v-card-text>
+        <v-row>
+          <v-col cols="12" md="4">
+            <div class="text-subtitle-2">Total Tax Amount</div>
+            <div class="text-h6 font-weight-bold">
+              {{ formatCurrency(totalTaxAmount) }}
+            </div>
+          </v-col>
+          <v-col cols="12" md="4">
+            <div class="text-subtitle-2">Average Tax per Employee</div>
+            <div class="text-h6 font-weight-bold">
+              {{ formatCurrency(averageTaxPerEmployee) }}
+            </div>
+          </v-col>
+          <v-col cols="12" md="4">
+            <div class="text-subtitle-2">Total Exemptions</div>
+            <div class="text-h6 font-weight-bold">
+              {{ formatCurrency(totalExemptions) }}
+            </div>
+          </v-col>
+        </v-row>
+      </v-card-text>
+    </v-card>
+
     <!-- Filters Card -->
     <v-card class="mb-6">
       <v-card-title class="d-flex align-center">
@@ -307,12 +336,13 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-  </v-container>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import { useTaxPolicyStore } from '@/stores/tax/policy';
+import { taxCalculationService } from '@/services/tax/taxCalculationService';
 import { usePayrollStore } from '@/stores/payroll';
 import { useSnackbar } from '@/composables/useSnackbar';
 import { formatDate, formatCurrency } from '@/utils/formatters';
@@ -320,13 +350,36 @@ import { formatDate, formatCurrency } from '@/utils/formatters';
 const router = useRouter();
 const payrollStore = usePayrollStore();
 const { showSuccess, showError } = useSnackbar();
+const taxPolicyStore = useTaxPolicyStore();
 
 // State
 const isLoading = ref(false);
-const isDeleting = ref(false);
-const deleteDialog = ref(false);
-const selectedPayRun = ref(null);
-const dateMenu = ref(false);
+const payRuns = ref<PayRun[]>([]);
+const error = ref<string | null>(null);
+const filters = ref({
+  status: null as string | null,
+  period: null as string | null,
+  dateRange: {
+    start: null as string | null,
+    end: null as string | null
+  }
+});
+
+// Computed tax summaries
+const totalTaxAmount = computed(() => {
+  return payRuns.value.reduce((total, run) => total + (run.taxAmount || 0), 0);
+});
+
+const totalExemptions = computed(() => {
+  return payRuns.value.reduce((total, run) => {
+    return total + Object.values(run.exemptions || {}).reduce((sum, amount) => sum + amount, 0);
+  }, 0);
+});
+
+const averageTaxPerEmployee = computed(() => {
+  const totalEmployees = payRuns.value.reduce((total, run) => total + run.payslips.length, 0);
+  return totalEmployees > 0 ? totalTaxAmount.value / totalEmployees : 0;
+});
 
 // Table headers
 const headers = [
@@ -337,213 +390,64 @@ const headers = [
   { title: 'Employees', key: 'employeeCount', align: 'end', sortable: true },
   { title: 'Total Gross', key: 'totalGross', align: 'end', sortable: true },
   { title: 'Total Net', key: 'totalNet', align: 'end', sortable: true },
+  { title: 'Tax Amount', key: 'taxAmount', align: 'end', sortable: true },
+  { title: 'Tax Breakdown', key: 'taxBreakdown', sortable: true },
+  { title: 'Exemptions', key: 'exemptions', sortable: true },
   { title: 'Actions', key: 'actions', sortable: false, align: 'center' },
 ];
 
-// Status options for filter
-const statusOptions = [
-  { title: 'Draft', value: 'draft' },
-  { title: 'Processing', value: 'processing' },
-  { title: 'Pending Approval', value: 'pending_approval' },
-  { title: 'Approved', value: 'approved' },
-  { title: 'Paid', value: 'paid' },
-  { title: 'Cancelled', value: 'cancelled' },
-];
+// Fetch pay runs
+const fetchPayRuns = async () => {
+  try {
+    isLoading.value = true;
+    error.value = null;
+    
+    // Fetch tax policy first
+    await taxPolicyStore.fetchPolicy();
+    
+    const params = {
+      status: filters.value.status,
+      period: filters.value.period,
+      start_date: filters.value.dateRange.start,
+      end_date: filters.value.dateRange.end
+    };
 
-// Filters
-const filters = ref({
-  status: '',
-  startDate: '',
-  endDate: '',
-});
-
-const dateRange = ref([]);
-const searchQuery = ref('');
-
-// Pagination
-const pagination = ref({
-  page: 1,
-  itemsPerPage: 10,
-  totalItems: 0,
-  sortBy: [{ key: 'paymentDate', order: 'desc' }],
-  sortDesc: [true],
-});
-
-// Computed
-const dateRangeText = computed(() => {
-  if (!dateRange.value || dateRange.value.length !== 2) return '';
-  const [start, end] = dateRange.value;
-  return `${formatDate(start)} - ${formatDate(end)}`;
-});
-
-const hasActiveFilters = computed(() => {
-  return (
-    filters.value.status ||
-    dateRange.value.length === 2 ||
-    searchQuery.value
-  );
-});
-
-// Table actions
-const tableActions = [
-  {
-    title: 'Export to Excel',
-    icon: 'mdi-microsoft-excel',
-    action: exportToExcel,
-  },
-  {
-    title: 'Export to PDF',
-    icon: 'mdi-file-pdf',
-    action: exportToPdf,
-  },
-  {
-    title: 'Print',
-    icon: 'mdi-printer',
-    action: printTable,
-  },
-];
-
-// Pay runs from store
-const payRuns = computed(() => payrollStore.payRuns);
-
-// Watch for changes in filters
-watch(
-  [filters, dateRange, searchQuery],
-  () => {
-    fetchPayRuns();
-  },
-  { deep: true }
-);
+    const response = await payrollService.getPayRuns(params);
+    
+    // Calculate tax details for each pay run if not present
+    payRuns.value = response.map(run => {
+      if (!run.taxAmount || !run.taxBreakdown) {
+        const taxResult = taxCalculationService.calculatePayRunTax(run);
+        return {
+          ...run,
+          taxAmount: taxResult.taxAmount,
+          taxBreakdown: taxResult.taxBreakdown,
+          exemptions: taxResult.exemptions
+        };
+      }
+      return run;
+    });
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Failed to fetch pay runs';
+    console.error('Error fetching pay runs:', err);
+  } finally {
+    isLoading.value = false;
+  }
+};
 
 // Lifecycle hooks
 onMounted(() => {
   fetchPayRuns();
 });
 
-// Methods
-function getStatusColor(status: string) {
-  const colors = {
-    draft: 'grey',
-    processing: 'blue',
-    pending_approval: 'orange',
-    approved: 'green',
-    paid: 'success',
-    cancelled: 'error',
-  };
-  return colors[status] || 'grey';
-}
-
-function formatStatus(status: string) {
-  return status
-    .split('_')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
-}
-
-function canProcessPayRun(payRun: any) {
-  return ['draft', 'pending_approval'].includes(payRun.status);
-}
-
-function canApprovePayRun(payRun: any) {
-  return payRun.status === 'pending_approval';
-}
-
-function canDeletePayRun(payRun: any) {
-  return ['draft', 'cancelled'].includes(payRun.status);
-}
-
-function getRowActions(payRun: any) {
-  const actions = [
-    {
-      title: 'View Details',
-      icon: 'mdi-eye',
-      action: (item: any) => {
-        router.push({ name: 'payroll-run-detail', params: { id: item.id } });
-      },
-    },
-  ];
-
-  if (canProcessPayRun(payRun)) {
-    actions.push({
-      title: 'Process Pay Run',
-      icon: 'mdi-cash-multiple',
-      color: 'primary',
-      action: (item: any) => {
-        router.push({ name: 'payroll-run-process', params: { id: item.id } });
-      },
-    });
-  }
-
-  if (canApprovePayRun(payRun)) {
-    actions.push({
-      title: 'Approve',
-      icon: 'mdi-check-circle',
-      color: 'success',
-      action: (item: any) => {
-        router.push({ name: 'payroll-run-approve', params: { id: item.id } });
-      },
-    });
-  }
-
-  if (canDeletePayRun(payRun)) {
-    actions.push({
-      title: 'Delete',
-      icon: 'mdi-delete',
-      color: 'error',
-      action: (item: any) => {
-        selectedPayRun.value = item;
-        deleteDialog.value = true;
-      },
-    });
-  }
-
-  return actions;
-}
-
-async function fetchPayRuns() {
-  try {
-    isLoading.value = true;
-    
-    // Prepare filters
-    const params: any = {
-      page: pagination.value.page,
-      limit: pagination.value.itemsPerPage,
-      sortBy: pagination.value.sortBy[0]?.key || 'paymentDate',
-      sortOrder: pagination.value.sortDesc[0] ? 'desc' : 'asc',
-    };
-
-    // Apply filters
-    if (filters.value.status) {
-      params.status = filters.value.status;
-    }
-
-    if (dateRange.value && dateRange.value.length === 2) {
-      params.startDate = dateRange.value[0];
-      params.endDate = dateRange.value[1];
-    }
-
-    if (searchQuery.value) {
-      params.search = searchQuery.value;
-    }
-
-    // Fetch pay runs
-    await payrollStore.fetchPayRuns(params);
-    
-    // Update pagination total
-    pagination.value.totalItems = payrollStore.payRunPagination.totalItems || 0;
-  } catch (error) {
-    console.error('Error fetching pay runs:', error);
-    showError('Failed to load pay runs');
-  } finally {
-    isLoading.value = false;
-  }
-}
-
-function onTableOptionsChange(options: any) {
-  pagination.value.page = options.page;
-  pagination.value.itemsPerPage = options.itemsPerPage;
-  
-  if (options.sortBy && options.sortBy.length > 0) {
+// Watch for changes in filters
+watch(
+  [filters],
+  () => {
+    fetchPayRuns();
+  },
+  { deep: true }
+);
     pagination.value.sortBy = options.sortBy;
     pagination.value.sortDesc = options.sortDesc;
   }
