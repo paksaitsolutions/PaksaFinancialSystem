@@ -31,6 +31,7 @@
               <router-link to="/ar/customers" class="dropdown-item">Customers</router-link>
               <router-link to="/ar/invoices" class="dropdown-item">AR Invoices</router-link>
               <router-link to="/ar/payments" class="dropdown-item">Payments</router-link>
+              <router-link to="/ar/analytics" class="dropdown-item">AI Analytics</router-link>
             </div>
           </div>
           <div class="nav-dropdown">
@@ -64,7 +65,13 @@
               <router-link to="/tax/policy" class="dropdown-item">Tax Policy</router-link>
             </div>
           </div>
-          <router-link to="/reports" class="nav-link">Reports</router-link>
+          <div class="nav-dropdown">
+            <span class="nav-link dropdown-toggle">Reports</span>
+            <div class="dropdown-menu">
+              <router-link to="/reports" class="dropdown-item">All Reports</router-link>
+              <router-link to="/reports/ar" class="dropdown-item">AR Reports</router-link>
+            </div>
+          </div>
         </div>
       </div>
     </nav>

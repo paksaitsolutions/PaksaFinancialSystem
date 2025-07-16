@@ -61,19 +61,19 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/ar/customers',
     name: 'Customers',
-    component: () => import('@/views/TestHome.vue'),
+    component: () => import('@/views/ar/CustomersAdvanced.vue'),
     meta: { title: 'Customers' },
   },
   {
     path: '/ar/invoices',
     name: 'ARInvoices',
-    component: () => import('@/views/TestHome.vue'),
+    component: () => import('@/views/ar/ARInvoicesAdvanced.vue'),
     meta: { title: 'AR Invoices' },
   },
   {
     path: '/ar/payments',
     name: 'ARPayments',
-    component: () => import('@/views/TestHome.vue'),
+    component: () => import('@/views/ar/ARPaymentsAdvanced.vue'),
     meta: { title: 'AR Payments' },
   },
   // Payroll
@@ -152,6 +152,18 @@ const routes: Array<RouteRecordRaw> = [
     name: 'Reports',
     component: () => import('@/views/TestHome.vue'),
     meta: { title: 'Reports' },
+  },
+  {
+    path: '/reports/ar',
+    name: 'ARReports',
+    component: () => import('@/views/reports/ARReports.vue'),
+    meta: { title: 'AR Reports' },
+  },
+  {
+    path: '/ar/analytics',
+    name: 'ARAnalytics',
+    component: () => import('@/views/ar/ARAnalyticsDashboard.vue'),
+    meta: { title: 'AR Analytics' },
   },
 ];
 
