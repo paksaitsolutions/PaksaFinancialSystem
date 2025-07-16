@@ -11,6 +11,7 @@
           <div class="nav-dropdown">
             <span class="nav-link dropdown-toggle">General Ledger</span>
             <div class="dropdown-menu">
+              <router-link to="/gl/advanced" class="dropdown-item">GL Dashboard</router-link>
               <router-link to="/gl/accounts" class="dropdown-item">Chart of Accounts</router-link>
               <router-link to="/gl/journal-entries" class="dropdown-item">Journal Entries</router-link>
               <router-link to="/gl/trial-balance" class="dropdown-item">Trial Balance</router-link>

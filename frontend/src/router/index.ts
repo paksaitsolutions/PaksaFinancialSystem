@@ -160,10 +160,22 @@ const routes: Array<RouteRecordRaw> = [
     meta: { title: 'AR Reports' },
   },
   {
+    path: '/gl/advanced',
+    name: 'GLDashboard',
+    component: () => import('@/views/gl/AdvancedGL.vue'),
+    meta: { title: 'General Ledger' },
+  },
+  {
     path: '/ar/analytics',
     name: 'ARAnalytics',
     component: () => import('@/views/ar/ARAnalyticsDashboard.vue'),
     meta: { title: 'AR Analytics' },
+  },
+  {
+    path: '/gl/advanced',
+    name: 'AdvancedGL',
+    component: () => import('@/views/gl/AdvancedGL.vue'),
+    meta: { title: 'Advanced General Ledger' },
   },
 ];
 
