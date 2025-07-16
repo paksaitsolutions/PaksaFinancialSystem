@@ -23,7 +23,7 @@
 
     <div class="sidebar-content">
       <Menu :model="visibleMenuItems" class="sidebar-menu">
-        <template #item="{ item, props }">
+        <template #item="{ item }">
           <router-link 
             v-if="item.route" 
             v-slot="{ href, navigate }" 
@@ -32,7 +32,6 @@
           >
             <a 
               :href="href" 
-              v-bind="props.action"
               @click="[navigate, $emit('navigate')]"
               class="p-menuitem-link"
               :class="{ 'p-disabled': item.disabled }"
@@ -72,7 +71,7 @@ import Menu from 'primevue/menu';
 import Button from 'primevue/button';
 import Badge from 'primevue/badge';
 
-const props = defineProps({
+defineProps({
   collapsed: {
     type: Boolean,
     default: false
@@ -149,6 +148,7 @@ const menuItems = ref<SidebarMenuItem[]>([
     label: 'General Ledger',
     icon: 'pi pi-book',
     permission: 'view_general_ledger',
+    visible: true,
     items: [
       { label: 'Dashboard', icon: 'pi pi-chart-bar', route: '/gl/dashboard', visible: true },
       { label: 'Chart of Accounts', icon: 'pi pi-sitemap', route: '/gl/accounts', visible: true },
@@ -164,6 +164,7 @@ const menuItems = ref<SidebarMenuItem[]>([
     label: 'Accounts Payable',
     icon: 'pi pi-credit-card',
     permission: 'view_accounts_payable',
+    visible: true,
     items: [
       { label: 'Dashboard', icon: 'pi pi-chart-bar', route: '/ap/dashboard', visible: true },
       { label: 'Vendors', icon: 'pi pi-users', route: '/ap/vendors', visible: true },
@@ -179,6 +180,7 @@ const menuItems = ref<SidebarMenuItem[]>([
     label: 'Accounts Receivable',
     icon: 'pi pi-money-bill',
     permission: 'view_accounts_receivable',
+    visible: true,
     items: [
       { label: 'Dashboard', icon: 'pi pi-chart-bar', route: '/ar/dashboard', visible: true },
       { label: 'Customers', icon: 'pi pi-users', route: '/ar/customers', visible: true },
@@ -194,6 +196,7 @@ const menuItems = ref<SidebarMenuItem[]>([
     label: 'Cash Management',
     icon: 'pi pi-wallet',
     permission: 'view_cash_management',
+    visible: true,
     items: [
       { label: 'Cash Position', icon: 'pi pi-chart-line', route: '/cash/position', visible: true },
       { label: 'Bank Accounts', icon: 'pi pi-building', route: '/cash/accounts', visible: true },
@@ -209,6 +212,7 @@ const menuItems = ref<SidebarMenuItem[]>([
     label: 'Fixed Assets',
     icon: 'pi pi-building',
     permission: 'view_fixed_assets',
+    visible: true,
     items: [
       { label: 'Asset Register', icon: 'pi pi-list', route: '/assets/register', visible: true },
       { label: 'Acquisitions', icon: 'pi pi-plus-circle', route: '/assets/acquisitions', visible: true },
@@ -224,6 +228,7 @@ const menuItems = ref<SidebarMenuItem[]>([
     label: 'Payroll',
     icon: 'pi pi-users',
     permission: 'view_payroll',
+    visible: true,
     items: [
       { label: 'Dashboard', icon: 'pi pi-chart-bar', route: '/payroll/dashboard', visible: true },
       { label: 'Employees', icon: 'pi pi-user', route: '/payroll/employees', visible: true },
@@ -239,6 +244,7 @@ const menuItems = ref<SidebarMenuItem[]>([
     label: 'Inventory',
     icon: 'pi pi-box',
     permission: 'view_inventory',
+    visible: true,
     items: [
       { label: 'Dashboard', icon: 'pi pi-chart-bar', route: '/inventory/dashboard', visible: true },
       { label: 'Items', icon: 'pi pi-tags', route: '/inventory/items', visible: true },
@@ -254,6 +260,7 @@ const menuItems = ref<SidebarMenuItem[]>([
     label: 'Project Accounting',
     icon: 'pi pi-briefcase',
     permission: 'view_project_accounting',
+    visible: true,
     items: [
       { label: 'Projects', icon: 'pi pi-folder', route: '/projects', visible: true },
       { label: 'Time & Expense', icon: 'pi pi-clock', route: '/projects/time-expense', visible: true },
@@ -269,6 +276,7 @@ const menuItems = ref<SidebarMenuItem[]>([
     label: 'Procurement',
     icon: 'pi pi-shopping-cart',
     permission: 'view_procurement',
+    visible: true,
     items: [
       { label: 'Requisitions', icon: 'pi pi-shopping-bag', route: '/procurement/requisitions', visible: true },
       { label: 'Purchase Orders', icon: 'pi pi-file-edit', route: '/procurement/purchase-orders', visible: true },
@@ -283,22 +291,111 @@ const menuItems = ref<SidebarMenuItem[]>([
   {
     label: 'Tax Management',
     icon: 'pi pi-percentage',
-    permission: 'view_tax_management',
+    permission: 'view_tax_module',
+    visible: true,
     items: [
-      { label: 'Dashboard', icon: 'pi pi-chart-bar', route: '/tax/dashboard', visible: true },
-      { label: 'Tax Returns', icon: 'pi pi-file-export', route: '/tax/returns', visible: true },
-      { label: 'Tax Codes', icon: 'pi pi-tag', route: '/tax/codes', visible: true },
-      { label: 'Tax Rates', icon: 'pi pi-percent', route: '/tax/rates', visible: true },
-      { label: 'Tax Jurisdictions', icon: 'pi pi-globe', route: '/tax/jurisdictions', visible: true },
-      { label: 'Tax Exemptions', icon: 'pi pi-file-pdf', route: '/tax/exemptions', visible: true },
-      { label: 'Tax Reports', icon: 'pi pi-file-pdf', route: '/tax/reports', visible: true },
-      { label: 'Settings', icon: 'pi pi-cog', route: '/tax/settings', visible: true }
+      // Dashboard & Analytics
+      { 
+        label: 'Dashboard', 
+        icon: 'pi pi-chart-bar', 
+        route: '/tax/dashboard', 
+        permission: 'view_tax_dashboard',
+        visible: true 
+      },
+      { 
+        label: 'Compliance', 
+        icon: 'pi pi-shield', 
+        route: '/tax/compliance', 
+        permission: 'view_tax_compliance',
+        visible: true 
+      },
+      
+      // Tax Setup & Configuration
+      { 
+        label: 'Tax Codes', 
+        icon: 'pi pi-tag', 
+        route: '/tax/codes', 
+        permission: 'view_tax_codes',
+        visible: true 
+      },
+      { 
+        label: 'Tax Rates', 
+        icon: 'pi pi-percent', 
+        route: '/tax/rates', 
+        permission: 'view_tax_rates',
+        visible: true 
+      },
+      { 
+        label: 'Jurisdictions', 
+        icon: 'pi pi-globe', 
+        route: '/tax/jurisdictions', 
+        permission: 'view_tax_jurisdictions',
+        visible: true 
+      },
+      
+      // Exemptions & Certificates
+      { 
+        label: 'Exemptions', 
+        icon: 'pi pi-file-export', 
+        route: '/tax/exemptions', 
+        permission: 'view_tax_exemptions',
+        visible: true 
+      },
+      { 
+        label: 'Exemption Certificates', 
+        icon: 'pi pi-file-pdf', 
+        route: '/tax/exemption-certificates', 
+        permission: 'view_tax_exemption_certificates',
+        visible: true 
+      },
+      
+      // Tax Operations
+      { 
+        label: 'Tax Liability', 
+        icon: 'pi pi-money-bill', 
+        route: '/tax/liability', 
+        permission: 'view_tax_liability',
+        visible: true 
+      },
+      { 
+        label: 'Tax Filing', 
+        icon: 'pi pi-upload', 
+        route: '/tax/filing', 
+        permission: 'view_tax_filing',
+        visible: true 
+      },
+      
+      // Reports & Analytics
+      { 
+        label: 'Tax Reports', 
+        icon: 'pi pi-chart-line', 
+        route: '/tax/reports', 
+        permission: 'view_tax_reports',
+        visible: true 
+      },
+      
+      // Configuration
+      { 
+        label: 'Tax Policy', 
+        icon: 'pi pi-book', 
+        route: '/tax/policy', 
+        permission: 'view_tax_policy',
+        visible: true 
+      },
+      { 
+        label: 'Settings', 
+        icon: 'pi pi-cog', 
+        route: '/tax/settings', 
+        permission: 'manage_tax_settings',
+        visible: true 
+      }
     ]
   },
   {
     label: 'Compliance',
     icon: 'pi pi-shield',
     permission: 'view_compliance',
+    visible: true,
     items: [
       { label: 'Dashboard', icon: 'pi pi-chart-bar', route: '/compliance', visible: true },
       { label: 'Audit Logs', icon: 'pi pi-history', route: '/compliance/audit-logs', visible: true },
@@ -314,6 +411,7 @@ const menuItems = ref<SidebarMenuItem[]>([
     label: 'Budgeting',
     icon: 'pi pi-chart-bar',
     permission: 'view_budgeting',
+    visible: true,
     items: [
       { label: 'Dashboard', icon: 'pi pi-chart-bar', route: '/bi/dashboard', visible: true },
       { label: 'Reports', icon: 'pi pi-file-pdf', route: '/bi/reports', visible: true },
@@ -329,6 +427,7 @@ const menuItems = ref<SidebarMenuItem[]>([
     label: 'Document Management',
     icon: 'pi pi-folder',
     permission: 'view_document_management',
+    visible: true,
     items: [
       { label: 'My Documents', icon: 'pi pi-folder-open', route: '/documents/my', visible: true },
       { label: 'Shared', icon: 'pi pi-users', route: '/documents/shared', visible: true },
@@ -341,9 +440,118 @@ const menuItems = ref<SidebarMenuItem[]>([
     ]
   },
   {
+    label: 'Reports',
+    icon: 'pi pi-chart-bar',
+    permission: 'view_reports',
+    route: '/reports',
+    visible: true,
+    items: [
+      // Favorites section
+      {
+        label: 'Favorites',
+        icon: 'pi pi-star',
+        visible: true,
+        items: [
+          { label: 'Report Dashboard', icon: 'pi pi-home', route: '/reports', visible: true },
+          { label: 'Recent Reports', icon: 'pi pi-history', route: '/reports?filter=recent', visible: true },
+          { label: 'Favorites', icon: 'pi pi-star', route: '/reports?filter=favorites', visible: true }
+        ]
+      },
+      {
+        label: 'Financial Statements',
+        icon: 'pi pi-file-pdf',
+        visible: true,
+        items: [
+          { label: 'Balance Sheet', icon: 'pi pi-balance-scale', route: '/reports/balance-sheet', visible: true },
+          { label: 'Income Statement', icon: 'pi pi-chart-line', route: '/reports/income-statement', visible: true },
+          { label: 'Cash Flow', icon: 'pi pi-money-bill', route: '/reports/cash-flow', visible: true },
+          { label: 'Statement of Changes', icon: 'pi pi-chart-bar', route: '/reports/changes-in-equity', visible: true }
+        ]
+      },
+      {
+        label: 'Receivables & Payables',
+        icon: 'pi pi-credit-card',
+        visible: true,
+        items: [
+          { label: 'AR Aging', icon: 'pi pi-credit-card', route: '/reports/ar-aging', visible: true },
+          { label: 'AP Aging', icon: 'pi pi-shopping-cart', route: '/reports/ap-aging', visible: true },
+          { label: 'Customer Statements', icon: 'pi pi-user', route: '/reports/customer-statements', visible: true },
+          { label: 'Vendor Balances', icon: 'pi pi-building', route: '/reports/vendor-balances', visible: true }
+        ]
+      },
+      {
+        label: 'General Ledger',
+        icon: 'pi pi-book',
+        visible: true,
+        items: [
+          { label: 'Trial Balance', icon: 'pi pi-book', route: '/reports/trial-balance', visible: true },
+          { label: 'General Ledger', icon: 'pi pi-book', route: '/reports/general-ledger', visible: true },
+          { label: 'Chart of Accounts', icon: 'pi pi-sitemap', route: '/reports/chart-of-accounts', visible: true },
+          { label: 'Journal Entries', icon: 'pi pi-file-edit', route: '/reports/journal-entries', visible: true }
+        ]
+      },
+      {
+        label: 'Taxation',
+        icon: 'pi pi-percentage',
+        visible: true,
+        items: [
+          { label: 'Sales Tax', icon: 'pi pi-percentage', route: '/reports/sales-tax', visible: true },
+          { label: 'VAT Report', icon: 'pi pi-euro', route: '/reports/vat', visible: true },
+          { label: 'Tax Summary', icon: 'pi pi-file-export', route: '/reports/tax-summary', visible: true },
+          { label: 'Tax Liabilities', icon: 'pi pi-exclamation-triangle', route: '/reports/tax-liabilities', visible: true }
+        ]
+      },
+      {
+        label: 'Performance',
+        icon: 'pi pi-chart-line',
+        visible: true,
+        items: [
+          { label: 'Budget vs Actual', icon: 'pi pi-chart-bar', route: '/reports/budget-vs-actual', visible: true },
+          { label: 'Expense Analysis', icon: 'pi pi-chart-pie', route: '/reports/expense-analysis', visible: true },
+          { label: 'Revenue by Customer', icon: 'pi pi-users', route: '/reports/revenue-by-customer', visible: true },
+          { label: 'Department Performance', icon: 'pi pi-sitemap', route: '/reports/department-performance', visible: true }
+        ]
+      },
+      {
+        label: 'Assets & Inventory',
+        icon: 'pi pi-box',
+        visible: true,
+        items: [
+          { label: 'Inventory Valuation', icon: 'pi pi-tags', route: '/reports/inventory-valuation', visible: true },
+          { label: 'Fixed Assets', icon: 'pi pi-building', route: '/reports/fixed-assets', visible: true },
+          { label: 'Asset Depreciation', icon: 'pi pi-chart-line', route: '/reports/asset-depreciation', visible: true },
+          { label: 'Stock Movement', icon: 'pi pi-arrow-right-arrow-left', route: '/reports/stock-movement', visible: true }
+        ]
+      },
+      {
+        label: 'Human Resources',
+        icon: 'pi pi-users',
+        visible: true,
+        items: [
+          { label: 'Payroll Summary', icon: 'pi pi-money-bill', route: '/reports/payroll-summary', visible: true },
+          { label: 'Employee Performance', icon: 'pi pi-user-edit', route: '/reports/employee-performance', visible: true },
+          { label: 'Time & Attendance', icon: 'pi pi-clock', route: '/reports/attendance', visible: true }
+        ]
+      },
+      // Custom Reports section
+      {
+        label: 'Custom & Tools',
+        icon: 'pi pi-wrench',
+        visible: true,
+        items: [
+          { label: 'Custom Reports', icon: 'pi pi-file-edit', route: '/reports/custom', visible: true, badge: 'New', badgeSeverity: 'info' as BadgeSeverity },
+          { label: 'Report Builder', icon: 'pi pi-wrench', route: '/reports/builder', visible: true },
+          { label: 'Scheduled Reports', icon: 'pi pi-clock', route: '/reports/scheduled', visible: true },
+          { label: 'Report Templates', icon: 'pi pi-copy', route: '/reports/templates', visible: true }
+        ]
+      }
+    ]
+  },
+  {
     label: 'System Administration',
     icon: 'pi pi-cog',
     permission: 'view_system_administration',
+    visible: true,
     items: [
       { label: 'Users', icon: 'pi pi-users', route: '/admin/users', visible: true },
       { label: 'Roles & Permissions', icon: 'pi pi-key', route: '/admin/roles', visible: true },

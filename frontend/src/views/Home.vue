@@ -106,39 +106,33 @@
 const features = [
   {
     title: 'General Ledger',
-    description: 'Complete chart of accounts management with journal entries and financial reporting',
+    description: 'Comprehensive accounting with multi-currency support',
     icon: 'mdi-book-open-variant',
-    color: 'blue'
+    color: 'primary'
+  },
+  {
+    title: 'Tax Management',
+    description: 'End-to-end tax calculation, reporting, and compliance',
+    icon: 'mdi-calculator',
+    color: 'purple'
   },
   {
     title: 'Accounts Payable',
-    description: 'Vendor management, invoice processing, and automated payment workflows',
-    icon: 'mdi-credit-card-outline',
-    color: 'red'
+    description: 'Streamline vendor payments and invoice processing',
+    icon: 'mdi-account-arrow-right',
+    color: 'blue'
   },
   {
     title: 'Accounts Receivable',
-    description: 'Customer invoicing, payment tracking, and collections management',
-    icon: 'mdi-cash-multiple',
+    description: 'Manage customer invoices and payments',
+    icon: 'mdi-account-arrow-left',
     color: 'green'
   },
   {
-    title: 'Payroll Management',
-    description: 'Employee payroll processing with tax calculations and compliance',
-    icon: 'mdi-account-group',
-    color: 'orange'
-  },
-  {
-    title: 'Cash Management',
-    description: 'Bank reconciliation, cash flow forecasting, and liquidity planning',
-    icon: 'mdi-bank',
+    title: 'Tax Compliance',
+    description: 'Stay compliant with automated tax calculations and filings',
+    icon: 'mdi-shield-check',
     color: 'teal'
-  },
-  {
-    title: 'Fixed Assets',
-    description: 'Asset lifecycle management with depreciation and maintenance tracking',
-    icon: 'mdi-factory',
-    color: 'purple'
   }
 ]
 
@@ -158,6 +152,13 @@ const quickActions = [
     route: '/dashboard'
   },
   {
+    title: 'Tax Management',
+    description: 'Access tax dashboard and tools',
+    icon: 'mdi-calculator',
+    color: 'purple',
+    route: '/tax/dashboard'
+  },
+  {
     title: 'Chart of Accounts',
     description: 'Manage your chart of accounts',
     icon: 'mdi-format-list-bulleted',
@@ -172,25 +173,18 @@ const quickActions = [
     route: '/gl/journal-entries'
   },
   {
+    title: 'Tax Compliance',
+    description: 'View tax compliance status',
+    icon: 'mdi-shield-check',
+    color: 'teal',
+    route: '/tax/compliance'
+  },
+  {
     title: 'Reports',
-    description: 'Generate financial reports',
+    description: 'Generate financial and tax reports',
     icon: 'mdi-chart-line',
     color: 'orange',
     route: '/reports'
-  },
-  {
-    title: 'Payroll',
-    description: 'Process employee payroll',
-    icon: 'mdi-account-cash',
-    color: 'teal',
-    route: '/payroll'
-  },
-  {
-    title: 'Settings',
-    description: 'Configure system settings',
-    icon: 'mdi-cog',
-    color: 'grey',
-    route: '/settings'
   }
 ]
 </script>

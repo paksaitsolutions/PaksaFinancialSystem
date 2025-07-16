@@ -66,13 +66,7 @@
               <router-link to="/tax/policy" class="dropdown-item">Tax Policy</router-link>
             </div>
           </div>
-          <div class="nav-dropdown">
-            <span class="nav-link dropdown-toggle">Reports</span>
-            <div class="dropdown-menu">
-              <router-link to="/reports" class="dropdown-item">All Reports</router-link>
-              <router-link to="/reports/ar" class="dropdown-item">AR Reports</router-link>
-            </div>
-          </div>
+
         </div>
       </div>
     </nav>

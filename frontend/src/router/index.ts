@@ -133,25 +133,129 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/TestHome.vue'),
     meta: { title: 'Asset Maintenance' },
   },
-  // Tax Routes
+  // Tax Management Routes
   {
-    path: '/tax/exemption-certificate',
-    name: 'TaxExemptionCertificate',
-    component: () => import('@/views/tax/TaxExemptionCertificate.vue'),
-    meta: { title: 'Tax Exemption Certificate' },
-  },
-  {
-    path: '/tax/policy',
-    name: 'TaxPolicy',
-    component: () => import('@/views/TestHome.vue'),
-    meta: { title: 'Tax Policy' },
+    path: '/tax',
+    redirect: '/tax/dashboard',
+    meta: { requiresAuth: true, permission: 'view_tax_module' },
+    children: [
+      {
+        path: 'dashboard',
+        name: 'TaxDashboard',
+        component: () => import('@/views/tax/TaxDashboard.vue'),
+        meta: { title: 'Tax Dashboard', permission: 'view_tax_dashboard' },
+      },
+      {
+        path: 'compliance',
+        name: 'TaxCompliance',
+        component: () => import('@/views/tax/TaxCompliance.vue'),
+        meta: { title: 'Tax Compliance', permission: 'view_tax_compliance' },
+      },
+      {
+        path: 'codes',
+        name: 'TaxCodes',
+        component: () => import('@/views/tax/TaxCodes.vue'),
+        meta: { title: 'Tax Codes', permission: 'view_tax_codes' },
+      },
+      {
+        path: 'rates',
+        name: 'TaxRates',
+        component: () => import('@/views/tax/TaxRates.vue'),
+        meta: { title: 'Tax Rates', permission: 'view_tax_rates' },
+      },
+      {
+        path: 'jurisdictions',
+        name: 'TaxJurisdictions',
+        component: () => import('@/views/tax/TaxJurisdictions.vue'),
+        meta: { title: 'Tax Jurisdictions', permission: 'view_tax_jurisdictions' },
+      },
+      {
+        path: 'exemptions',
+        name: 'TaxExemptions',
+        component: () => import('@/views/tax/TaxExemptions.vue'),
+        meta: { title: 'Tax Exemptions', permission: 'view_tax_exemptions' },
+      },
+      {
+        path: 'exemption-certificates',
+        name: 'TaxExemptionCertificates',
+        component: () => import('@/views/tax/TaxExemptionCertificatesView.vue'),
+        meta: { title: 'Exemption Certificates', permission: 'view_tax_exemption_certificates' },
+      },
+      {
+        path: 'exemption-certificate/:id?',
+        name: 'TaxExemptionCertificate',
+        component: () => import('@/views/tax/TaxExemptionCertificate.vue'),
+        meta: { title: 'Tax Exemption Certificate', permission: 'manage_tax_exemption_certificates' },
+        props: true
+      },
+      {
+        path: 'liability',
+        name: 'TaxLiability',
+        component: () => import('@/views/tax/TaxLiabilityReport.vue'),
+        meta: { title: 'Tax Liability', permission: 'view_tax_liability' },
+      },
+      {
+        path: 'filing',
+        name: 'TaxFiling',
+        component: () => import('@/views/tax/TaxCompliance.vue'),
+        meta: { title: 'Tax Compliance', permission: 'view_tax_compliance' },
+      },
+      {
+        path: 'reports',
+        name: 'TaxReports',
+        component: () => import('@/views/tax/TaxReports.vue'),
+        meta: { title: 'Tax Reports', permission: 'view_tax_reports' },
+      },
+      {
+        path: 'policy',
+        name: 'TaxPolicy',
+        component: () => import('@/views/tax/TaxPolicyView.vue'),
+        meta: { title: 'Tax Policy', permission: 'view_tax_policy' },
+      },
+      {
+        path: 'settings',
+        name: 'TaxSettings',
+        component: () => import('@/views/TestHome.vue'),
+        meta: { title: 'Tax Settings', permission: 'manage_tax_settings' },
+      },
+    ],
   },
   // Reports
   {
     path: '/reports',
-    name: 'Reports',
-    component: () => import('@/views/TestHome.vue'),
-    meta: { title: 'Reports' },
+    name: 'FinancialReports',
+    component: () => import('@/views/reports/FinancialReportsView.vue'),
+    meta: { title: 'Financial Reports' },
+  },
+  {
+    path: '/reports/balance-sheet',
+    name: 'BalanceSheetReport',
+    component: () => import('@/views/reports/BalanceSheetReport.vue'),
+    meta: { title: 'Balance Sheet Report' },
+  },
+  {
+    path: '/reports/income-statement',
+    name: 'IncomeStatementReport',
+    component: () => import('@/views/reports/IncomeStatementReport.vue'),
+    meta: { title: 'Income Statement Report' },
+  },
+  {
+    path: '/reports/cash-flow',
+    name: 'CashFlowReport',
+    component: () => import('@/views/reports/CashFlowReport.vue'),
+    meta: { title: 'Cash Flow Report' },
+  },
+  {
+    path: '/reports/ar-aging',
+    name: 'ARAgingReport',
+    component: () => import('@/views/reports/ARAgingReport.vue'),
+    meta: { title: 'AR Aging Report' },
+  },
+  {
+    path: '/reports/ap-aging',
+    name: 'APAgingReport',
+    component: () => import('@/views/reports/APAgingReport.vue'),
+    meta: { title: 'AP Aging Report' },
   },
   {
     path: '/reports/ar',
