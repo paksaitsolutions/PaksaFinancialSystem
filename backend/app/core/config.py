@@ -7,7 +7,6 @@ from typing import Any, Dict, List, Optional, Union
 
 from pydantic import (
     BaseModel,
-    BaseSettings,
     Field,
     ValidationError,
     field_validator,
@@ -17,7 +16,9 @@ from pydantic import (
     EmailStr,
     field_serializer,
 )
+from pydantic_settings import BaseSettings
 from pydantic_core import core_schema
+from pydantic import field_validator
 from urllib.parse import urlparse, quote_plus
 from typing import Any, Dict, List, Optional, TypeVar, Union, Annotated
 
@@ -42,7 +43,7 @@ class DatabaseUrl(str):
         )
     
     @classmethod
-    def validate(cls, v: Any, _info: core_schema.ValidationInfo) -> str:
+    def validate(cls, v: Any) -> str:
         if not isinstance(v, str):
             raise ValueError("Database URL must be a string")
         return validate_database_url(v)
@@ -57,9 +58,18 @@ class Settings(BaseSettings):
     
     # Security
     SECRET_KEY: str = os.getenv("SECRET_KEY", "dev-secret-key-change-in-production")
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8  # 8 days
-    REFRESH_TOKEN_EXPIRE_DAYS: int = 30
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440  # 24 hours by default
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     ALGORITHM: str = "HS256"
+    
+    @field_validator('ACCESS_TOKEN_EXPIRE_MINUTES', mode='before')
+    @classmethod
+    def parse_access_token_expire_minutes(cls, v: Any) -> int:
+        if isinstance(v, str):
+            # Remove any comments and strip whitespace
+            v = v.split('#')[0].strip()
+            return int(v)
+        return v
     
     # CORS
     BACKEND_CORS_ORIGINS: List[str] = [
