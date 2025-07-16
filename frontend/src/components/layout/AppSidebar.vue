@@ -22,8 +22,8 @@
     </div>
 
     <div class="sidebar-content">
-      <Menu :model="menuItems" class="sidebar-menu">
-        <template #item="{ item, props, hasSubmenu, root }">
+      <Menu :model="visibleMenuItems" class="sidebar-menu">
+        <template #item="{ item, props }">
           <router-link 
             v-if="item.route" 
             v-slot="{ href, navigate }" 
@@ -42,7 +42,7 @@
               <span v-if="item.badge" class="ml-auto">
                 <Badge :value="item.badge" :severity="item.badgeSeverity" />
               </span>
-              <span v-if="hasSubmenu" class="ml-auto">
+              <span v-if="item.items && item.items.length > 0" class="ml-auto">
                 <i class="pi pi-angle-down"></i>
               </span>
             </a>
@@ -88,19 +88,56 @@ const router = useRouter();
 const authStore = useAuthStore();
 
 // Types
-// Define our own menu item type to avoid conflicts with PrimeVue's MenuItem
-type SidebarMenuItem = {
+type BadgeSeverity = 'success' | 'info' | 'warning' | 'danger' | 'contrast' | 'secondary' | null | undefined;
+
+interface SidebarMenuItem {
   label: string;
   icon: string;
   route?: RouteLocationRaw;
-  visible: boolean;
+  visible: boolean | (() => boolean);
   items?: SidebarMenuItem[];
   badge?: string;
-  badgeSeverity?: 'success' | 'info' | 'warning' | 'danger' | 'contrast' | 'secondary';
+  badgeSeverity?: BadgeSeverity;
   disabled?: boolean;
+  permission?: string | string[];
+}
+
+// Check if menu item should be visible
+const isMenuItemVisible = (item: SidebarMenuItem): boolean => {
+  // If visibility is a function, call it
+  if (typeof item.visible === 'function') {
+    return item.visible();
+  }
+  
+  // Check permissions if specified
+  if (item.permission) {
+    if (Array.isArray(item.permission)) {
+      return authStore.hasAnyPermission(item.permission);
+    }
+    return authStore.hasPermission(item.permission);
+  }
+  
+  // Default to visible if no specific conditions
+  return item.visible !== false;
 };
 
-// Menu items
+// Filter menu items based on visibility
+const filterMenuItems = (items: SidebarMenuItem[]): SidebarMenuItem[] => {
+  return items
+    .map(item => ({
+      ...item,
+      // Process sub-items if they exist
+      items: item.items ? filterMenuItems(item.items) : undefined,
+      // Evaluate visibility
+      visible: isMenuItemVisible(item)
+    }))
+    .filter(item => item.visible);
+};
+
+// Compute visible menu items based on permissions
+const visibleMenuItems = computed(() => filterMenuItems(menuItems.value));
+
+// Menu items configuration
 const menuItems = ref<SidebarMenuItem[]>([
   {
     label: 'Dashboard',
@@ -111,147 +148,226 @@ const menuItems = ref<SidebarMenuItem[]>([
   {
     label: 'General Ledger',
     icon: 'pi pi-book',
-    route: '/general-ledger',
-    visible: authStore.hasPermission('view_general_ledger')
+    permission: 'view_general_ledger',
+    items: [
+      { label: 'Dashboard', icon: 'pi pi-chart-bar', route: '/gl/dashboard', visible: true },
+      { label: 'Chart of Accounts', icon: 'pi pi-sitemap', route: '/gl/accounts', visible: true },
+      { label: 'Journal Entries', icon: 'pi pi-book', route: '/gl/journal-entries', visible: true },
+      { label: 'Trial Balance', icon: 'pi pi-balance-scale', route: '/gl/trial-balance', visible: true },
+      { label: 'Financial Statements', icon: 'pi pi-file-pdf', route: '/gl/financial-statements', visible: true },
+      { label: 'Recurring Journals', icon: 'pi pi-sync', route: '/gl/recurring-journals', visible: true },
+      { label: 'Allocation Rules', icon: 'pi pi-share-alt', route: '/gl/allocation-rules', visible: true },
+      { label: 'Period Close', icon: 'pi pi-lock', route: '/gl/period-close', visible: true }
+    ]
   },
   {
     label: 'Accounts Payable',
     icon: 'pi pi-credit-card',
-    route: '/accounts-payable',
-    visible: authStore.hasPermission('view_accounts_payable')
+    permission: 'view_accounts_payable',
+    items: [
+      { label: 'Dashboard', icon: 'pi pi-chart-bar', route: '/ap/dashboard', visible: true },
+      { label: 'Vendors', icon: 'pi pi-users', route: '/ap/vendors', visible: true },
+      { label: 'Invoices', icon: 'pi pi-file-import', route: '/ap/invoices', visible: true },
+      { label: 'Payments', icon: 'pi pi-money-bill', route: '/ap/payments', visible: true },
+      { label: 'Expense Reports', icon: 'pi pi-receipt', route: '/ap/expense-reports', visible: true },
+      { label: 'Purchase Orders', icon: 'pi pi-shopping-cart', route: '/ap/purchase-orders', visible: true },
+      { label: 'Aging Report', icon: 'pi pi-clock', route: '/ap/aging-report', visible: true },
+      { label: '1099 Reporting', icon: 'pi pi-file-pdf', route: '/ap/1099-reporting', visible: true }
+    ]
   },
   {
     label: 'Accounts Receivable',
     icon: 'pi pi-money-bill',
-    route: '/accounts-receivable',
-    visible: authStore.hasPermission('view_accounts_receivable')
+    permission: 'view_accounts_receivable',
+    items: [
+      { label: 'Dashboard', icon: 'pi pi-chart-bar', route: '/ar/dashboard', visible: true },
+      { label: 'Customers', icon: 'pi pi-users', route: '/ar/customers', visible: true },
+      { label: 'Invoices', icon: 'pi pi-file-export', route: '/ar/invoices', visible: true },
+      { label: 'Payments', icon: 'pi pi-credit-card', route: '/ar/payments', visible: true },
+      { label: 'Credit Notes', icon: 'pi pi-undo', route: '/ar/credit-notes', visible: true },
+      { label: 'Collections', icon: 'pi pi-inbox', route: '/ar/collections', visible: true },
+      { label: 'Aging Report', icon: 'pi pi-clock', route: '/ar/aging-report', visible: true },
+      { label: 'Customer Statements', icon: 'pi pi-file-pdf', route: '/ar/statements', visible: true }
+    ]
   },
   {
     label: 'Cash Management',
     icon: 'pi pi-wallet',
-    route: '/cash-management',
-    visible: authStore.hasPermission('view_cash_management')
+    permission: 'view_cash_management',
+    items: [
+      { label: 'Cash Position', icon: 'pi pi-chart-line', route: '/cash/position', visible: true },
+      { label: 'Bank Accounts', icon: 'pi pi-building', route: '/cash/accounts', visible: true },
+      { label: 'Bank Reconciliation', icon: 'pi pi-sync', route: '/cash/reconciliation', visible: true },
+      { label: 'Cash Flow Forecast', icon: 'pi pi-chart-bar', route: '/cash/forecast', visible: true },
+      { label: 'Funds Transfer', icon: 'pi pi-exchange', route: '/cash/transfer', visible: true },
+      { label: 'Cash Receipts', icon: 'pi pi-arrow-down', route: '/cash/receipts', visible: true },
+      { label: 'Cash Disbursements', icon: 'pi pi-arrow-up', route: '/cash/disbursements', visible: true },
+      { label: 'Bank Feeds', icon: 'pi pi-cloud-download', route: '/cash/bank-feeds', visible: true }
+    ]
   },
   {
     label: 'Fixed Assets',
     icon: 'pi pi-building',
-    route: '/fixed-assets',
-    visible: authStore.hasPermission('view_fixed_assets')
+    permission: 'view_fixed_assets',
+    items: [
+      { label: 'Asset Register', icon: 'pi pi-list', route: '/assets/register', visible: true },
+      { label: 'Acquisitions', icon: 'pi pi-plus-circle', route: '/assets/acquisitions', visible: true },
+      { label: 'Depreciation', icon: 'pi pi-chart-line', route: '/assets/depreciation', visible: true },
+      { label: 'Disposals', icon: 'pi pi-trash', route: '/assets/disposals', visible: true },
+      { label: 'Transfers', icon: 'pi pi-sync', route: '/assets/transfers', visible: true },
+      { label: 'Maintenance', icon: 'pi pi-wrench', route: '/assets/maintenance', visible: true },
+      { label: 'Reports', icon: 'pi pi-file-pdf', route: '/assets/reports', visible: true },
+      { label: 'Settings', icon: 'pi pi-cog', route: '/assets/settings', visible: true }
+    ]
   },
   {
     label: 'Payroll',
     icon: 'pi pi-users',
-    route: '/payroll',
-    visible: authStore.hasPermission('view_payroll')
-  },
-  {
-    label: 'Compliance & Security',
-    icon: 'pi pi-shield',
-    visible: authStore.hasAnyPermission([
-      'view_compliance_dashboard',
-      'view_audit_logs',
-      'manage_data_subject_requests',
-      'manage_security_policies',
-      'view_security_events',
-      'manage_encryption_keys'
-    ]),
+    permission: 'view_payroll',
     items: [
-      {
-        label: 'Dashboard',
-        icon: 'pi pi-chart-bar',
-        route: '/compliance',
-        visible: authStore.hasPermission('view_compliance_dashboard')
-      },
-      {
-        label: 'Audit Logs',
-        icon: 'pi pi-history',
-        route: '/compliance/audit-logs',
-        visible: authStore.hasPermission('view_audit_logs'),
-        badge: 'New',
-        badgeSeverity: 'info' as const
-      },
-      {
-        label: 'Data Subject Requests',
-        icon: 'pi pi-database',
-        route: '/compliance/data-subject-requests',
-        visible: authStore.hasPermission('manage_data_subject_requests')
-      },
-      {
-        label: 'Security Policies',
-        icon: 'pi pi-lock',
-        route: '/compliance/security-policies',
-        visible: authStore.hasPermission('manage_security_policies')
-      },
-      {
-        label: 'Security Events',
-        icon: 'pi pi-exclamation-triangle',
-        route: '/compliance/security-events',
-        visible: authStore.hasPermission('view_security_events')
-      },
-      {
-        label: 'Encryption Keys',
-        icon: 'pi pi-key',
-        route: '/compliance/encryption-keys',
-        visible: authStore.hasPermission('manage_encryption_keys')
-      },
-      {
-        label: 'Encryption Management',
-        icon: 'pi pi-lock',
-        route: '/compliance/encryption-management',
-        visible: authStore.hasPermission('manage_encryption_keys'),
-        badge: 'New',
-        badgeSeverity: 'success' as const
-      }
+      { label: 'Dashboard', icon: 'pi pi-chart-bar', route: '/payroll/dashboard', visible: true },
+      { label: 'Employees', icon: 'pi pi-user', route: '/payroll/employees', visible: true },
+      { label: 'Process Payroll', icon: 'pi pi-calculator', route: '/payroll/process', visible: true },
+      { label: 'Payslips', icon: 'pi pi-file-pdf', route: '/payroll/payslips', visible: true },
+      { label: 'Taxes', icon: 'pi pi-percentage', route: '/payroll/taxes', visible: true },
+      { label: 'Benefits', icon: 'pi pi-heart', route: '/payroll/benefits', visible: true },
+      { label: 'Reports', icon: 'pi pi-chart-line', route: '/payroll/reports', visible: true },
+      { label: 'Year-End', icon: 'pi pi-calendar', route: '/payroll/yearend', visible: true }
     ]
   },
   {
-    label: 'Tax',
+    label: 'Inventory',
+    icon: 'pi pi-box',
+    permission: 'view_inventory',
+    items: [
+      { label: 'Dashboard', icon: 'pi pi-chart-bar', route: '/inventory/dashboard', visible: true },
+      { label: 'Items', icon: 'pi pi-tags', route: '/inventory/items', visible: true },
+      { label: 'Stock Movements', icon: 'pi pi-arrow-right-arrow-left', route: '/inventory/movements', visible: true },
+      { label: 'Transfers', icon: 'pi pi-truck', route: '/inventory/transfers', visible: true },
+      { label: 'Adjustments', icon: 'pi pi-sliders-h', route: '/inventory/adjustments', visible: true },
+      { label: 'Counts', icon: 'pi pi-list-check', route: '/inventory/counts', visible: true },
+      { label: 'Valuation', icon: 'pi pi-dollar', route: '/inventory/valuation', visible: true },
+      { label: 'Reports', icon: 'pi pi-file-pdf', route: '/inventory/reports', visible: true }
+    ]
+  },
+  {
+    label: 'Project Accounting',
+    icon: 'pi pi-briefcase',
+    permission: 'view_project_accounting',
+    items: [
+      { label: 'Projects', icon: 'pi pi-folder', route: '/projects', visible: true },
+      { label: 'Time & Expense', icon: 'pi pi-clock', route: '/projects/time-expense', visible: true },
+      { label: 'Billing', icon: 'pi pi-file-invoice', route: '/projects/billing', visible: true },
+      { label: 'Budgeting', icon: 'pi pi-chart-pie', route: '/projects/budgets', visible: true },
+      { label: 'Profitability', icon: 'pi pi-chart-line', route: '/projects/profitability', visible: true },
+      { label: 'Resource Planning', icon: 'pi pi-users', route: '/projects/resource-planning', visible: true },
+      { label: 'Reports', icon: 'pi pi-file-pdf', route: '/projects/reports', visible: true },
+      { label: 'Settings', icon: 'pi pi-cog', route: '/projects/settings', visible: true }
+    ]
+  },
+  {
+    label: 'Procurement',
+    icon: 'pi pi-shopping-cart',
+    permission: 'view_procurement',
+    items: [
+      { label: 'Requisitions', icon: 'pi pi-shopping-bag', route: '/procurement/requisitions', visible: true },
+      { label: 'Purchase Orders', icon: 'pi pi-file-edit', route: '/procurement/purchase-orders', visible: true },
+      { label: 'Vendors', icon: 'pi pi-building', route: '/procurement/vendors', visible: true },
+      { label: 'RFQs', icon: 'pi pi-file', route: '/procurement/rfqs', visible: true },
+      { label: 'Receiving', icon: 'pi pi-check-square', route: '/procurement/receiving', visible: true },
+      { label: 'Contracts', icon: 'pi pi-file-contract', route: '/procurement/contracts', visible: true },
+      { label: 'Spend Analysis', icon: 'pi pi-chart-bar', route: '/procurement/spend-analysis', visible: true },
+      { label: 'Settings', icon: 'pi pi-cog', route: '/procurement/settings', visible: true }
+    ]
+  },
+  {
+    label: 'Tax Management',
     icon: 'pi pi-percentage',
-    visible: authStore.hasAnyPermission([
-      'view_tax_exemption_certificates',
-      'manage_tax_exemption_certificates'
-    ]),
+    permission: 'view_tax_management',
     items: [
-      {
-        label: 'Exemption Certificates',
-        icon: 'pi pi-file-pdf',
-        route: '/tax/exemption-certificates',
-        visible: authStore.hasAnyPermission([
-          'view_tax_exemption_certificates',
-          'manage_tax_exemption_certificates'
-        ])
-      }
+      { label: 'Dashboard', icon: 'pi pi-chart-bar', route: '/tax/dashboard', visible: true },
+      { label: 'Tax Returns', icon: 'pi pi-file-export', route: '/tax/returns', visible: true },
+      { label: 'Tax Codes', icon: 'pi pi-tag', route: '/tax/codes', visible: true },
+      { label: 'Tax Rates', icon: 'pi pi-percent', route: '/tax/rates', visible: true },
+      { label: 'Tax Jurisdictions', icon: 'pi pi-globe', route: '/tax/jurisdictions', visible: true },
+      { label: 'Tax Exemptions', icon: 'pi pi-file-pdf', route: '/tax/exemptions', visible: true },
+      { label: 'Tax Reports', icon: 'pi pi-file-pdf', route: '/tax/reports', visible: true },
+      { label: 'Settings', icon: 'pi pi-cog', route: '/tax/settings', visible: true }
     ]
   },
   {
-    label: 'Reports',
-    icon: 'pi pi-chart-line',
-    route: '/reports',
-    visible: authStore.hasPermission('view_reports')
+    label: 'Compliance',
+    icon: 'pi pi-shield',
+    permission: 'view_compliance',
+    items: [
+      { label: 'Dashboard', icon: 'pi pi-chart-bar', route: '/compliance', visible: true },
+      { label: 'Audit Logs', icon: 'pi pi-history', route: '/compliance/audit-logs', visible: true },
+      { label: 'Policies', icon: 'pi pi-file', route: '/compliance/policies', visible: true },
+      { label: 'Risk Assessment', icon: 'pi pi-exclamation-triangle', route: '/compliance/risk', visible: true },
+      { label: 'Training', icon: 'pi pi-graduation-cap', route: '/compliance/training', visible: true },
+      { label: 'Incidents', icon: 'pi pi-exclamation-circle', route: '/compliance/incidents', visible: true },
+      { label: 'Reports', icon: 'pi pi-file-pdf', route: '/compliance/reports', visible: true },
+      { label: 'Settings', icon: 'pi pi-cog', route: '/compliance/settings', visible: true }
+    ]
   },
   {
-    label: 'Administration',
+    label: 'Budgeting',
+    icon: 'pi pi-chart-bar',
+    permission: 'view_budgeting',
+    items: [
+      { label: 'Dashboard', icon: 'pi pi-chart-bar', route: '/bi/dashboard', visible: true },
+      { label: 'Reports', icon: 'pi pi-file-pdf', route: '/bi/reports', visible: true },
+      { label: 'Analytics', icon: 'pi pi-chart-line', route: '/bi/analytics', visible: true },
+      { label: 'Data Explorer', icon: 'pi pi-search', route: '/bi/explorer', visible: true },
+      { label: 'KPIs', icon: 'pi pi-chart-bar', route: '/bi/kpis', visible: true },
+      { label: 'Alerts', icon: 'pi pi-bell', route: '/bi/alerts', visible: true },
+      { label: 'Scheduled Reports', icon: 'pi pi-clock', route: '/bi/scheduled-reports', visible: true },
+      { label: 'Settings', icon: 'pi pi-cog', route: '/bi/settings', visible: true }
+    ]
+  },
+  {
+    label: 'Document Management',
+    icon: 'pi pi-folder',
+    permission: 'view_document_management',
+    items: [
+      { label: 'My Documents', icon: 'pi pi-folder-open', route: '/documents/my', visible: true },
+      { label: 'Shared', icon: 'pi pi-users', route: '/documents/shared', visible: true },
+      { label: 'Recent', icon: 'pi pi-clock', route: '/documents/recent', visible: true },
+      { label: 'Templates', icon: 'pi pi-file', route: '/documents/templates', visible: true },
+      { label: 'Trash', icon: 'pi pi-trash', route: '/documents/trash', visible: true },
+      { label: 'Search', icon: 'pi pi-search', route: '/documents/search', visible: true },
+      { label: 'Workflows', icon: 'pi pi-sitemap', route: '/documents/workflows', visible: true },
+      { label: 'Settings', icon: 'pi pi-cog', route: '/documents/settings', visible: true }
+    ]
+  },
+  {
+    label: 'System Administration',
     icon: 'pi pi-cog',
-    route: '/admin',
-    visible: authStore.hasAnyPermission([
-      'manage_users',
-      'manage_roles',
-      'manage_settings'
-    ])
+    permission: 'view_system_administration',
+    items: [
+      { label: 'Users', icon: 'pi pi-users', route: '/admin/users', visible: true },
+      { label: 'Roles & Permissions', icon: 'pi pi-key', route: '/admin/roles', visible: true },
+      { label: 'System Settings', icon: 'pi pi-cog', route: '/admin/settings', visible: true },
+      { label: 'Email Templates', icon: 'pi pi-envelope', route: '/admin/email-templates', visible: true },
+      { label: 'Audit Trail', icon: 'pi pi-history', route: '/admin/audit-trail', visible: true },
+      { label: 'System Logs', icon: 'pi pi-list', route: '/admin/logs', visible: true },
+      { label: 'Backup & Restore', icon: 'pi pi-cloud', route: '/admin/backup', visible: true },
+      { label: 'System Health', icon: 'pi pi-heart', route: '/admin/health', visible: true }
+    ]
   }
-].filter(item => item.visible));
+]);
 
 // Methods
 const navigateToSettings = () => {
-  router.push('/settings');
-  emit('navigate');
+  if (authStore.hasPermission('view_settings')) {
+    router.push('/settings');
+    emit('navigate');
+  }
 };
 
 const handleClick = (event: Event) => {
-  // Prevent click events from propagating when sidebar is collapsed or in mobile mode
-  if (props.collapsed || props.isMobileMenuOpen) {
-    event.stopPropagation();
-  }
+  // Prevent event propagation to avoid closing mobile menu when clicking inside
+  event.stopPropagation();
 };
 </script>
 
