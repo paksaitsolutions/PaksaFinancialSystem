@@ -9,8 +9,8 @@
             <p>Welcome to Paksa Financial System - {{ getCurrentDate() }}</p>
           </div>
           <div class="header-actions">
-            <button class="btn btn-primary">Export Report</button>
-            <button class="btn btn-secondary">Settings</button>
+            <button class="btn btn-primary" @click="exportDashboard()">Export Report</button>
+            <button class="btn btn-secondary" @click="navigateToModule('/settings')">Settings</button>
           </div>
         </div>
       </div>
@@ -92,7 +92,7 @@
           <div class="transactions-card">
             <div class="card-header">
               <h3>Recent Transactions</h3>
-              <button class="btn-link" @click="$router.push('/gl/journal-entries')">View All</button>
+              <button class="btn-link" @click="navigateToModule('/gl/journal-entries')">View All</button>
             </div>
             <div class="transactions-list">
               <div v-for="transaction in recentTransactions" :key="transaction.id" class="transaction-item">
@@ -113,21 +113,21 @@
               <h3>Quick Actions</h3>
             </div>
             <div class="actions-grid">
-              <button class="action-btn" @click="$router.push('/gl/journal-entries')">
+              <button class="action-btn" @click="navigateToModule('/gl/journal-entries')">
                 <span class="action-icon">➕</span>
                 <span>New Entry</span>
               </button>
-              <button class="action-btn" @click="$router.push('/gl/accounts')">
+              <button class="action-btn" @click="navigateToModule('/gl/accounts')">
                 <span class="action-icon">📋</span>
                 <span>Accounts</span>
               </button>
-              <button class="action-btn" @click="$router.push('/reports')">
+              <button class="action-btn" @click="navigateToModule('/ap/analytics')">
                 <span class="action-icon">📊</span>
-                <span>Reports</span>
+                <span>AP Analytics</span>
               </button>
-              <button class="action-btn" @click="$router.push('/payroll/process')">
-                <span class="action-icon">💼</span>
-                <span>Payroll</span>
+              <button class="action-btn" @click="navigateToModule('/ap/vendors')">
+                <span class="action-icon">🏢</span>
+                <span>Vendors</span>
               </button>
             </div>
           </div>
@@ -215,6 +215,33 @@ const formatCurrency = (amount: number) => {
     style: 'currency',
     currency: 'USD'
   }).format(amount)
+}
+
+// Navigation functions
+const navigateToModule = (path: string) => {
+  window.location.href = path
+}
+
+const exportDashboard = () => {
+  const dashboardData = {
+    date: new Date().toISOString(),
+    metrics: {
+      totalAssets: metrics.value.totalAssets,
+      totalLiabilities: metrics.value.totalLiabilities,
+      monthlyRevenue: metrics.value.monthlyRevenue,
+      monthlyExpenses: metrics.value.monthlyExpenses
+    },
+    recentTransactions: recentTransactions.value
+  }
+  
+  const blob = new Blob([JSON.stringify(dashboardData, null, 2)], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `dashboard-export-${new Date().toISOString().split('T')[0]}.json`
+  link.click()
+  URL.revokeObjectURL(url)
+  alert('Dashboard data exported successfully')
 }
 
 onMounted(() => {

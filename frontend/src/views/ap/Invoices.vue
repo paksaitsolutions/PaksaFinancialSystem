@@ -315,24 +315,64 @@ const removeLine = (index: number) => {
 }
 
 const viewInvoice = (invoice: any) => {
-  console.log('Viewing invoice:', invoice.invoiceNumber)
+  window.open(`/ap/invoices/${invoice.id}`, '_blank')
 }
 
 const editInvoice = (invoice: any) => {
   editingInvoice.value = invoice
+  invoiceForm.value = {
+    vendorId: invoice.vendorId,
+    invoiceNumber: invoice.invoiceNumber,
+    invoiceDate: invoice.invoiceDate,
+    dueDate: invoice.dueDate,
+    description: invoice.description,
+    taxAmount: invoice.taxAmount || 0,
+    lines: invoice.lines || [{ description: '', quantity: 1, unitPrice: 0 }]
+  }
   showCreateModal.value = true
 }
 
 const approveInvoice = (invoice: any) => {
-  invoice.status = 'approved'
+  if (confirm(`Approve invoice ${invoice.invoiceNumber}?`)) {
+    invoice.status = 'approved'
+    alert('Invoice approved successfully')
+  }
 }
 
 const payInvoice = (invoice: any) => {
-  invoice.status = 'paid'
+  if (confirm(`Mark invoice ${invoice.invoiceNumber} as paid?`)) {
+    invoice.status = 'paid'
+    alert('Invoice marked as paid')
+  }
 }
 
 const saveInvoice = () => {
-  console.log('Saving invoice:', invoiceForm.value)
+  if (!invoiceForm.value.vendorId || !invoiceForm.value.invoiceNumber) {
+    alert('Please fill in required fields')
+    return
+  }
+  
+  if (editingInvoice.value) {
+    const index = invoices.value.findIndex(inv => inv.id === editingInvoice.value.id)
+    if (index > -1) {
+      invoices.value[index] = {
+        ...invoices.value[index],
+        ...invoiceForm.value,
+        totalAmount: calculateTotal()
+      }
+    }
+    alert('Invoice updated successfully')
+  } else {
+    const newInvoice = {
+      id: Math.max(...invoices.value.map(i => i.id)) + 1,
+      ...invoiceForm.value,
+      totalAmount: calculateTotal(),
+      status: 'draft'
+    }
+    invoices.value.push(newInvoice)
+    alert('Invoice created successfully')
+  }
+  
   closeModal()
 }
 

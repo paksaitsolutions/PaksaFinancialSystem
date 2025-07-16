@@ -52,8 +52,15 @@
             <option value="">All Methods</option>
             <option value="check">Check</option>
             <option value="ach">ACH</option>
-            <option value="wire">Wire Transfer</option>
-            <option value="card">Credit Card</option>
+            <option value="wire_transfer">Wire Transfer</option>
+            <option value="ibft">IBFT</option>
+            <option value="cash">Cash</option>
+            <option value="debit_card">Debit Card</option>
+            <option value="credit_card">Credit Card</option>
+            <option value="digital_wallet">Digital Wallet</option>
+            <option value="crypto">Cryptocurrency</option>
+            <option value="mobile_payment">Mobile Payment</option>
+            <option value="online_banking">Online Banking</option>
           </select>
           <input type="date" v-model="dateFilter" class="filter-input">
         </div>
@@ -140,8 +147,16 @@
                 <option value="">Select Method</option>
                 <option value="check">Check</option>
                 <option value="ach">ACH Transfer</option>
-                <option value="wire">Wire Transfer</option>
-                <option value="card">Credit Card</option>
+                <option value="wire_transfer">Wire Transfer</option>
+                <option value="ibft">IBFT (Interbank Fund Transfer)</option>
+                <option value="cash">Cash</option>
+                <option value="debit_card">Debit Card</option>
+                <option value="credit_card">Credit Card</option>
+                <option value="digital_wallet">Digital Wallet (PayPal, Stripe)</option>
+                <option value="crypto">Cryptocurrency</option>
+                <option value="bank_transfer">Bank Transfer</option>
+                <option value="mobile_payment">Mobile Payment (Apple Pay, Google Pay)</option>
+                <option value="online_banking">Online Banking</option>
               </select>
             </div>
           </div>
@@ -259,9 +274,39 @@ const payments = ref([
     vendorName: 'Construction Pro',
     invoiceNumber: 'INV-2024-003',
     amount: 25000,
-    method: 'wire',
+    method: 'wire_transfer',
     paymentDate: '2024-01-25',
     status: 'scheduled'
+  },
+  {
+    id: 4,
+    paymentNumber: 'PAY-2024-004',
+    vendorName: 'Digital Services Co.',
+    invoiceNumber: 'INV-2024-004',
+    amount: 3200,
+    method: 'digital_wallet',
+    paymentDate: '2024-01-28',
+    status: 'processed'
+  },
+  {
+    id: 5,
+    paymentNumber: 'PAY-2024-005',
+    vendorName: 'Local Bank',
+    invoiceNumber: 'INV-2024-005',
+    amount: 1800,
+    method: 'ibft',
+    paymentDate: '2024-01-30',
+    status: 'pending'
+  },
+  {
+    id: 6,
+    paymentNumber: 'PAY-2024-006',
+    vendorName: 'Mobile Tech Ltd.',
+    invoiceNumber: 'INV-2024-006',
+    amount: 950,
+    method: 'mobile_payment',
+    paymentDate: '2024-02-01',
+    status: 'processed'
   }
 ])
 
@@ -315,26 +360,79 @@ const updatePaymentAmount = () => {
 }
 
 const viewPayment = (payment: any) => {
-  console.log('Viewing payment:', payment.paymentNumber)
+  window.open(`/ap/payments/${payment.id}`, '_blank')
 }
 
 const editPayment = (payment: any) => {
   editingPayment.value = payment
+  paymentForm.value = {
+    vendorId: payment.vendorId,
+    method: payment.method,
+    paymentDate: payment.paymentDate,
+    referenceNumber: payment.referenceNumber,
+    totalAmount: payment.amount,
+    notes: payment.notes || ''
+  }
   showCreateModal.value = true
 }
 
 const processPayment = (payment: any) => {
   if (confirm(`Process payment ${payment.paymentNumber}?`)) {
     payment.status = 'processed'
+    alert('Payment processed successfully')
   }
 }
 
 const printCheck = (payment: any) => {
-  console.log('Printing check for payment:', payment.paymentNumber)
+  const checkData = {
+    paymentNumber: payment.paymentNumber,
+    vendorName: payment.vendorName,
+    amount: payment.amount,
+    date: payment.paymentDate
+  }
+  
+  const printWindow = window.open('', '_blank')
+  printWindow.document.write(`
+    <html>
+      <head><title>Check - ${payment.paymentNumber}</title></head>
+      <body style="font-family: Arial, sans-serif; padding: 20px;">
+        <h2>Payment Check</h2>
+        <p><strong>Payment #:</strong> ${checkData.paymentNumber}</p>
+        <p><strong>Pay to:</strong> ${checkData.vendorName}</p>
+        <p><strong>Amount:</strong> $${checkData.amount}</p>
+        <p><strong>Date:</strong> ${checkData.date}</p>
+        <button onclick="window.print()">Print</button>
+      </body>
+    </html>
+  `)
 }
 
 const savePayment = () => {
-  console.log('Saving payment:', paymentForm.value)
+  if (!paymentForm.value.vendorId || !paymentForm.value.method) {
+    alert('Please fill in required fields')
+    return
+  }
+  
+  if (editingPayment.value) {
+    const index = payments.value.findIndex(p => p.id === editingPayment.value.id)
+    if (index > -1) {
+      payments.value[index] = {
+        ...payments.value[index],
+        ...paymentForm.value
+      }
+    }
+    alert('Payment updated successfully')
+  } else {
+    const newPayment = {
+      id: Math.max(...payments.value.map(p => p.id)) + 1,
+      paymentNumber: `PAY-${new Date().getFullYear()}-${String(Math.max(...payments.value.map(p => parseInt(p.paymentNumber.split('-')[2]))) + 1).padStart(3, '0')}`,
+      ...paymentForm.value,
+      status: 'pending'
+    }
+    payments.value.push(newPayment)
+    alert('Payment created successfully')
+  }
+  
   closeModal()
 }
 
@@ -551,14 +649,54 @@ const closeModal = () => {
   color: #2e7d32;
 }
 
-.method-badge.wire {
+.method-badge.wire_transfer {
   background: #fff3e0;
   color: #ef6c00;
 }
 
-.method-badge.card {
+.method-badge.ibft {
+  background: #e1f5fe;
+  color: #0277bd;
+}
+
+.method-badge.cash {
+  background: #f1f8e9;
+  color: #33691e;
+}
+
+.method-badge.debit_card {
+  background: #fce4ec;
+  color: #ad1457;
+}
+
+.method-badge.credit_card {
   background: #f3e5f5;
   color: #7b1fa2;
+}
+
+.method-badge.digital_wallet {
+  background: #e8eaf6;
+  color: #3f51b5;
+}
+
+.method-badge.crypto {
+  background: #fff8e1;
+  color: #f57f17;
+}
+
+.method-badge.bank_transfer {
+  background: #e0f2f1;
+  color: #00695c;
+}
+
+.method-badge.mobile_payment {
+  background: #fafafa;
+  color: #424242;
+}
+
+.method-badge.online_banking {
+  background: #e8f5e8;
+  color: #1b5e20;
 }
 
 .status-badge {

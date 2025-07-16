@@ -1,8 +1,5 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
 
-// Tax
-const TaxExemptionCertificatesView = () => import('@/views/tax/TaxExemptionCertificatesView.vue');
-
 const routes: Array<RouteRecordRaw> = [
   {
     path: '/',
@@ -29,11 +26,17 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/gl/JournalEntries.vue'),
     meta: { title: 'Journal Entries' },
   },
+  {
+    path: '/gl/trial-balance',
+    name: 'TrialBalance',
+    component: () => import('@/views/gl/TrialBalance.vue'),
+    meta: { title: 'Trial Balance' },
+  },
   // Accounts Payable
   {
     path: '/ap/vendors',
     name: 'Vendors',
-    component: () => import('@/views/ap/Vendors.vue'),
+    component: () => import('@/views/ap/VendorsAdvanced.vue'),
     meta: { title: 'Vendors' },
   },
   {
@@ -42,18 +45,36 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/ap/Invoices.vue'),
     meta: { title: 'AP Invoices' },
   },
+  {
+    path: '/ap/payments',
+    name: 'APPayments',
+    component: () => import('@/views/ap/Payments.vue'),
+    meta: { title: 'AP Payments' },
+  },
+  {
+    path: '/ap/analytics',
+    name: 'APAnalytics',
+    component: () => import('@/views/ap/APAnalyticsDashboard.vue'),
+    meta: { title: 'AP Analytics' },
+  },
   // Accounts Receivable
   {
     path: '/ar/customers',
     name: 'Customers',
-    component: () => import('@/views/TestHome.vue'),
+    component: () => import('@/views/ar/CustomersAdvanced.vue'),
     meta: { title: 'Customers' },
   },
   {
     path: '/ar/invoices',
     name: 'ARInvoices',
-    component: () => import('@/views/TestHome.vue'),
+    component: () => import('@/views/ar/ARInvoicesAdvanced.vue'),
     meta: { title: 'AR Invoices' },
+  },
+  {
+    path: '/ar/payments',
+    name: 'ARPayments',
+    component: () => import('@/views/ar/ARPaymentsAdvanced.vue'),
+    meta: { title: 'AR Payments' },
   },
   // Payroll
   {
@@ -68,6 +89,12 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/TestHome.vue'),
     meta: { title: 'Process Payroll' },
   },
+  {
+    path: '/payroll/reports',
+    name: 'PayrollReports',
+    component: () => import('@/views/TestHome.vue'),
+    meta: { title: 'Payroll Reports' },
+  },
   // Cash Management
   {
     path: '/cash/accounts',
@@ -81,80 +108,18 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/TestHome.vue'),
     meta: { title: 'Bank Reconciliation' },
   },
+  {
+    path: '/cash/forecast',
+    name: 'CashForecast',
+    component: () => import('@/views/TestHome.vue'),
+    meta: { title: 'Cash Forecast' },
+  },
   // Fixed Assets
   {
     path: '/assets/list',
     name: 'AssetList',
     component: () => import('@/views/TestHome.vue'),
     meta: { title: 'Fixed Assets' },
-  },
-  // Reports
-  {
-    path: '/reports',
-    name: 'Reports',
-    component: () => import('@/views/TestHome.vue'),
-    meta: { title: 'Reports' },
-  },
-  // Additional routes
-  {
-    path: '/gl/trial-balance',
-    name: 'TrialBalance',
-<<<<<<< HEAD
-<<<<<<< HEAD
-    component: TrialBalanceView,
-    meta: { requiresAuth: true, title: 'Trial Balance' },
-  },
-  // Tax Routes
-  {
-    path: '/tax/exemption-certificates',
-    name: 'TaxExemptionCertificates',
-    component: TaxExemptionCertificatesView,
-    meta: { 
-      requiresAuth: true, 
-      title: 'Tax Exemption Certificates',
-      breadcrumb: [
-        { title: 'Tax', to: { name: 'TaxExemptionCertificates' } },
-        { title: 'Exemption Certificates' }
-      ]
-    },
-  },
-  // Compliance Routes
-  {
-    path: '/compliance/dashboard',
-    name: 'ComplianceDashboard',
-    component: DashboardView,
-    meta: { requiresAuth: true, title: 'Compliance Dashboard' },
-=======
-    component: () => import('@/views/TestHome.vue'),
-=======
-    component: () => import('@/views/gl/TrialBalance.vue'),
->>>>>>> 021863356a857d56e2ff0145177f3e07ebeca70b
-    meta: { title: 'Trial Balance' },
->>>>>>> 888d2a53a17ad29675da32aa79cfc5d5c6438561
-  },
-  {
-    path: '/ap/payments',
-    name: 'APPayments',
-    component: () => import('@/views/ap/Payments.vue'),
-    meta: { title: 'AP Payments' },
-  },
-  {
-    path: '/ar/payments',
-    name: 'ARPayments',
-    component: () => import('@/views/TestHome.vue'),
-    meta: { title: 'AR Payments' },
-  },
-  {
-    path: '/payroll/reports',
-    name: 'PayrollReports',
-    component: () => import('@/views/TestHome.vue'),
-    meta: { title: 'Payroll Reports' },
-  },
-  {
-    path: '/cash/forecast',
-    name: 'CashForecast',
-    component: () => import('@/views/TestHome.vue'),
-    meta: { title: 'Cash Forecast' },
   },
   {
     path: '/assets/depreciation',
@@ -181,18 +146,47 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/TestHome.vue'),
     meta: { title: 'Tax Policy' },
   },
+  // Reports
+  {
+    path: '/reports',
+    name: 'Reports',
+    component: () => import('@/views/TestHome.vue'),
+    meta: { title: 'Reports' },
+  },
+  {
+    path: '/reports/ar',
+    name: 'ARReports',
+    component: () => import('@/views/reports/ARReports.vue'),
+    meta: { title: 'AR Reports' },
+  },
+  {
+    path: '/gl/advanced',
+    name: 'GLDashboard',
+    component: () => import('@/views/gl/AdvancedGL.vue'),
+    meta: { title: 'General Ledger' },
+  },
+  {
+    path: '/ar/analytics',
+    name: 'ARAnalytics',
+    component: () => import('@/views/ar/ARAnalyticsDashboard.vue'),
+    meta: { title: 'AR Analytics' },
+  },
+  {
+    path: '/gl/advanced',
+    name: 'AdvancedGL',
+    component: () => import('@/views/gl/AdvancedGL.vue'),
+    meta: { title: 'Advanced General Ledger' },
+  },
 ];
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,
   scrollBehavior(to, from, savedPosition) {
-    // Always scroll to top when navigating to a new route
     return { top: 0, behavior: 'smooth' };
   },
 });
 
-// Update page title based on route meta
 router.beforeEach((to, from, next) => {
   const appName = 'Paksa Financial System';
   document.title = to.meta.title ? `${to.meta.title} | ${appName}` : appName;
