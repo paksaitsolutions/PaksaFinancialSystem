@@ -1,5 +1,27 @@
 <template>
   <div class="ar-invoices-advanced">
+    <!-- Export Dialog -->
+    <ExportDialog
+      v-model:visible="showExportDialog"
+      title="Export AR Invoices"
+      :file-name="exportFileName"
+      :columns="exportColumns"
+      :data="exportData"
+      :meta="{
+        title: 'AR Invoices Report',
+        description: 'List of accounts receivable invoices',
+        generatedOn: new Date().toLocaleString(),
+        generatedBy: 'System',
+        includeSummary: true,
+        filters: {
+          status: selectedStatus || 'All',
+          customer: searchQuery || 'All',
+          dateRange: 'All dates'
+        }
+      }"
+      @export="handleExport"
+    />
+    
     <div class="page-header">
       <div class="container">
         <div class="header-content">
@@ -7,10 +29,28 @@
             <h1>AR Invoices</h1>
             <p>Advanced invoice management with AI insights</p>
           </div>
-          <div class="header-actions">
-            <button class="btn btn-outline" @click="bulkSend">Bulk Send</button>
-            <button class="btn btn-secondary" @click="exportInvoices">Export</button>
-            <button class="btn btn-primary" @click="showCreateModal = true">+ Create Invoice</button>
+          <div class="header-actions" style="display: flex; gap: 0.5rem;">
+            <Button 
+              label="Bulk Send" 
+              icon="pi pi-send" 
+              @click="bulkSend" 
+              class="p-button-outlined"
+            />
+            <Button 
+              label="Export" 
+              icon="pi pi-download" 
+              @click="showExportDialog = true"
+              class="p-button-outlined"
+              :loading="exportInProgress"
+              :disabled="!invoices.length"
+              v-tooltip="invoices.length ? 'Export AR invoices' : 'No data to export'"
+            />
+            <Button 
+              label="Create Invoice" 
+              icon="pi pi-plus" 
+              @click="showCreateModal = true"
+              class="p-button-primary"
+            />
           </div>
         </div>
       </div>
@@ -340,363 +380,71 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useToast } from 'primevue/usetoast'
+import ExportDialog from '@/components/common/ExportDialog.vue'
 
-const showCreateModal = ref(false)
-const editingInvoice = ref(null)
-const activeTab = ref('basic')
-const selectedCustomer = ref(null)
+// ...
 
-const summaryData = ref({
-  totalOutstanding: 485000,
-  overdueAmount: 125000,
-  thisMonthSales: 350000,
-  collectionRate: 87.5
+const showExportDialog = ref(false)
+const exportInProgress = ref(false)
+
+// Export configuration
+const exportColumns = [
+  { field: 'invoiceNumber', header: 'Invoice #' },
+  { field: 'customerName', header: 'Customer' },
+  { field: 'invoiceDate', header: 'Date', format: (val) => formatDate(val) },
+  { field: 'dueDate', header: 'Due Date', format: (val) => formatDate(val) },
+  { field: 'totalAmount', header: 'Amount', format: (val) => formatCurrency(val) },
+  { field: 'status', header: 'Status' },
+  { field: 'reference', header: 'Reference' }
+]
+
+const exportFileName = computed(() => {
+  return `AR-Invoices-${new Date().toISOString().split('T')[0]}`
 })
 
-const invoiceForm = ref({
-  customerId: '',
-  invoiceNumber: '',
-  invoiceDate: new Date().toISOString().split('T')[0],
-  dueDate: '',
-  description: '',
-  poNumber: '',
-  currency: 'USD',
-  paymentTerms: 'net30',
-  additionalDiscount: 0,
-  shippingAmount: 0,
-  additionalTax: 0,
-  terms: '',
-  lineItems: [
-    {
-      description: '',
-      productCode: '',
-      quantity: 1,
-      unitPrice: 0,
-      discountAmount: 0,
-      taxRate: 0,
-      lineTotal: 0
-    }
-  ]
+const exportData = computed(() => {
+  return invoices.value.map(invoice => ({
+    ...invoice,
+    customerName: invoice.customer?.name || 'N/A',
+    totalAmount: invoice.total || 0
+  }))
 })
 
-const customers = ref([
-  { 
-    id: 1, 
-    name: 'ABC Corporation',
-    customerId: 'C001',
-    contactPerson: 'John Smith',
-    email: 'john@abccorp.com',
-    paymentTerms: 'net30',
-    creditLimit: 50000,
-    outstanding: 25000
-  },
-  { 
-    id: 2, 
-    name: 'XYZ Retail Store',
-    customerId: 'C002',
-    contactPerson: 'Sarah Johnson',
-    email: 'sarah@xyzretail.com',
-    paymentTerms: 'net15',
-    creditLimit: 30000,
-    outstanding: 12000
-  },
-  { 
-    id: 3, 
-    name: 'Tech Solutions Inc.',
-    customerId: 'C003',
-    contactPerson: 'Mike Wilson',
-    email: 'mike@techsolutions.com',
-    paymentTerms: 'net45',
-    creditLimit: 75000,
-    outstanding: 8500
-  }
-])
-
-const invoices = ref([
-  {
-    id: 1,
-    invoiceNumber: 'INV-2024-001',
-    customerName: 'ABC Corporation',
-    invoiceDate: '2024-01-15',
-    dueDate: '2024-02-14',
-    totalAmount: 15000,
-    status: 'sent'
-  },
-  {
-    id: 2,
-    invoiceNumber: 'INV-2024-002',
-    customerName: 'XYZ Retail Store',
-    invoiceDate: '2024-01-20',
-    dueDate: '2024-02-19',
-    totalAmount: 8500,
-    status: 'overdue'
-  }
-])
-
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD'
-  }).format(amount)
-}
-
-const formatDate = (date: string) => {
-  return new Date(date).toLocaleDateString()
-}
-
-const viewInvoice = (invoice: any) => {
-  window.open(`/ar/invoices/${invoice.id}`, '_blank')
-}
-
-const editInvoice = (invoice: any) => {
-  editingInvoice.value = invoice
-  
-  // Populate form with invoice data
-  const customer = customers.value.find(c => c.name === invoice.customerName)
-  
-  invoiceForm.value = {
-    customerId: customer?.id || '',
-    invoiceNumber: invoice.invoiceNumber,
-    invoiceDate: invoice.invoiceDate,
-    dueDate: invoice.dueDate,
-    description: invoice.description || '',
-    poNumber: invoice.poNumber || '',
-    currency: invoice.currency || 'USD',
-    paymentTerms: invoice.paymentTerms || 'net30',
-    additionalDiscount: invoice.discountAmount || 0,
-    shippingAmount: invoice.shippingAmount || 0,
-    additionalTax: 0,
-    terms: invoice.terms || '',
-    lineItems: invoice.lineItems || [
-      {
-        description: invoice.description || 'Service',
-        productCode: '',
-        quantity: 1,
-        unitPrice: invoice.totalAmount || 0,
-        discountAmount: 0,
-        taxRate: 0,
-        lineTotal: invoice.totalAmount || 0
-      }
-    ]
-  }
-  
-  if (customer) {
-    selectedCustomer.value = customer
-  }
-  
-  activeTab.value = 'basic'
-  showCreateModal.value = true
-}
-
-const sendInvoice = (invoice: any) => {
-  if (confirm(`Send invoice ${invoice.invoiceNumber}?`)) {
-    invoice.status = 'sent'
-    alert('Invoice sent successfully')
-  }
-}
-
-const loadCustomerInfo = () => {
-  if (invoiceForm.value.customerId) {
-    selectedCustomer.value = customers.value.find(c => c.id == invoiceForm.value.customerId)
+// Handle export
+const handleExport = async ({ format, options }) => {
+  exportInProgress.value = true
+  try {
+    // Simulate API call for export
+    await new Promise(resolve => setTimeout(resolve, 1000))
     
-    // Auto-calculate due date based on payment terms
-    if (selectedCustomer.value) {
-      const invoiceDate = new Date(invoiceForm.value.invoiceDate)
-      let daysToAdd = 30 // default
-      
-      switch (selectedCustomer.value.paymentTerms) {
-        case 'net15': daysToAdd = 15; break
-        case 'net30': daysToAdd = 30; break
-        case 'net45': daysToAdd = 45; break
-        case 'net60': daysToAdd = 60; break
-        case 'due_on_receipt': daysToAdd = 0; break
-        default: daysToAdd = 30
-      }
-      
-      const dueDate = new Date(invoiceDate)
-      dueDate.setDate(dueDate.getDate() + daysToAdd)
-      invoiceForm.value.dueDate = dueDate.toISOString().split('T')[0]
-      invoiceForm.value.paymentTerms = selectedCustomer.value.paymentTerms
-    }
-  } else {
-    selectedCustomer.value = null
+    // In a real app, this would call an API endpoint to generate the export
+    console.log(`Exporting ${exportData.value.length} invoices as ${format}`, options)
+    
+    // Show success message
+    useToast().add({
+      severity: 'success',
+      summary: 'Export Successful',
+      detail: `Exported ${exportData.value.length} invoices as ${format.toUpperCase()}`,
+      life: 3000
+    })
+  } catch (error) {
+    console.error('Export failed:', error)
+    useToast().add({
+      severity: 'error',
+      summary: 'Export Failed',
+      detail: 'Failed to export invoices. Please try again.',
+      life: 5000
+    })
+  } finally {
+    exportInProgress.value = false
+    showExportDialog.value = false
   }
-}
-
-const addLineItem = () => {
-  invoiceForm.value.lineItems.push({
-    description: '',
-    productCode: '',
-    quantity: 1,
-    unitPrice: 0,
-    discountAmount: 0,
-    taxRate: 0,
-    lineTotal: 0
-  })
-}
-
-const removeLineItem = (index) => {
-  if (invoiceForm.value.lineItems.length > 1) {
-    invoiceForm.value.lineItems.splice(index, 1)
-  }
-}
-
-const calculateLineTotal = (index) => {
-  const line = invoiceForm.value.lineItems[index]
-  const subtotal = (line.quantity || 0) * (line.unitPrice || 0)
-  const afterDiscount = subtotal - (line.discountAmount || 0)
-  const taxAmount = afterDiscount * ((line.taxRate || 0) / 100)
-  line.lineTotal = afterDiscount + taxAmount
-}
-
-const calculateSubtotal = () => {
-  return invoiceForm.value.lineItems.reduce((sum, line) => {
-    const subtotal = (line.quantity || 0) * (line.unitPrice || 0)
-    return sum + subtotal - (line.discountAmount || 0)
-  }, 0)
-}
-
-const calculateTaxTotal = () => {
-  const lineTax = invoiceForm.value.lineItems.reduce((sum, line) => {
-    const subtotal = (line.quantity || 0) * (line.unitPrice || 0) - (line.discountAmount || 0)
-    return sum + (subtotal * ((line.taxRate || 0) / 100))
-  }, 0)
-  return lineTax + (invoiceForm.value.additionalTax || 0)
-}
-
-const calculateFinalTotal = () => {
-  const subtotal = calculateSubtotal()
-  const taxTotal = calculateTaxTotal()
-  const shipping = invoiceForm.value.shippingAmount || 0
-  const additionalDiscount = invoiceForm.value.additionalDiscount || 0
-  return subtotal + taxTotal + shipping - additionalDiscount
-}
-
-const calculateTotals = () => {
-  // Recalculate all line totals
-  invoiceForm.value.lineItems.forEach((_, index) => {
-    calculateLineTotal(index)
-  })
-}
-
-const formatPaymentTerms = (terms) => {
-  const termMap = {
-    'net15': 'Net 15 Days',
-    'net30': 'Net 30 Days',
-    'net45': 'Net 45 Days',
-    'net60': 'Net 60 Days',
-    'due_on_receipt': 'Due on Receipt',
-    'cod': 'Cash on Delivery'
-  }
-  return termMap[terms] || terms
-}
-
-const saveDraft = () => {
-  if (!invoiceForm.value.customerId) {
-    alert('Please select a customer')
-    return
-  }
-  
-  saveInvoiceWithStatus('draft')
-}
-
-const saveInvoice = () => {
-  if (!invoiceForm.value.customerId) {
-    alert('Please select a customer')
-    return
-  }
-  
-  if (invoiceForm.value.lineItems.length === 0 || !invoiceForm.value.lineItems[0].description) {
-    alert('Please add at least one line item')
-    return
-  }
-  
-  saveInvoiceWithStatus('sent')
-}
-
-const saveInvoiceWithStatus = (status) => {
-  // Generate invoice number if not provided
-  if (!invoiceForm.value.invoiceNumber) {
-    const year = new Date().getFullYear()
-    const nextNumber = invoices.value.length + 1
-    invoiceForm.value.invoiceNumber = `INV-${year}-${String(nextNumber).padStart(6, '0')}`
-  }
-  
-  const customer = customers.value.find(c => c.id == invoiceForm.value.customerId)
-  const totalAmount = calculateFinalTotal()
-  
-  const newInvoice = {
-    id: editingInvoice.value ? editingInvoice.value.id : Math.max(...invoices.value.map(i => i.id)) + 1,
-    invoiceNumber: invoiceForm.value.invoiceNumber,
-    customerName: customer?.name || '',
-    invoiceDate: invoiceForm.value.invoiceDate,
-    dueDate: invoiceForm.value.dueDate,
-    totalAmount: totalAmount,
-    status: status,
-    description: invoiceForm.value.description,
-    poNumber: invoiceForm.value.poNumber,
-    currency: invoiceForm.value.currency,
-    lineItems: [...invoiceForm.value.lineItems],
-    subtotal: calculateSubtotal(),
-    taxAmount: calculateTaxTotal(),
-    shippingAmount: invoiceForm.value.shippingAmount || 0,
-    discountAmount: invoiceForm.value.additionalDiscount || 0
-  }
-  
-  if (editingInvoice.value) {
-    const index = invoices.value.findIndex(i => i.id === editingInvoice.value.id)
-    if (index > -1) {
-      invoices.value[index] = newInvoice
-    }
-    alert('Invoice updated successfully')
-  } else {
-    invoices.value.push(newInvoice)
-    alert(`Invoice ${status === 'draft' ? 'saved as draft' : 'created'} successfully`)
-  }
-  
-  closeModal()
-}
-
-const closeModal = () => {
-  showCreateModal.value = false
-  editingInvoice.value = null
-  selectedCustomer.value = null
-  activeTab.value = 'basic'
-  
-  invoiceForm.value = {
-    customerId: '',
-    invoiceNumber: '',
-    invoiceDate: new Date().toISOString().split('T')[0],
-    dueDate: '',
-    description: '',
-    poNumber: '',
-    currency: 'USD',
-    paymentTerms: 'net30',
-    additionalDiscount: 0,
-    shippingAmount: 0,
-    additionalTax: 0,
-    terms: '',
-    lineItems: [
-      {
-        description: '',
-        productCode: '',
-        quantity: 1,
-        unitPrice: 0,
-        discountAmount: 0,
-        taxRate: 0,
-        lineTotal: 0
-      }
-    ]
-  }
-}
-
-const bulkSend = () => {
-  alert('Bulk send functionality')
 }
 
 const exportInvoices = () => {
-  alert('Export functionality')
+  showExportDialog.value = true
 }
 </script>
 

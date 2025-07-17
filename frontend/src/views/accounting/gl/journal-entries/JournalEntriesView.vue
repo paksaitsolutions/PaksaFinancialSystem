@@ -35,6 +35,14 @@
                 class="p-button-text" 
                 @click="loadJournalEntries"
                 :loading="loading"
+                v-tooltip="'Refresh data'"
+              />
+              <Button 
+                icon="pi pi-download" 
+                class="p-button-text" 
+                label="Export" 
+                @click="showExportDialog"
+                v-tooltip="'Export data'"
               />
             </div>
           </div>
@@ -329,12 +337,38 @@
         />
       </template>
     </Dialog>
+    <!-- Export Dialog -->
+    <ExportDialog
+      v-model:visible="exportDialogVisible"
+      title="Export Journal Entries"
+      :file-name="'journal-entries-export'"
+      :columns="exportColumns"
+      :data="filteredEntries"
+      :meta="{
+        title: 'Journal Entries',
+        description: 'General Ledger Journal Entries',
+        generatedOn: new Date().toLocaleString(),
+        generatedBy: 'System',
+        includeSummary: true,
+        filters: {
+          'Search Term': filters['global'].value || 'None',
+          'Total Entries': journalEntries.length,
+          'Status': selectedStatus || 'All',
+          'Date Range': dateRange ? 
+            `${new Date(dateRange[0]).toLocaleDateString()} - ${new Date(dateRange[1]).toLocaleDateString()}` : 
+            'All Dates'
+        }
+      }"
+      @export="handleExport"
+    />
   </div>
 </template>
 
 <script>
 import { ref, computed, onMounted } from 'vue';
 import { useToast } from 'primevue/usetoast';
+import { useRouter } from 'vue-router';
+import ExportDialog from '@/components/common/ExportDialog.vue';
 import { FilterMatchMode } from 'primevue/api';
 
 // Mock data
@@ -391,6 +425,9 @@ const mockJournalEntries = [
 
 export default {
   name: 'JournalEntriesView',
+  components: {
+    ExportDialog
+  },
   
   setup() {
     const toast = useToast();
@@ -399,14 +436,33 @@ export default {
     const accounts = ref([]);
     const loading = ref(false);
     const saving = ref(false);
-    const deleting = ref(false);
-    const showEntryDialog = ref(false);
+    const exporting = ref(false);
+    const exportProgress = ref(0);
+    const showNewEntryDialog = ref(false);
+    const exportDialogVisible = ref(false);
     const showDeleteDialog = ref(false);
     const editingEntry = ref(false);
     const entryToDelete = ref(null);
     
     const filters = ref({
       'global': { value: null, matchMode: FilterMatchMode.CONTAINS },
+    });
+    
+    const exportColumns = [
+      { field: 'entry_number', header: 'Entry #' },
+      { field: 'entry_date', header: 'Date', format: (val) => formatDate(val) },
+      { field: 'description', header: 'Description' },
+      { field: 'total_debit', header: 'Debit', format: (val) => formatCurrency(val) },
+      { field: 'total_credit', header: 'Credit', format: (val) => formatCurrency(val) },
+      { field: 'status', header: 'Status' }
+    ];
+
+    const filteredEntries = computed(() => {
+      return journalEntries.value.map(entry => ({
+        ...entry,
+        total_debit: formatCurrency(entry.total_debit, true),
+        total_credit: formatCurrency(entry.total_credit, true)
+      }));
     });
     
     const entryForm = ref({
@@ -461,15 +517,15 @@ export default {
     };
     
     // Format date
-    const formatDate = (dateString) => {
-      if (!dateString) return '';
-      const options = { year: 'numeric', month: 'short', day: '2-digit' };
-      return new Date(dateString).toLocaleDateString('en-US', options);
+    const formatDate = (value) => {
+      if (!value) return '';
+      return new Date(value).toLocaleDateString();
     };
     
     // Format currency
-    const formatCurrency = (value) => {
-      if (value === null || value === undefined) return '$0.00';
+    const formatCurrency = (value, returnRaw = false) => {
+      if (value === null || value === undefined) return '';
+      if (returnRaw) return value;
       return new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'USD'
@@ -509,7 +565,7 @@ export default {
       addLineItem();
       
       editingEntry.value = false;
-      showEntryDialog.value = true;
+      showNewEntryDialog.value = true;
     };
     
     // Add line item
@@ -560,7 +616,7 @@ export default {
     const editEntry = (entry) => {
       entryForm.value = JSON.parse(JSON.stringify(entry));
       editingEntry.value = true;
-      showEntryDialog.value = true;
+      showNewEntryDialog.value = true;
     };
     
     // Confirm delete
@@ -572,8 +628,6 @@ export default {
     // Delete entry
     const deleteEntry = async () => {
       if (!entryToDelete.value) return;
-      
-      deleting.value = true;
       
       try {
         // TODO: Replace with actual API call
@@ -596,7 +650,6 @@ export default {
       } finally {
         showDeleteDialog.value = false;
         entryToDelete.value = null;
-        deleting.value = false;
       }
     };
     
@@ -632,7 +685,7 @@ export default {
           life: 3000
         });
         
-        showEntryDialog.value = false;
+        showNewEntryDialog.value = false;
       } catch (error) {
         console.error('Error saving journal entry:', error);
         toast.add({
@@ -646,6 +699,50 @@ export default {
       }
     };
     
+    // Show export dialog
+    const showExportDialog = () => {
+      exportDialogVisible.value = true;
+    };
+
+    // Handle export
+    const handleExport = async (format, options) => {
+      exporting.value = true;
+      exportProgress.value = 0;
+      
+      try {
+        // Simulate export progress
+        const interval = setInterval(() => {
+          exportProgress.value = Math.min(exportProgress.value + 10, 90);
+        }, 100);
+
+        // Here you would typically make an API call to export the data
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        clearInterval(interval);
+        exportProgress.value = 100;
+        
+        toast.add({
+          severity: 'success',
+          summary: 'Export Complete',
+          detail: `Exported ${filteredEntries.value.length} journal entries to ${format.toUpperCase()}`,
+          life: 3000
+        });
+      } catch (error) {
+        console.error('Export failed:', error);
+        toast.add({
+          severity: 'error',
+          summary: 'Export Failed',
+          detail: 'An error occurred while exporting the data',
+          life: 5000
+        });
+      } finally {
+        setTimeout(() => {
+          exporting.value = false;
+          exportProgress.value = 0;
+        }, 500);
+      }
+    };
+    
     // Load data on component mount
     onMounted(() => {
       loadJournalEntries();
@@ -656,8 +753,10 @@ export default {
       accounts,
       loading,
       saving,
-      deleting,
-      showEntryDialog,
+      exporting,
+      exportProgress,
+      showNewEntryDialog,
+      exportDialogVisible,
       showDeleteDialog,
       editingEntry,
       entryToDelete,
@@ -679,7 +778,11 @@ export default {
       editEntry,
       confirmDeleteEntry,
       deleteEntry,
-      saveEntry
+      saveEntry,
+      showExportDialog,
+      handleExport,
+      exportColumns,
+      filteredEntries
     };
   }
 };

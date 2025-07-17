@@ -11,13 +11,6 @@
           :loading="exporting"
           :disabled="!selectedReport"
         />
-        <Button 
-          label="Print" 
-          icon="pi pi-print" 
-          class="p-button-outlined"
-          @click="printReport"
-          :disabled="!selectedReport"
-        />
       </div>
     </div>
 
@@ -94,6 +87,15 @@
                   <ProgressSpinner style="width: 50px; height: 50px" strokeWidth="4" />
                   <p class="mt-2 text-gray-500">Generating report...</p>
                 </div>
+                
+                <!-- Export Progress -->
+                <div v-if="exporting" class="p-4">
+                  <div class="flex items-center mb-2">
+                    <i class="pi pi-spin pi-spinner text-primary-500 mr-2"></i>
+                    <span>Exporting report ({{ Math.round(exportProgress) }}%)</span>
+                  </div>
+                  <ProgressBar :value="exportProgress" :show-value="false" style="height: 4px" />
+                </div>
 
                 <!-- Report Data -->
                 <div v-else>
@@ -168,12 +170,38 @@
         </div>
       </template>
     </Card>
+    
+    <!-- Export Dialog -->
+    <ExportDialog
+      v-model:visible="exportDialogVisible"
+      :title="exportOptions?.title || 'Export Report'"
+      :file-name="exportOptions?.fileName || 'tax-report'"
+      :columns="exportOptions?.columns || []"
+      :data="exportOptions?.data || []"
+      :table-ref="exportOptions?.tableRef"
+      :meta="{
+        title: selectedReport?.name || 'Tax Report',
+        description: selectedReport?.description || '',
+        generatedOn: new Date().toLocaleString(),
+        generatedBy: authStore.user?.name || 'System',
+        includeSummary: true,
+        filters: {
+          Period: selectedPeriod?.name || 'Custom',
+          'Date Range': dateRange && dateRange[0] && dateRange[1] 
+            ? `${new Date(dateRange[0]).toLocaleDateString()} - ${new Date(dateRange[1]).toLocaleDateString()}`
+            : 'All Dates'
+        }
+      }"
+      @export="handleExport"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useAuthStore } from '@/stores/auth';
+import ExportDialog from '@/components/common/ExportDialog.vue';
+import { useExport } from '@/composables/useExport';
 import { formatDate, formatCurrency } from '@/utils/formatters';
 
 // UI Components
@@ -207,7 +235,17 @@ interface ReportStat {
 // State
 const authStore = useAuthStore();
 const loading = ref(false);
-const exporting = ref(false);
+const tableRef = ref();
+
+// Initialize export functionality
+const { 
+  isExporting: exporting,
+  exportProgress,
+  exportDialogVisible,
+  exportOptions,
+  showExportDialog,
+  handleExport 
+} = useExport();
 const selectedReport = ref<ReportType | null>(null);
 const selectedPeriod = ref({ name: 'This Month', value: 'current_month' });
 const dateRange = ref<Date[]>([]);
@@ -390,22 +428,80 @@ const selectReport = (report: ReportType) => {
 };
 
 const exportReport = () => {
-  if (!selectedReport.value) return;
+  if (!selectedReport.value) {
+    return;
+  }
   
-  exporting.value = true;
+  // Get the current report data
+  const reportData = getReportData();
   
-  // Simulate export
-  setTimeout(() => {
-    exporting.value = false;
-    // Show success message
-  }, 1500);
+  // Prepare export options
+  showExportDialog({
+    title: selectedReport.value.name,
+    fileName: `tax-report-${selectedReport.value.id.toLowerCase().replace(/\s+/g, '-')}`,
+    columns: getExportColumns(),
+    data: reportData,
+    tableRef: tableRef.value,
+    meta: {
+      title: selectedReport.value.name,
+      description: selectedReport.value.description || '',
+      includeSummary: true
+    }
+  });
 };
 
-const printReport = () => {
-  if (!selectedReport.value) return;
-  
-  // Implement print functionality
-  window.print();
+// Helper methods for export
+const getExportColumns = () => {
+  // Define columns based on the selected report type
+  const commonColumns = [
+    { field: 'id', header: 'ID', width: 80 },
+    { field: 'date', header: 'Date', format: 'date', width: 100 },
+    { field: 'reference', header: 'Reference', width: 120 },
+    { field: 'description', header: 'Description', width: 200 },
+    { field: 'taxCode', header: 'Tax Code', width: 120 },
+    { field: 'taxRate', header: 'Rate', format: 'percent', width: 80 },
+    { field: 'taxableAmount', header: 'Taxable Amount', format: 'currency', total: 'sum', width: 120 },
+    { field: 'taxAmount', header: 'Tax Amount', format: 'currency', total: 'sum', width: 120 }
+  ];
+
+  // Add report-specific columns
+  if (selectedReport.value?.id === 'tax-liability') {
+    commonColumns.push(
+      { field: 'dueDate', header: 'Due Date', format: 'date', width: 100 },
+      { field: 'status', header: 'Status', width: 100 }
+    );
+  } else if (selectedReport.value?.id === 'vat-return') {
+    commonColumns.push(
+      { field: 'period', header: 'Period', width: 100 },
+      { field: 'boxNumber', header: 'Box', width: 80 }
+    );
+  }
+
+  return commonColumns;
+};
+
+const getReportData = () => {
+  // In a real app, this would fetch the actual report data
+  // For now, we'll return sample data
+  const sampleData = [
+    {
+      id: 'TX001',
+      date: new Date('2023-01-15'),
+      reference: 'INV-2023-001',
+      description: 'Consulting Services',
+      taxCode: 'SRV-001',
+      taxRate: 0.15,
+      taxableAmount: 1000.00,
+      taxAmount: 150.00,
+      dueDate: new Date('2023-02-15'),
+      status: 'Paid',
+      period: 'Jan 2023',
+      boxNumber: 'A1'
+    },
+    // Add more sample data as needed
+  ];
+
+  return sampleData;
 };
 
 // Lifecycle Hooks

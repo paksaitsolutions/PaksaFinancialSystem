@@ -7,9 +7,16 @@
             <h1>AP Payments</h1>
             <p>Process and manage vendor payments</p>
           </div>
-          <button class="btn btn-primary" @click="showCreateModal = true">
-            + Create Payment
-          </button>
+          <div class="header-actions">
+            <button class="btn btn-outline" @click="bulkProcess">Bulk Process</button>
+            <button class="btn btn-secondary" @click="exportPayments" :disabled="payments.length === 0">
+              <i class="pi pi-download mr-2"></i>
+              {{ isExporting ? 'Exporting...' : 'Export' }}
+            </button>
+            <button class="btn btn-primary" @click="showCreateModal = true">
+              + Create Payment
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -211,10 +218,23 @@
       </div>
     </div>
   </div>
+
+  <!-- Export Dialog -->
+  <ExportDialog 
+    v-model:visible="exportDialog"
+    :formats="['pdf', 'excel', 'csv']"
+    :loading="isExporting"
+    @export="handleExport"
+    title="Export Payments"
+    description="Select format and options for exporting payments data"
+  />
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useToast } from 'primevue/usetoast'
+import { useExport } from '@/composables/useExport'
+import ExportDialog from '@/components/common/ExportDialog.vue'
 
 const showCreateModal = ref(false)
 const editingPayment = ref(null)
@@ -437,17 +457,90 @@ const savePayment = () => {
 }
 
 const closeModal = () => {
-  showCreateModal.value = false
   editingPayment.value = null
-  vendorInvoices.value = []
-  paymentForm.value = {
-    vendorId: '',
-    method: '',
-    paymentDate: new Date().toISOString().split('T')[0],
-    referenceNumber: '',
-    totalAmount: 0,
-    notes: ''
+  showCreateModal.value = false
+  selectedVendor.value = null
+  paymentAmount.value = ''
+  paymentDate.value = ''
+  paymentMethod.value = ''
+  paymentReference.value = ''
+  selectedInvoices.value = []
+  paymentNotes.value = ''
+  selectedBankAccount.value = null
+  isProcessing.value = false
+}
+
+const toast = useToast()
+const exportDialog = ref(false)
+const isExporting = ref(false)
+
+const exportColumns = [
+  { field: 'paymentNumber', header: 'Payment #', width: '120px' },
+  { field: 'vendorName', header: 'Vendor', width: '180px' },
+  { field: 'invoiceNumber', header: 'Invoice #', width: '120px' },
+  { field: 'paymentDate', header: 'Date', width: '100px', type: 'date' },
+  { field: 'method', header: 'Method', width: '120px' },
+  { field: 'reference', header: 'Reference', width: '150px' },
+  { field: 'amount', header: 'Amount', width: '120px', type: 'currency', format: { symbol: '$', decimal: 2 } },
+  { field: 'status', header: 'Status', width: '120px' },
+  { field: 'notes', header: 'Notes', width: '200px' }
+]
+
+const exportData = computed(() => {
+  return payments.value.map(payment => ({
+    paymentNumber: payment.paymentNumber,
+    vendorName: payment.vendorName,
+    invoiceNumber: payment.invoiceNumber,
+    paymentDate: payment.paymentDate,
+    method: payment.method,
+    reference: payment.reference || 'N/A',
+    amount: payment.amount,
+    status: payment.status,
+    notes: payment.notes || ''
+  }))
+})
+
+const exportPayments = () => {
+  exportDialog.value = true
+}
+
+const handleExport = async (format: string, options: any = {}) => {
+  try {
+    isExporting.value = true
+    
+    const { exportData: exportFn } = useExport()
+    
+    const exportOptions = {
+      title: 'AP Payments',
+      columns: exportColumns,
+      data: exportData.value,
+      filename: `ap-payments-${new Date().toISOString().split('T')[0]}`,
+      ...options
+    }
+    
+    await exportFn(format, exportOptions)
+    
+    toast.add({
+      severity: 'success',
+      summary: 'Export Successful',
+      detail: `Payments exported successfully as ${format.toUpperCase()}`,
+      life: 3000
+    })
+  } catch (error) {
+    console.error('Export failed:', error)
+    toast.add({
+      severity: 'error',
+      summary: 'Export Failed',
+      detail: 'Failed to export payments. Please try again.',
+      life: 3000
+    })
+  } finally {
+    isExporting.value = false
   }
+}
+
+const bulkProcess = () => {
+  alert('Bulk process functionality')
 }
 </script>
 

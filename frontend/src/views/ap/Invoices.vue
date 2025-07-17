@@ -7,14 +7,50 @@
             <h1>AP Invoices</h1>
             <p>Manage accounts payable invoices and payments</p>
           </div>
-          <button class="btn btn-primary" @click="showCreateModal = true">
-            + Create Invoice
-          </button>
+          <div class="flex gap-2">
+            <Button 
+              icon="pi pi-download" 
+              label="Export" 
+              @click="showExportDialog = true"
+              class="p-button-outlined"
+              :loading="exportInProgress"
+              :disabled="!filteredInvoices.length"
+              v-tooltip="filteredInvoices.length ? 'Export AP invoices' : 'No data to export'"
+            />
+            <Button 
+              label="Create Invoice" 
+              icon="pi pi-plus" 
+              @click="showCreateModal = true"
+              class="p-button-primary"
+            />
+          </div>
         </div>
       </div>
     </div>
 
     <div class="container">
+      <!-- Export Dialog -->
+      <ExportDialog
+        v-model:visible="showExportDialog"
+        title="Export AP Invoices"
+        :file-name="exportFileName"
+        :columns="exportColumns"
+        :data="exportData"
+        :meta="{
+          title: 'AP Invoices Report',
+          description: 'List of accounts payable invoices',
+          generatedOn: new Date().toLocaleString(),
+          generatedBy: 'System',
+          includeSummary: true,
+          filters: {
+            status: selectedStatus || 'All',
+            vendor: searchQuery || 'All',
+            dateRange: 'All dates'
+          }
+        }"
+        @export="handleExport"
+      />
+
       <!-- Summary Cards -->
       <div class="summary-section">
         <div class="summary-grid">
@@ -192,15 +228,83 @@
       </div>
     </div>
   </div>
+  
+  <!-- Export Dialog Component -->
+  <ExportDialog
+    v-model:visible="showExportDialog"
+    :data="filteredInvoices"
+    :columns="exportColumns"
+    :file-name="exportFileName"
+  />
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useToast } from 'primevue/usetoast'
+import { FilterMatchMode } from 'primevue/api'
+import ExportDialog from '@/components/common/ExportDialog.vue'
+import { useExport } from '@/composables/useExport'
 
 const showCreateModal = ref(false)
 const editingInvoice = ref(null)
 const searchQuery = ref('')
 const selectedStatus = ref('')
+const showExportDialog = ref(false)
+const exportInProgress = ref(false)
+
+// Export configuration
+const exportColumns = [
+  { field: 'invoiceNumber', header: 'Invoice #' },
+  { field: 'vendorName', header: 'Vendor' },
+  { field: 'invoiceDate', header: 'Date', format: (val) => formatDate(val) },
+  { field: 'dueDate', header: 'Due Date', format: (val) => formatDate(val) },
+  { field: 'totalAmount', header: 'Amount', format: (val) => formatCurrency(val) },
+  { field: 'status', header: 'Status' },
+  { field: 'reference', header: 'Reference' }
+]
+
+const exportFileName = computed(() => {
+  return `AP-Invoices-${new Date().toISOString().split('T')[0]}`
+})
+
+const exportData = computed(() => {
+  return filteredInvoices.value.map(invoice => ({
+    ...invoice,
+    vendorName: invoice.vendor?.name || 'N/A',
+    totalAmount: invoice.totalAmount || 0
+  }))
+})
+
+// Handle export
+const handleExport = async ({ format, options }) => {
+  exportInProgress.value = true
+  try {
+    // Simulate API call for export
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    
+    // In a real app, this would call an API endpoint to generate the export
+    console.log(`Exporting ${exportData.value.length} invoices as ${format}`, options)
+    
+    // Show success message
+    useToast().add({
+      severity: 'success',
+      summary: 'Export Successful',
+      detail: `Exported ${exportData.value.length} invoices as ${format.toUpperCase()}`,
+      life: 3000
+    })
+  } catch (error) {
+    console.error('Export failed:', error)
+    useToast().add({
+      severity: 'error',
+      summary: 'Export Failed',
+      detail: 'Failed to export invoices. Please try again.',
+      life: 5000
+    })
+  } finally {
+    exportInProgress.value = false
+    showExportDialog.value = false
+  }
+}
 const selectedVendor = ref('')
 const dateFilter = ref('')
 
