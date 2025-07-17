@@ -4,6 +4,9 @@ import type { RouteRecordRaw } from 'vue-router';
 // Import all view components
 import UnderConstruction from '@/views/UnderConstruction.vue';
 
+// Import module routes
+import { cashRoutes } from './cash';
+
 // Helper function to lazy load components with fallback
 const lazyLoad = (path: string) => {
   return () => import(`@/views/${path}.vue`).catch(() => ({
@@ -197,6 +200,8 @@ const taxRoutes: RouteRecordRaw = {
 
 // Export all routes as an array
 export const allRoutes: RouteRecordRaw[] = [
+  // Cash Management
+  cashRoutes,
   rootRoute,
   authRoutes,
   dashboardRoutes,
