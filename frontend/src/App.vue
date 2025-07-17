@@ -1,5 +1,6 @@
 <template>
   <div id="app">
+    <router-view />
     <nav class="navbar">
       <div class="nav-container">
         <router-link to="/" class="nav-brand">

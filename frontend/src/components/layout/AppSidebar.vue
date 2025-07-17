@@ -157,7 +157,10 @@ const menuItems = ref<SidebarMenuItem[]>([
       { label: 'Financial Statements', icon: 'pi pi-file-pdf', route: '/gl/financial-statements', visible: true },
       { label: 'Recurring Journals', icon: 'pi pi-sync', route: '/gl/recurring-journals', visible: true },
       { label: 'Allocation Rules', icon: 'pi pi-share-alt', route: '/gl/allocation-rules', visible: true },
-      { label: 'Period Close', icon: 'pi pi-lock', route: '/gl/period-close', visible: true }
+      { label: 'Period Close', icon: 'pi pi-lock', route: '/gl/period-close', visible: true },
+      { label: 'Intercompany', icon: 'pi pi-exchange', route: '/gl/intercompany', visible: true },
+      { label: 'Consolidation', icon: 'pi pi-sitemap', route: '/gl/consolidation', visible: true },
+      { label: 'Budgeting', icon: 'pi pi-chart-line', route: '/gl/budgeting', visible: true }
     ]
   },
   {
@@ -169,11 +172,15 @@ const menuItems = ref<SidebarMenuItem[]>([
       { label: 'Dashboard', icon: 'pi pi-chart-bar', route: '/ap/dashboard', visible: true },
       { label: 'Vendors', icon: 'pi pi-users', route: '/ap/vendors', visible: true },
       { label: 'Invoices', icon: 'pi pi-file-import', route: '/ap/invoices', visible: true },
+      { label: 'Bills', icon: 'pi pi-file-edit', route: '/ap/bills', visible: true },
       { label: 'Payments', icon: 'pi pi-money-bill', route: '/ap/payments', visible: true },
       { label: 'Expense Reports', icon: 'pi pi-receipt', route: '/ap/expense-reports', visible: true },
       { label: 'Purchase Orders', icon: 'pi pi-shopping-cart', route: '/ap/purchase-orders', visible: true },
       { label: 'Aging Report', icon: 'pi pi-clock', route: '/ap/aging-report', visible: true },
-      { label: '1099 Reporting', icon: 'pi pi-file-pdf', route: '/ap/1099-reporting', visible: true }
+      { label: '1099 Reporting', icon: 'pi pi-file-pdf', route: '/ap/1099-reporting', visible: true },
+      { label: 'Vendor Credits', icon: 'pi pi-undo', route: '/ap/vendor-credits', visible: true },
+      { label: 'Payment Terms', icon: 'pi pi-calendar', route: '/ap/payment-terms', visible: true },
+      { label: 'Approvals', icon: 'pi pi-check-circle', route: '/ap/approvals', visible: true }
     ]
   },
   {
@@ -189,37 +196,49 @@ const menuItems = ref<SidebarMenuItem[]>([
       { label: 'Credit Notes', icon: 'pi pi-undo', route: '/ar/credit-notes', visible: true },
       { label: 'Collections', icon: 'pi pi-inbox', route: '/ar/collections', visible: true },
       { label: 'Aging Report', icon: 'pi pi-clock', route: '/ar/aging-report', visible: true },
-      { label: 'Customer Statements', icon: 'pi pi-file-pdf', route: '/ar/statements', visible: true }
+      { label: 'Customer Statements', icon: 'pi pi-file-pdf', route: '/ar/statements', visible: true },
+      { label: 'Recurring Invoices', icon: 'pi pi-sync', route: '/ar/recurring-invoices', visible: true },
+      { label: 'Payment Terms', icon: 'pi pi-calendar', route: '/ar/payment-terms', visible: true },
+      { label: 'Dunning', icon: 'pi pi-exclamation-circle', route: '/ar/dunning', visible: true },
+      { label: 'Disputes', icon: 'pi pi-exclamation-triangle', route: '/ar/disputes', visible: true }
     ]
   },
   {
-    label: 'Cash Management',
+    label: 'Banking & Cash',
     icon: 'pi pi-wallet',
     permission: 'view_cash_management',
     visible: true,
     items: [
-      { label: 'Cash Position', icon: 'pi pi-chart-line', route: '/cash/position', visible: true },
+      { label: 'Dashboard', icon: 'pi pi-chart-line', route: '/cash/dashboard', visible: true },
       { label: 'Bank Accounts', icon: 'pi pi-building', route: '/cash/accounts', visible: true },
-      { label: 'Bank Reconciliation', icon: 'pi pi-sync', route: '/cash/reconciliation', visible: true },
+      { label: 'Reconciliation', icon: 'pi pi-sync', route: '/cash/reconciliation', visible: true },
+      { label: 'Cash Position', icon: 'pi pi-chart-pie', route: '/cash/position', visible: true },
       { label: 'Cash Flow Forecast', icon: 'pi pi-chart-bar', route: '/cash/forecast', visible: true },
       { label: 'Funds Transfer', icon: 'pi pi-exchange', route: '/cash/transfer', visible: true },
-      { label: 'Cash Receipts', icon: 'pi pi-arrow-down', route: '/cash/receipts', visible: true },
-      { label: 'Cash Disbursements', icon: 'pi pi-arrow-up', route: '/cash/disbursements', visible: true },
-      { label: 'Bank Feeds', icon: 'pi pi-cloud-download', route: '/cash/bank-feeds', visible: true }
+      { label: 'Receipts', icon: 'pi pi-arrow-down', route: '/cash/receipts', visible: true },
+      { label: 'Disbursements', icon: 'pi pi-arrow-up', route: '/cash/disbursements', visible: true },
+      { label: 'Bank Feeds', icon: 'pi pi-cloud-download', route: '/cash/bank-feeds', visible: true },
+      { label: 'Bank Rules', icon: 'pi pi-cog', route: '/cash/rules', visible: true },
+      { label: 'Petty Cash', icon: 'pi pi-money-bill', route: '/cash/petty-cash', visible: true },
+      { label: 'Foreign Exchange', icon: 'pi pi-globe', route: '/cash/forex', visible: true }
     ]
   },
   {
     label: 'Fixed Assets',
-    icon: 'pi pi-building',
+    icon: 'pi pi-box',
     permission: 'view_fixed_assets',
     visible: true,
     items: [
+      { label: 'Dashboard', icon: 'pi pi-chart-bar', route: '/assets/dashboard', visible: true },
       { label: 'Asset Register', icon: 'pi pi-list', route: '/assets/register', visible: true },
       { label: 'Acquisitions', icon: 'pi pi-plus-circle', route: '/assets/acquisitions', visible: true },
       { label: 'Depreciation', icon: 'pi pi-chart-line', route: '/assets/depreciation', visible: true },
       { label: 'Disposals', icon: 'pi pi-trash', route: '/assets/disposals', visible: true },
       { label: 'Transfers', icon: 'pi pi-sync', route: '/assets/transfers', visible: true },
       { label: 'Maintenance', icon: 'pi pi-wrench', route: '/assets/maintenance', visible: true },
+      { label: 'Categories', icon: 'pi pi-tags', route: '/assets/categories', visible: true },
+      { label: 'Locations', icon: 'pi pi-map-marker', route: '/assets/locations', visible: true },
+      { label: 'Depreciation Methods', icon: 'pi pi-calculator', route: '/assets/depreciation-methods', visible: true },
       { label: 'Reports', icon: 'pi pi-file-pdf', route: '/assets/reports', visible: true },
       { label: 'Settings', icon: 'pi pi-cog', route: '/assets/settings', visible: true }
     ]
@@ -236,8 +255,14 @@ const menuItems = ref<SidebarMenuItem[]>([
       { label: 'Payslips', icon: 'pi pi-file-pdf', route: '/payroll/payslips', visible: true },
       { label: 'Taxes', icon: 'pi pi-percentage', route: '/payroll/taxes', visible: true },
       { label: 'Benefits', icon: 'pi pi-heart', route: '/payroll/benefits', visible: true },
+      { label: 'Deductions', icon: 'pi pi-minus-circle', route: '/payroll/deductions', visible: true },
+      { label: 'Timesheets', icon: 'pi pi-clock', route: '/payroll/timesheets', visible: true },
+      { label: 'Leave Management', icon: 'pi pi-calendar-plus', route: '/payroll/leave', visible: true },
+      { label: 'Reimbursements', icon: 'pi pi-money-bill', route: '/payroll/reimbursements', visible: true },
+      { label: 'Compliance', icon: 'pi pi-shield', route: '/payroll/compliance', visible: true },
       { label: 'Reports', icon: 'pi pi-chart-line', route: '/payroll/reports', visible: true },
-      { label: 'Year-End', icon: 'pi pi-calendar', route: '/payroll/yearend', visible: true }
+      { label: 'Year-End', icon: 'pi pi-calendar', route: '/payroll/yearend', visible: true },
+      { label: 'Settings', icon: 'pi pi-cog', route: '/payroll/settings', visible: true }
     ]
   },
   {

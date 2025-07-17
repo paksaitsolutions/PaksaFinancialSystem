@@ -13,36 +13,44 @@ const router = createRouter({
 // Initialize router in auth store
 setRouter(router);
 
-router.beforeEach(async (to, from, next) => {
+// Type guard to check if meta has permissions
+const hasPermissions = (meta: any): meta is { permissions: string[] } => {
+  return Array.isArray(meta?.permissions);
+};
+
+router.beforeEach(async (to, _, next) => {
   const appName = 'Paksa Financial System';
   // Set document title
   document.title = to.meta.title ? `${to.meta.title} | ${appName}` : appName;
   
   const authStore = useAuthStore();
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
+  const requiresGuest = to.matched.some(record => record.meta.requiresGuest);
   const isAuthenticated = authStore.isAuthenticated;
 
-  // If route requires auth and user is not logged in, redirect to login
-  if (requiresAuth && !isAuthenticated) {
-    next({ name: 'login', query: { redirect: to.fullPath } });
+  // If route requires guest but user is authenticated, redirect to home
+  if (requiresGuest && isAuthenticated) {
+    next({ name: 'Home' });
     return;
   }
 
-  // If user is logged in and tries to access auth pages, redirect to home
-  const authPages = ['login', 'register', 'forgot-password'];
-  if (isAuthenticated && authPages.includes(String(to.name))) {
-    next({ name: 'dashboard' });
+  // If route requires auth and user is not logged in, redirect to login
+  if (requiresAuth && !isAuthenticated) {
+    next({ 
+      name: 'Login',
+      query: to.fullPath !== '/' ? { redirect: to.fullPath } : undefined
+    });
     return;
   }
 
   // Check route permissions if any
-  if (to.meta.permissions) {
-    const hasPermission = (to.meta.permissions as string[]).some(permission => 
+  if (hasPermissions(to.meta)) {
+    const hasPermission = to.meta.permissions.some(permission => 
       authStore.hasPermission(permission)
     );
     
     if (!hasPermission) {
-      next({ name: 'unauthorized' });
+      next({ name: 'NotFound' });
       return;
     }
   }

@@ -15,9 +15,10 @@
     "axios": "^1.4.0",
     "date-fns": "^2.30.0",
     "dayjs": "^1.11.13",
+    "esbuild": "^0.25.6",
     "file-saver": "^2.0.5",
     "html2canvas": "^1.4.1",
-    "jspdf": "^2.5.1",
+    "jspdf": "^3.0.1",
     "jspdf-autotable": "^5.0.2",
     "lodash-es": "^4.17.21",
     "pinia": "^2.1.6",
@@ -31,7 +32,7 @@
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.0",
     "typescript": "^5.1.6",
-    "vite": "^7.0.4",
+    "vite": "^7.0.5",
     "vue-tsc": "^3.0.1"
   }
 }
