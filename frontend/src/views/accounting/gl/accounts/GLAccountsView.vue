@@ -37,12 +37,14 @@
                 class="p-button-text" 
                 @click="loadAccounts"
                 :loading="loading"
+                v-tooltip="'Refresh data'"
               />
               <Button 
                 icon="pi pi-download" 
                 class="p-button-text" 
                 label="Export" 
-                @click="exportToCSV"
+                @click="showExportDialog"
+                v-tooltip="'Export data'"
               />
             </div>
           </div>
@@ -220,13 +222,35 @@
         />
       </template>
     </Dialog>
+    <!-- Export Dialog -->
+    <ExportDialog
+      v-model:visible="exportDialogVisible"
+      title="Export Chart of Accounts"
+      :file-name="'gl-accounts-export'"
+      :columns="exportColumns"
+      :data="filteredAccounts"
+      :meta="{
+        title: 'Chart of Accounts',
+        description: 'General Ledger Accounts',
+        generatedOn: new Date().toLocaleString(),
+        generatedBy: 'System',
+        includeSummary: true,
+        filters: {
+          'Search Term': filters['global'].value || 'None',
+          'Total Accounts': accounts.length,
+          'Active Accounts': activeAccountsCount
+        }
+      }"
+      @export="handleExport"
+    />
   </div>
 </template>
 
 <script>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
+import ExportDialog from '@/components/common/ExportDialog.vue';
 import { FilterMatchMode } from 'primevue/api';
 
 // Mock data - Replace with actual API calls
@@ -289,14 +313,19 @@ const mockAccounts = [
 
 export default {
   name: 'GLAccountsView',
-  
+  components: {
+    ExportDialog
+  },
   setup() {
     const router = useRouter();
     const toast = useToast();
     
     const accounts = ref([]);
     const loading = ref(false);
-    const saving = ref(false);
+    const showNewAccountDialog = ref(false);
+    const exportDialogVisible = ref(false);
+    const exporting = ref(false);
+    const exportProgress = ref(0);
     const deleting = ref(false);
     const submitted = ref(false);
     const showAccountDialog = ref(false);
@@ -308,6 +337,25 @@ export default {
       'global': { value: null, matchMode: FilterMatchMode.CONTAINS },
     });
     
+    const exportColumns = [
+      { field: 'code', header: 'Code' },
+      { field: 'name', header: 'Account Name' },
+      { field: 'type', header: 'Type' },
+      { field: 'balance', header: 'Balance' },
+      { field: 'is_active', header: 'Status', format: (val) => val ? 'Active' : 'Inactive' }
+    ];
+
+    const filteredAccounts = computed(() => {
+      return accounts.value.map(account => ({
+        ...account,
+        balance: formatCurrency(account.balance, true)
+      }));
+    });
+
+    const activeAccountsCount = computed(() => {
+      return accounts.value.filter(acc => acc.is_active).length;
+    });
+
     const accountForm = ref({
       id: null,
       code: '',
@@ -380,23 +428,54 @@ export default {
     };
     
     // Export to CSV
-    const exportToCSV = () => {
-      import('xlsx').then(xlsx => {
-        const worksheet = xlsx.utils.json_to_sheet(accounts.value);
-        const workbook = { Sheets: { 'data': worksheet }, SheetNames: ['data'] };
-        const excelBuffer = xlsx.write(workbook, { bookType: 'csv', type: 'array' });
-        saveAsExcelFile(excelBuffer, 'chart_of_accounts');
-      });
+    const showExportDialog = () => {
+      exportDialogVisible.value = true;
+    };
+
+    const handleExport = async (format, options) => {
+      exporting.value = true;
+      exportProgress.value = 0;
+      
+      try {
+        // Simulate export progress
+        const interval = setInterval(() => {
+          exportProgress.value = Math.min(exportProgress.value + 10, 90);
+        }, 100);
+
+        // Here you would typically make an API call to export the data
+        // For now, we'll just simulate a delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        clearInterval(interval);
+        exportProgress.value = 100;
+        
+        toast.add({
+          severity: 'success',
+          summary: 'Export Complete',
+          detail: `Exported ${filteredAccounts.value.length} accounts to ${format.toUpperCase()}`,
+          life: 3000
+        });
+      } catch (error) {
+        console.error('Export failed:', error);
+        toast.add({
+          severity: 'error',
+          summary: 'Export Failed',
+          detail: 'An error occurred while exporting the data',
+          life: 5000
+        });
+      } finally {
+        setTimeout(() => {
+          exporting.value = false;
+          exportProgress.value = 0;
+        }, 500);
+      }
     };
     
     const saveAsExcelFile = (buffer, fileName) => {
       import('file-saver').then(module => {
-        if (module && module.default) {
-          const EXCEL_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
-          const EXCEL_EXTENSION = '.csv';
-          const data = new Blob([buffer], { type: EXCEL_TYPE });
-          module.default.saveAs(data, fileName + '_export_' + new Date().getTime() + EXCEL_EXTENSION);
-        }
+        const { saveAs } = module;
+        const data = new Blob([buffer], { type: 'application/octet-stream' });
+        saveAs(data, `${fileName}_export_${new Date().getTime()}.xlsx`);
       });
     };
     

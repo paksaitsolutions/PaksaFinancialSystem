@@ -34,7 +34,13 @@
         <div class="table-header">
           <h3>Journal Entries</h3>
           <div class="table-actions">
-            <button class="btn btn-outline">Export</button>
+            <button 
+              class="btn btn-outline" 
+              @click="showExportDialog = true"
+              :disabled="!journalEntries.length"
+            >
+              <i class="pi pi-download mr-2"></i>Export
+            </button>
           </div>
         </div>
         
@@ -130,62 +136,115 @@
         </form>
       </div>
     </div>
+
+    <!-- Export Dialog -->
+    <ExportDialog
+      v-model:visible="showExportDialog"
+      title="Export Journal Entries"
+      :file-name="exportFileName"
+      :columns="exportColumns"
+      :data="journalEntries"
+      :meta="{
+        title: 'Journal Entries Report',
+        description: 'List of all journal entries with details',
+        generatedOn: new Date().toLocaleString(),
+        generatedBy: 'System',
+        includeSummary: true,
+        filters: {
+          'Date Range': filters.dateFrom && filters.dateTo 
+            ? `${filters.dateFrom} to ${filters.dateTo}` 
+            : 'All dates',
+          'Status': filters.status || 'All statuses'
+        }
+      }"
+      @export="handleExport"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
+import { useToast } from 'primevue/usetoast'
+import ExportDialog from '@/components/common/ExportDialog.vue'
+import { useExport } from '@/composables/useExport'
 
 const showCreateModal = ref(false)
+const showExportDialog = ref(false)
 const editingEntry = ref(null)
+const toast = useToast()
+
+// Journal entries data
+const journalEntries = ref([
+  {
+    id: 1,
+    entryNumber: 'JE-2023-001',
+    date: '2023-06-15',
+    description: 'Monthly rent payment',
+    reference: 'INV-001',
+    totalDebit: 1200.00,
+    totalCredit: 1200.00,
+    status: 'posted'
+  },
+  // Add more mock entries as needed
+])
+
+// Form data
+const entryForm = ref({
+  date: '',
+  reference: '',
+  description: '',
+  lines: [
+    { account: '', description: '', debit: 0, credit: 0 }
+  ]
+})
+
+// Filters
 const filters = ref({
   dateFrom: '',
   dateTo: '',
   status: ''
 })
 
-const entryForm = ref({
-  date: new Date().toISOString().split('T')[0],
-  description: '',
-  reference: '',
-  lines: [
-    { accountId: '', debit: 0, credit: 0 },
-    { accountId: '', debit: 0, credit: 0 }
-  ]
-})
+// Export functionality
+const exportFileName = computed(() => `journal-entries-${new Date().toISOString().split('T')[0]}`)
 
-const journalEntries = ref([
-  {
-    id: 1,
-    entryNumber: 'JE-001',
-    date: '2024-01-15',
-    description: 'Office supplies purchase',
-    reference: 'INV-2024-001',
-    totalDebit: 1250.00,
-    totalCredit: 1250.00,
-    status: 'posted'
+// Export columns configuration
+const exportColumns = [
+  { field: 'entryNumber', header: 'Entry #' },
+  { field: 'date', header: 'Date' },
+  { field: 'description', header: 'Description' },
+  { field: 'reference', header: 'Reference' },
+  { 
+    field: 'totalDebit', 
+    header: 'Total Debit',
+    format: (val) => formatCurrency(val)
   },
-  {
-    id: 2,
-    entryNumber: 'JE-002',
-    date: '2024-01-14',
-    description: 'Client payment received',
-    reference: 'PAY-2024-001',
-    totalDebit: 5000.00,
-    totalCredit: 5000.00,
-    status: 'posted'
+  { 
+    field: 'totalCredit', 
+    header: 'Total Credit',
+    format: (val) => formatCurrency(val)
   },
-  {
-    id: 3,
-    entryNumber: 'JE-003',
-    date: '2024-01-13',
-    description: 'Monthly rent payment',
-    reference: 'RENT-JAN-2024',
-    totalDebit: 2500.00,
-    totalCredit: 2500.00,
-    status: 'draft'
+  { field: 'status', header: 'Status' }
+]
+
+// Initialize export functionality
+const { exportData, exportProgress, exportInProgress } = useExport({
+  data: journalEntries,
+  columns: exportColumns,
+  fileName: exportFileName,
+  meta: {
+    title: 'Journal Entries Report',
+    description: 'List of all journal entries',
+    generatedOn: new Date().toLocaleString(),
+    generatedBy: 'System',
+    filters: {
+      'Date Range': filters.value.dateFrom && filters.value.dateTo 
+        ? `${filters.value.dateFrom} to ${filters.value.dateTo}` 
+        : 'All dates',
+      'Status': filters.value.status || 'All statuses'
+    }
   }
-])
+})
 
 const accounts = ref([
   { id: 1, code: '1000', name: 'Cash' },
@@ -207,7 +266,7 @@ const formatCurrency = (amount: number) => {
 }
 
 const addLine = () => {
-  entryForm.value.lines.push({ accountId: '', debit: 0, credit: 0 })
+  entryForm.value.lines.push({ account: '', description: '', debit: 0, credit: 0 })
 }
 
 const removeLine = (index: number) => {
@@ -224,12 +283,11 @@ const closeModal = () => {
 
 const resetForm = () => {
   entryForm.value = {
-    date: new Date().toISOString().split('T')[0],
-    description: '',
+    date: '',
     reference: '',
+    description: '',
     lines: [
-      { accountId: '', debit: 0, credit: 0 },
-      { accountId: '', debit: 0, credit: 0 }
+      { account: '', description: '', debit: 0, credit: 0 }
     ]
   }
 }
@@ -259,6 +317,26 @@ const deleteEntry = (entry: any) => {
 
 const applyFilters = () => {
   console.log('Applying filters:', filters.value)
+}
+
+const handleExport = async ({ format, options }) => {
+  try {
+    await exportData(format, options)
+    toast.add({
+      severity: 'success',
+      summary: 'Export Successful',
+      detail: 'Journal entries exported successfully',
+      life: 3000
+    })
+  } catch (error) {
+    console.error('Export failed:', error)
+    toast.add({
+      severity: 'error',
+      summary: 'Export Failed',
+      detail: 'Failed to export journal entries. Please try again.',
+      life: 5000
+    })
+  }
 }
 
 onMounted(() => {

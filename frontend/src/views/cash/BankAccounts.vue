@@ -2,11 +2,20 @@
   <div class="bank-accounts">
     <div class="flex justify-content-between align-items-center mb-4">
       <h1>Bank Accounts</h1>
-      <Button 
-        label="Add Bank Account" 
-        icon="pi pi-plus" 
-        @click="openNewAccountDialog"
-      />
+      <div class="flex">
+        <Button 
+          icon="pi pi-download" 
+          label="Export"
+          class="p-button-outlined p-button-secondary mr-2"
+          @click="exportDialogVisible = true"
+          :loading="exportLoading"
+        />
+        <Button 
+          label="Add Bank Account" 
+          icon="pi pi-plus" 
+          @click="openNewAccountDialog"
+        />
+      </div>
     </div>
 
     <!-- Bank Accounts Summary Cards -->
@@ -295,14 +304,23 @@
         />
       </template>
     </Dialog>
+    
+    <!-- Export Dialog -->
+    <ReportExportDialog
+      v-model:visible="exportDialogVisible"
+      :loading="exportLoading"
+      title="Export Bank Accounts"
+      @export="handleExport"
+    />
   </div>
 </template>
 
 <script>
 import { ref, onMounted, computed } from 'vue';
 import { useToast } from 'primevue/usetoast';
+import { formatCurrency, formatDate } from '@/utils/formatters';
 import BankAccountService from '@/services/BankAccountService';
-import { formatCurrency } from '@/utils/formatters';
+import ReportExportDialog from '@/components/common/ReportExportDialog.vue';
 
 export default {
   name: 'BankAccounts',
@@ -557,6 +575,66 @@ export default {
       }
     };
     
+    const exportDialogVisible = ref(false);
+    const exportLoading = ref(false);
+
+    const getExportData = () => {
+      return bankAccounts.value.map(account => ({
+        'Account Name': account.name,
+        'Bank Name': account.bank_name,
+        'Account Number': account.account_number,
+        'Account Type': formatAccountType(account.account_type),
+        'Currency': account.currency,
+        'Current Balance': formatCurrency(account.current_balance, account.currency),
+        'Status': account.is_active ? 'Active' : 'Inactive',
+        'Opening Date': formatDate(account.opening_date),
+        'Last Updated': formatDate(account.updated_at)
+      }));
+    };
+
+    const handleExport = async (format, options = {}) => {
+      exportLoading.value = true;
+      
+      try {
+        const data = getExportData();
+        const exportService = (await import('@/services/ExportService')).default;
+        const title = 'Bank Accounts Report';
+        
+        switch (format) {
+          case 'pdf':
+            await exportService.exportToPDF(data, Object.keys(data[0] || {}), title, 'bank_accounts', options);
+            break;
+          case 'excel':
+            await exportService.exportToExcel(data, 'bank_accounts', options);
+            break;
+          case 'csv':
+            await exportService.exportToCSV(data, 'bank_accounts', options);
+            break;
+          case 'print':
+            await exportService.printTable(data, Object.keys(data[0] || {}), title, options);
+            break;
+        }
+        
+        toast.add({
+          severity: 'success',
+          summary: 'Export Successful',
+          detail: `Bank accounts exported to ${format.toUpperCase()} successfully`,
+          life: 3000
+        });
+      } catch (error) {
+        console.error('Export error:', error);
+        toast.add({
+          severity: 'error',
+          summary: 'Export Failed',
+          detail: error.message || 'Failed to export bank accounts',
+          life: 5000
+        });
+        throw error;
+      } finally {
+        exportLoading.value = false;
+      }
+    };
+    
     // Lifecycle hooks
     onMounted(() => {
       loadBankAccounts();
@@ -589,6 +667,8 @@ export default {
       
       // Methods
       formatCurrency,
+      exportDialogVisible,
+      exportLoading,
       openNewAccountDialog,
       editAccount,
       closeAccountDialog,
@@ -598,7 +678,8 @@ export default {
       getAccountIcon,
       getAccountStatusClass,
       formatAccountType,
-      getAccountTypeSeverity
+      getAccountTypeSeverity,
+      handleExport
     };
   }
 };

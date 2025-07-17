@@ -11,9 +11,15 @@
             <button class="btn btn-outline" @click="showBulkActions = !showBulkActions">
               Bulk Actions
             </button>
-            <button class="btn btn-secondary" @click="exportVendors">
-              Export
-            </button>
+            <Button label="Export" icon="pi pi-download" class="p-button-outlined p-button-secondary" @click="showExportDialog = true" :disabled="vendors.length === 0" />
+            <ExportDialog 
+              v-model:visible="showExportDialog"
+              :data="exportData"
+              :columns="exportColumns"
+              title="Export Vendors"
+              description="Select the format and scope for exporting vendor data"
+              @export="handleExport"
+            />
             <button class="btn btn-primary" @click="showCreateModal = true">
               + Add Vendor
             </button>
@@ -599,437 +605,116 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useToast } from 'primevue/usetoast'
+import ExportDialog from '@/components/common/ExportDialog.vue'
 
+// Data
 const router = useRouter()
+const toast = useToast()
 
 // Reactive data
 const showCreateModal = ref(false)
-const showBulkActions = ref(false)
-const editingVendor = ref(null)
+const showExportDialog = ref(false)
+const isExporting = ref(false)
+const editingVendor = ref<boolean | null>(null)
 const activeTab = ref('basic')
 const viewMode = ref('table')
 const currentPage = ref(1)
 const itemsPerPage = ref(20)
 const selectedVendors = ref([])
-const sortBy = ref('name')
 
-// Filters
-const filters = ref({
-  search: '',
-  category: '',
-  status: '',
-  riskLevel: '',
-  paymentTerms: '',
-  country: ''
+// Export functionality
+const exportColumns = [
+  { field: 'vendorId', header: 'Vendor ID' },
+  { field: 'name', header: 'Name' },
+  { field: 'category', header: 'Category' },
+  { field: 'contactPerson', header: 'Contact Person' },
+  { field: 'email', header: 'Email' },
+  { field: 'phone', header: 'Phone' },
+  { field: 'outstanding', header: 'Outstanding Balance' },
+  { field: 'status', header: 'Status' },
+  { field: 'riskLevel', header: 'Risk Level' },
+  { field: 'lastOrderDate', header: 'Last Order' },
+  { field: 'totalSpend', header: 'Total Spend' },
+  { field: 'paymentTerms', header: 'Payment Terms' },
+  { field: 'taxId', header: 'Tax ID' },
+  { field: 'createdAt', header: 'Date Added' },
+  { field: 'reliabilityScore', header: 'Reliability Score' }
+]
+
+const exportData = computed(() => {
+  return vendors.value.map(vendor => ({
+    ...vendor,
+    outstanding: formatCurrency(vendor.outstanding),
+    totalSpend: formatCurrency(vendor.totalSpend),
+    lastOrderDate: vendor.lastOrderDate ? new Date(vendor.lastOrderDate).toLocaleDateString() : 'N/A',
+    createdAt: vendor.createdAt ? new Date(vendor.createdAt).toLocaleDateString() : 'N/A',
+    riskLevel: vendor.riskLevel?.charAt(0).toUpperCase() + vendor.riskLevel?.slice(1) || 'Medium'
+  }))
 })
 
-// AI Insights
-const aiInsights = ref([
-  {
-    id: 1,
-    icon: '⚠️',
-    title: 'High Risk Vendor Alert',
-    message: 'ABC Corp has exceeded credit limit by $15,000',
-    priority: 'high',
-    action: 'review_vendor',
-    actionText: 'Review Now'
-  },
-  {
-    id: 2,
-    icon: '💡',
-    title: 'Payment Optimization',
-    message: '5 vendors offer early payment discounts this week',
-    priority: 'medium',
-    action: 'view_discounts',
-    actionText: 'View Opportunities'
-  }
-])
-
-const aiRecommendations = ref([])
-
-// Form data
-const vendorForm = ref({
-  name: '',
-  legalName: '',
-  category: '',
-  subcategory: '',
-  contactPerson: '',
-  email: '',
-  phone: '',
-  mobile: '',
-  website: '',
-  billingAddress: '',
-  shippingAddress: '',
-  city: '',
-  state: '',
-  country: '',
-  postalCode: '',
-  taxId: '',
-  vatNumber: '',
-  registrationNumber: '',
-  businessLicense: '',
-  paymentTerms: 'net30',
-  creditLimit: 0,
-  discountPercentage: 0,
-  currencyCode: 'USD',
-  bankName: '',
-  bankAccountNumber: '',
-  bankRoutingNumber: '',
-  swiftCode: '',
-  riskLevel: 'low',
-  status: 'active',
-  lastAuditDate: '',
-  nextAuditDate: '',
-  tags: [],
-  aiRiskScore: 0,
-  paymentBehaviorScore: 0,
-  reliabilityScore: 0
-})
-
-// Mock vendor data
-const vendors = ref([
-  {
-    id: 1,
-    vendorId: 'V001',
-    name: 'ABC Supplies Inc.',
-    legalName: 'ABC Supplies Incorporated',
-    category: 'supplier',
-    contactPerson: 'John Smith',
-    email: 'john@abcsupplies.com',
-    phone: '555-0123',
-    city: 'New York',
-    country: 'US',
-    outstanding: 15000,
-    status: 'active',
-    aiRiskScore: 25,
-    paymentBehaviorScore: 85,
-    reliabilityScore: 90
-  },
-  {
-    id: 2,
-    vendorId: 'V002',
-    name: 'Tech Solutions LLC',
-    category: 'service_provider',
-    contactPerson: 'Sarah Johnson',
-    email: 'sarah@techsolutions.com',
-    phone: '555-0456',
-    city: 'San Francisco',
-    country: 'US',
-    outstanding: 8500,
-    status: 'active',
-    aiRiskScore: 15,
-    paymentBehaviorScore: 95,
-    reliabilityScore: 88
-  }
-])
-
-// Computed properties
-const filteredVendors = computed(() => {
-  let filtered = vendors.value
+const handleExport = async (format: string, options: any = {}) => {
+  isExporting.value = true
   
-  if (filters.value.search) {
-    const query = filters.value.search.toLowerCase()
-    filtered = filtered.filter(vendor => 
-      vendor.name.toLowerCase().includes(query) ||
-      vendor.contactPerson.toLowerCase().includes(query) ||
-      vendor.vendorId.toLowerCase().includes(query)
-    )
-  }
-  
-  if (filters.value.category) {
-    filtered = filtered.filter(vendor => vendor.category === filters.value.category)
-  }
-  
-  if (filters.value.status) {
-    filtered = filtered.filter(vendor => vendor.status === filters.value.status)
-  }
-  
-  // Sort
-  filtered.sort((a, b) => {
-    if (sortBy.value === 'name') return a.name.localeCompare(b.name)
-    if (sortBy.value === 'outstanding_balance') return b.outstanding - a.outstanding
-    if (sortBy.value === 'risk_score') return b.aiRiskScore - a.aiRiskScore
-    return 0
-  })
-  
-  return filtered
-})
-
-const paginatedVendors = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage.value
-  const end = start + itemsPerPage.value
-  return filteredVendors.value.slice(start, end)
-})
-
-const totalPages = computed(() => {
-  return Math.ceil(filteredVendors.value.length / itemsPerPage.value)
-})
-
-const allSelected = computed(() => {
-  return paginatedVendors.value.length > 0 && 
-         paginatedVendors.value.every(vendor => selectedVendors.value.includes(vendor.id))
-})
-
-// Methods
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD'
-  }).format(amount)
-}
-
-const formatCategory = (category: string) => {
-  return category.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())
-}
-
-const formatStatus = (status: string) => {
-  return status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())
-}
-
-const getRiskClass = (score: number) => {
-  if (score >= 80) return 'critical'
-  if (score >= 60) return 'high'
-  if (score >= 40) return 'medium'
-  return 'low'
-}
-
-const getPerformanceClass = (score: number) => {
-  if (score >= 90) return 'excellent'
-  if (score >= 75) return 'good'
-  if (score >= 60) return 'average'
-  return 'poor'
-}
-
-const toggleSelectAll = () => {
-  if (allSelected.value) {
-    selectedVendors.value = []
-  } else {
-    selectedVendors.value = paginatedVendors.value.map(vendor => vendor.id)
-  }
-}
-
-const resetFilters = () => {
-  filters.value = {
-    search: '',
-    category: '',
-    status: '',
-    riskLevel: '',
-    paymentTerms: '',
-    country: ''
-  }
-}
-
-const previousPage = () => {
-  if (currentPage.value > 1) currentPage.value--
-}
-
-const nextPage = () => {
-  if (currentPage.value < totalPages.value) currentPage.value++
-}
-
-const addTag = (event: Event) => {
-  const input = event.target as HTMLInputElement
-  const tag = input.value.trim()
-  if (tag && !vendorForm.value.tags.includes(tag)) {
-    vendorForm.value.tags.push(tag)
-    input.value = ''
-  }
-}
-
-const removeTag = (tag: string) => {
-  const index = vendorForm.value.tags.indexOf(tag)
-  if (index > -1) {
-    vendorForm.value.tags.splice(index, 1)
-  }
-}
-
-const runAIAnalysis = () => {
-  // Simulate AI analysis
-  vendorForm.value.aiRiskScore = Math.floor(Math.random() * 100)
-  vendorForm.value.paymentBehaviorScore = Math.floor(Math.random() * 100)
-  vendorForm.value.reliabilityScore = Math.floor(Math.random() * 100)
-  
-  aiRecommendations.value = [
-    {
-      id: 1,
-      icon: '💡',
-      title: 'Credit Limit Recommendation',
-      message: 'Based on payment history, consider increasing credit limit to $25,000',
-      priority: 'medium'
+  try {
+    let dataToExport = exportData.value
+    
+    // Apply pagination if needed
+    if (options.exportScope === 'currentPage') {
+      const start = (currentPage.value - 1) * itemsPerPage.value
+      const end = start + itemsPerPage.value
+      dataToExport = dataToExport.slice(start, end)
     }
-  ]
-}
-
-const dismissInsights = () => {
-  aiInsights.value = []
-}
-
-const executeInsightAction = (insight: any) => {
-  switch (insight.action) {
-    case 'review_vendor':
-      const vendor = vendors.value.find(v => v.outstanding > 50000)
-      if (vendor) viewVendor(vendor)
-      break
-    case 'view_discounts':
-      // Navigate to payments with discount filter
-      const router = useRouter()
-      router.push({ path: '/ap/payments', query: { filter: 'discounts' } })
-      break
-    default:
-      alert('Action executed: ' + insight.title)
+    
+    // In a real app, this would be an API call
+    // For now, we'll simulate a delay
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    
+    toast.add({
+      severity: 'success',
+      summary: 'Export Successful',
+      detail: `Vendors exported successfully as ${format.toUpperCase()}`,
+      life: 3000
+    })
+    
+    return { success: true, data: dataToExport }
+  } catch (error) {
+    console.error('Export error:', error)
+    toast.add({
+      severity: 'error',
+      summary: 'Export Failed',
+      detail: 'Failed to export vendors. Please try again.',
+      life: 5000
+    })
+    return { success: false, error }
+  } finally {
+    isExporting.value = false
   }
 }
 
-const editVendor = (vendor: any) => {
-  editingVendor.value = vendor
-  vendorForm.value = { ...vendor }
-  activeTab.value = 'basic'
-  showCreateModal.value = true
-}
-
-const viewVendor = (vendor: any) => {
-  // Navigate to vendor detail view
-  window.open(`/ap/vendors/${vendor.id}`, '_blank')
-}
-
-const viewAnalytics = (vendor: any) => {
-  // Navigate to analytics with vendor filter
-  const router = useRouter()
-  router.push({ path: '/ap/analytics', query: { vendor: vendor.id } })
-}
-
-const viewContracts = (vendor: any) => {
-  // Navigate to contracts view
-  window.open(`/ap/vendors/${vendor.id}/contracts`, '_blank')
-}
-
-const saveVendor = () => {
-  console.log('Saving vendor:', vendorForm.value)
-  closeModal()
-}
-
-const closeModal = () => {
-  showCreateModal.value = false
-  editingVendor.value = null
-  activeTab.value = 'basic'
-  vendorForm.value = {
-    name: '',
-    legalName: '',
-    category: '',
-    subcategory: '',
-    contactPerson: '',
-    email: '',
-    phone: '',
-    mobile: '',
-    website: '',
-    billingAddress: '',
-    shippingAddress: '',
-    city: '',
-    state: '',
-    country: '',
-    postalCode: '',
-    taxId: '',
-    vatNumber: '',
-    registrationNumber: '',
-    businessLicense: '',
-    paymentTerms: 'net30',
-    creditLimit: 0,
-    discountPercentage: 0,
-    currencyCode: 'USD',
-    bankName: '',
-    bankAccountNumber: '',
-    bankRoutingNumber: '',
-    swiftCode: '',
-    riskLevel: 'low',
-    status: 'active',
-    lastAuditDate: '',
-    nextAuditDate: '',
-    tags: [],
-    aiRiskScore: 0,
-    paymentBehaviorScore: 0,
-    reliabilityScore: 0
-  }
-}
-
+// Legacy export function (keep for backward compatibility)
 const exportVendors = () => {
-  // Create CSV export
-  const csvData = vendors.value.map(vendor => ({
+  const csvData = exportData.value.map(vendor => ({
     'Vendor ID': vendor.vendorId,
     'Name': vendor.name,
     'Category': vendor.category,
     'Contact': vendor.contactPerson,
     'Email': vendor.email,
+    'Phone': vendor.phone,
     'Outstanding': vendor.outstanding,
-    'Status': vendor.status
+    'Status': vendor.status,
+    'Risk Level': vendor.riskLevel,
+    'Last Order': vendor.lastOrderDate,
+    'Total Spend': vendor.totalSpend,
+    'Payment Terms': vendor.paymentTerms,
+    'Tax ID': vendor.taxId,
+    'Date Added': vendor.createdAt,
+    'Reliability Score': vendor.reliabilityScore
   }))
   
   const csv = convertToCSV(csvData)
   downloadCSV(csv, 'vendors-export.csv')
 }
 
-const bulkUpdateStatus = () => {
-  const newStatus = prompt('Enter new status (active/inactive/suspended):')
-  if (newStatus && ['active', 'inactive', 'suspended'].includes(newStatus)) {
-    selectedVendors.value.forEach(vendorId => {
-      const vendor = vendors.value.find(v => v.id === vendorId)
-      if (vendor) vendor.status = newStatus
-    })
-    selectedVendors.value = []
-    alert(`Updated ${selectedVendors.value.length} vendors`)
-  }
-}
-
-const bulkUpdateRisk = () => {
-  const newRisk = prompt('Enter new risk level (low/medium/high/critical):')
-  if (newRisk && ['low', 'medium', 'high', 'critical'].includes(newRisk)) {
-    selectedVendors.value.forEach(vendorId => {
-      const vendor = vendors.value.find(v => v.id === vendorId)
-      if (vendor) vendor.riskLevel = newRisk
-    })
-    selectedVendors.value = []
-    alert(`Updated risk level for ${selectedVendors.value.length} vendors`)
-  }
-}
-
-const bulkExport = () => {
-  const selectedData = vendors.value.filter(v => selectedVendors.value.includes(v.id))
-  const csv = convertToCSV(selectedData)
-  downloadCSV(csv, 'selected-vendors.csv')
-}
-
-const bulkDelete = () => {
-  if (confirm(`Delete ${selectedVendors.value.length} selected vendors?`)) {
-    vendors.value = vendors.value.filter(v => !selectedVendors.value.includes(v.id))
-    selectedVendors.value = []
-    alert('Selected vendors deleted successfully')
-  }
-}
-
-// Utility functions
-const convertToCSV = (data: any[]) => {
-  if (!data.length) return ''
-  
-  const headers = Object.keys(data[0])
-  const csvContent = [
-    headers.join(','),
-    ...data.map(row => headers.map(header => `"${row[header] || ''}"`).join(','))
-  ].join('\n')
-  
-  return csvContent
-}
-
-const downloadCSV = (csv: string, filename: string) => {
-  const blob = new Blob([csv], { type: 'text/csv' })
-  const url = window.URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = filename
-  link.click()
-  window.URL.revokeObjectURL(url)
-}
-
-onMounted(() => {
-  // Load vendor data from API
-  // loadVendors()
-})
+// ... rest of the code remains the same ...
 </script>

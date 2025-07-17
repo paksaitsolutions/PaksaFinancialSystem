@@ -38,6 +38,17 @@ export const cashRoutes: RouteRecordRaw = {
       }
     },
     {
+      path: 'cash-flow',
+      name: 'CashFlow',
+      component: () => import('@/views/cash/CashFlowForecast.vue'),
+      meta: { 
+        title: 'Cash Flow Forecast',
+        icon: 'pi pi-chart-line',
+        breadcrumb: ['Cash Management', 'Cash Flow Forecast'],
+        permission: 'cash_management.view_cash_flow'
+      }
+    },
+    {
       path: 'bank-accounts',
       name: 'BankAccounts',
       component: () => import('@/views/cash/BankAccounts.vue'),

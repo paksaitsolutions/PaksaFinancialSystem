@@ -2,11 +2,25 @@
   <div class="p-4">
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-2xl font-bold">Bank Accounts</h1>
-      <Button 
-        label="New Account" 
-        icon="pi pi-plus" 
-        @click="showAccountForm()" 
-      />
+      <div class="flex gap-2">
+        <Button 
+          label="Export" 
+          icon="pi pi-download" 
+          class="p-button-outlined p-button-success"
+          @click="showExportDialog"
+        />
+        <Button 
+          label="Print" 
+          icon="pi pi-print" 
+          class="p-button-outlined p-button-info"
+          @click="printAccounts"
+        />
+        <Button 
+          label="New Account" 
+          icon="pi pi-plus" 
+          @click="showAccountForm()" 
+        />
+      </div>
     </div>
 
     <Card>
@@ -232,12 +246,25 @@
         />
       </template>
     </Dialog>
+    
+    <!-- Export Dialog -->
+    <ReportExportDialog
+      v-model:visible="displayExportDialog"
+      :current-item-count="accounts.length"
+      :total-items="accounts.length"
+      :total-pages="1"
+      :has-pagination="false"
+      :export-formats="['pdf', 'excel', 'csv']"
+      :export-callback="handleExport"
+      @schedule="handleScheduleExport"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import ReportExportDialog from '@/components/reports/ReportExportDialog.vue';
 import { useToast } from 'primevue/usetoast';
 import { useCurrency } from '@/composables/useCurrency';
 import BankAccountService from '@/services/BankAccountService';
@@ -247,13 +274,191 @@ const router = useRouter();
 const toast = useToast();
 const { formatCurrency, getCurrencyCode } = useCurrency();
 
-// State
-const accounts = ref([]);
+// Refs for template
+const actionMenu = ref(null);
+const displayExportDialog = ref(false);
+
+// Show export dialog
+const showExportDialog = () => {
+  displayExportDialog.value = true;
+};
+
+// Handle export action
+const handleExport = async (params) => {
+  try {
+    const { format, scope, options } = params;
+    let exportData = [];
+    
+    // In this view, we don't have pagination, so we'll just use all accounts
+    exportData = [...accounts.value];
+    
+    // Format data for export
+    const formattedData = exportData.map(account => ({
+      'Account Name': account.name,
+      'Bank Name': account.bank_name,
+      'Account Number': account.account_number,
+      'Account Type': account.account_type,
+      'Current Balance': formatCurrency(account.current_balance, account.currency?.code),
+      'Available Balance': formatCurrency(account.available_balance, account.currency?.code),
+      'Currency': account.currency?.code || 'USD',
+      'Status': account.is_active ? 'Active' : 'Inactive',
+      'Last Updated': formatDate(account.updated_at)
+    }));
+    
+    // In a real app, you would use a library like xlsx, jsPDF, etc.
+    console.log(`Exporting ${formattedData.length} accounts to ${format} format`, options);
+    
+    // Simulate export
+    toast.add({
+      severity: 'success',
+      summary: 'Export Started',
+      detail: `Preparing to export ${formattedData.length} accounts to ${format.toUpperCase()} format`,
+      life: 3000
+    });
+    
+    // In a real app, you would generate and download the file here
+    return new Promise(resolve => {
+      setTimeout(() => {
+        console.log('Export complete:', { format, data: formattedData });
+        resolve();
+      }, 1000);
+    });
+    
+  } catch (error) {
+    console.error('Export error:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Export Failed',
+      detail: 'Failed to export bank accounts. Please try again.',
+      life: 5000
+    });
+    throw error;
+  }
+};
+
+// Handle scheduled export
+const handleScheduleExport = (params) => {
+  console.log('Scheduling export:', params);
+  // In a real app, you would save this to a scheduled jobs/tasks system
+  toast.add({
+    severity: 'info',
+    summary: 'Export Scheduled',
+    detail: 'Your export has been scheduled and will be processed shortly.',
+    life: 5000
+  });
+};
+
+// Print accounts
+const printAccounts = () => {
+  const printWindow = window.open('', '_blank');
+  
+  // Create a print-friendly version
+  const printContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Bank Accounts - ${new Date().toLocaleDateString()}</title>
+      <style>
+        body { font-family: Arial, sans-serif; font-size: 12px; margin: 20px; }
+        h1 { color: #333; font-size: 18px; margin-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f5f5f5; font-weight: bold; }
+        .text-right { text-align: right; }
+        .footer { margin-top: 20px; font-size: 11px; color: #666; }
+        @media print {
+          @page { size: landscape; margin: 1cm; }
+          .no-print { display: none; }
+        }
+      </style>
+    </head>
+    <body>
+      <h1>Bank Accounts</h1>
+      <div>Generated on: ${new Date().toLocaleString()}</div>
+      
+      <table>
+        <thead>
+          <tr>
+            <th>Account Name</th>
+            <th>Bank Name</th>
+            <th>Account Number</th>
+            <th>Type</th>
+            <th class="text-right">Current Balance</th>
+            <th class="text-right">Available Balance</th>
+            <th>Currency</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${accounts.value.map(account => `
+            <tr>
+              <td>${account.name}</td>
+              <td>${account.bank_name || 'N/A'}</td>
+              <td>${account.account_number || 'N/A'}</td>
+              <td>${account.account_type || 'N/A'}</td>
+              <td class="text-right">${formatCurrency(account.current_balance, account.currency?.code)}</td>
+              <td class="text-right">${formatCurrency(account.available_balance, account.currency?.code)}</td>
+              <td>${account.currency?.code || 'USD'}</td>
+              <td>${account.is_active ? 'Active' : 'Inactive'}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="4" class="text-right"><strong>Total:</strong></td>
+            <td class="text-right">
+              <strong>${formatCurrency(accounts.value.reduce((sum, acc) => sum + parseFloat(acc.current_balance || 0), 0))}</strong>
+            </td>
+            <td class="text-right">
+              <strong>${formatCurrency(accounts.value.reduce((sum, acc) => sum + parseFloat(acc.available_balance || 0), 0))}</strong>
+            </td>
+            <td colspan="2"></td>
+          </tr>
+        </tfoot>
+      </table>
+      
+      <div class="footer">
+        <div>Generated by Paksa Financial System</div>
+        <div>Page 1 of 1</div>
+      </div>
+      
+      <div class="no-print" style="margin-top: 20px; text-align: center;">
+        <button onclick="window.print()" style="padding: 8px 16px; background: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer;">
+          Print Report
+        </button>
+        <button onclick="window.close()" style="margin-left: 10px; padding: 8px 16px; background: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer;">
+          Close
+        </button>
+      </div>
+      
+      <script>
+        // Auto-print when the window loads
+        window.onload = function() {
+          setTimeout(function() {
+            window.print();
+            // Close the window after printing (or after a delay if print was cancelled)
+            setTimeout(function() {
+              // window.close();
+            }, 1000);
+          }, 500);
+        };
+      <\/script>
+    </body>
+    </html>
+  `;
+  
+  // Write the content to the new window
+  printWindow.document.open();
+  printWindow.document.write(printContent);
+  printWindow.document.close();
+};
+
 const loading = ref(false);
 const displayAccountForm = ref(false);
 const displayDeleteDialog = ref(false);
 const submitted = ref(false);
 const editingAccount = ref(false);
+// ... existing code ...
 const accountToDelete = ref(null);
 const currencies = ref([]);
 

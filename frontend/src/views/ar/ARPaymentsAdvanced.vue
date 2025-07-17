@@ -9,7 +9,10 @@
           </div>
           <div class="header-actions">
             <button class="btn btn-outline" @click="bulkProcess">Bulk Process</button>
-            <button class="btn btn-secondary" @click="exportPayments">Export</button>
+            <button class="btn btn-secondary" @click="exportPayments" :disabled="payments.length === 0">
+              <i class="pi pi-download mr-2"></i>
+              {{ isExporting ? 'Exporting...' : 'Export' }}
+            </button>
             <button class="btn btn-primary" @click="showCreateModal = true">+ Record Payment</button>
           </div>
         </div>
@@ -180,10 +183,23 @@
       </div>
     </div>
   </div>
+
+  <!-- Export Dialog -->
+  <ExportDialog 
+    v-model:visible="exportDialog"
+    :formats="['pdf', 'excel', 'csv']"
+    :loading="isExporting"
+    @export="handleExport"
+    title="Export Payments"
+    description="Select format and options for exporting payments data"
+  />
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useToast } from 'primevue/usetoast'
+import { useExport } from '@/composables/useExport'
+import ExportDialog from '@/components/common/ExportDialog.vue'
 
 const showCreateModal = ref(false)
 
@@ -321,8 +337,80 @@ const bulkProcess = () => {
   alert('Bulk process functionality')
 }
 
+// Export functionality
+const toast = useToast()
+const exportDialog = ref(false)
+const isExporting = ref(false)
+
+// Define export columns with proper formatting
+const exportColumns = [
+  { field: 'paymentNumber', header: 'Payment #', width: '120px' },
+  { field: 'customerName', header: 'Customer', width: '180px' },
+  { field: 'invoiceNumber', header: 'Invoice #', width: '120px' },
+  { field: 'date', header: 'Date', width: '100px', type: 'date' },
+  { field: 'method', header: 'Method', width: '120px' },
+  { field: 'reference', header: 'Reference', width: '150px' },
+  { field: 'amount', header: 'Amount', width: '120px', type: 'currency', format: { symbol: '$', decimal: 2 } },
+  { field: 'status', header: 'Status', width: '120px' },
+  { field: 'notes', header: 'Notes', width: '200px' }
+]
+
+// Prepare data for export
+const exportData = computed(() => {
+  return payments.value.map(payment => ({
+    paymentNumber: payment.paymentNumber,
+    customerName: payment.customerName,
+    invoiceNumber: payment.invoiceNumber,
+    date: payment.date,
+    method: formatMethod(payment.method),
+    reference: payment.reference || 'N/A',
+    amount: payment.amount,
+    status: formatStatus(payment.status),
+    notes: payment.notes || ''
+  }))
+})
+
 const exportPayments = () => {
-  alert('Export functionality')
+  exportDialog.value = true
+}
+
+const handleExport = async (format: string, options: any = {}) => {
+  try {
+    isExporting.value = true
+    
+    // Use the useExport composable
+    const { exportData: exportFn } = useExport()
+    
+    // Prepare export options
+    const exportOptions = {
+      title: 'AR Payments',
+      columns: exportColumns,
+      data: exportData.value,
+      filename: `ar-payments-${new Date().toISOString().split('T')[0]}`,
+      ...options
+    }
+    
+    // Perform the export
+    await exportFn(format, exportOptions)
+    
+    // Show success message
+    toast.add({
+      severity: 'success',
+      summary: 'Export Successful',
+      detail: `Payments exported successfully as ${format.toUpperCase()}`,
+      life: 3000
+    })
+  } catch (error) {
+    console.error('Export failed:', error)
+    toast.add({
+      severity: 'error',
+      summary: 'Export Failed',
+      detail: 'Failed to export payments. Please try again.',
+      life: 3000
+    })
+  } finally {
+    isExporting.value = false
+  }
 }
 </script>
 
