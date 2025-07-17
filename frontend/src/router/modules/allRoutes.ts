@@ -33,7 +33,24 @@ export const authRoutes: RouteRecordRaw = {
       component: () => import('@/views/auth/Login.vue'),
       meta: { title: 'Login' }
     },
-    // Add register, forgot-password, etc. here
+    {
+      path: 'register',
+      name: 'Register',
+      component: () => import('@/views/auth/Register.vue'),
+      meta: { title: 'Register' }
+    },
+    {
+      path: 'forgot-password',
+      name: 'ForgotPassword',
+      component: () => import('@/views/auth/ForgotPassword.vue'),
+      meta: { title: 'Forgot Password' }
+    },
+    {
+      path: 'reset-password',
+      name: 'ResetPassword',
+      component: () => import('@/views/auth/ResetPassword.vue'),
+      meta: { title: 'Reset Password' }
+    }
   ]
 };
 

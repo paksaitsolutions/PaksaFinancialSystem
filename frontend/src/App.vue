@@ -1,227 +1,205 @@
 <template>
-  <div id="app">
-    <router-view />
-    <nav class="navbar">
-      <div class="nav-container">
-        <router-link to="/" class="nav-brand">
-          <img src="/src/assets/logo.svg" alt="Paksa" class="nav-logo" />
-        </router-link>
-        <div class="nav-links">
-          <router-link to="/" class="nav-link">Home</router-link>
-          <router-link to="/dashboard" class="nav-link">Dashboard</router-link>
-          <div class="nav-dropdown">
-            <span class="nav-link dropdown-toggle">General Ledger</span>
-            <div class="dropdown-menu">
-              <router-link to="/gl/advanced" class="dropdown-item">GL Dashboard</router-link>
-              <router-link to="/gl/accounts" class="dropdown-item">Chart of Accounts</router-link>
-              <router-link to="/gl/journal-entries" class="dropdown-item">Journal Entries</router-link>
-              <router-link to="/gl/trial-balance" class="dropdown-item">Trial Balance</router-link>
-            </div>
-          </div>
-          <div class="nav-dropdown">
-            <span class="nav-link dropdown-toggle">Accounts Payable</span>
-            <div class="dropdown-menu">
-              <router-link to="/ap/vendors" class="dropdown-item">Vendors</router-link>
-              <router-link to="/ap/invoices" class="dropdown-item">AP Invoices</router-link>
-              <router-link to="/ap/payments" class="dropdown-item">Payments</router-link>
-              <router-link to="/ap/analytics" class="dropdown-item">Analytics</router-link>
-            </div>
-          </div>
-          <div class="nav-dropdown">
-            <span class="nav-link dropdown-toggle">Accounts Receivable</span>
-            <div class="dropdown-menu">
-              <router-link to="/ar/customers" class="dropdown-item">Customers</router-link>
-              <router-link to="/ar/invoices" class="dropdown-item">AR Invoices</router-link>
-              <router-link to="/ar/payments" class="dropdown-item">Payments</router-link>
-              <router-link to="/ar/analytics" class="dropdown-item">AI Analytics</router-link>
-            </div>
-          </div>
-          <div class="nav-dropdown">
-            <span class="nav-link dropdown-toggle">Payroll</span>
-            <div class="dropdown-menu">
-              <router-link to="/payroll/employees" class="dropdown-item">Employees</router-link>
-              <router-link to="/payroll/process" class="dropdown-item">Process Payroll</router-link>
-              <router-link to="/payroll/reports" class="dropdown-item">Payroll Reports</router-link>
-            </div>
-          </div>
-          <div class="nav-dropdown">
-            <span class="nav-link dropdown-toggle">Cash Management</span>
-            <div class="dropdown-menu">
-              <router-link to="/cash/accounts" class="dropdown-item">Bank Accounts</router-link>
-              <router-link to="/cash/reconciliation" class="dropdown-item">Reconciliation</router-link>
-              <router-link to="/cash/forecast" class="dropdown-item">Cash Forecast</router-link>
-            </div>
-          </div>
-          <div class="nav-dropdown">
-            <span class="nav-link dropdown-toggle">Fixed Assets</span>
-            <div class="dropdown-menu">
-              <router-link to="/assets/list" class="dropdown-item">Asset List</router-link>
-              <router-link to="/assets/depreciation" class="dropdown-item">Depreciation</router-link>
-              <router-link to="/assets/maintenance" class="dropdown-item">Maintenance</router-link>
-            </div>
-          </div>
-          <div class="nav-dropdown">
-            <span class="nav-link dropdown-toggle">Tax</span>
-            <div class="dropdown-menu">
-              <router-link to="/tax/exemption-certificate" class="dropdown-item">Tax Exemption Certificate</router-link>
-              <router-link to="/tax/policy" class="dropdown-item">Tax Policy</router-link>
-            </div>
-          </div>
+  <v-app>
+    <v-layout>
+      <!-- App Bar (only shown when authenticated) -->
+      <v-app-bar v-if="isAuthenticated" color="primary" app>
+        <v-app-bar-nav-icon @click="toggleSidebar"></v-app-bar-nav-icon>
+        
+        <v-app-bar-title>
+          <router-link to="/" class="text-decoration-none text-white">
+            Paksa Financial System
+          </router-link>
+        </v-app-bar-title>
+        
+        <v-spacer></v-spacer>
+        
+        <v-btn icon>
+          <v-icon>mdi-magnify</v-icon>
+        </v-btn>
+        
+        <v-btn icon>
+          <v-badge dot color="error">
+            <v-icon>mdi-bell</v-icon>
+          </v-badge>
+        </v-btn>
+        
+        <v-menu>
+          <template v-slot:activator="{ props }">
+            <v-btn v-bind="props">
+              <v-avatar size="32" class="mr-2">
+                <v-img src="https://randomuser.me/api/portraits/men/85.jpg" alt="User"></v-img>
+              </v-avatar>
+              {{ userName || 'User' }}
+            </v-btn>
+          </template>
+          <v-list>
+            <v-list-item to="/profile">
+              <v-list-item-title>Profile</v-list-item-title>
+            </v-list-item>
+            <v-list-item to="/settings">
+              <v-list-item-title>Settings</v-list-item-title>
+            </v-list-item>
+            <v-divider></v-divider>
+            <v-list-item @click="logout">
+              <v-list-item-title>Logout</v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-menu>
+      </v-app-bar>
 
-        </div>
-      </div>
-    </nav>
+      <!-- Navigation Drawer (only shown when authenticated) -->
+      <v-navigation-drawer
+        v-if="isAuthenticated"
+        v-model="drawer"
+        app
+      >
+        <v-list>
+          <v-list-item
+            prepend-avatar="/src/assets/logo.svg"
+            title="Paksa Financial"
+            subtitle="Enterprise System"
+          ></v-list-item>
+        </v-list>
+
+        <v-divider></v-divider>
+
+        <v-list density="compact" nav>
+          <v-list-item to="/" prepend-icon="mdi-view-dashboard" title="Dashboard"></v-list-item>
+          
+          <v-list-group value="gl">
+            <template v-slot:activator="{ props }">
+              <v-list-item v-bind="props" prepend-icon="mdi-book-open-page-variant" title="General Ledger"></v-list-item>
+            </template>
+            <v-list-item to="/gl/accounts" title="Chart of Accounts"></v-list-item>
+            <v-list-item to="/gl/journal-entries" title="Journal Entries"></v-list-item>
+            <v-list-item to="/gl/trial-balance" title="Trial Balance"></v-list-item>
+          </v-list-group>
+          
+          <v-list-group>
+            <template v-slot:activator="{ props }">
+              <v-list-item v-bind="props" prepend-icon="mdi-file-document-outline" title="Accounts Payable"></v-list-item>
+            </template>
+            <v-list-item to="/ap/vendors" title="Vendors"></v-list-item>
+            <v-list-item to="/ap/invoices" title="Invoices"></v-list-item>
+            <v-list-item to="/ap/payments" title="Payments"></v-list-item>
+          </v-list-group>
+          
+          <v-list-group>
+            <template v-slot:activator="{ props }">
+              <v-list-item v-bind="props" prepend-icon="mdi-cash-multiple" title="Accounts Receivable"></v-list-item>
+            </template>
+            <v-list-item to="/ar/customers" title="Customers"></v-list-item>
+            <v-list-item to="/ar/invoices" title="Invoices"></v-list-item>
+            <v-list-item to="/ar/payments" title="Payments"></v-list-item>
+          </v-list-group>
+          
+          <v-list-group>
+            <template v-slot:activator="{ props }">
+              <v-list-item v-bind="props" prepend-icon="mdi-bank" title="Cash Management"></v-list-item>
+            </template>
+            <v-list-item to="/cash/accounts" title="Bank Accounts"></v-list-item>
+            <v-list-item to="/cash/reconciliation" title="Reconciliation"></v-list-item>
+            <v-list-item to="/cash/forecast" title="Cash Forecast"></v-list-item>
+          </v-list-group>
+          
+          <v-list-group>
+            <template v-slot:activator="{ props }">
+              <v-list-item v-bind="props" prepend-icon="mdi-account-cash" title="Payroll"></v-list-item>
+            </template>
+            <v-list-item to="/payroll/employees" title="Employees"></v-list-item>
+            <v-list-item to="/payroll/process" title="Process Payroll"></v-list-item>
+            <v-list-item to="/payroll/reports" title="Reports"></v-list-item>
+          </v-list-group>
+          
+          <v-list-group>
+            <template v-slot:activator="{ props }">
+              <v-list-item v-bind="props" prepend-icon="mdi-calculator-variant" title="Tax"></v-list-item>
+            </template>
+            <v-list-item to="/tax/exemption-certificate" title="Exemption Certificates"></v-list-item>
+            <v-list-item to="/tax/policy" title="Tax Policy"></v-list-item>
+          </v-list-group>
+        </v-list>
+      </v-navigation-drawer>
+
+      <!-- Main Content -->
+      <v-main>
+        <v-container fluid :class="{ 'pa-0': !isAuthenticated }">
+          <router-view v-slot="{ Component }">
+            <transition name="fade" mode="out-in">
+              <component :is="Component" />
+            </transition>
+          </router-view>
+        </v-container>
+      </v-main>
+    </v-layout>
     
-    <main class="main-content">
-      <RouterView />
-    </main>
-  </div>
+    <!-- Global Loading Overlay -->
+    <loading-overlay :loading="globalLoading" message="Loading application..."></loading-overlay>
+    
+    <!-- Global Snackbar -->
+    <global-snackbar
+      v-model="snackbar.visible"
+      :text="snackbar.text"
+      :color="snackbar.color"
+      :timeout="snackbar.timeout"
+      :location="snackbar.location"
+    ></global-snackbar>
+  </v-app>
 </template>
 
-<script setup lang="ts">
-import { RouterView } from 'vue-router'
+<script setup>
+import { ref, computed, onMounted, provide } from 'vue';
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/stores/auth';
+import { useSnackbar } from '@/composables/useSnackbar';
+import LoadingOverlay from '@/components/ui/LoadingOverlay.vue';
+import GlobalSnackbar from '@/components/ui/GlobalSnackbar.vue';
+
+const router = useRouter();
+const authStore = useAuthStore();
+const drawer = ref(true);
+const globalLoading = ref(true);
+
+// Setup snackbar
+const snackbar = useSnackbar();
+// Provide snackbar to all components
+provide('snackbar', snackbar);
+
+// Check if user is authenticated
+const isAuthenticated = computed(() => authStore.isAuthenticated);
+const userName = computed(() => authStore.userName);
+
+// Toggle sidebar
+const toggleSidebar = () => {
+  drawer.value = !drawer.value;
+};
+
+// Logout function
+const logout = async () => {
+  await authStore.logout();
+  router.push('/auth/login');
+};
+
+// Check authentication status on app load
+onMounted(async () => {
+  try {
+    await authStore.checkAuth();
+  } catch (error) {
+    console.error('Auth check failed:', error);
+  } finally {
+    globalLoading.value = false;
+  }
+});
 </script>
 
 <style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
 }
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  line-height: 1.6;
-  color: #333;
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
-
-.navbar {
-  background: #1976D2;
-  color: white;
-  padding: 0;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-
-.nav-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  height: 64px;
-}
-
-.nav-brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: white;
-  text-decoration: none;
-}
-
-.nav-logo {
-  height: 40px;
-  width: auto;
-}
-
-.nav-links {
-  display: flex;
-  align-items: center;
-  gap: 0;
-}
-
-.nav-link {
-  color: white;
-  text-decoration: none;
-  padding: 20px 16px;
-  transition: background 0.3s ease;
-  white-space: nowrap;
-}
-
-.nav-link:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.nav-link.router-link-active {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.nav-dropdown {
-  position: relative;
-}
-
-.dropdown-toggle {
-  cursor: pointer;
-  padding: 20px 16px;
-}
-
-.dropdown-menu {
-  display: none;
-  position: absolute;
-  top: 100%;
-  left: 0;
-  background: white;
-  min-width: 180px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  border-radius: 4px;
-  z-index: 1000;
-  margin-top: 0;
-}
-
-.nav-dropdown:hover .dropdown-menu {
-  display: block;
-}
-
-.dropdown-item {
-  display: block;
-  padding: 12px 16px;
-  color: #333;
-  text-decoration: none;
-  font-size: 0.9rem;
-  transition: background 0.2s ease;
-}
-
-.dropdown-item:hover {
-  background: #f5f5f5;
-}
-
-.main-content {
-  min-height: calc(100vh - 80px);
-}
-
-@media (max-width: 768px) {
-  .nav-container {
-    flex-direction: column;
-    gap: 1rem;
-    padding: 0 15px;
-  }
-  
-  .nav-links {
-    gap: 0.5rem;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-  
-  .nav-link {
-    padding: 0.4rem 0.8rem;
-    font-size: 0.9rem;
-  }
-  
-  .dropdown-menu {
-    position: fixed;
-    left: 50%;
-    transform: translateX(-50%);
-    min-width: 200px;
-  }
-}
-</style>
-
-<style>
-@import './assets/styles/ap-advanced.css';
-@import './assets/styles/ap-analytics.css';
 </style>

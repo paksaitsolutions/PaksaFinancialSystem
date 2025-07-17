@@ -1,102 +1,74 @@
-import { ref, inject, InjectionKey, Ref, computed } from 'vue';
+import { ref } from 'vue';
 
-type SnackbarColor = 'success' | 'error' | 'warning' | 'info' | '';
-
-interface SnackbarState {
-  message: string;
-  color: SnackbarColor;
-  timeout: number;
-  show: boolean;
+interface SnackbarOptions {
+  text: string;
+  color?: string;
+  timeout?: number;
+  location?: string;
 }
-
-interface SnackbarMethods {
-  showMessage(message: string, color?: SnackbarColor, timeout?: number): void;
-  success(message: string, timeout?: number): void;
-  error(message: string, timeout?: number): void;
-  warning(message: string, timeout?: number): void;
-  info(message: string, timeout?: number): void;
-}
-
-const snackbarKey: InjectionKey<SnackbarMethods> = Symbol('snackbar');
 
 export function useSnackbar() {
-  const state = inject<Ref<SnackbarState>>('snackbarState');
-  const methods = inject<SnackbarMethods>(snackbarKey);
+  const visible = ref(false);
+  const text = ref('');
+  const color = ref('success');
+  const timeout = ref(5000);
+  const location = ref('bottom');
 
-  if (!state || !methods) {
-    throw new Error('useSnackbar must be used within a SnackbarProvider');
-  }
+  const show = (options: SnackbarOptions) => {
+    text.value = options.text;
+    color.value = options.color || 'success';
+    timeout.value = options.timeout || 5000;
+    location.value = options.location || 'bottom';
+    visible.value = true;
+  };
+
+  const success = (message: string, options: Partial<SnackbarOptions> = {}) => {
+    show({
+      text: message,
+      color: 'success',
+      ...options
+    });
+  };
+
+  const error = (message: string, options: Partial<SnackbarOptions> = {}) => {
+    show({
+      text: message,
+      color: 'error',
+      ...options
+    });
+  };
+
+  const info = (message: string, options: Partial<SnackbarOptions> = {}) => {
+    show({
+      text: message,
+      color: 'info',
+      ...options
+    });
+  };
+
+  const warning = (message: string, options: Partial<SnackbarOptions> = {}) => {
+    show({
+      text: message,
+      color: 'warning',
+      ...options
+    });
+  };
+
+  const hide = () => {
+    visible.value = false;
+  };
 
   return {
-    ...methods,
-    state: computed(() => state.value),
-  };
-}
-
-export function createSnackbar() {
-  const state = ref<SnackbarState>({
-    message: '',
-    color: '',
-    timeout: 3000,
-    show: false,
-  });
-
-  let timeoutId: number | null = null;
-
-  const showMessage = (message: string, color: SnackbarColor = 'info', timeout: number = 3000) => {
-    // Clear any existing timeout
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-      timeoutId = null;
-    }
-
-    // Update the state
-    state.value = {
-      message,
-      color,
-      timeout,
-      show: true,
-    };
-
-    // Auto-hide after timeout
-    if (timeout > 0) {
-      timeoutId = window.setTimeout(() => {
-        state.value.show = false;
-        timeoutId = null;
-      }, timeout);
-    }
-  };
-
-  const success = (message: string, timeout: number = 3000) => {
-    showMessage(message, 'success', timeout);
-  };
-
-  const error = (message: string, timeout: number = 5000) => {
-    showMessage(message, 'error', timeout);
-  };
-
-  const warning = (message: string, timeout: number = 4000) => {
-    showMessage(message, 'warning', timeout);
-  };
-
-  const info = (message: string, timeout: number = 3000) => {
-    showMessage(message, 'info', timeout);
-  };
-
-  // Provide methods that can be used in components
-  const methods: SnackbarMethods = {
-    showMessage,
+    visible,
+    text,
+    color,
+    timeout,
+    location,
+    show,
     success,
     error,
-    warning,
     info,
-  };
-
-  return {
-    state,
-    methods,
-    snackbarKey,
+    warning,
+    hide
   };
 }
-
-export { SnackbarColor };

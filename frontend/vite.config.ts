@@ -13,6 +13,11 @@ export default defineConfig({
       runtimeCompiler: true
     }),
   ],
+  css: {
+    preprocessorOptions: {
+      scss: {}
+    }
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

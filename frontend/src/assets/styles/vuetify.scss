@@ -1,0 +1,76 @@
+// Vuetify overrides
+.v-btn {
+  text-transform: none !important;
+  letter-spacing: normal !important;
+}
+
+.v-card {
+  border-radius: 8px !important;
+}
+
+.v-text-field .v-field__input {
+  min-height: 44px !important;
+}
+
+// Custom Vuetify theme classes
+.primary-gradient {
+  background: linear-gradient(45deg, #1867C0, #5CBBF6) !important;
+}
+
+.v-card.elevated {
+  box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23) !important;
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  
+  &:hover {
+    box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23) !important;
+    transform: translateY(-2px);
+  }
+}
+
+// Form styles
+.v-form {
+  .v-text-field {
+    margin-bottom: 16px;
+  }
+}
+
+// Auth specific styles
+.auth-container {
+  background-color: #F5F7FA;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.auth-card {
+  max-width: 450px;
+  width: 100%;
+  padding: 24px;
+  border-radius: 8px;
+}
+
+// Dashboard specific styles
+.dashboard-stat-card {
+  transition: transform 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-4px);
+  }
+}
+
+// Table styles
+.v-data-table {
+  .v-data-table__thead {
+    tr th {
+      font-size: 14px !important;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+  }
+}
+
+// Alert styles
+.v-alert {
+  font-weight: 500;
+}

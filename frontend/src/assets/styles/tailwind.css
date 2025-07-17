@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom Tailwind utilities */
+@layer utilities {
+  .tw-text-balance {
+    text-wrap: balance;
+  }
+  
+  .tw-text-pretty {
+    text-wrap: pretty;
+  }
+}
