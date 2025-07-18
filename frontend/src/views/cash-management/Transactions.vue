@@ -13,14 +13,15 @@
           label="Export" 
           icon="pi pi-download" 
           class="p-button-outlined p-button-success mr-2"
-          @click="showExportDialog"
-        />
-        <Button 
-          label="Print" 
-          icon="pi pi-print" 
-          class="p-button-outlined p-button-info mr-2"
-          @click="printTransactions"
-        />
+          @click="showExportDialog = true"
+          :disabled="!transactions.length"
+          :loading="isExporting"
+        >
+          <template #loading>
+            <i class="pi pi-spinner pi-spin mr-2"></i>
+            Exporting...
+          </template>
+        </Button>
         <Button 
           label="New Transaction" 
           icon="pi pi-plus" 
@@ -291,11 +292,35 @@
       @schedule="handleScheduleExport"
     />
   </div>
+
+  <!-- Export Dialog -->
+  <ExportDialog 
+    v-model:visible="showExportDialog"
+    title="Export Transactions"
+    :file-name="exportFileName"
+    :columns="exportColumns"
+    :data="exportData"
+    :meta="{
+      title: 'Transactions Report',
+      description: 'List of bank transactions',
+      generatedOn: new Date().toLocaleString(),
+      generatedBy: 'System',
+      includeSummary: true,
+      filters: {
+        status: filters.status || 'All',
+        type: filters.type || 'All',
+        dateRange: `${filters.startDate || 'Start Date'} to ${filters.endDate || 'End Date'}`
+      }
+    }"
+    @export="handleExport"
+  />
 </template>
 
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { useToast } from 'primevue/usetoast';
+import { format } from 'date-fns';
+import ExportDialog from '@/components/common/ExportDialog.vue';
 import ReportExportDialog from '@/components/reports/ReportExportDialog.vue';
 import { useConfirm } from 'primevue/useconfirm';
 import { useCurrency } from '@/composables/useCurrency';
@@ -680,104 +705,68 @@ const getAccountCurrency = (accountId) => {
 
 // Refs for template
 const actionMenu = ref(null);
-const displayExportDialog = ref(false);
+const showExportDialog = ref(false);
+const isExporting = ref(false);
 
-// Show export dialog
-const showExportDialog = () => {
-  displayExportDialog.value = true;
-};
+// Export configuration
+const exportColumns = [
+  { field: 'transaction_date', header: 'Date' },
+  { field: 'account_name', header: 'Account' },
+  { field: 'reference_number', header: 'Reference' },
+  { field: 'description', header: 'Description' },
+  { field: 'category', header: 'Category' },
+  { field: 'amount', header: 'Amount' },
+  { field: 'transaction_type', header: 'Type' },
+  { field: 'status', header: 'Status' },
+  { field: 'is_reconciled', header: 'Reconciled' },
+  { field: 'created_at', header: 'Created At' }
+];
+
+const exportData = computed(() => {
+  return transactions.value.map(tx => ({
+    ...tx,
+    account_name: getAccountById(tx.account_id)?.name || 'N/A',
+    transaction_date: tx.transaction_date ? format(new Date(tx.transaction_date), 'yyyy-MM-dd') : '',
+    created_at: tx.created_at ? format(new Date(tx.created_at), 'yyyy-MM-dd HH:mm') : '',
+    amount: formatCurrency(tx.amount || 0),
+    is_reconciled: tx.is_reconciled ? 'Yes' : 'No'
+  }));
+});
+
+const exportFileName = computed(() => {
+  return `transactions_${format(new Date(), 'yyyyMMdd_HHmmss')}`;
+});
 
 // Handle export action
-const handleExport = async (params) => {
+const handleExport = async (format: string, options: any = {}) => {
+  isExporting.value = true;
   try {
-    const { format, scope, options } = params;
-    let exportData = [];
-    
-    // Prepare data based on scope
-    if (scope === 'current') {
-      exportData = [...transactions.value];
-    } else if (scope === 'all') {
-      // In a real app, you would fetch all data from the server
-      const response = await TransactionService.getTransactions({
-        page: 1,
-        pageSize: 10000, // Large number to get all records
-        ...filters.value
-      });
-      exportData = response.data;
-    } else if (scope === 'range' && params.pageRange) {
-      // Fetch data for the specified page range
-      const { start, end } = params.pageRange;
-      const pageSize = rowsPerPage.value;
-      
-      // In a real app, you would fetch each page's data
-      const allData = [];
-      for (let page = start; page <= end; page++) {
-        const response = await TransactionService.getTransactions({
-          page,
-          pageSize,
-          ...filters.value
-        });
-        allData.push(...response.data);
-      }
-      exportData = allData;
-    }
-    
-    // Format data for export
-    const formattedData = exportData.map(tx => ({
-      'Date': formatDate(tx.transaction_date),
-      'Account': getAccountById(tx.account_id)?.name || 'N/A',
-      'Reference': tx.reference_number || 'N/A',
-      'Description': tx.description || 'N/A',
-      'Category': tx.category || 'Uncategorized',
-      'Amount': formatCurrency(tx.amount),
-      'Type': tx.transaction_type,
-      'Status': tx.status,
-      'Reconciled': tx.is_reconciled ? 'Yes' : 'No',
-      'Created At': formatDateTime(tx.created_at)
-    }));
-    
-    // In a real app, you would use a library like xlsx, jsPDF, etc.
-    // This is a simplified example
-    console.log(`Exporting ${formattedData.length} transactions to ${format} format`, options);
-    
-    // Simulate export
-    toast.add({
-      severity: 'success',
-      summary: 'Export Started',
-      detail: `Preparing to export ${formattedData.length} transactions to ${format.toUpperCase()} format`,
-      life: 3000
+    // In a real implementation, this would make an API call to export the data
+    // For now, we'll return the current filtered transactions
+    const response = await TransactionService.exportTransactions({
+      format,
+      ...filters.value,
+      ...options
     });
     
-    // In a real app, you would generate and download the file here
-    // For now, we'll just log it
-    return new Promise(resolve => {
-      setTimeout(() => {
-        console.log('Export complete:', { format, data: formattedData });
-        resolve();
-      }, 1000);
-    });
+    // The actual export is handled by the ExportDialog component
+    // This is just a placeholder for any additional processing
+    console.log(`Exporting ${response.data.length} transactions to ${format}`);
     
+    return {
+      success: true,
+      message: `Successfully exported ${response.data.length} transactions`
+    };
   } catch (error) {
-    console.error('Export error:', error);
-    toast.add({
-      severity: 'error',
-      summary: 'Export Failed',
-      detail: 'Failed to export transactions. Please try again.',
-      life: 5000
-    });
-    throw error;
+    console.error('Export failed:', error);
+    return {
+      success: false,
+      message: 'Export failed. Please try again.'
+    };
+  } finally {
+    isExporting.value = false;
   }
 };
-
-// Handle scheduled export
-const handleScheduleExport = (params) => {
-  console.log('Scheduling export:', params);
-  // In a real app, you would save this to a scheduled jobs/tasks system
-  toast.add({
-    severity: 'info',
-    summary: 'Export Scheduled',
-    detail: 'Your export has been scheduled and will be processed shortly.',
-    life: 5000
   });};
 
 // Print transactions
