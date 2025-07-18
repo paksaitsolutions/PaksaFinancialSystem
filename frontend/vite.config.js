@@ -1,7 +1,6 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { fileURLToPath, URL } from 'node:url'
-import path from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -13,17 +12,15 @@ export default defineConfig({
   },
   server: {
     port: 3000,
-    proxy: {
-      '/api': {
-        target: 'http://localhost:8000',
-        changeOrigin: true
-      }
+    hmr: {
+      overlay: false // Disable error overlay
     }
   },
   css: {
-    devSourcemap: true,
     postcss: {
-      plugins: [require('autoprefixer')]
+      plugins: [
+        require('autoprefixer')
+      ]
     }
   }
 })

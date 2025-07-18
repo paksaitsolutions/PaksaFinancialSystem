@@ -5,7 +5,7 @@
       <v-col cols="12" md="6" class="d-flex align-center justify-center">
         <v-card width="400" class="pa-6 elevation-0">
           <div class="text-center mb-6">
-            <img src="/src/assets/logo.svg" alt="Paksa Financial System" height="60" class="mb-4">
+            <v-img src="/favicon.svg" alt="Paksa Financial System" height="60" class="mb-4"></v-img>
             <slot name="header">
               <h1 class="text-h4 font-weight-bold">Welcome</h1>
               <p class="text-body-1 text-medium-emphasis">Sign in to your account</p>
@@ -19,9 +19,10 @@
       <!-- Right side - Background image -->
       <v-col cols="12" md="6" class="d-none d-md-flex">
         <v-img
-          src="/src/assets/login-bg.svg"
+          src="https://images.unsplash.com/photo-1551434678-e076c223a692?ixlib=rb-1.2.1&auto=format&fit=crop&w=2850&q=80"
           cover
           class="h-100"
+          gradient="to top right, rgba(25,32,72,.7), rgba(25,32,72,.8)"
         >
           <div class="d-flex flex-column justify-center align-center fill-height text-white px-8">
             <h2 class="text-h3 font-weight-bold mb-4">Paksa Financial System</h2>

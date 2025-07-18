@@ -1,7 +1,7 @@
 import { ref } from 'vue';
 import { useToast } from 'primevue/usetoast';
 import { useAuthStore } from '@/stores/auth';
-import { api } from '@/api';
+import api from '@/services/api';
 import type { 
   Report, 
   ReportCategory, 

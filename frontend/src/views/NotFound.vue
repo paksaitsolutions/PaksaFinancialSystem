@@ -1,23 +1,35 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-    <div class="text-center">
-      <h1 class="text-6xl font-bold text-gray-900 mb-4">404</h1>
-      <h2 class="text-2xl font-medium text-gray-700 mb-6">Page Not Found</h2>
-      <p class="text-gray-600 mb-8">The page you're looking for doesn't exist or has been moved.</p>
-      <router-link 
-        to="/" 
-        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-      >
-        Go back home
-      </router-link>
-    </div>
+  <div class="not-found">
+    <v-container class="text-center">
+      <v-row justify="center">
+        <v-col cols="12" md="6">
+          <v-card class="pa-6">
+            <v-card-title class="text-h3 mb-4">404</v-card-title>
+            <v-card-subtitle class="text-h5 mb-4">Page Not Found</v-card-subtitle>
+            <v-card-text>
+              <p class="text-body-1 mb-4">
+                The page you are looking for does not exist or has been moved.
+              </p>
+              <v-btn color="primary" to="/" size="large">
+                Go to Home
+              </v-btn>
+            </v-card-text>
+          </v-card>
+        </v-col>
+      </v-row>
+    </v-container>
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent } from 'vue';
-
-export default defineComponent({
-  name: 'NotFound',
-});
+<script setup>
+// No additional logic needed
 </script>
+
+<style scoped>
+.not-found {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+</style>

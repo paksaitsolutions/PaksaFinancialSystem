@@ -1,6 +1,7 @@
 <template>
   <Dialog 
-    v-model:visible="modelValue" 
+    :visible="modelValue" 
+    @update:visible="$emit('update:modelValue', $event)"
     :header="report?.name || 'Run Report'" 
     :style="{ width: '90vw', maxWidth: '1400px', height: '90vh' }"
     :modal="true"
