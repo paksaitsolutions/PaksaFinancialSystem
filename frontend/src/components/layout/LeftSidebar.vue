@@ -35,9 +35,9 @@
     <v-list nav density="compact">
       <v-list-item
         prepend-icon="mdi-view-dashboard"
-        title="Home"
-        :to="{ name: 'home' }"
-        :active="isHome"
+        title="Dashboard"
+        :to="{ path: '/dashboard' }"
+        :active="isActive('/dashboard')"
         rounded="lg"
         class="mb-1"
       ></v-list-item>
@@ -101,21 +101,28 @@
   </v-navigation-drawer>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import { useMenuStore } from '@/stores/menu';
+import { useRoute, useRouter, type RouteLocationNormalizedLoaded } from 'vue-router';
+import { useMenuStore } from '../../stores/menu';
+
+interface MenuItem {
+  title: string;
+  icon: string;
+  route: string;
+  children?: MenuItem[];
+}
 
 const menuStore = useMenuStore();
-const route = useRoute();
+const route: RouteLocationNormalizedLoaded = useRoute();
 const router = useRouter();
-const drawer = ref(true);
+const drawer = ref<boolean>(true);
 
-const isActive = (path) => {
+const isActive = (path: string): boolean => {
   return route.path === path || route.path.startsWith(`${path}/`);
 };
 
-const isModuleActive = (module) => {
+const isModuleActive = (module: MenuItem): boolean => {
   return route.path.startsWith(module.route);
 };
 

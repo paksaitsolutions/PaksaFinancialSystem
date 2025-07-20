@@ -1,5 +1,5 @@
 import { TaxAnalyticsRequest, TaxAnalyticsResponse } from '@/types/tax';
-import { useTaxAnalyticsStore } from '@/stores/tax/analytics';
+import { useTaxAnalyticsStore } from '@/modules/tax/store/analytics';
 import { useAnalytics } from '@/composables/useAnalytics';
 import { taxAnalyticsLogger } from '@/services/logger/taxAnalyticsLogger';
 import { taxAnalyticsErrorHandler } from '@/services/error/taxAnalyticsErrorHandler';

@@ -23,10 +23,10 @@
 
     <div class="sidebar-content">
       <Menu :model="visibleMenuItems" class="sidebar-menu">
-        <template #item="{ item }">
+        <template #item="{ item, root, hasSubmenu }">
           <router-link 
             v-if="item.route" 
-            v-slot="{ href, navigate }" 
+            v-slot="{ href, navigate, isActive, isExactActive }" 
             :to="item.route"
             custom
           >
@@ -34,18 +34,41 @@
               :href="href" 
               @click="[navigate, $emit('navigate')]"
               class="p-menuitem-link"
-              :class="{ 'p-disabled': item.disabled }"
+              :class="{ 
+                'p-disabled': item.disabled,
+                'router-link-active': isActive,
+                'router-link-exact-active': isExactActive
+              }"
+              :aria-current="isActive ? 'page' : undefined"
+              :aria-disabled="item.disabled"
+              :aria-haspopup="hasSubmenu ? 'true' : undefined"
+              :aria-expanded="hasSubmenu && root ? 'false' : undefined"
             >
-              <span :class="item.icon"></span>
-              <span class="ml-2">{{ item.label }}</span>
+              <span :class="item.icon" aria-hidden="true"></span>
+              <span class="menu-item-text">{{ item.label }}</span>
               <span v-if="item.badge" class="ml-auto">
                 <Badge :value="item.badge" :severity="item.badgeSeverity" />
               </span>
-              <span v-if="item.items && item.items.length > 0" class="ml-auto">
+              <span v-if="hasSubmenu" class="menu-toggle-icon">
                 <i class="pi pi-angle-down"></i>
               </span>
             </a>
           </router-link>
+          <a 
+            v-else 
+            href="#" 
+            class="p-menuitem-link"
+            :class="{ 'p-disabled': item.disabled }"
+            @click.prevent="hasSubmenu && root.toggle($event)"
+            :aria-haspopup="hasSubmenu ? 'true' : undefined"
+            :aria-expanded="hasSubmenu && root ? 'false' : undefined"
+          >
+            <span :class="item.icon" aria-hidden="true"></span>
+            <span class="menu-item-text">{{ item.label }}</span>
+            <span v-if="hasSubmenu" class="menu-toggle-icon">
+              <i class="pi pi-angle-down"></i>
+            </span>
+          </a>
         </template>
       </Menu>
     </div>
@@ -55,6 +78,7 @@
         icon="pi pi-cog" 
         class="p-button-text p-button-plain"
         @click="navigateToSettings"
+        aria-label="Settings"
       >
         <span v-if="!collapsed" class="ml-2">Settings</span>
       </Button>
@@ -65,8 +89,8 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import type { RouteLocationRaw } from 'vue-router';
 import { useAuthStore } from '@/store/auth';
+import { menuItems as allMenuItems, type SidebarMenuItem } from '@/config/menu';
 import Menu from 'primevue/menu';
 import Button from 'primevue/button';
 import Badge from 'primevue/badge';
@@ -85,21 +109,6 @@ defineProps({
 const emit = defineEmits(['navigate']);
 const router = useRouter();
 const authStore = useAuthStore();
-
-// Types
-type BadgeSeverity = 'success' | 'info' | 'warning' | 'danger' | 'contrast' | 'secondary' | null | undefined;
-
-interface SidebarMenuItem {
-  label: string;
-  icon: string;
-  route?: RouteLocationRaw;
-  visible: boolean | (() => boolean);
-  items?: SidebarMenuItem[];
-  badge?: string;
-  badgeSeverity?: BadgeSeverity;
-  disabled?: boolean;
-  permission?: string | string[];
-}
 
 // Check if menu item should be visible
 const isMenuItemVisible = (item: SidebarMenuItem): boolean => {
@@ -134,35 +143,11 @@ const filterMenuItems = (items: SidebarMenuItem[]): SidebarMenuItem[] => {
 };
 
 // Compute visible menu items based on permissions
-const visibleMenuItems = computed(() => filterMenuItems(menuItems.value));
+const visibleMenuItems = computed(() => filterMenuItems(allMenuItems));
 
 // Menu items configuration
-const menuItems = ref<SidebarMenuItem[]>([
-  {
-    label: 'Dashboard',
-    icon: 'pi pi-home',
-    route: '/',
-    visible: true
-  },
-  {
-    label: 'General Ledger',
-    icon: 'pi pi-book',
-    permission: 'view_general_ledger',
-    visible: true,
-    items: [
-      { label: 'Dashboard', icon: 'pi pi-chart-bar', route: '/gl/dashboard', visible: true },
-      { label: 'Chart of Accounts', icon: 'pi pi-sitemap', route: '/gl/accounts', visible: true },
-      { label: 'Journal Entries', icon: 'pi pi-book', route: '/gl/journal-entries', visible: true },
-      { label: 'Trial Balance', icon: 'pi pi-balance-scale', route: '/gl/trial-balance', visible: true },
-      { label: 'Financial Statements', icon: 'pi pi-file-pdf', route: '/gl/financial-statements', visible: true },
-      { label: 'Recurring Journals', icon: 'pi pi-sync', route: '/gl/recurring-journals', visible: true },
-      { label: 'Allocation Rules', icon: 'pi pi-share-alt', route: '/gl/allocation-rules', visible: true },
-      { label: 'Period Close', icon: 'pi pi-lock', route: '/gl/period-close', visible: true },
-      { label: 'Intercompany', icon: 'pi pi-exchange', route: '/gl/intercompany', visible: true },
-      { label: 'Consolidation', icon: 'pi pi-sitemap', route: '/gl/consolidation', visible: true },
-      { label: 'Budgeting', icon: 'pi pi-chart-line', route: '/gl/budgeting', visible: true }
-    ]
-  },
+const menuItems = ref<SidebarMenuItem[]>(allMenuItems);
+  // Menu items are now imported from @/config/menu.ts
   {
     label: 'Accounts Payable',
     icon: 'pi pi-credit-card',
@@ -617,12 +602,27 @@ const handleClick = (event: Event) => {
   display: flex;
   flex-direction: column;
   transition: all 0.3s ease;
-  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--surface-300) var(--surface-0);
+}
+
+/* Custom scrollbar for WebKit browsers */
+.app-sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.app-sidebar::-webkit-scrollbar-track {
+  background: var(--surface-0);
+}
+
+.app-sidebar::-webkit-scrollbar-thumb {
+  background-color: var(--surface-300);
+  border-radius: 3px;
 }
 
 .app-sidebar.collapsed {
   width: 60px;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .sidebar-header {
@@ -632,6 +632,7 @@ const handleClick = (event: Event) => {
   align-items: center;
   justify-content: center;
   height: 60px;
+  flex-shrink: 0;
 }
 
 .logo-container {
@@ -639,52 +640,143 @@ const handleClick = (event: Event) => {
   align-items: center;
   justify-content: center;
   text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.logo-container:hover {
+  opacity: 0.9;
 }
 
 .logo {
   max-height: 40px;
   max-width: 100%;
+  transition: transform 0.2s;
 }
 
 .logo-icon {
   max-height: 30px;
   max-width: 30px;
+  transition: transform 0.2s;
 }
 
 .sidebar-content {
   flex: 1;
   overflow-y: auto;
   padding: 0.5rem 0;
+  scrollbar-width: none; /* Hide scrollbar for Firefox */
+  -ms-overflow-style: none; /* Hide scrollbar for IE and Edge */
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.sidebar-content::-webkit-scrollbar {
+  display: none;
 }
 
 .sidebar-menu {
   border: none;
   width: 100%;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar-menu :deep(.p-menuitem) {
+  width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 .sidebar-menu :deep(.p-menuitem-link) {
   border-radius: 0;
   padding: 0.75rem 1.5rem;
   color: var(--text-color);
-  transition: all 0.2s;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  width: 100%;
 }
 
-.sidebar-menu :deep(.p-menuitem-link:hover) {
+/* Focus styles for better accessibility */
+.sidebar-menu :deep(.p-menuitem-link:focus-visible) {
+  outline: 2px solid var(--primary-color);
+  outline-offset: -2px;
+  z-index: 1;
+}
+
+/* Hover effect */
+.sidebar-menu :deep(.p-menuitem-link:not(.router-link-active):hover) {
   background-color: var(--surface-hover);
+  transform: translateX(2px);
 }
 
-.sidebar-menu :deep(.p-menuitem-link.router-link-active) {
+/* Active/selected state */
+.sidebar-menu :deep(.router-link-active) {
   background-color: var(--primary-color);
-  color: var(--primary-color-text);
+  color: var(--primary-color-text) !important;
+  font-weight: 500;
 }
 
+/* Icon styles */
 .sidebar-menu :deep(.p-menuitem-link .pi) {
   font-size: 1.1rem;
+  transition: transform 0.2s;
 }
 
+/* Menu item text */
+.menu-item-text {
+  margin-left: 0.5rem;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+/* Toggle icon for submenus */
+.menu-toggle-icon {
+  margin-left: auto;
+  transition: transform 0.2s;
+}
+
+.sidebar-menu :deep(.p-menuitem-link[aria-expanded="true"] .menu-toggle-icon) {
+  transform: rotate(-180deg);
+}
+
+/* Submenu styles */
+.sidebar-menu :deep(.p-submenu-list) {
+  padding: 0;
+  background-color: var(--surface-a);
+}
+
+.sidebar-menu :deep(.p-submenu-header) {
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  color: var(--text-color-secondary);
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Nested menu items */
+.sidebar-menu :deep(.p-menuitem .p-menuitem .p-menuitem-link) {
+  padding-left: 2.5rem;
+}
+
+.sidebar-menu :deep(.p-menuitem .p-menuitem .p-menuitem .p-menuitem-link) {
+  padding-left: 3.5rem;
+}
+
+/* Badge styles */
+.sidebar-menu :deep(.p-badge) {
+  font-size: 0.75rem;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  line-height: 1.5rem;
+}
+
+/* Footer styles */
 .sidebar-footer {
   padding: 1rem;
   border-top: 1px solid var(--surface-border);
+  flex-shrink: 0;
 }
 
 /* Mobile menu styles */
@@ -692,11 +784,17 @@ const handleClick = (event: Event) => {
   .app-sidebar {
     transform: translateX(-100%);
     z-index: 1100;
+    box-shadow: 4px 0 10px rgba(0, 0, 0, 0.15);
   }
   
   .app-sidebar.mobile-menu {
     transform: translateX(0);
-    box-shadow: 4px 0 10px rgba(0, 0, 0, 0.15);
+  }
+  
+  /* Better touch targets on mobile */
+  .sidebar-menu :deep(.p-menuitem-link) {
+    min-height: 48px;
+    padding: 0.75rem 1.5rem;
   }
 }
 
@@ -704,27 +802,63 @@ const handleClick = (event: Event) => {
 .collapsed .menu-item-text,
 .collapsed .p-badge,
 .collapsed .menu-toggle-icon {
-  display: none;
+  opacity: 0;
+  width: 0;
+  padding: 0;
+  margin: 0;
+  position: absolute;
+  pointer-events: none;
 }
 
 .collapsed .p-menuitem-link {
   justify-content: center;
   padding: 0.75rem 0;
+  position: relative;
 }
 
 .collapsed .p-menuitem-link .pi {
-  margin-right: 0;
+  margin: 0;
   font-size: 1.25rem;
+}
+
+/* Tooltip for collapsed menu items */
+.collapsed .p-tooltip {
+  position: relative;
+  display: block;
 }
 
 /* Animation */
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.2s;
+  transition: opacity 0.2s ease;
 }
 
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+/* Smooth transitions for menu items */
+.menu-item-enter-active,
+.menu-item-leave-active {
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+
+.menu-item-enter-from,
+.menu-item-leave-to {
+  opacity: 0;
+  max-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+/* Print styles */
+@media print {
+  .app-sidebar {
+    display: none;
+  }
 }
 </style>

@@ -1,64 +1,68 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import MainLayout from '@/layouts/MainLayout.vue';
+import MainLayout from '../layouts/MainLayout.vue';
 
 // Auth views
-const Login = () => import('@/views/auth/Login.vue');
-const Register = () => import('@/views/auth/Register.vue');
-const ForgotPassword = () => import('@/views/auth/ForgotPassword.vue');
+const Login = () => import('../views/auth/Login.vue');
+const Register = () => import('../views/auth/Register.vue');
+const ForgotPassword = () => import('../views/auth/ForgotPassword.vue');
 
 // Main views
-const Home = () => import('@/views/Home.vue');
-const Dashboard = () => import('@/views/Dashboard.vue');
+const Home = () => import('../views/Home.vue');
+const Dashboard = () => import('../modules/general-ledger/views/Dashboard.vue');
 
-// GL views
-const GLDashboard = () => import('@/views/gl/Dashboard.vue');
-const ChartOfAccounts = () => import('@/views/gl/ChartOfAccounts.vue');
-const JournalEntries = () => import('@/views/gl/JournalEntries.vue');
-const TrialBalance = () => import('@/views/gl/TrialBalance.vue');
-const RecurringJournals = () => import('@/views/gl/recurring/RecurringJournalsView.vue');
+// GL views (modular imports)
+const GLDashboard = Dashboard; // Alias for backward compatibility
+const ChartOfAccounts = () => import('../modules/general-ledger/views/accounts/GLAccountsView.vue');
+const JournalEntries = () => import('../modules/general-ledger/views/journal-entries/JournalEntriesView.vue');
+const TrialBalance = () => import('../modules/general-ledger/views/TrialBalance.vue');
+const RecurringJournals = () => import('../modules/general-ledger/views/recurring/RecurringJournalsView.vue');
+const FinancialStatements = () => import('../modules/general-ledger/views/financial-statements/FinancialStatementsView.vue');
+const AdvancedGL = () => import('../modules/general-ledger/views/AdvancedGL.vue');
 
-// AP views
-const APDashboard = () => import('@/views/ap/APAnalyticsDashboard.vue');
-const Vendors = () => import('@/views/ap/Vendors.vue');
-const APInvoices = () => import('@/views/ap/Invoices.vue');
-const APPayments = () => import('@/views/ap/Payments.vue');
+// AP views (modular imports)
+const APDashboard = () => import('../modules/accounts-payable/views/VendorsAdvancedView.vue');
+const Vendors = () => import('../modules/accounts-payable/views/VendorsAdvancedView.vue');
+const APInvoices = () => import('../modules/accounts-payable/views/invoices/InvoicesView.vue');
+const APPendingPayments = () => import('../modules/accounts-payable/views/payments/PaymentsView.vue');
 
-// AR views
-const ARDashboard = () => import('@/views/ar/ARAnalyticsDashboard.vue');
-const Customers = () => import('@/views/ar/CustomersAdvanced.vue');
-const ARInvoices = () => import('@/views/ar/ARInvoicesAdvanced.vue');
-const ARPayments = () => import('@/views/ar/ARPaymentsAdvanced.vue');
+// AR views (modular imports)
+const ARDashboard = () => import('../modules/accounts-receivable/views/CustomersAdvanced.vue');
+const Customers = () => import('../modules/accounts-receivable/views/CustomersAdvanced.vue');
+const ARInvoices = () => import('../modules/accounts-receivable/views/ARInvoicesAdvanced.vue');
+const ARPayments = () => import('../modules/accounts-receivable/views/ARPaymentsAdvanced.vue');
 
-// Cash Management views
-const BankAccounts = () => import('@/views/cash/BankAccounts.vue');
-const Reconciliation = () => import('@/views/cash/Reconciliation.vue');
+// Cash Management views (modular imports)
+const BankAccounts = () => import('../modules/cash-management/views/BankAccounts.vue');
+const Reconciliation = () => import('../modules/cash-management/views/Reconciliation.vue');
 
-// Tax views
-const TaxDashboard = () => import('@/views/tax/TaxDashboard.vue');
-const TaxRates = () => import('@/views/tax/TaxRates.vue');
-const TaxExemptions = () => import('@/views/tax/TaxExemptions.vue');
-const TaxCompliance = () => import('@/views/tax/TaxCompliance.vue');
+// Tax views (modular imports)
+const TaxDashboard = () => import('../modules/tax/views/TaxDashboard.vue');
+const TaxRates = () => import('../modules/tax/views/TaxRates.vue');
+const TaxExemptions = () => import('../modules/tax/views/TaxExemptionsView.vue');
+const TaxCompliance = () => import('../modules/tax/views/TaxComplianceDashboard.vue');
 
-// Budget views
-const BudgetDashboard = () => import('@/views/budget/BudgetDashboard.vue');
-const BudgetPlans = () => import('@/views/budget/BudgetView.vue');
-const BudgetApproval = () => import('@/views/budget/BudgetApprovalView.vue');
+// Budget views (modular imports)
+const BudgetDashboard = () => import('../modules/budget/views/BudgetDashboard.vue');
+const BudgetPlans = () => import('../modules/budget/views/BudgetView.vue');
+const BudgetApproval = () => import('../modules/budget/views/BudgetApprovalView.vue');
 
-// Payroll views
-const PayrollRuns = () => import('@/views/payroll/payruns/PayRunListView.vue');
-const PayrollRunView = () => import('@/views/payroll/payruns/PayRunView.vue');
-
-// Reports views
-const ReportsView = () => import('@/views/reports/ReportsView.vue');
-const FinancialReportsView = () => import('@/views/reports/FinancialReportsView.vue');
-const BalanceSheetReport = () => import('@/views/reports/BalanceSheetReport.vue');
-const IncomeStatementReport = () => import('@/views/reports/IncomeStatementReport.vue');
-const CashFlowReport = () => import('@/views/reports/CashFlowReport.vue');
-const APAgingReport = () => import('@/views/reports/APAgingReport.vue');
-const ARAgingReport = () => import('@/views/reports/ARAgingReport.vue');
+// Payroll views (modular imports)
+const PayrollRuns = () => import('../modules/payroll/views/PayRunListView.vue');
+const PayrollRunView = () => import('../modules/payroll/views/PayRunView.vue');
 
 // Module placeholder for missing views
-const ModuleView = () => import('@/views/ModuleView.vue');
+const ModuleView = () => import('../views/ModuleView.vue');
+
+// Reports views (modular imports)
+// Using ModuleView as a fallback since the Reports module doesn't exist yet
+const ReportsView = ModuleView;
+const FinancialStatementView = ModuleView;
+const GeneralLedgerView = ModuleView;
+const TrialBalanceView = ModuleView;
+const AgingReportView = ModuleView;
+const TaxReportView = ModuleView;
+const CashFlowView = ModuleView;
+const BudgetVsActualView = ModuleView;
 
 const routes = [
   // Auth routes

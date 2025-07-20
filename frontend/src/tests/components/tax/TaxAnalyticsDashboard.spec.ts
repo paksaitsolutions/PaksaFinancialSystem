@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { mount } from '@vue/test-utils';
-import TaxAnalyticsDashboard from '@/views/tax/TaxAnalyticsDashboard.vue';
-import { useTaxAnalyticsStore } from '@/stores/tax/analytics';
+import TaxAnalyticsDashboard from '@/modules/tax/views/TaxAnalyticsDashboard.vue';
+import { useTaxAnalyticsStore } from '@/modules/tax/store/analytics';
 import { createTestingPinia } from '@pinia/testing';
 import { createVuetify } from 'vuetify';
 import { nextTick } from 'vue';

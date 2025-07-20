@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f5f5f5;
+        }
+        .container {
+            text-align: center;
+            padding: 2rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        .status {
+            margin: 1rem 0;
+            padding: 1rem;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Paksa Financial System</h1>
+        <p>Test page to verify browser access</p>
+        <div id="status" class="status">
+            Checking server status...
+        </div>
+    </div>
+
+    <script>
+        // Simple check if the development server is running
+        fetch('http://localhost:3000')
+            .then(response => {
+                const status = document.getElementById('status');
+                if (response.ok) {
+                    status.textContent = '✅ Development server is running!';
+                    status.className = 'status success';
+                    // Redirect to the actual app after a short delay
+                    setTimeout(() => {
+                        window.location.href = 'http://localhost:3000';
+                    }, 2000);
+                } else {
+                    status.textContent = `❌ Server returned status: ${response.status} ${response.statusText}`;
+                    status.className = 'status error';
+                }
+            })
+            .catch(error => {
+                const status = document.getElementById('status');
+                status.textContent = `❌ Could not connect to the development server: ${error.message}`;
+                status.className = 'status error';
+                
+                // Add troubleshooting steps
+                const troubleshooting = document.createElement('div');
+                troubleshooting.innerHTML = `
+                    <h3>Troubleshooting steps:</h3>
+                    <ol>
+                        <li>Make sure the development server is running by executing <code>npm run dev</code> in the frontend directory</li>
+                        <li>Check if the server is running on a different port (look for output like <code>Local:   http://localhost:3000/</code>)</li>
+                        <li>Try accessing the server directly at <a href="http://localhost:3000" target="_blank">http://localhost:3000</a></li>
+                        <li>Check your terminal for any error messages</li>
+                    </ol>
+                `;
+                status.appendChild(troubleshooting);
+            });
+    </script>
+</body>
+</html>

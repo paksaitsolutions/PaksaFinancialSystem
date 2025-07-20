@@ -1,18 +1,47 @@
 import { defineComponent } from 'vue';
 import type { RouteRecordRaw } from 'vue-router';
+import { useAuthStore } from '../../modules/auth/store';
 
 // Import all view components
 import UnderConstruction from '@/views/UnderConstruction.vue';
 
 // Import module routes
 import { cashRoutes } from './cash';
+import { generalLedgerRoutes } from './general-ledger';
 
 // Helper function to lazy load components with fallback
 const lazyLoad = (path: string) => {
-  return () => import(`@/views/${path}.vue`).catch(() => ({
-    template: '<UnderConstruction />',
-    components: { UnderConstruction },
-  }));
+  // Special handling for general ledger components
+  if (path.startsWith('gl/')) {
+    const componentName = path.split('/')[1];
+    const modulePath = `@/modules/general-ledger/views/${componentName}.vue`;
+    const moduleIndexPath = `@/modules/general-ledger/views/${componentName}/index.vue`;
+    
+    console.log(`Attempting to load GL component: ${componentName} from ${modulePath} or ${moduleIndexPath}`);
+    
+    return () => import(/* @vite-ignore */ modulePath)
+      .catch(() => import(/* @vite-ignore */ moduleIndexPath))
+      .catch((err) => {
+        console.error(`Failed to load GL component ${componentName}:`, err);
+        return {
+          template: '<div><h3>Component Not Found</h3><p>The requested component could not be loaded.</p><p>Path: ' + path + '</p></div>',
+          components: {}
+        };
+      });
+  }
+  
+  // For all other paths, try multiple locations
+  return () => import(/* @vite-ignore */ `@/modules/${path}.vue`)
+    .catch(() => import(/* @vite-ignore */ `@/modules/${path}`))
+    .catch(() => import(/* @vite-ignore */ `@/views/${path}.vue`))
+    .catch(() => import(/* @vite-ignore */ `@/views/${path}`))
+    .catch((err) => {
+      console.error(`Failed to load component ${path}:`, err);
+      return {
+        template: '<div><h3>Component Not Found</h3><p>The requested component could not be loaded.</p><p>Path: ' + path + '</p></div>',
+        components: {}
+      };
+    });
 };
 
 // Auth layout component
@@ -57,20 +86,43 @@ export const authRoutes: RouteRecordRaw = {
 // Root route
 export const rootRoute: RouteRecordRaw = {
   path: '/',
-  name: 'Home',
-  component: () => import('@/views/Home.vue'),
+  name: 'Root',
+  redirect: (to) => {
+    const authStore = useAuthStore();
+    // Always redirect to login page first
+    if (authStore.isAuthenticated) {
+      return { name: 'Dashboard' };
+    } else {
+      return { 
+        name: 'Login',
+        query: to.query.redirect 
+          ? { redirect: to.query.redirect } 
+          : undefined 
+      };
+    }
+  },
   meta: { 
     title: 'Home',
-    requiresAuth: true
-  },
+    requiresAuth: false
+  }
 };
 
 // Dashboard route
 export const dashboardRoutes: RouteRecordRaw = {
   path: '/dashboard',
   name: 'Dashboard',
-  component: () => import('@/views/Dashboard.vue'),
-  meta: { title: 'Dashboard' },
+  component: () => import('@/modules/general-ledger/views/Dashboard.vue')
+    .catch(() => ({
+      template: '<div>Loading Dashboard...</div>',
+      mounted() {
+        // Redirect to GL accounts as a fallback
+        this.$router.replace({ name: 'gl-accounts' });
+      }
+    })),
+  meta: { 
+    title: 'Dashboard',
+    requiresAuth: true
+  },
 };
 
 // GL layout component
@@ -217,6 +269,8 @@ const taxRoutes: RouteRecordRaw = {
 
 // Export all routes as an array
 export const allRoutes: RouteRecordRaw[] = [
+  // General Ledger routes
+  generalLedgerRoutes,
   // Cash Management
   cashRoutes,
   rootRoute,
@@ -238,4 +292,17 @@ export const allRoutes: RouteRecordRaw[] = [
   }
 ];
 
-export default allRoutes;
+// Export all route objects as named exports and default export
+export {
+  authRoutes,
+  glRoutes,
+  apRoutes,
+  arRoutes,
+  payrollRoutes,
+  cashRoutes,
+  assetsRoutes,
+  taxRoutes,
+  rootRoute,
+  dashboardRoutes,
+  allRoutes as default
+};

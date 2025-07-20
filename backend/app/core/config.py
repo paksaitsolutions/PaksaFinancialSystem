@@ -203,6 +203,19 @@ class Settings(BaseSettings):
     REDOC_URL: Optional[str] = "/redoc"
     OPENAPI_URL: Optional[str] = "/openapi.json"
     
+    # Redis Configuration
+    REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+    REDIS_CACHE_TTL: int = 3600  # Default cache TTL in seconds (1 hour)
+    
+    # Report Generation Settings
+    REPORT_CACHE_TTL: int = 86400  # 24 hours for report caching
+    REPORT_QUEUE_NAME: str = "tax_report_queue"
+    REPORT_CHUNK_SIZE: int = 1000  # Number of records to process in each chunk
+    
+    # Background Task Settings
+    BACKGROUND_TASK_TIMEOUT: int = 300  # 5 minutes
+    MAX_CONCURRENT_REPORTS: int = 5  # Maximum number of concurrent report generations
+    
     class Config:
         case_sensitive = True
         env_file = ".env"

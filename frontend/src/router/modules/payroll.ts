@@ -1,18 +1,22 @@
 import { RouteRecordRaw } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 
+// Import layout components
 const PayrollLayout = () => import('@/layouts/MainLayout.vue');
-const PayrollView = () => import('@/views/payroll/PayrollView.vue');
-const PayRunView = () => import('@/views/payroll/PayRunView.vue');
-const PayRunCreateView = () => import('@/views/payroll/PayRunCreateView.vue');
-const PayRunProcessView = () => import('@/views/payroll/PayRunProcessView.vue');
-const PayRunApproveView = () => import('@/views/payroll/PayRunApproveView.vue');
-const PayslipsView = () => import('@/views/payroll/PayslipsView.vue');
-const PayslipDetailView = () => import('@/views/payroll/PayslipDetailView.vue');
-const EmployeePayrollView = () => import('@/views/payroll/EmployeePayrollView.vue');
-const PayrollSettingsView = () => import('@/views/payroll/PayrollSettingsView.vue');
-const PayrollReportsView = () => import('@/views/payroll/PayrollReportsView.vue');
-const PayrollTaxesView = () => import('@/views/payroll/PayrollTaxesView.vue');
+
+// Import payroll module components using the new module-based structure
+const PayrollView = () => import('@/modules/payroll/views/PayrollView.vue');
+const AnalyticsDashboard = () => import('@/modules/payroll/views/AnalyticsDashboard.vue');
+const PayRunView = () => import('@/modules/payroll/views/PayRunView.vue');
+const PayRunCreateView = () => import('@/modules/payroll/views/PayRunCreateView.vue');
+const PayRunProcessView = () => import('@/modules/payroll/views/PayRunProcessView.vue');
+const PayRunApproveView = () => import('@/modules/payroll/views/PayRunApproveView.vue');
+const PayslipsView = () => import('@/modules/payroll/views/PayslipsView.vue');
+const PayslipDetailView = () => import('@/modules/payroll/views/PayslipDetailView.vue');
+const EmployeePayrollView = () => import('@/modules/payroll/views/EmployeePayrollView.vue');
+const PayrollSettingsView = () => import('@/modules/payroll/views/PayrollSettingsView.vue');
+const PayrollReportsView = () => import('@/modules/payroll/views/PayrollReportsView.vue');
+const PayrollTaxesView = () => import('@/modules/payroll/views/PayrollTaxesView.vue');
 
 const routes: RouteRecordRaw[] = [
   {
@@ -36,6 +40,18 @@ const routes: RouteRecordRaw[] = [
           requiresAuth: true,
           permissions: ['view_payroll'],
           breadcrumb: 'Dashboard',
+        },
+      },
+      {
+        path: 'analytics',
+        name: 'payroll-analytics',
+        component: AnalyticsDashboard,
+        meta: {
+          title: 'Payroll Analytics',
+          icon: 'mdi-chart-box',
+          requiresAuth: true,
+          permissions: ['view_payroll_analytics'],
+          breadcrumb: 'Analytics',
         },
       },
       {

@@ -1,5 +1,5 @@
 import { TaxPeriod, TaxAnalyticsRequest } from '@/types/tax';
-import { useTaxAnalyticsStore } from '@/stores/tax/analytics';
+import { useTaxAnalyticsStore } from '@/modules/tax/store/analytics';
 import { useNotification } from '@/composables/useNotification';
 
 export class TaxAnalyticsConfigService {

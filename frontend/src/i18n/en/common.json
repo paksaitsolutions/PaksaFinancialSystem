@@ -1,0 +1,41 @@
+{
+  "common": {
+    "welcome": "Welcome to Paksa Financial System",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "search": "Search...",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Operation completed successfully",
+    "noData": "No data available",
+    "actions": "Actions",
+    "status": "Status",
+    "date": "Date",
+    "amount": "Amount",
+    "description": "Description",
+    "createdAt": "Created At",
+    "updatedAt": "Updated At",
+    "createdBy": "Created By",
+    "updatedBy": "Updated By"
+  },
+  "validation": {
+    "required": "{field} is required",
+    "email": "Please enter a valid email address",
+    "minLength": "{field} must be at least {min} characters",
+    "maxLength": "{field} must be at most {max} characters",
+    "passwordMismatch": "Passwords do not match",
+    "invalidFormat": "Invalid format"
+  },
+  "languages": {
+    "en": "English",
+    "ur": "Urdu",
+    "ar": "Arabic"
+  }
+}

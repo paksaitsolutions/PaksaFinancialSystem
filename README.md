@@ -20,12 +20,33 @@
 
 Explore our comprehensive documentation to get started with the Paksa Financial System:
 
+### Getting Started
+- [**Quick Start Guide**](docs/QUICK_START.md) - Get up and running quickly with the Paksa Financial System.
 - [**User Guide**](docs/user_guide.md) - Learn how to use the system's features and functionality.
-- [**API Documentation**](docs/api/overview.md) - Reference for integrating with our RESTful API.
+- [**Security**](docs/SECURITY.md) - Security best practices and guidelines.
+
+### Development
 - [**Developer Documentation**](docs/developer.md) - Setup, architecture, and contribution guidelines.
+- [**Best Practices**](docs/development/BEST_PRACTICES.md) - Coding standards and best practices for developers.
 - [**Architecture**](docs/architecture.md) - System design and technical architecture overview.
+- [**Visual Design**](docs/design/VISUAL_PREVIEW.md) - UI/UX design guidelines and previews.
+
+### API
+- [**API Reference**](docs/api/swagger.yaml) - Swagger/OpenAPI specification for our RESTful API.
+- [**Integration Guide**](docs/modules/tax/INTEGRATION_GUIDE.md) - How to integrate with our system.
+
+### Progress & Planning
 - [**Implementation Plan**](docs/implementation_plan.md) - Roadmap and development progress.
-- [**BI Dashboard Specs**](docs/BI_DASHBOARD_SPECS.md) - Specifications for business intelligence dashboards.
+- [**Dashboard Completion**](docs/progress/DASHBOARD_COMPLETION.md) - Status of dashboard implementations.
+- [**Project Progress**](docs/progress/TODO.md) - Current tasks and progress tracking.
+- [**Implementation Status**](docs/progress/IMPLEMENTATION_COMPLETE.md) - Overview of completed features.
+
+### Modules
+- [**Tax Module**](docs/modules/tax/USER_GUIDE.md) - User guide for the Tax module.
+- [**Tax API Reference**](docs/modules/tax/API_REFERENCE.md) - API documentation for the Tax module.
+- [**Tax Analytics**](docs/modules/tax/analytics-dashboard.md) - Analytics dashboard specifications for Tax.
+- [**Budget Module**](docs/budget_module.md) - Documentation for the Budget module.
+- [**BI Dashboard**](docs/BI_DASHBOARD_SPECS.md) - Specifications for business intelligence dashboards.
 
 ## 🌟 Overview
 

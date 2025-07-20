@@ -5,22 +5,47 @@ This module provides comprehensive tax calculation functionality for the Paksa F
 It handles complex tax scenarios including multi-jurisdictional taxes, exemptions, and special tax rules.
 """
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import Decimal, ROUND_HALF_UP
-from typing import Dict, List, Optional, Tuple, Union, Any
+from typing import Dict, List, Optional, Tuple, Union, Any, Callable, TypeVar
 from enum import Enum
 import logging
+import hashlib
+import json
+import time
+from functools import wraps
 
 from pydantic import BaseModel, Field, validator
 from sqlalchemy.orm import Session
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.redis import RedisBackend
+from fastapi_cache.decorator import cache
+
+# Type variable for generic return type
+T = TypeVar('T')
+
+def cache_key_builder(
+    func: Callable[..., T],
+    *args,
+    **kwargs
+) -> str:
+    """Generate a cache key from function name and arguments."""
+    # Convert args and kwargs to a consistent string representation
+    args_str = ",".join(str(arg) for arg in args)
+    kwargs_str = ",".join(f"{k}={v}" for k, v in sorted(kwargs.items()))
+    key_str = f"{func.__module__}:{func.__name__}:{args_str}:{kwargs_str}"
+    
+    # Create a hash of the key string to ensure it's a valid cache key
+    return f"tax:{hashlib.md5(key_str.encode('utf-8')).hexdigest()}"
 
 from app.core.tax.tax_policy_service import (
     TaxType, 
-    TaxJurisdiction, 
+    TaxRateType, 
     TaxRule, 
-    TaxExemption,
-    TaxCalculationResult,
-    tax_policy_service
+    TaxRuleType,
+    TaxExemptionCertificate as TaxExemptionCertificateModel,
+    TaxRate as TaxRateModel,
+    TaxRule as TaxRuleModel
 )
 from app.core.config import settings
 from app.db.session import get_db_context
@@ -137,16 +162,137 @@ class TaxCalculationService:
         """
         self.db = db
         self.tax_policy_service = tax_policy_service
+        self._cache_enabled = settings.REDIS_URL is not None
+        self._cache_ttl = settings.CACHE_TTL_SECONDS if hasattr(settings, 'CACHE_TTL_SECONDS') else 300  # 5 minutes default
+        self._last_cache_refresh = datetime.min
+        self._local_cache = {}
+        
+        # Initialize Redis cache if available
+        if self._cache_enabled and not hasattr(self, '_redis_initialized'):
+            try:
+                from redis import asyncio as aioredis
+                redis = aioredis.from_url(settings.REDIS_URL)
+                FastAPICache.init(RedisBackend(redis), prefix="tax-cache")
+                self._redis_initialized = True
+                logger.info("Redis cache initialized for tax service")
+            except Exception as e:
+                logger.warning(f"Failed to initialize Redis cache: {str(e)}. Using in-memory cache only.")
+                self._cache_enabled = False
         
     def _get_db(self) -> Session:
         """Get a database session, creating one if needed."""
-        if self.db is not None:
-            return self.db
-            
-        # Create a new session if one wasn't provided
-        with get_db_context() as db:
-            return db
+        if self.db is None:
+            from app.db.session import SessionLocal
+            self.db = SessionLocal()
+        return self.db
         
+    def _generate_tax_rules_cache_key(
+        self,
+        item: TaxLineItem,
+        billing_country: str,
+        billing_state: Optional[str],
+        billing_city: Optional[str],
+        shipping_country: str,
+        shipping_state: Optional[str],
+        shipping_city: Optional[str],
+        transaction_date: date,
+        customer_id: Optional[str],
+        customer_type: Optional[str],
+        exemption_certificate_id: Optional[str]
+    ) -> str:
+        """Generate a cache key for tax rules lookup."""
+        key_parts = [
+            f"item:{item.tax_code}:{item.product_type}",
+            f"bill:{billing_country}:{billing_state or ''}:{billing_city or ''}",
+            f"ship:{shipping_country}:{shipping_state or ''}:{shipping_city or ''}",
+            f"date:{transaction_date}",
+            f"cust:{customer_id or ''}:{customer_type or ''}",
+            f"exempt:{exemption_certificate_id or ''}"
+        ]
+        return f"tax_rules:{hashlib.md5('|'.join(key_parts).encode('utf-8')).hexdigest()}"
+        
+    async def _cache_tax_rules_result(self, cache_key: str, rules: List[Dict]) -> None:
+        """Cache the result of a tax rules lookup."""
+        if not rules:
+            expiry = 60  # 1 minute for empty results
+        else:
+            expiry = self._cache_ttl
+            
+        # Update local cache
+        self._local_cache[cache_key] = (
+            rules,
+            datetime.now() + timedelta(seconds=expiry)
+        )
+        
+        # Update Redis cache if enabled
+        if self._cache_enabled:
+            try:
+                await FastAPICache.set(cache_key, rules, expire=expiry)
+            except Exception as e:
+                logger.warning(f"Error updating Redis cache: {str(e)}")
+    
+    async def _get_tax_rules_with_cache(
+        self,
+        country_code: str,
+        state_code: Optional[str] = None,
+        city: Optional[str] = None
+    ) -> List[Dict]:
+        """
+        Get tax rules with caching support.
+        
+        Args:
+            country_code: Country code (e.g., 'US')
+            state_code: Optional state/province code
+            city: Optional city name
+            
+        Returns:
+            List of tax rules
+        """
+        cache_key = f"tax_rules_jurisdiction:{country_code}:{state_code or ''}:{city or ''}"
+        
+        # Try local cache first
+        if cache_key in self._local_cache:
+            rules, expiry = self._local_cache[cache_key]
+            if datetime.now() < expiry:
+                return rules
+            del self._local_cache[cache_key]
+            
+        # Try Redis cache
+        if self._cache_enabled:
+            try:
+                cached_rules = await FastAPICache.get(cache_key)
+                if cached_rules is not None:
+                    # Update local cache
+                    self._local_cache[cache_key] = (
+                        cached_rules,
+                        datetime.now() + timedelta(minutes=15)
+                    )
+                    return cached_rules
+            except Exception as e:
+                logger.warning(f"Error getting tax rules from Redis cache: {str(e)}")
+        
+        # Get from database
+        db = self._get_db()
+        rules = await self.tax_policy_service.search_tax_rules(
+            tax_type=None,
+            country_code=country_code,
+            state_code=state_code,
+            city=city,
+            is_active=True
+        )
+        
+        # Cache the result
+        expiry = 3600  # 1 hour for jurisdiction-based rules
+        self._local_cache[cache_key] = (rules, datetime.now() + timedelta(seconds=expiry))
+        
+        if self._cache_enabled:
+            try:
+                await FastAPICache.set(cache_key, rules, expire=expiry)
+            except Exception as e:
+                logger.warning(f"Error setting Redis cache: {str(e)}")
+                
+        return rules
+    
     async def calculate_taxes(
         self, 
         request: TaxCalculationRequest
@@ -280,6 +426,44 @@ class TaxCalculationService:
         This method determines which tax rules apply to a given line item
         based on location, product type, customer information, and other factors.
         """
+        # Generate a cache key based on the function arguments
+        cache_key = self._generate_tax_rules_cache_key(
+            item=item,
+            billing_country=billing_country,
+            billing_state=billing_state,
+            billing_city=billing_city,
+            shipping_country=shipping_country,
+            shipping_state=shipping_state,
+            shipping_city=shipping_city,
+            transaction_date=transaction_date,
+            customer_id=customer_id,
+            customer_type=customer_type,
+            exemption_certificate_id=exemption_certificate_id
+        )
+        
+        # Try to get from local cache first
+        if cache_key in self._local_cache:
+            cached_rules, expiry = self._local_cache[cache_key]
+            if datetime.now() < expiry:
+                return cached_rules
+            # Cache expired, remove it
+            del self._local_cache[cache_key]
+        
+        # Try to get from Redis cache if enabled
+        if self._cache_enabled:
+            try:
+                cached_rules = await FastAPICache.get(cache_key)
+                if cached_rules is not None:
+                    # Cache for 15 minutes in local cache after getting from Redis
+                    self._local_cache[cache_key] = (
+                        cached_rules,
+                        datetime.now() + timedelta(minutes=15)
+                    )
+                    return cached_rules
+            except Exception as e:
+                logger.warning(f"Error getting tax rules from Redis cache: {str(e)}")
+        
+        # Not in cache, proceed with calculation
         try:
             # Check for tax exemption first
             is_exempt = await self._check_tax_exemption(
@@ -295,7 +479,10 @@ class TaxCalculationService:
             )
             
             if is_exempt:
-                return []
+                result = []
+                # Cache the empty result
+                self._cache_tax_rules_result(cache_key, result)
+                return result
             
             # Determine which jurisdiction to use (origin vs. destination)
             use_destination = self._should_use_destination_based_tax(
@@ -313,13 +500,11 @@ class TaxCalculationService:
                 state = billing_state
                 city = billing_city
             
-            # Get tax rules from the tax policy service
-            tax_rules = await self.tax_policy_service.search_tax_rules(
-                tax_type=None,  # Let the service determine based on jurisdiction
+            # Get tax rules from the tax policy service with caching
+            tax_rules = await self._get_tax_rules_with_cache(
                 country_code=country,
                 state_code=state,
-                city=city,
-                is_active=True
+                city=city
             )
             
             # Filter rules based on product type, customer type, etc.
@@ -327,6 +512,9 @@ class TaxCalculationService:
             for rule in tax_rules:
                 if self._does_rule_apply(rule, item, customer_type, transaction_date):
                     filtered_rules.append(rule)
+            
+            # Cache the result
+            self._cache_tax_rules_result(cache_key, filtered_rules)
             
             return filtered_rules
             
@@ -472,7 +660,7 @@ class TaxCalculationService:
     
     async def _get_exemption_certificate(self, certificate_id: str) -> Optional[Dict]:
         """
-        Get an exemption certificate from the database.
+        Get an exemption certificate from the database or cache.
         
         Args:
             certificate_id: The certificate number to retrieve
@@ -480,12 +668,40 @@ class TaxCalculationService:
         Returns:
             Dict containing the certificate data, or None if not found
         """
+        # Generate cache key
+        cache_key = f"exemption_cert:{certificate_id}"
+        
+        # Try to get from local cache first
+        if cache_key in self._local_cache:
+            cert_data, expiry = self._local_cache[cache_key]
+            if datetime.now() < expiry:
+                return cert_data
+            # Cache expired, remove it
+            del self._local_cache[cache_key]
+        
+        # Try to get from Redis cache if enabled
+        if self._cache_enabled:
+            try:
+                cached_cert = await FastAPICache.get(cache_key)
+                if cached_cert:
+                    # Cache for 1 hour in local cache after getting from Redis
+                    self._local_cache[cache_key] = (
+                        cached_cert, 
+                        datetime.now() + timedelta(minutes=5)  # Local cache for 5 minutes
+                    )
+                    return cached_cert
+            except Exception as e:
+                logger.warning(f"Error getting from Redis cache: {str(e)}")
+        
+        # Not in cache, fetch from database
         try:
             db = self._get_db()
             cert = tax_exemption_certificate.get_by_certificate_number(db, certificate_number=certificate_id)
             
             if not cert:
                 logger.warning(f"Exemption certificate not found: {certificate_id}")
+                # Cache negative result for a short time to prevent repeated lookups
+                self._local_cache[cache_key] = (None, datetime.now() + timedelta(minutes=1))
                 return None
                 
             # Convert SQLAlchemy model to dict
@@ -510,6 +726,17 @@ class TaxCalculationService:
                 'updated_at': cert.updated_at,
                 'is_valid': cert.is_valid,
             }
+            
+            # Cache the result
+            expiry = datetime.now() + timedelta(minutes=30)  # Cache for 30 minutes
+            self._local_cache[cache_key] = (cert_dict, expiry)
+            
+            # Also cache in Redis if available
+            if self._cache_enabled:
+                try:
+                    await FastAPICache.set(cache_key, cert_dict, expire=self._cache_ttl)
+                except Exception as e:
+                    logger.warning(f"Error setting Redis cache: {str(e)}")
             
             return cert_dict
             

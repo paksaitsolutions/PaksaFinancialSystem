@@ -1,29 +1,51 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { fileURLToPath, URL } from 'node:url'
-import path from 'path'
 
-// https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [
+    vue({
+      template: {
+        compilerOptions: {
+          isCustomElement: (tag) => tag.includes('-')
+        }
+      }
+    })
+  ],
+  
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+      'vue': 'vue/dist/vue.esm-bundler.js'
     }
   },
+  
   server: {
-    port: 3000,
-    proxy: {
-      '/api': {
-        target: 'http://localhost:8000',
-        changeOrigin: true
-      }
+    port: 3003,
+    host: '0.0.0.0',
+    strictPort: true,
+    hmr: {
+      host: 'localhost',
+      port: 3003
+    },
+    watch: {
+      usePolling: true
     }
   },
-  css: {
-    devSourcemap: true,
-    postcss: {
-      plugins: [require('autoprefixer')]
-    }
+  
+  preview: {
+    port: 3003,
+    host: true,
+    strictPort: true
+  },
+  
+  optimizeDeps: {
+    include: ['vue', 'vue-router', 'pinia', 'primevue']
+  },
+  
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+    sourcemap: true
   }
 })

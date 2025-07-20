@@ -52,167 +52,202 @@
             persistent-hint
           ></v-text-field>
           
-          <v-text-field
-            v-model="password"
-            label="Password"
-            prepend-inner-icon="mdi-lock"
-            :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
-            @click:append-inner="showPassword = !showPassword"
-            :type="showPassword ? 'text' : 'password'"
-            variant="outlined"
-            :rules="[validationRules.required]"
-            required
-            autocomplete="current-password"
-            :disabled="loading"
-            @keyup.enter="handleLogin"
-          ></v-text-field>
-          
-          <div class="d-flex align-center justify-space-between mb-6">
-            <v-checkbox
-              v-model="rememberMe"
-              label="Remember me"
-              hide-details
-              density="compact"
-            ></v-checkbox>
-            <v-btn variant="text" color="primary" size="small" to="/auth/forgot-password">
-              Forgot Password?
-            </v-btn>
-          </div>
-          
-          <v-btn
-            type="submit"
-            color="primary"
-            block
-            size="large"
-            :loading="loading"
-            :disabled="!isFormValid"
-          >
-            <v-icon start>mdi-login</v-icon>
-            Sign In
-          </v-btn>
-        </v-form>
-        
-        <social-login-buttons @social-login="handleSocialLogin" />
-      </v-card-text>
-      
-      <v-divider></v-divider>
-      
-      <v-card-actions class="justify-center pa-4">
-        <div class="text-center">
-          <p class="text-body-2">
-            Don't have an account?
-            <v-btn variant="text" color="primary" to="/auth/register">
-              Sign Up
-            </v-btn>
-          </p>
-        </div>
-      </v-card-actions>
-      
-      <v-card-text class="text-center text-caption text-medium-emphasis">
-        By signing in, you agree to our 
-        <a href="#" @click.prevent="showTerms = true">Terms of Service</a> and 
-        <a href="#" @click.prevent="showPrivacy = true">Privacy Policy</a>
-      </v-card-text>
-    </v-card>
-    
-    <!-- Terms Dialog -->
-    <v-dialog v-model="showTerms" max-width="600">
-      <v-card>
-        <v-card-title>Terms of Service</v-card-title>
-        <v-card-text>
-          <p>These Terms of Service govern your use of the Paksa Financial System.</p>
-          <p>By accessing or using the service, you agree to be bound by these Terms.</p>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="primary" @click="showTerms = false">Close</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-    
-    <!-- Privacy Dialog -->
-    <v-dialog v-model="showPrivacy" max-width="600">
-      <v-card>
-        <v-card-title>Privacy Policy</v-card-title>
-        <v-card-text>
-          <p>This Privacy Policy describes how your personal information is collected, used, and shared when you use the Paksa Financial System.</p>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="primary" @click="showPrivacy = false">Close</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-  </div>
+          <v-card-text>
+            <v-alert
+              v-if="error"
+              type="error"
+              class="mb-4"
+              dismissible
+              @input="error = ''"
+            >
+              {{ error }}
+            </v-alert>
+            
+            <v-form @submit.prevent="handleLogin" v-if="!isLocked">
+              <v-text-field
+                v-model="email"
+                label="Email"
+                type="email"
+                prepend-icon="mdi-account"
+                :error-messages="emailErrors"
+                @input="$v.email.$touch()"
+                @blur="$v.email.$touch()"
+                required
+                outlined
+                dense
+                :disabled="loading"
+              ></v-text-field>
+              
+              <v-text-field
+                v-model="password"
+                label="Password"
+                type="password"
+                prepend-icon="mdi-lock"
+                :error-messages="passwordErrors"
+                @input="$v.password.$touch()"
+                @blur="$v.password.$touch()"
+                :append-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
+                @click:append="showPassword = !showPassword"
+                :type="showPassword ? 'text' : 'password'"
+                required
+                outlined
+                dense
+                :disabled="loading"
+              ></v-text-field>
+              
+              <v-checkbox
+                v-model="rememberMe"
+                label="Remember me"
+                hide-details
+                class="mt-0"
+                :disabled="loading"
+              ></v-checkbox>
+              
+              <v-btn
+                type="submit"
+                color="primary"
+                block
+                :loading="loading"
+                :disabled="loading || $v.$invalid"
+                class="mt-4"
+                large
+              >
+                <v-icon left>mdi-login</v-icon>
+                Login
+              </v-btn>
+            </v-form>
+            
+            <div v-else class="account-locked text-center py-4">
+              <v-icon color="error" size="64" class="mb-4">mdi-lock-alert</v-icon>
+              <div class="text-h6 mb-2">Account Locked</div>
+              <div class="text-body-1">{{ error }}</div>
+              <div class="text-caption mt-2">Please try again later or contact support.</div>
+            </div>
+            
+            <v-divider class="my-4"></v-divider>
+            
+            <div class="text-center">
+              <router-link to="/forgot-password" class="text-decoration-none">
+                Forgot your password?
+              </router-link>
+              
+              <div class="mt-2">
+                Don't have an account? 
+                <router-link to="/register" class="text-decoration-none">
+                  Sign up
+                </router-link>
+              </div>
+            </div>
+          </v-card-text>
+        </v-card>
+      </v-col>
+    </v-row>
+  </v-container>
 </template>
 
-<script>
-import SocialLoginButtons from '@/components/auth/SocialLoginButtons.vue';
-import formValidation from '@/mixins/formValidation.js';
+<script lang="ts">
+import { defineComponent } from 'vue';
+import { required, email } from '@vuelidate/validators';
+import { useVuelidate } from '@vuelidate/core';
+import { useAuthStore } from '@/modules/auth/store';
+import { useSnackbar } from '@/shared/composables/useSnackbar';
 
-export default {
-  components: {
-    SocialLoginButtons
+export default defineComponent({
+  name: 'LoginView',
+  
+  setup() {
+    const authStore = useAuthStore();
+    const snackbar = useSnackbar();
+    
+    return { 
+      authStore, 
+      snackbar,
+      v$: useVuelidate()
+    };
   },
-  mixins: [formValidation],
+  
   data() {
     return {
-      email: 'admin@example.com',
-      password: 'password',
+      email: '',
+      password: '',
       showPassword: false,
       rememberMe: false,
-      error: '',
-      successMessage: '',
       loading: false,
-      showTerms: false,
-      showPrivacy: false,
+      error: '',
       loginAttempts: 0,
       isLocked: false,
-      lockoutTime: null
-    }
+      lockoutTime: null as ReturnType<typeof setTimeout> | null
+    };
   },
+  
+  validations() {
+    return {
+      email: { required, email },
+      password: { required }
+    };
+  },
+  
   computed: {
-    isFormValid() {
-      return this.email && 
-             /.+@.+\..+/.test(this.email) && 
-             this.password && 
-             !this.isLocked;
+    emailErrors() {
+      const errors: string[] = [];
+      if (!this.v$.email?.$dirty) return errors;
+      !this.v$.email.email && errors.push('Must be a valid email');
+      !this.v$.email.required && errors.push('Email is required');
+      return errors;
+    },
+    passwordErrors() {
+      const errors: string[] = [];
+      if (!this.v$.password?.$dirty) return errors;
+      !this.v$.password.required && errors.push('Password is required');
+      return errors;
     }
   },
-  mounted() {
-    // Show success message if redirected from registration
-    if (this.$route.query.registered === 'true') {
-      this.successMessage = 'Registration successful! Please sign in with your new account.';
-    }
+  
+  created() {
+    // Check for existing lockout
+    this.checkAccountLockout();
     
-    // Show success message if redirected from password reset
-    if (this.$route.query.reset === 'true') {
-      this.successMessage = 'Password reset successful! Please sign in with your new password.';
-    }
+    // Check for existing login attempts
+    this.loginAttempts = parseInt(localStorage.getItem('loginAttempts') || '0');
     
-    // Check if account is locked
-    const lockoutUntil = localStorage.getItem('lockoutUntil');
-    if (lockoutUntil && new Date(lockoutUntil) > new Date()) {
-      this.isLocked = true;
-      this.error = `Account temporarily locked. Please try again later.`;
-      
-      // Set timer to unlock
-      const timeLeft = new Date(lockoutUntil) - new Date();
-      this.lockoutTime = setTimeout(() => {
-        this.isLocked = false;
-        this.error = '';
-        localStorage.removeItem('lockoutUntil');
-      }, timeLeft);
+    // Check for remembered email
+    const rememberedEmail = localStorage.getItem('rememberedEmail');
+    if (rememberedEmail) {
+      this.email = rememberedEmail;
+      this.rememberMe = true;
     }
   },
+  
   beforeUnmount() {
     if (this.lockoutTime) {
       clearTimeout(this.lockoutTime);
     }
   },
+  
   methods: {
+    checkAccountLockout() {
+      const lockoutUntil = localStorage.getItem('lockoutUntil');
+      if (lockoutUntil && new Date(lockoutUntil) > new Date()) {
+        this.isLocked = true;
+        this.error = 'Too many failed attempts. Account locked for 30 minutes.';
+        
+        // Set timer to unlock
+        const timeLeft = new Date(lockoutUntil).getTime() - new Date().getTime();
+        this.lockoutTime = setTimeout(() => {
+          this.isLocked = false;
+          this.error = '';
+          localStorage.removeItem('lockoutUntil');
+        }, timeLeft);
+      }
+    },
+    
     async handleLogin() {
       if (this.isLocked) {
+        return;
+      }
+      
+      this.v$.$touch();
+      if (this.v$.$invalid) {
         return;
       }
       
@@ -220,91 +255,113 @@ export default {
         this.error = '';
         this.loading = true;
         
-        // Mock login with security features
-        if (this.email === 'admin@example.com' && this.password === 'password') {
-          // Successful login
-          localStorage.setItem('token', 'mock-token');
-          localStorage.setItem('user', JSON.stringify({
-            name: 'Admin User',
-            email: this.email,
-            lastLogin: new Date().toISOString()
-          }));
-          
-          // Reset login attempts
+        // Handle remember me
+        if (this.rememberMe) {
+          localStorage.setItem('rememberedEmail', this.email);
+        } else {
+          localStorage.removeItem('rememberedEmail');
+        }
+        
+        // Use the auth store to handle login
+        const success = await this.authStore.login({
+          email: this.email,
+          password: this.password,
+        });
+        
+        if (success) {
+          // Reset login attempts on successful login
           this.loginAttempts = 0;
           localStorage.removeItem('loginAttempts');
           
-          // Redirect to dashboard
-          this.$router.push('/');
-        } else {
-          // Failed login
-          this.loginAttempts = (parseInt(localStorage.getItem('loginAttempts') || '0')) + 1;
-          localStorage.setItem('loginAttempts', this.loginAttempts.toString());
+          // Show success message
+          this.snackbar.showSuccess('Login successful');
           
-          // Check for account lockout (after 5 attempts)
-          if (this.loginAttempts >= 5) {
-            // Lock account for 30 minutes
-            const lockoutUntil = new Date(new Date().getTime() + 30 * 60000);
-            localStorage.setItem('lockoutUntil', lockoutUntil.toISOString());
-            
-            this.isLocked = true;
-            this.error = 'Too many failed attempts. Account locked for 30 minutes.';
-            
-            // Set timer to unlock
-            this.lockoutTime = setTimeout(() => {
-              this.isLocked = false;
-              this.error = '';
-              localStorage.removeItem('lockoutUntil');
-            }, 30 * 60000);
-          } else {
-            this.error = 'Invalid email or password';
-          }
+          // Redirect to dashboard or intended route
+          const redirect = typeof this.$route.query.redirect === 'string' 
+            ? this.$route.query.redirect 
+            : '/';
+          this.$router.push(redirect);
+        } else {
+          // Handle failed login
+          this.handleFailedLogin();
         }
-      } catch (err) {
-        console.error('Login failed:', err);
-        this.error = 'An error occurred during login';
+      } catch (error: any) {
+        console.error('Login error:', error);
+        this.error = error.response?.data?.message || 'An error occurred during login';
       } finally {
         this.loading = false;
       }
     },
     
-    handleSocialLogin(provider) {
-      this.loading = true;
+    handleFailedLogin() {
+      this.loginAttempts = (parseInt(localStorage.getItem('loginAttempts') || '0')) + 1;
+      localStorage.setItem('loginAttempts', this.loginAttempts.toString());
       
-      // Mock social login
-      setTimeout(() => {
-        localStorage.setItem('token', `mock-${provider}-token`);
-        localStorage.setItem('user', JSON.stringify({
-          name: `${provider.charAt(0).toUpperCase() + provider.slice(1)} User`,
-          email: `user@${provider}.com`,
-          provider: provider,
-          lastLogin: new Date().toISOString()
-        }));
+      // Check for account lockout (after 5 attempts)
+      if (this.loginAttempts >= 5) {
+        // Lock account for 30 minutes
+        const lockoutUntil = new Date(new Date().getTime() + 30 * 60000);
+        localStorage.setItem('lockoutUntil', lockoutUntil.toISOString());
         
-        this.loading = false;
-        this.$router.push('/');
-      }, 1000);
+        this.isLocked = true;
+        this.error = 'Too many failed attempts. Account locked for 30 minutes.';
+        
+        // Set timer to unlock
+        this.lockoutTime = setTimeout(() => {
+          this.isLocked = false;
+          this.error = '';
+          localStorage.removeItem('lockoutUntil');
+        }, 30 * 60000);
+      } else {
+        const attemptsLeft = 5 - this.loginAttempts;
+        this.error = `Invalid email or password. ${attemptsLeft} attempt${attemptsLeft !== 1 ? 's' : ''} remaining.`;
+      }
     }
   }
-}
+});
 </script>
 
-<style>
-.login-container {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #f5f5f5;
-  padding: 20px;
+<style scoped>
+.v-card {
+  border-radius: 8px;
+  overflow: hidden;
 }
 
-.login-card {
-  width: 100%;
+.v-toolbar {
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+.v-btn {
+  text-transform: none;
+  letter-spacing: 0.5px;
+}
+
+.account-locked {
+  padding: 24px;
+}
+
+.v-icon {
+  display: block;
+  margin: 0 auto;
+}
+
+.v-divider {
+  margin: 16px 0;
 }
 
 a {
-  text-decoration: none;
   color: var(--v-primary-base);
+  transition: opacity 0.2s ease-in-out;
+}
+
+a:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+.fill-height {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
 }
 </style>

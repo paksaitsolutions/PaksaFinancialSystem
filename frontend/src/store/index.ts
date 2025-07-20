@@ -1,23 +1,167 @@
-import { createPinia } from 'pinia';
+import { createPinia, defineStore } from 'pinia';
 import { markRaw } from 'vue';
-import { useRouter } from 'vue-router';
-import { useAppStore } from './app';
-import { useAuthStore } from './auth';
-import { useReconciliationStore } from './reconciliation';
+import type { App } from 'vue';
+import piniaPluginPersistedstate from 'pinia-plugin-persistedstate';
 
-// Create Pinia instance
+/**
+ * Pinia instance
+ */
 const pinia = createPinia();
 
-// Add router to all stores
+/**
+ * Pinia plugin for handling store initialization
+ */
 pinia.use(({ store }) => {
-  const router = useRouter();
-  store.router = markRaw(router);
+  // Add a reactive property to track if the store is initialized
+  store.$state = markRaw({
+    ...store.$state,
+    _isInitialized: false,
+  });
+
+  // Add initialization method
+  store.initialize = async function (force = false) {
+    if (!force && this._isInitialized) return;
+    
+    if (typeof this.$_initialize === 'function') {
+      await this.$_initialize();
+    }
+    
+    this._isInitialized = true;
+  };
+
+  // Add reset method
+  store.reset = function () {
+    if (typeof this.$_reset === 'function') {
+      this.$_reset();
+    } else {
+      this.$reset();
+    }
+    this._isInitialized = false;
+  };
 });
 
-export { 
-  useAppStore, 
-  useAuthStore, 
-  useReconciliationStore 
-};
+// Add persistence plugin
+pinia.use(piniaPluginPersistedstate);
+
+/**
+ * Initialize Pinia in the Vue app
+ */
+export function setupStore(app: App) {
+  app.use(pinia);
+  return pinia;
+}
+
+/**
+ * Base store with common functionality
+ */
+export const useBaseStore = defineStore('base', {
+  state: () => ({
+    loading: false,
+    error: null as string | null,
+    _isInitialized: false,
+  }),
+  
+  actions: {
+    /**
+     * Set loading state
+     */
+    setLoading(loading: boolean) {
+      this.loading = loading;
+    },
+    
+    /**
+     * Set error
+     */
+    setError(error: string | null) {
+      this.error = error;
+    },
+    
+    /**
+     * Reset store state
+     */
+    $_reset() {
+      this.$reset();
+    },
+  },
+  
+  // Persist specific state properties
+  persist: {
+    paths: ['_isInitialized'],
+  },
+});
+
+/**
+ * Create a namespaced store with common functionality
+ */
+export function createNamespacedStore<Id extends string, S, G, A>(
+  id: Id,
+  options: {
+    state: () => S;
+    getters?: G & ThisType<S & { [K in keyof G]: ReturnType<G[K]> }>;
+    actions: A & ThisType<A & S & { _isInitialized: boolean }>;
+    persist?: boolean | string[];
+  }
+) {
+  return defineStore(id, {
+    state: options.state,
+    
+    getters: {
+      ...(options.getters || {}),
+      
+      /**
+       * Check if the store is loading
+       */
+      isLoading(): boolean {
+        return (this as any).loading === true;
+      },
+      
+      /**
+       * Get the current error message
+       */
+      errorMessage(): string | null {
+        return (this as any).error;
+      },
+      
+      /**
+       * Check if the store has been initialized
+       */
+      isInitialized(): boolean {
+        return (this as any)._isInitialized === true;
+      },
+    },
+    
+    actions: {
+      ...options.actions,
+      
+      /**
+       * Set loading state
+       */
+      setLoading(loading: boolean) {
+        (this as any).loading = loading;
+      },
+      
+      /**
+       * Set error
+       */
+      setError(error: string | null) {
+        (this as any).error = error;
+      },
+      
+      /**
+       * Reset store state
+       */
+      $_reset() {
+        this.$reset();
+      },
+    },
+    
+    // Enable persistence if specified
+    persist: Array.isArray(options.persist)
+      ? { paths: options.persist }
+      : options.persist === true
+      ? {}
+      : false,
+  });
+}
 
 export default pinia;

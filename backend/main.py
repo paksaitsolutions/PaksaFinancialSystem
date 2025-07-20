@@ -14,8 +14,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import List, Optional, Dict, Any
 
-from fastapi import FastAPI, Depends, HTTPException, status
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, Depends, HTTPException, status, Request
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -23,10 +22,11 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 # Absolute imports
 from app.core.config import settings
 from app.core.logging import setup_logging
-from app.core.middleware.error_handler import setup_middleware
+from app.core.middleware_config import middleware_settings
 
 # Import API router
 from app.api.v1.api import api_router
+from app.middleware.setup import setup_middleware
 
 # Setup logging
 setup_logging()
@@ -71,19 +71,8 @@ app = FastAPI(
     default_response_class=JSONResponse,
 )
 
-# Set up middleware
+# Set up all middleware components
 setup_middleware(app)
-
-# Set up CORS
-if settings.BACKEND_CORS_ORIGINS:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-        expose_headers=["Content-Range", "X-Total-Count"],
-    )
 
 # Include API router
 app.include_router(api_router)
@@ -129,14 +118,15 @@ async def global_exception_handler(request, exc: Exception) -> JSONResponse:
 
 # Root endpoint
 @app.get("/", include_in_schema=False)
-async def root() -> Dict[str, Any]:
+async def root(request: Request) -> Dict[str, Any]:
     """Root endpoint with basic API information."""
     return {
-        "application": settings.APP_NAME,
-        "version": settings.API_VERSION,
+        "application": settings.PROJECT_NAME,
+        "version": settings.VERSION,
         "environment": settings.ENVIRONMENT,
         "documentation": "/api/docs" if settings.ENVIRONMENT != "production" else None,
         "status": "operational",
+        "request_id": request.state.request_id if hasattr(request.state, 'request_id') else None,
     }
 
 # Health check endpoint

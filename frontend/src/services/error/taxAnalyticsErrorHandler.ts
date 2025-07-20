@@ -1,5 +1,5 @@
 import { useNotification } from '@/composables/useNotification';
-import { useTaxAnalyticsStore } from '@/stores/tax/analytics';
+import { useTaxAnalyticsStore } from '@/modules/tax/store/analytics';
 import { useLogger } from '@/composables/useLogger';
 
 export class TaxAnalyticsErrorHandler {

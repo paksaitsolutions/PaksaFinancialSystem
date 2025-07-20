@@ -47,3 +47,10 @@ python-json-logger==2.0.7
 # Utilities
 python-slugify==8.0.1
 email-validator==2.1.0.post1
+
+# Data Processing & Export
+pandas==2.1.1
+openpyxl==3.1.2
+xlsxwriter==3.1.9
+python-multipart==0.0.6
+fastapi-responses==0.1.2

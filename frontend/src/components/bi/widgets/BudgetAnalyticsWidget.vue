@@ -138,7 +138,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useBudgetStore } from '@/stores/budget'
+import { useBudgetStore } from '@/modules/budget/store/budget'
 import { useApi } from '@/composables/useApi'
 
 const api = useApi()

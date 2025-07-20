@@ -1,4 +1,4 @@
-import { useTaxPolicyStore } from '@/stores/tax/policy';
+import { useTaxPolicyStore } from '@/modules/tax/store/policy';
 import { usePayrollStore } from '@/stores/payroll';
 import { useAIStore } from '@/stores/ai';
 import { formatCurrency, formatDate } from '@/utils/formatters';
