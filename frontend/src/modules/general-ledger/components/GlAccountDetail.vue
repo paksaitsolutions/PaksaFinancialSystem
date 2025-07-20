@@ -1,260 +1,389 @@
 <template>
   <div class="gl-account-detail">
-    <Card>
-      <template #title>
-        <div class="flex justify-content-between align-items-center">
-          <div>
-            <span v-if="isNew">New GL Account</span>
-            <span v-else>GL Account: {{ account.accountNumber }} - {{ account.name }}</span>
-          </div>
-          <div>
-            <Button 
-              v-if="!isNew" 
-              icon="pi pi-print" 
-              class="p-button-text p-button-rounded p-button-plain" 
-              @click="handlePrint"
-              v-tooltip.top="'Print Account Details'"
-            />
-            <Button 
-              icon="pi pi-file-export" 
-              class="p-button-text p-button-rounded p-button-plain" 
-              @click="handleExport"
-              v-tooltip.top="'Export Account Data'"
-            />
-          </div>
-        </div>
-      </template>
+    <!-- Account Header -->
+    <div class="flex justify-content-between align-items-center mb-4">
+      <h1>{{ pageTitle }}</h1>
+      <div class="flex gap-2">
+        <Button 
+          label="Back" 
+          icon="pi pi-arrow-left" 
+          class="p-button-text" 
+          @click="$router.go(-1)" 
+        />
+        <Button 
+          v-if="!isNew"
+          label="Print" 
+          icon="pi pi-print" 
+          class="p-button-text" 
+          @click="handlePrint" 
+        />
+        <Button 
+          v-if="!isNew"
+          label="Export" 
+          icon="pi pi-download" 
+          class="p-button-text" 
+          @click="handleExport" 
+        />
+        <Button 
+          v-if="canDelete"
+          label="Delete" 
+          icon="pi pi-trash" 
+          class="p-button-text p-button-danger" 
+          @click="confirmDelete" 
+        />
+        <Button 
+          label="Save" 
+          icon="pi pi-save" 
+          :loading="saving" 
+          @click="saveAccount" 
+        />
+      </div>
+    </div>
 
-      <TabView>
-        <TabPanel header="Account Information">
-          <div class="p-fluid grid">
-            <div class="field col-12 md:col-6">
-              <label for="accountNumber">Account Number <span class="required">*</span></label>
-              <InputText 
-                id="accountNumber" 
-                v-model="formData.accountNumber" 
-                :class="{ 'p-invalid': v$.accountNumber.$error }"
-                :disabled="!isNew"
-              />
-              <small v-if="v$.accountNumber.$error" class="p-error">
-                {{ v$.accountNumber.$errors[0].$message }}
-              </small>
-            </div>
+    <ProgressBar v-if="loading" mode="indeterminate" style="height: 6px" />
 
-            <div class="field col-12 md:col-6">
-              <label for="name">Account Name <span class="required">*</span></label>
-              <InputText 
-                id="name" 
-                v-model="formData.name" 
-                :class="{ 'p-invalid': v$.name.$error }"
-              />
-              <small v-if="v$.name.$error" class="p-error">
-                {{ v$.name.$errors[0].$message }}
-              </small>
-            </div>
-
-            <div class="field col-12 md:col-6">
-              <label for="accountType">Account Type <span class="required">*</span></label>
-              <Dropdown
-                id="accountType"
-                v-model="formData.accountType"
-                :options="accountTypes"
-                optionLabel="label"
-                optionValue="value"
-                :class="{ 'p-invalid': v$.accountType.$error }"
-                :disabled="!isNew"
-              />
-              <small v-if="v$.accountType.$error" class="p-error">
-                {{ v$.accountType.$errors[0].$message }}
-              </small>
-            </div>
-
-            <div class="field col-12 md:col-6">
-              <label for="category">Category</label>
-              <Dropdown
-                id="category"
-                v-model="formData.category"
-                :options="accountCategories"
-                optionLabel="label"
-                optionValue="value"
-              />
-            </div>
-
-            <div class="field col-12 md:col-6">
-              <label for="parentAccount">Parent Account</label>
-              <TreeSelect
-                v-model="formData.parentAccountId"
-                :options="parentAccountOptions"
-                placeholder="Select Parent Account"
-                :loading="loadingAccounts"
-                :class="{ 'p-invalid': v$.parentAccountId.$error }"
-                :disabled="!isNew"
-              />
-              <small v-if="v$.parentAccountId.$error" class="p-error">
-                {{ v$.parentAccountId.$errors[0].$message }}
-              </small>
-            </div>
-
-            <div class="field col-12 md:col-6">
-              <label for="currency">Currency</label>
-              <Dropdown
-                id="currency"
-                v-model="formData.currency"
-                :options="currencies"
-                optionLabel="name"
-                optionValue="code"
-                :loading="loadingCurrencies"
-              />
-            </div>
-
-            <div class="field col-12 md:col-6">
-              <label for="status">Status</label>
-              <Dropdown
-                id="status"
-                v-model="formData.status"
-                :options="accountStatuses"
-                optionLabel="label"
-                optionValue="value"
-              />
-            </div>
-
-            <div class="field col-12">
-              <label for="description">Description</label>
-              <Textarea id="description" v-model="formData.description" rows="3" />
-            </div>
-
-            <div class="field col-12 md:col-6">
-              <div class="flex align-items-center">
-                <Checkbox 
-                  id="isTaxRelevant" 
-                  v-model="formData.isTaxRelevant" 
-                  :binary="true"
-                />
-                <label for="isTaxRelevant" class="ml-2">Tax Relevant</label>
-              </div>
-            </div>
-
-            <div class="field col-12 md:col-6">
-              <div class="flex align-items-center">
-                <Checkbox 
-                  id="isReconcilable" 
-                  v-model="formData.isReconcilable" 
-                  :binary="true"
-                />
-                <label for="isReconcilable" class="ml-2">Reconcilable</label>
-              </div>
-            </div>
-          </div>
-        </TabPanel>
-
-        <TabPanel header="Advanced Settings" v-if="!isNew">
-          <div class="p-fluid grid">
-            <div class="field col-12 md:col-6">
-              <label for="openingBalance">Opening Balance</label>
-              <InputNumber
-                id="openingBalance"
-                v-model="formData.openingBalance"
-                mode="currency"
-                :currency="formData.currency || 'USD'"
-                :minFractionDigits="2"
-                :maxFractionDigits="4"
-                :disabled="!isNew"
-              />
-            </div>
-
-            <div class="field col-12 md:col-6">
-              <label for="asOfDate">Balance As Of</label>
-              <Calendar
-                id="asOfDate"
-                v-model="formData.balanceAsOf"
-                :showIcon="true"
-                :disabled="!isNew"
-              />
-            </div>
-
-            <div class="field col-12">
-              <h4>Custom Fields</h4>
+    <div v-else class="grid">
+      <!-- Main Form -->
+      <div class="col-12 md:col-8">
+        <Card>
+          <template #title>Account Information</template>
+          <template #content>
+            <form ref="formRef" @submit.prevent="saveAccount">
               <div class="grid">
-                <div 
-                  v-for="field in customFields" 
-                  :key="field.id" 
-                  class="field col-12 md:col-6"
-                >
-                  <component
-                    :is="getFieldComponent(field.type)"
-                    v-model="formData.customFields[field.id]"
+                <!-- Account Number -->
+                <div class="col-12 md:col-6">
+                  <div class="field">
+                    <label for="accountNumber">Account Number <span class="text-red-500">*</span></label>
+                    <InputText
+                      id="accountNumber"
+                      v-model="formData.accountNumber"
+                      :class="{ 'p-invalid': v$.accountNumber.$error }"
+                      :disabled="!isNew"
+                      @blur="v$.accountNumber.$touch()"
+                    />
+                    <small v-if="v$.accountNumber.$error" class="p-error">
+                      {{ v$.accountNumber.$errors[0]?.$message }}
+                    </small>
+                  </div>
+                </div>
+
+                <!-- Account Name -->
+                <div class="col-12 md:col-6">
+                  <div class="field">
+                    <label for="name">Account Name <span class="text-red-500">*</span></label>
+                    <InputText
+                      id="name"
+                      v-model="formData.name"
+                      :class="{ 'p-invalid': v$.name.$error }"
+                      @blur="v$.name.$touch()"
+                    />
+                    <small v-if="v$.name.$error" class="p-error">
+                      {{ v$.name.$errors[0]?.$message }}
+                    </small>
+                  </div>
+                </div>
+
+                <!-- Account Type -->
+                <div class="col-12 md:col-6">
+                  <div class="field">
+                    <label for="accountType">Account Type <span class="text-red-500">*</span></label>
+                    <Dropdown
+                      id="accountType"
+                      v-model="formData.accountType"
+                      :options="accountTypes"
+                      option-label="label"
+                      option-value="value"
+                      :class="{ 'p-invalid': v$.accountType.$error }"
+                      :loading="loading"
+                      placeholder="Select Account Type"
+                      @change="updateAccountType(formData.accountType)"
+                    />
+                    <small v-if="v$.accountType.$error" class="p-error">
+                      {{ v$.accountType.$errors[0]?.$message }}
+                    </small>
+                  </div>
+                </div>
+
+                <!-- Account Category -->
+                <div class="col-12 md:col-6">
+                  <div class="field">
+                    <label for="accountCategory">Account Category <span class="text-red-500">*</span></label>
+                    <Dropdown
+                      id="accountCategory"
+                      v-model="formData.accountCategory"
+                      :options="accountCategories"
+                      option-label="label"
+                      option-value="value"
+                      :class="{ 'p-invalid': v$.accountCategory.$error }"
+                      :loading="loading"
+                      placeholder="Select Account Category"
+                    />
+                    <small v-if="v$.accountCategory.$error" class="p-error">
+                      {{ v$.accountCategory.$errors[0]?.$message }}
+                    </small>
+                  </div>
+                </div>
+
+                <!-- Parent Account -->
+                <div class="col-12">
+                  <div class="field">
+                    <label for="parentAccount">Parent Account</label>
+                    <Dropdown
+                      id="parentAccount"
+                      v-model="formData.parentAccountId"
+                      :options="parentAccountOptions"
+                      option-label="label"
+                      option-value="value"
+                      :loading="loadingAccounts"
+                      :disabled="!formData.accountType"
+                      placeholder="Select Parent Account"
+                      :filter="true"
+                      filter-placeholder="Search accounts..."
+                      filter-input-auto-focus="true"
+                      :show-clear="true"
+                    />
+                    <small v-if="v$.parentAccountId.$error" class="p-error">
+                      {{ v$.parentAccountId.$errors[0]?.$message }}
+                    </small>
+                  </div>
+                </div>
+
+                <!-- Description -->
+                <div class="col-12">
+                  <div class="field">
+                    <label for="description">Description</label>
+                    <Textarea
+                      id="description"
+                      v-model="formData.description"
+                      :auto-resize="true"
+                      rows="3"
+                    />
+                  </div>
+                </div>
+
+                <!-- Currency and Status -->
+                <div class="col-12 md:col-6">
+                  <div class="field">
+                    <label for="currency">Currency <span class="text-red-500">*</span></label>
+                    <Dropdown
+                      id="currency"
+                      v-model="formData.currency"
+                      :options="currencies"
+                      option-label="name"
+                      option-value="code"
+                      placeholder="Select Currency"
+                      :loading="loadingCurrencies"
+                    />
+                  </div>
+                </div>
+
+                <div class="col-12 md:col-6">
+                  <div class="field">
+                    <label for="status">Status</label>
+                    <Dropdown
+                      id="status"
+                      v-model="formData.status"
+                      :options="accountStatuses"
+                      option-label="label"
+                      option-value="value"
+                      placeholder="Select Status"
+                    />
+                  </div>
+                </div>
+
+                <!-- Toggle Options -->
+                <div class="col-12 md:col-6">
+                  <div class="field-checkbox">
+                    <Checkbox
+                      id="isDetailAccount"
+                      v-model="formData.isDetailAccount"
+                      :binary="true"
+                    />
+                    <label for="isDetailAccount">Is Detail Account (Allows Posting)</label>
+                  </div>
+                </div>
+
+                <div class="col-12 md:col-6">
+                  <div class="field-checkbox">
+                    <Checkbox
+                      id="isLocked"
+                      v-model="formData.isLocked"
+                      :binary="true"
+                      :disabled="!formData.id"
+                    />
+                    <label for="isLocked">Lock Account (Prevent Modifications)</label>
+                  </div>
+                </div>
+
+                <!-- Opening Balance -->
+                <div v-if="isNew" class="col-12">
+                  <div class="field">
+                    <label for="openingBalance">Opening Balance</label>
+                    <InputNumber
+                      id="openingBalance"
+                      v-model="formData.openingBalance"
+                      mode="currency"
+                      :currency="formData.currency || 'PKR'"
+                      :min-fraction-digits="2"
+                      :max-fraction-digits="4"
+                    />
+                  </div>
+                </div>
+              </div>
+            </form>
+          </template>
+        </Card>
+
+        <!-- Custom Fields Section -->
+        <Card v-if="customFields.length > 0" class="mt-4">
+          <template #title>Custom Fields</template>
+          <template #content>
+            <div class="grid">
+              <div 
+                v-for="field in customFields" 
+                :key="field.id"
+                class="col-12 md:col-6"
+              >
+                <div class="field">
+                  <label :for="`custom-${field.id}`">
+                    {{ field.name }}
+                    <span v-if="field.required" class="text-red-500">*</span>
+                  </label>
+                  <InputText
+                    v-if="field.type === 'text'"
                     :id="`custom-${field.id}`"
-                    :label="field.label"
-                    :options="field.options"
+                    v-model="field.value"
                     :required="field.required"
+                    class="w-full"
+                  />
+                  <Textarea
+                    v-else-if="field.type === 'textarea'"
+                    :id="`custom-${field.id}`"
+                    v-model="field.value"
+                    :required="field.required"
+                    :auto-resize="true"
+                    rows="3"
+                    class="w-full"
+                  />
+                  <InputNumber
+                    v-else-if="field.type === 'number'"
+                    :id="`custom-${field.id}`"
+                    v-model="field.value"
+                    :required="field.required"
+                    class="w-full"
+                  />
+                  <Checkbox
+                    v-else-if="field.type === 'boolean'"
+                    :id="`custom-${field.id}`"
+                    v-model="field.value"
+                    :binary="true"
+                    :required="field.required"
+                  />
+                  <Calendar
+                    v-else-if="field.type === 'date'"
+                    :id="`custom-${field.id}`"
+                    v-model="field.value"
+                    :required="field.required"
+                    class="w-full"
+                    date-format="yy-mm-dd"
+                    show-icon
                   />
                 </div>
               </div>
             </div>
-          </div>
-        </TabPanel>
+          </template>
+        </Card>
+      </div>
 
-        <TabPanel header="Activity" v-if="!isNew">
-          <DataTable
-            :value="activityLogs"
-            :loading="loadingActivity"
-            :paginator="true"
-            :rows="10"
-            :rowsPerPageOptions="[10, 25, 50]"
-            responsiveLayout="scroll"
-          >
-            <Column field="timestamp" header="Date" style="width: 15%">
-              <template #body="{ data }">
-                {{ formatDate(data.timestamp) }}
-              </template>
-            </Column>
-            <Column field="user" header="User" style="width: 15%" />
-            <Column field="action" header="Action" style="width: 15%" />
-            <Column field="details" header="Details" style="width: 55%" />
-          </DataTable>
-        </TabPanel>
-      </TabView>
+      <!-- Sidebar -->
+      <div class="col-12 md:col-4">
+        <!-- Account Summary -->
+        <Card class="mb-4">
+          <template #title>Account Summary</template>
+          <template #content>
+            <div v-if="!isNew" class="flex flex-column gap-3">
+              <div class="flex justify-content-between">
+                <span class="font-medium">Account Number:</span>
+                <span>{{ formData.accountNumber }}</span>
+              </div>
+              <div class="flex justify-content-between">
+                <span class="font-medium">Type:</span>
+                <Tag :value="formData.accountType" />
+              </div>
+              <div class="flex justify-content-between">
+                <span class="font-medium">Status:</span>
+                <Tag 
+                  :value="formData.status" 
+                  :severity="formData.status === 'active' ? 'success' : 'danger'"
+                />
+              </div>
+              <div class="flex justify-content-between">
+                <span class="font-medium">Created:</span>
+                <span>{{ formatDate(new Date().toISOString()) }}</span>
+              </div>
+              <div class="flex justify-content-between">
+                <span class="font-medium">Last Updated:</span>
+                <span>{{ formatDate(new Date().toISOString()) }}</span>
+              </div>
+              <div class="flex justify-content-between">
+                <span class="font-medium">Balance:</span>
+                <span class="font-bold">
+                  {{ formData.currency || 'PKR' }} {{ formData.openingBalance || '0.00' }}
+                </span>
+              </div>
+            </div>
+            <div v-else class="text-center p-4">
+              <i class="pi pi-info-circle text-2xl mb-2"></i>
+              <p>Account details will be displayed here after saving.</p>
+            </div>
+          </template>
+        </Card>
 
-      <template #footer>
-        <div class="flex justify-content-between">
-          <div>
-            <Button 
-              v-if="!isNew" 
-              label="Delete" 
-              icon="pi pi-trash" 
-              class="p-button-danger" 
-              @click="confirmDelete"
-            />
-          </div>
-          <div>
-            <Button 
-              label="Cancel" 
-              icon="pi pi-times" 
-              class="p-button-text" 
-              @click="handleCancel"
-            />
-            <Button 
-              :label="isNew ? 'Create' : 'Update'" 
-              icon="pi pi-check" 
-              class="p-button-success" 
-              @click="handleSubmit"
-              :loading="saving"
-            />
-          </div>
-        </div>
-      </template>
-    </Card>
+        <!-- Activity Log -->
+        <Card v-if="!isNew" class="mb-4">
+          <template #title>
+            <div class="flex align-items-center justify-content-between">
+              <span>Recent Activity</span>
+              <Button 
+                icon="pi pi-refresh" 
+                class="p-button-text p-button-sm" 
+                :loading="loadingActivity"
+                @click="loadActivityLogs"
+              />
+            </div>
+          </template>
+          <template #content>
+            <div v-if="activityLogs.length > 0" class="flex flex-column gap-3">
+              <div v-for="log in activityLogs" :key="log.id" class="border-bottom-1 surface-border pb-3">
+                <div class="flex justify-content-between">
+                  <span class="font-medium">{{ log.action }}</span>
+                  <span class="text-500 text-sm">{{ formatDate(log.timestamp) }}</span>
+                </div>
+                <p class="text-sm mb-1">{{ log.details }}</p>
+                <span class="text-500 text-xs">By {{ log.user }}</span>
+              </div>
+            </div>
+            <div v-else class="text-center p-3">
+              <p>No activity found</p>
+            </div>
+          </template>
+        </Card>
+      </div>
+    </div>
 
-    <ConfirmDialog />
+    <!-- Export Dialog -->
     <ReportExportDialog 
       ref="exportDialog"
-      :formats="exportFormats"
       @export="handleExportConfirm"
     />
+
+    <!-- Confirm Dialog -->
+    <ConfirmDialog />
+  </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, reactive, computed, onMounted } from 'vue';
+import { defineComponent, ref, reactive, computed, onMounted, PropType } from 'vue';
 import { useRouter } from 'vue-router';
 import { useVuelidate } from '@vuelidate/core';
 import { required, maxLength, helpers } from '@vuelidate/validators';
@@ -266,24 +395,44 @@ import { formatDate } from '@/shared/utils/date-utils';
 import ReportExportDialog from '@/shared/components/ReportExportDialog.vue';
 import type { AxiosResponse } from 'axios';
 
-// Import types and constants from gl-account module
+// Import types and constants
 import type { 
   GlAccount, 
-  GlAccountFilters, 
-  AccountType, 
-  AccountCategory, 
-  AccountStatus, 
   CreateGlAccountDto, 
   UpdateGlAccountDto,
-  ACCOUNT_TYPES,
-  ACCOUNT_CATEGORIES,
-  ACCOUNT_STATUS
+  AccountType,
+  AccountCategory,
+  AccountStatus
 } from '../types/gl-account';
+
 import {
   ACCOUNT_TYPES,
   ACCOUNT_CATEGORIES,
-  ACCOUNT_STATUS
+  ACCOUNT_STATUS,
+  ACCOUNT_TYPE_CATEGORIES,
+  DEFAULT_GL_ACCOUNT,
+  VALIDATION_MESSAGES
 } from '../types/gl-account-constants';
+
+// Type for form data
+interface GlAccountFormData extends Omit<CreateGlAccountDto, 'id' | 'createdAt' | 'updatedAt'> {
+  id?: string;
+  parentAccount?: GlAccount | null;
+  customFields?: Record<string, any>;
+}
+
+// Type for export formats
+interface ExportFormat {
+  label: string;
+  value: string;
+  icon: string;
+}
+
+// Type for dropdown options
+interface DropdownOption {
+  label: string;
+  value: string;
+}
 
 // Import glAccountService for export functionality
 import { glAccountService } from '../services/gl-account.service';
@@ -298,51 +447,113 @@ export default defineComponent({
       type: String,
       default: '',
     },
+    parentAccountId: {
+      type: String,
+      default: null,
+    },
+    defaultAccountType: {
+      type: String as PropType<AccountType>,
+      default: ACCOUNT_TYPES.ASSET,
+    },
   },
-  setup(props) {
+  setup(props, { emit }) {
     const router = useRouter();
     const glAccountStore = useGlAccountStore();
     const glCategoryStore = useGlCategoryStore();
+    const confirm = useConfirm();
     const { showSuccess, showError } = useNotification();
     
-    // Initialize with default values
-    const currencies = ref([{ code: 'USD', name: 'US Dollar' }, { code: 'PKR', name: 'Pakistani Rupee' }]);
-
+    // Refs
     const isNew = computed(() => !props.id);
     const loading = ref(false);
     const saving = ref(false);
     const loadingAccounts = ref(false);
     const loadingCurrencies = ref(false);
     const loadingActivity = ref(false);
-    const exportDialog = ref();
+    const exportDialog = ref<InstanceType<typeof ReportExportDialog> | null>(null);
+    const formRef = ref<HTMLFormElement | null>(null);
 
     // Form state
-    const formState = reactive<CreateGlAccountDto | UpdateGlAccountDto>({
-      accountNumber: '',
-      name: '',
-      accountType: ACCOUNT_TYPES.ASSET as AccountType, // Default to ASSET type
-      accountCategory: ACCOUNT_CATEGORIES.CURRENT_ASSET, // Default category
-      description: '',
-      parentAccountId: null,
-      status: ACCOUNT_STATUS.ACTIVE,
-      isDetailAccount: true,
-      currency: 'PKR',
-      isLocked: false,
-      sortOrder: 0,
+    const formData = reactive<GlAccountFormData>({
+      ...DEFAULT_GL_ACCOUNT,
+      accountType: props.defaultAccountType,
+      parentAccountId: props.parentAccountId || null,
     });
+
+    // Data options
+    const currencies = ref([
+      { code: 'PKR', name: 'Pakistani Rupee' },
+      { code: 'USD', name: 'US Dollar' },
+      { code: 'EUR', name: 'Euro' },
+      { code: 'GBP', name: 'British Pound' },
+      { code: 'AED', name: 'UAE Dirham' },
+      { code: 'SAR', name: 'Saudi Riyal' },
+    ]);
+
+    const accountTypes = computed<DropdownOption[]>(() => 
+      Object.entries(ACCOUNT_TYPES).map(([key, value]) => ({
+        label: key.charAt(0).toUpperCase() + key.slice(1).toLowerCase(),
+        value,
+      }))
+    );
+
+    const accountStatuses = computed<DropdownOption[]>(() => 
+      Object.entries(ACCOUNT_STATUS).map(([key, value]) => ({
+        label: key.split('_').map(word => word.charAt(0) + word.slice(1).toLowerCase()).join(' '),
+        value,
+      }))
+    );
+    
+    const accountCategories = computed<DropdownOption[]>(() => {
+      const type = formData.accountType;
+      const categories = ACCOUNT_TYPE_CATEGORIES[type] || [];
+      
+      return categories.map(category => {
+        const key = Object.entries(ACCOUNT_CATEGORIES).find(([_, value]) => value === category)?.[0] || '';
+        return {
+          label: key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' '),
+          value: category,
+        };
+      });
+    });
+
+    const parentAccountOptions = ref<Array<{ label: string; value: string; data: any }>>([]);
+    const activityLogs = ref<Array<{ id: string; action: string; timestamp: string; user: string; details: string }>>([]);
+    const customFields = ref<Array<{ id: string; name: string; type: string; value: any; required: boolean }>>([]);
+    
+    const exportFormats = ref<ExportFormat[]>([
+      { label: 'PDF', value: 'pdf', icon: 'pi pi-file-pdf' },
+      { label: 'Excel', value: 'xlsx', icon: 'pi pi-file-excel' },
+      { label: 'CSV', value: 'csv', icon: 'pi pi-file' },
+      { label: 'JSON', value: 'json', icon: 'pi pi-code' },
+    ]);
 
     // Validation rules
     const rules = {
       accountNumber: { 
-        required: helpers.withMessage('Account number is required', required),
-        maxLength: helpers.withMessage('Maximum 20 characters allowed', maxLength(20)),
+        required: helpers.withMessage(VALIDATION_MESSAGES.ACCOUNT_NUMBER_REQUIRED, required),
+        maxLength: helpers.withMessage(VALIDATION_MESSAGES.ACCOUNT_NUMBER_LENGTH, maxLength(ACCOUNT_NUMBER_RULES.MAX_LENGTH)),
+        validFormat: helpers.withMessage(
+          VALIDATION_MESSAGES.ACCOUNT_NUMBER_INVALID,
+          (value: string) => ACCOUNT_NUMBER_RULES.ALLOWED_CHARS.test(value)
+        ),
       },
       name: { 
-        required: helpers.withMessage('Account name is required', required),
-        maxLength: helpers.withMessage('Maximum 100 characters allowed', maxLength(100)),
+        required: helpers.withMessage(VALIDATION_MESSAGES.NAME_REQUIRED, required),
+        maxLength: helpers.withMessage(VALIDATION_MESSAGES.NAME_LENGTH, maxLength(100)),
       },
       accountType: { 
-        required: helpers.withMessage('Account type is required', required),
+        required: helpers.withMessage(VALIDATION_MESSAGES.ACCOUNT_TYPE_REQUIRED, required),
+      },
+      accountCategory: {
+        required: helpers.withMessage(VALIDATION_MESSAGES.ACCOUNT_CATEGORY_REQUIRED, required),
+        validCategory: helpers.withMessage(
+          'Selected category is not valid for the account type',
+          (value: string) => {
+            const validCategories = ACCOUNT_TYPE_CATEGORIES[formData.accountType] || [];
+            return validCategories.includes(value as AccountCategory);
+          }
+        ),
       },
       parentAccountId: {
         // Custom validator to prevent circular references
@@ -357,38 +568,7 @@ export default defineComponent({
       },
     };
 
-    const v$ = useVuelidate(rules, formState);
-
-    // Data options
-    const accountTypes = ref(
-      Object.entries(ACCOUNT_TYPES).map(([key, value]) => ({
-        label: key.charAt(0).toUpperCase() + key.slice(1).toLowerCase(),
-        value,
-      }))
-    );
-
-    const accountStatuses = ref(
-      Object.entries(ACCOUNT_STATUS).map(([key, value]) => ({
-        label: key.split('_').map(word => word.charAt(0) + word.slice(1).toLowerCase()).join(' '),
-        value,
-      }))
-    );
-    
-    const accountCategories = ref(
-      Object.entries(ACCOUNT_CATEGORIES).map(([key, value]) => ({
-        label: key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' '),
-        value,
-      }))
-    );
-
-    const parentAccountOptions = ref<Array<any>>([]);
-    const activityLogs = ref<Array<any>>([]);
-    const customFields = ref<Array<any>>([]);
-    const exportFormats = ref([
-      { label: 'PDF', value: 'pdf', icon: 'pi pi-file-pdf' },
-      { label: 'Excel', value: 'xlsx', icon: 'pi pi-file-excel' },
-      { label: 'CSV', value: 'csv', icon: 'pi pi-file' },
-    ]);
+    const v$ = useVuelidate(rules, formData);
 
     // Methods
     const loadAccount = async () => {
@@ -398,6 +578,361 @@ export default defineComponent({
       try {
         // Use fetchAccountById to get the account details
         const account = await glAccountStore.fetchAccountById(props.id);
+        
+        // Update form data with account details
+        Object.assign(formData, {
+          id: account.id,
+          accountNumber: account.accountNumber,
+          name: account.name,
+          description: account.description,
+          accountType: account.accountType,
+          accountCategory: account.accountCategory,
+          parentAccountId: account.parentAccountId,
+          status: account.status,
+          isDetailAccount: account.isDetailAccount,
+          currency: account.currency,
+          isLocked: account.isLocked,
+          sortOrder: account.sortOrder,
+          openingBalance: account.openingBalance,
+          customFields: { ...account.customFields },
+        });
+        
+        // Load parent account details if exists
+        if (account.parentAccountId) {
+          await loadParentAccount(account.parentAccountId);
+        }
+        
+        // Load additional data if needed
+        if (!isNew.value) {
+          await Promise.all([
+            loadActivityLogs(),
+            loadCustomFields(),
+          ]);
+        }
+      } catch (error) {
+        console.error('Error loading account:', error);
+        showError('Failed to load account details. Please try again.');
+      } finally {
+        loading.value = false;
+      }
+    };
+    
+    const loadParentAccount = async (parentId: string) => {
+      if (!parentId) return;
+      
+      try {
+        const parent = await glAccountStore.fetchAccountById(parentId);
+        formData.parentAccount = parent;
+      } catch (error) {
+        console.warn('Failed to load parent account details:', error);
+      }
+    };
+    
+    const loadParentAccountOptions = async (query?: string) => {
+      loadingAccounts.value = true;
+      try {
+        const filters = {
+          isActive: true,
+          searchTerm: query || '',
+          excludeId: formData.id, // Exclude current account from parent options
+        };
+        
+        const response = await glAccountStore.fetchAccounts(filters);
+        
+        // Format options for TreeSelect
+        parentAccountOptions.value = response.data.map(account => ({
+          label: `${account.accountNumber} - ${account.name}`,
+          value: account.id,
+          data: account,
+        }));
+      } catch (error) {
+        console.error('Error loading parent accounts:', error);
+        showError('Failed to load parent account options');
+      } finally {
+        loadingAccounts.value = false;
+      }
+    };
+    
+    const loadActivityLogs = async () => {
+      if (!formData.id) return;
+      
+      loadingActivity.value = true;
+      try {
+        // TODO: Implement activity log fetching from API
+        // This is a mock implementation
+        activityLogs.value = [
+          {
+            id: '1',
+            action: 'Created',
+            timestamp: new Date().toISOString(),
+            user: 'System',
+            details: 'Account was created',
+          },
+        ];
+      } catch (error) {
+        console.error('Error loading activity logs:', error);
+      } finally {
+        loadingActivity.value = false;
+      }
+    };
+    
+    const loadCustomFields = async () => {
+      if (!formData.id) return;
+      
+      try {
+        // TODO: Implement custom fields fetching from API
+        // This is a mock implementation
+        customFields.value = [
+          {
+            id: 'tax_code',
+            name: 'Tax Code',
+            type: 'text',
+            value: '',
+            required: false,
+          },
+        ];
+      } catch (error) {
+        console.error('Error loading custom fields:', error);
+      }
+    };
+    
+    const saveAccount = async () => {
+      // Validate form
+      const isValid = await v$.value.$validate();
+      if (!isValid) {
+        showError('Please fix the validation errors before saving.');
+        return false;
+      }
+      
+      saving.value = true;
+      try {
+        let savedAccount: GlAccount;
+        
+        if (isNew.value) {
+          // Create new account
+          const createDto: CreateGlAccountDto = {
+            ...formData,
+            // Ensure we don't send undefined values
+            parentAccountId: formData.parentAccountId || null,
+            description: formData.description || '',
+            customFields: formData.customFields || {},
+          };
+          
+          savedAccount = await glAccountStore.createAccount(createDto);
+          showSuccess('Account created successfully');
+          
+          // Redirect to edit page
+          router.push({ 
+            name: 'gl-account-detail', 
+            params: { id: savedAccount.id } 
+          });
+        } else {
+          // Update existing account
+          if (!formData.id) throw new Error('Account ID is required for update');
+          
+          const updateDto: UpdateGlAccountDto = {
+            ...formData,
+            id: formData.id,
+            // Ensure we don't send undefined values
+            parentAccountId: formData.parentAccountId || null,
+            description: formData.description || '',
+            customFields: formData.customFields || {},
+          };
+          
+          savedAccount = await glAccountStore.updateAccount(formData.id, updateDto);
+          showSuccess('Account updated successfully');
+        }
+        
+        // Reload the account to get fresh data
+        await loadAccount();
+        
+        return true;
+      } catch (error) {
+        console.error('Error saving account:', error);
+        showError(`Failed to save account: ${error.message || 'Unknown error'}`);
+        return false;
+      } finally {
+        saving.value = false;
+      }
+    };
+    
+    const confirmDelete = () => {
+      if (!formData.id) return;
+      
+      confirm.require({
+        message: 'Are you sure you want to delete this account? This action cannot be undone.',
+        header: 'Confirm Deletion',
+        icon: 'pi pi-exclamation-triangle',
+        acceptClass: 'p-button-danger',
+        accept: () => deleteAccount(),
+      });
+    };
+    
+    const deleteAccount = async () => {
+      if (!formData.id) return false;
+      
+      try {
+        await glAccountStore.deleteAccount(formData.id);
+        showSuccess('Account deleted successfully');
+        
+        // Navigate back to accounts list
+        router.push({ name: 'gl-accounts' });
+        return true;
+      } catch (error) {
+        console.error('Error deleting account:', error);
+        showError(`Failed to delete account: ${error.message || 'Unknown error'}`);
+        return false;
+      }
+    };
+    
+    const handlePrint = () => {
+      window.print();
+    };
+    
+    const handleExport = () => {
+      if (!exportDialog.value) return;
+      
+      exportDialog.value.show({
+        title: 'Export Account Data',
+        formats: exportFormats.value,
+      });
+    };
+    
+    const handleExportConfirm = async (format: string) => {
+      try {
+        if (!formData.id) return;
+        
+        // Trigger export based on selected format
+        let data: any;
+        let filename = `gl-account-${formData.accountNumber}-${new Date().toISOString().split('T')[0]}`;
+        
+        switch (format) {
+          case 'pdf':
+            // TODO: Implement PDF export
+            data = await glAccountService.exportAccountPdf(formData.id);
+            filename += '.pdf';
+            break;
+            
+          case 'xlsx':
+            data = await glAccountService.exportAccountExcel(formData.id);
+            filename += '.xlsx';
+            break;
+            
+          case 'csv':
+            data = await glAccountService.exportAccountCsv(formData.id);
+            filename += '.csv';
+            break;
+            
+          case 'json':
+            data = await glAccountService.exportAccountJson(formData.id);
+            filename += '.json';
+            break;
+            
+          default:
+            throw new Error(`Unsupported export format: ${format}`);
+        }
+        
+        // Create download link
+        const url = window.URL.createObjectURL(new Blob([data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', filename);
+        document.body.appendChild(link);
+        link.click();
+        
+        // Cleanup
+        if (link.parentNode) {
+          link.parentNode.removeChild(link);
+        }
+        window.URL.revokeObjectURL(url);
+        
+        showSuccess(`Account data exported successfully as ${format.toUpperCase()}`);
+      } catch (error) {
+        console.error('Export error:', error);
+        showError(`Failed to export account data: ${error.message || 'Unknown error'}`);
+      }
+    };
+    
+    const updateAccountType = (newType: AccountType) => {
+      // Reset category if not valid for the new type
+      if (formData.accountCategory && ACCOUNT_TYPE_CATEGORIES[newType]) {
+        const validCategories = ACCOUNT_TYPE_CATEGORIES[newType];
+        if (!validCategories.includes(formData.accountCategory as AccountCategory)) {
+          formData.accountCategory = validCategories[0] || '';
+        }
+      }
+      
+      // Load parent accounts for the new type
+      loadParentAccountOptions();
+    };
+    
+    // Lifecycle hooks
+    onMounted(async () => {
+      await Promise.all([
+        loadAccount(),
+        loadParentAccountOptions(),
+      ]);
+    });
+    
+    // Computed properties
+    const pageTitle = computed(() => {
+      return isNew.value 
+        ? 'New GL Account' 
+        : `GL Account: ${formData.accountNumber} - ${formData.name}`;
+    });
+    
+    const isFormDirty = computed(() => {
+      return v$.value.$dirty;
+    });
+    
+    const canEdit = computed(() => {
+      return !formData.isLocked && !formData.isSystemAccount;
+    });
+    
+    const canDelete = computed(() => {
+      return !isNew.value && canEdit.value && !formData.isSystemAccount;
+    });
+    
+    // Return template bindings
+    return {
+      // Refs
+      loading,
+      saving,
+      loadingAccounts,
+      loadingCurrencies,
+      loadingActivity,
+      exportDialog,
+      formRef,
+      
+      // Data
+      formData,
+      currencies,
+      accountTypes,
+      accountStatuses,
+      accountCategories,
+      parentAccountOptions,
+      activityLogs,
+      customFields,
+      exportFormats,
+      
+      // Computed
+      isNew,
+      pageTitle,
+      isFormDirty,
+      canEdit,
+      canDelete,
+      
+      // Methods
+      v$,
+      saveAccount,
+      confirmDelete,
+      handlePrint,
+      handleExport,
+      handleExportConfirm,
+      updateAccountType,
+      loadParentAccountOptions,
+      formatDate,
+    };
         if (account) {
           const { 
             accountNumber,

@@ -1,0 +1,57 @@
+// Color variables
+$primary: #1976D2;
+$secondary: #424242;
+$accent: #82B1FF;
+$error: #FF5252;
+$info: #2196F3;
+$success: #4CAF50;
+$warning: #FFC107;
+
+// Typography
+$body-font-family: 'Roboto', sans-serif;
+$font-size-root: 16px;
+$line-height-root: 1.5;
+
+// Spacing
+$spacer: 8px;
+$grid-gutter: $spacer * 4;
+
+// Breakpoints
+$grid-breakpoints: (
+  'xs': 0,
+  'sm': 600px,
+  'md': 960px,
+  'lg': 1280px - 16px,
+  'xl': 1920px - 16px
+);
+
+// Container max-widths
+$container-max-widths: (
+  'md': map-get($grid-breakpoints, 'md') * 0.9375,
+  'lg': map-get($grid-breakpoints, 'lg') * 0.9375,
+  'xl': map-get($grid-breakpoints, 'xl') * 0.9375
+);
+
+// Border radius
+$border-radius-root: 4px;
+$border-radius-sm: 2px;
+$border-radius-lg: 8px;
+
+// Transitions
+$transition: (
+  'fast-out-slow-in': cubic-bezier(0.4, 0, 0.2, 1),
+  'linear-out-slow-in': cubic-bezier(0, 0, 0.2, 1),
+  'fast-out-linear-in': cubic-bezier(0.4, 0, 1, 1)
+);
+
+// Shadows
+$shadow-key-umbra: 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+$shadow-key-penumbra: 0 1px 10px 0 rgba(0, 0, 0, 0.14);
+$shadow-key-ambient: 0 3px 5px -1px rgba(0, 0, 0, 0.12);
+
+// Z-index
+$z-index-drawer: 1000;
+$z-index-toolbar: 1100;
+$z-index-dialog: 1200;
+$z-index-snackbar: 1300;
+$z-index-tooltip: 1400;

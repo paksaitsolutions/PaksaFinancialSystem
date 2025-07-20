@@ -96,7 +96,45 @@ def role_required(required_roles: list):
     return decorator
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    def __init__(self, app, is_development: bool = False):
+        super().__init__(app)
+        self.is_development = is_development
+        self.csp_directives = [
+            "default-src 'self'",
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https: http:",
+            "style-src 'self' 'unsafe-inline' https: http:",
+            "img-src 'self' data: blob: https: http:",
+            "font-src 'self' data: https: http:",
+            "connect-src 'self' ws: wss: http: https:",
+            "frame-src 'self' https:",
+            "object-src 'none'",
+            "base-uri 'self'",
+            "form-action 'self'",
+            "frame-ancestors 'none'"
+        ]
+        
+        if self.is_development:
+            self.csp_directives.extend([
+                "script-src-attr 'unsafe-inline'",
+                "upgrade-insecure-requests"
+            ])
+    
+    def generate_nonce(self, length: int = 16) -> str:
+        """Generate a random nonce for CSP"""
+        import os
+        import base64
+        return base64.b64encode(os.urandom(length)).decode('utf-8')
+    
     async def dispatch(self, request: Request, call_next):
+        # Generate a nonce for this request
+        nonce = self.generate_nonce()
+        request.state.csp_nonce = nonce
+        nonce = os.urandom(16).hex()
+        
+        # Add nonce to request state for use in templates
+        request.state.csp_nonce = nonce
+        
+        # Create the response
         response = await call_next(request)
         
         # Add security headers
@@ -104,12 +142,36 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';"
+        
+        # Set CSP header with nonce for development
+        # In production, you should use a more restrictive policy
+        csp_policy = (
+            f"default-src 'self'; "
+            f"script-src 'self' 'nonce-{nonce}' 'strict-dynamic' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' 'self' https: http:; "
+            f"style-src 'self' 'unsafe-inline'; "
+            f"img-src 'self' data: blob: https: http:; "
+            f"connect-src 'self' ws: wss: http: https:; "
+            f"font-src 'self' data: https: http:; "
+            f"frame-src 'self' https:; "
+            f"object-src 'none'; "
+            f"base-uri 'self'; "
+            f"form-action 'self'; "
+            f"frame-ancestors 'none'; "
+            f"upgrade-insecure-requests;"
+        )
+        
+        # Set the CSP header
+        response.headers["Content-Security-Policy"] = csp_policy
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
         response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
         
-        # Log security headers
-        logger.debug(f"Security headers set for {request.url}")
+        # For development, also set the nonce as a header for client-side use
+        if os.getenv("ENVIRONMENT", "development") == "development":
+            response.headers["X-CSP-Nonce"] = nonce
+        
+        # Log security headers in debug mode
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f"Security headers set for {request.url}")
         
         return response
 

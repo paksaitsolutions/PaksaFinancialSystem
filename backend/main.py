@@ -71,8 +71,9 @@ app = FastAPI(
     default_response_class=JSONResponse,
 )
 
-# Set up all middleware components
-setup_middleware(app)
+# Set up all middleware
+# Setup middleware with development flag based on environment
+setup_middleware(app, is_development=settings.ENVIRONMENT == "development")
 
 # Include API router
 app.include_router(api_router)

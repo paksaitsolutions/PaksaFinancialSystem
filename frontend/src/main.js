@@ -27,7 +27,7 @@ const vuetify = createVuetify({
       light: {
         dark: false,
         colors: {
-          primary: '#1867C0',
+          primary: '#1976D2', // Updated primary color to match Vuetify default
           secondary: '#5CBBF6',
           accent: '#82B1FF',
           error: '#FF5252',

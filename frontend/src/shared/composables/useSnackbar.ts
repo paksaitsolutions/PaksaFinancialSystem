@@ -1,60 +1,60 @@
-import { ref } from 'vue';
+import { getCurrentInstance, type App } from 'vue';
 
 export interface SnackbarMessage {
-  text: string;
-  color?: 'success' | 'error' | 'info' | 'warning';
+  message: string;
+  type?: 'success' | 'error' | 'info' | 'warning';
   timeout?: number;
-  showClose?: boolean;
 }
 
 export function useSnackbar() {
-  const message = ref('');
-  const color = ref('success');
-  const show = ref(false);
-  const timeout = ref(6000);
-  const showClose = ref(true);
-
-  function showMessage({ text, color: msgColor = 'success', timeout: msgTimeout = 6000, showClose: msgShowClose = true }: SnackbarMessage) {
-    message.value = text;
-    color.value = msgColor;
-    timeout.value = msgTimeout;
-    showClose.value = msgShowClose;
-    show.value = true;
+  function showMessage({ message, type = 'info', timeout = 6000 }: SnackbarMessage) {
+    const app = getCurrentInstance()?.appContext.app;
+    if (!app) {
+      console.warn('Snackbar not available - app instance not found');
+      return;
+    }
+    
+    // Emit event to the root component
+    const root = app.config.globalProperties.$root;
+    if (root) {
+      root.$emit('show-snackbar', { message, type, timeout });
+    } else {
+      console.warn('Root instance not available for snackbar');
+    }
   }
 
-  function showSuccess(text: string, msgTimeout: number = 6000) {
-    showMessage({ text, color: 'success', timeout: msgTimeout });
+  function showSuccess(message: string, timeout: number = 6000) {
+    showMessage({ message, type: 'success', timeout });
   }
 
-  function showError(text: string, msgTimeout: number = 10000) {
-    showMessage({ text, color: 'error', timeout: msgTimeout });
+  function showError(message: string, timeout: number = 10000) {
+    showMessage({ message, type: 'error', timeout });
   }
 
-  function showInfo(text: string, msgTimeout: number = 4000) {
-    showMessage({ text, color: 'info', timeout: msgTimeout });
+  function showInfo(message: string, timeout: number = 4000) {
+    showMessage({ message, type: 'info', timeout });
   }
 
-  function showWarning(text: string, msgTimeout: number = 8000) {
-    showMessage({ text, color: 'warning', timeout: msgTimeout });
-  }
-
-  function close() {
-    show.value = false;
+  function showWarning(message: string, timeout: number = 8000) {
+    showMessage({ message, type: 'warning', timeout });
   }
 
   return {
-    message,
-    color,
-    show,
-    timeout,
-    showClose,
     showMessage,
     showSuccess,
     showError,
     showInfo,
     showWarning,
-    close,
   };
 }
 
 export type Snackbar = ReturnType<typeof useSnackbar>;
+
+// Plugin installation
+export default {
+  install(app: App) {
+    const snackbar = useSnackbar();
+    app.config.globalProperties.$snackbar = snackbar;
+    app.provide('snackbar', snackbar);
+  },
+};

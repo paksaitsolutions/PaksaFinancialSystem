@@ -41,7 +41,7 @@ const initialize = async () => {
     
     // Redirect to login if not authenticated and not on login page
     if (!isAuthenticated.value && !window.location.pathname.includes('/auth')) {
-      router.push({ name: 'Login', query: { redirect: window.location.pathname } });
+      router.push({ name: 'login', query: { redirect: window.location.pathname } });
     }
   } catch (error) {
     console.error('Error initializing app:', error);
@@ -55,7 +55,7 @@ const handleLogout = async () => {
   try {
     await authStore.logout();
     isAuthenticated.value = false;
-    router.push({ name: 'Login' });
+    router.push({ name: 'login' });
   } catch (error) {
     console.error('Error during logout:', error);
   }

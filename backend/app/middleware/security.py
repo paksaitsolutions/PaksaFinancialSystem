@@ -63,17 +63,10 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         # Default CSP directives
         self.csp_directives = {
             "default-src": ["'self'"],
-            "script-src": [
-                "'self'",
-                "'unsafe-inline'",  # Required for some frameworks
-                "'unsafe-eval'",    # Required for some frameworks
-            ],
-            "style-src": [
-                "'self'",
-                "'unsafe-inline'",  # Required for some frameworks
-            ],
-            "img-src": ["'self'", "data:", "https:"],
-            "font-src": ["'self'", "data:"],
+            "script-src": ["'self'"],
+            "style-src": ["'self'"],
+            "img-src": ["'self'"],
+            "font-src": ["'self'"],
             "connect-src": ["'self'"],
             "frame-src": ["'self'"],
             "object-src": ["'none'"],
@@ -83,6 +76,40 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             "block-all-mixed-content": [],
             "upgrade-insecure-requests": [],
         }
+        
+        # Development-specific CSP directives
+        if is_development:
+            self.csp_directives.update({
+                "script-src": [
+                    "'self'",
+                    "'unsafe-inline'",
+                    "'unsafe-eval'"
+                ],
+                "style-src": [
+                    "'self'",
+                    "'unsafe-inline'"
+                ],
+                "img-src": [
+                    "'self'",
+                    "data:",
+                    "blob:",
+                    "https:",
+                    "http:"
+                ],
+                "font-src": [
+                    "'self'",
+                    "data:",
+                    "https:",
+                    "http:"
+                ],
+                "connect-src": [
+                    "'self'",
+                    "ws:",
+                    "wss:",
+                    "http:",
+                    "https:"
+                ]
+            })
         
         # Update with user-provided directives
         if csp_directives:
@@ -302,10 +329,15 @@ class SecureHostMiddleware(BaseHTTPMiddleware):
         return False
 
 
-def setup_security_middleware(app: FastAPI) -> None:
-    """Set up security middleware for the FastAPI application."""
-    # Add security headers middleware
-    app.add_middleware(SecurityHeadersMiddleware)
+def setup_security_middleware(app: FastAPI, is_development: bool = False) -> None:
+    """Set up security middleware for the FastAPI application.
+    
+    Args:
+        app: The FastAPI application instance
+        is_development: Whether the application is running in development mode
+    """
+    # Add security headers middleware with development flag
+    app.add_middleware(SecurityHeadersMiddleware, is_development=is_development)
     
     # Add secure host middleware
     if settings.ENVIRONMENT == "production":

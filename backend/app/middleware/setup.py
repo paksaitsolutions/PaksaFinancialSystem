@@ -20,11 +20,15 @@ from ..core.logging import get_logger
 
 logger = get_logger(__name__)
 
-def setup_middleware(app: FastAPI) -> None:
+def setup_middleware(app: FastAPI, is_development: bool = False) -> None:
     """Set up all middleware components for the FastAPI application.
     
     The order of middleware is important! The first middleware added will be the
     outermost layer, and the last middleware added will be the innermost layer.
+    
+    Args:
+        app: The FastAPI application instance
+        is_development: Whether the application is running in development mode
     """
     logger.info("Setting up middleware...")
     
@@ -44,7 +48,7 @@ def setup_middleware(app: FastAPI) -> None:
     
     # 4. Security Headers Middleware
     if middleware_settings.SECURITY_HEADERS_ENABLED:
-        setup_security_middleware(app)
+        setup_security_middleware(app, is_development=is_development)
     
     # 5. Rate Limiting Middleware (after CORS and security headers)
     if middleware_settings.RATE_LIMIT_ENABLED:

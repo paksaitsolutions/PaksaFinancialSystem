@@ -1,6 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import MainLayout from '../layouts/MainLayout.vue';
 
+// Test view
+const TestView = () => import('../views/TestView.vue');
+
 // Auth views
 const Login = () => import('../views/auth/Login.vue');
 const Register = () => import('../views/auth/Register.vue');
@@ -20,10 +23,10 @@ const FinancialStatements = () => import('../modules/general-ledger/views/financ
 const AdvancedGL = () => import('../modules/general-ledger/views/AdvancedGL.vue');
 
 // AP views (modular imports)
-const APDashboard = () => import('../modules/accounts-payable/views/VendorsAdvancedView.vue');
-const Vendors = () => import('../modules/accounts-payable/views/VendorsAdvancedView.vue');
-const APInvoices = () => import('../modules/accounts-payable/views/invoices/InvoicesView.vue');
-const APPendingPayments = () => import('../modules/accounts-payable/views/payments/PaymentsView.vue');
+const APDashboard = () => import('@/modules/accounts-payable/views/VendorsAdvancedView.vue');
+const Vendors = () => import('@/modules/accounts-payable/views/VendorsAdvancedView.vue');
+const APInvoices = () => import('@/modules/accounts-payable/views/invoices/InvoicesView.vue');
+const APPayments = () => import('@/modules/accounts-payable/views/payments/PaymentsView.vue');
 
 // AR views (modular imports)
 const ARDashboard = () => import('../modules/accounts-receivable/views/CustomersAdvanced.vue');
@@ -51,11 +54,18 @@ const PayrollRuns = () => import('../modules/payroll/views/PayRunListView.vue');
 const PayrollRunView = () => import('../modules/payroll/views/PayRunView.vue');
 
 // Module placeholder for missing views
-const ModuleView = () => import('../views/ModuleView.vue');
+const ModuleView = () => import('@/views/ModuleView.vue');
 
-// Reports views (modular imports)
-// Using ModuleView as a fallback since the Reports module doesn't exist yet
-const ReportsView = ModuleView;
+// Reports views
+const ReportsView = () => import('@/views/reports/ReportsView.vue');
+const FinancialReportsView = () => import('@/views/reports/FinancialReportsView.vue');
+const BalanceSheetReport = () => import('@/views/reports/BalanceSheetReport.vue');
+const IncomeStatementReport = () => import('@/views/reports/IncomeStatementReport.vue');
+const CashFlowReport = () => import('@/views/reports/CashFlowReport.vue');
+const APAgingReport = () => import('@/views/reports/APAgingReport.vue');
+const ARAgingReport = () => import('@/views/reports/ARAgingReport.vue');
+
+// Fallback for any missing report views
 const FinancialStatementView = ModuleView;
 const GeneralLedgerView = ModuleView;
 const TrialBalanceView = ModuleView;

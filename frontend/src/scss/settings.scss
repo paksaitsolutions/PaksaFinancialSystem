@@ -1,0 +1,17 @@
+// Vuetify variable overrides
+$body-font-family: 'Roboto', sans-serif;
+$border-radius-root: 4px;
+
+// Import Vuetify styles
+@import 'vuetify/settings';
+
+// Custom variables
+:root {
+  --v-theme-primary: #1976D2;
+  --v-theme-secondary: #424242;
+  --v-theme-accent: #82B1FF;
+  --v-theme-error: #FF5252;
+  --v-theme-info: #2196F3;
+  --v-theme-success: #4CAF50;
+  --v-theme-warning: #FFC107;
+}
