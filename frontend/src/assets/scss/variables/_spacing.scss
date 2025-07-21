@@ -1,0 +1,82 @@
+// Base unit for spacing (8px grid system)
+$spacer: 8px !default;
+
+// Spacing scale
+$spacers: (
+  0: 0,
+  1: $spacer * 0.5,  // 4px
+  2: $spacer,        // 8px
+  3: $spacer * 1.5,  // 12px
+  4: $spacer * 2,    // 16px
+  5: $spacer * 3,    // 24px
+  6: $spacer * 4,    // 32px
+  7: $spacer * 5,    // 40px
+  8: $spacer * 6,    // 48px
+  9: $spacer * 8,    // 64px
+  10: $spacer * 10,  // 80px
+  11: $spacer * 12,  // 96px
+  12: $spacer * 16,  // 128px
+  13: $spacer * 20,  // 160px
+  14: $spacer * 24,  // 192px
+  15: $spacer * 32,  // 256px
+);
+
+// Generate spacing utility classes
+@each $size, $length in $spacers {
+  // Margin
+  .m-#{$size} { margin: $length !important; }
+  .mt-#{$size}, .my-#{$size} { margin-top: $length !important; }
+  .mr-#{$size}, .mx-#{$size} { margin-right: $length !important; }
+  .mb-#{$size}, .my-#{$size} { margin-bottom: $length !important; }
+  .ml-#{$size}, .mx-#{$size} { margin-left: $length !important; }
+  
+  // Padding
+  .p-#{$size} { padding: $length !important; }
+  .pt-#{$size}, .py-#{$size} { padding-top: $length !important; }
+  .pr-#{$size}, .px-#{$size} { padding-right: $length !important; }
+  .pb-#{$size}, .py-#{$size} { padding-bottom: $length !important; }
+  .pl-#{$size}, .px-#{$size} { padding-left: $length !important; }
+}
+
+// Negative margins (for offset utilities)
+@each $size, $length in $spacers {
+  @if $size != 0 {
+    .nmt-#{$size} { margin-top: -$length !important; }
+    .nmr-#{$size} { margin-right: -$length !important; }
+    .nmb-#{$size} { margin-bottom: -$length !important; }
+    .nml-#{$size} { margin-left: -$length !important; }
+    .nmx-#{$size} { margin-left: -$length !important; margin-right: -$length !important; }
+    .nmy-#{$size} { margin-top: -$length !important; margin-bottom: -$length !important; }
+  }
+}
+
+// Responsive spacing utilities
+@each $breakpoint in map-keys($grid-breakpoints) {
+  @include media-breakpoint-up($breakpoint) {
+    $infix: breakpoint-infix($breakpoint, $grid-breakpoints);
+    
+    @each $size, $length in $spacers {
+      // Margin
+      .m#{$infix}-#{$size} { margin: $length !important; }
+      .mt#{$infix}-#{$size}, .my#{$infix}-#{$size} { margin-top: $length !important; }
+      .mr#{$infix}-#{$size}, .mx#{$infix}-#{$size} { margin-right: $length !important; }
+      .mb#{$infix}-#{$size}, .my#{$infix}-#{$size} { margin-bottom: $length !important; }
+      .ml#{$infix}-#{$size}, .mx#{$infix}-#{$size} { margin-left: $length !important; }
+      
+      // Padding
+      .p#{$infix}-#{$size} { padding: $length !important; }
+      .pt#{$infix}-#{$size}, .py#{$infix}-#{$size} { padding-top: $length !important; }
+      .pr#{$infix}-#{$size}, .px#{$infix}-#{$size} { padding-right: $length !important; }
+      .pb#{$infix}-#{$size}, .py#{$infix}-#{$size} { padding-bottom: $length !important; }
+      .pl#{$infix}-#{$size}, .px#{$infix}-#{$size} { padding-left: $length !important; }
+    }
+  }
+}
+
+// Spacing for specific components
+$card-spacer-x: map-get($spacers, 4) !default;  // 16px
+$card-spacer-y: map-get($spacers, 4) !default;  // 16px
+$input-padding-y: 0.75rem !default;
+$input-padding-x: 1rem !default;
+$btn-padding-y: 0.5rem !default;
+$btn-padding-x: 1rem !default;

@@ -1,0 +1,99 @@
+// Breakpoints
+// These values define the minimum dimensions at which your layout will change,
+// adapting to different screen sizes.
+
+$grid-breakpoints: (
+  'xs': 0,          // Extra small screen / phone (portrait)
+  'sm': 600px,      // Small screen / phone (landscape)
+  'md': 960px,      // Medium screen / tablet
+  'lg': 1280px,     // Large screen / desktop
+  'xl': 1920px,     // Extra large screen / wide desktop
+  'xxl': 2560px     // Extra extra large screen / 4K
+) !default;
+
+// Media query mixins
+@mixin media-breakpoint-up($name, $breakpoints: $grid-breakpoints) {
+  $min: map-get($breakpoints, $name);
+  @if $min {
+    @media (min-width: $min) {
+      @content;
+    }
+  } @else {
+    @content;
+  }
+}
+
+@mixin media-breakpoint-down($name, $breakpoints: $grid-breakpoints) {
+  $max: map-get($breakpoints, $name);
+  @if $max {
+    @media (max-width: ($max - 0.02px)) {
+      @content;
+    }
+  } @else {
+    @content;
+  }
+}
+
+@mixin media-breakpoint-between($lower, $upper, $breakpoints: $grid-breakpoints) {
+  $min: map-get($breakpoints, $lower);
+  $max: map-get($breakpoints, $upper);
+
+  @if $min != null and $max != null {
+    @media (min-width: $min) and (max-width: ($max - 0.02px)) {
+      @content;
+    }
+  } @else if $min == null {
+    @include media-breakpoint-down($upper, $breakpoints) {
+      @content;
+    }
+  } @else if $max == null {
+    @include media-breakpoint-up($lower, $breakpoints) {
+      @content;
+    }
+  }
+}
+
+// Breakpoint utility classes
+@each $breakpoint in map-keys($grid-breakpoints) {
+  @include media-breakpoint-up($breakpoint) {
+    $infix: breakpoint-infix($breakpoint, $grid-breakpoints);
+    
+    .d#{$infix}-none { display: none !important; }
+    .d#{$infix}-inline { display: inline !important; }
+    .d#{$infix}-inline-block { display: inline-block !important; }
+    .d#{$infix}-block { display: block !important; }
+    .d#{$infix}-flex { display: flex !important; }
+    .d#{$infix}-inline-flex { display: inline-flex !important; }
+  }
+}
+
+// Container max-widths for responsive containers
+$container-max-widths: (
+  'sm': 540px,
+  'md': 720px,
+  'lg': 960px,
+  'xl': 1140px,
+  'xxl': 1320px
+) !default;
+
+// Grid columns and gutters
+$grid-columns: 12 !default;
+$grid-gutter-width: 24px !default;
+
+// Helper function for breakpoint infix
+@function breakpoint-infix($name, $breakpoints: $grid-breakpoints) {
+  @return if(breakpoint-min($name, $breakpoints) == null, "", "-#{$name}");
+}
+
+// Helper function to get minimum breakpoint width
+@function breakpoint-min($name, $breakpoints: $grid-breakpoints) {
+  $min: map-get($breakpoints, $name);
+  @return if($min != 0, $min, null);
+}
+
+// Export breakpoints for JavaScript/TypeScript
+:export {
+  @each $key, $value in $grid-breakpoints {
+    #{unquote($key)}: $value;
+  }
+}

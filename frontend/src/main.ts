@@ -7,19 +7,16 @@ import { useAuthStore } from './modules/auth/store'
 import AppSnackbar from '@/components/AppSnackbar.vue'
 import snackbar from '@/shared/composables/useSnackbar'
 
-// Import Vuetify styles first
+// Import Vuetify styles
 import 'vuetify/styles'
+import '@mdi/font/css/materialdesignicons.css'
 
-// Import PrimeVue styles
-import 'primeflex/primeflex.css' // PrimeFlex CSS utilities
-
-// Then import our custom styles
+// Import our custom styles
 import './assets/styles/reset.css'
 import './assets/styles/main.scss'
 
 // Import plugins
 import vuetify from './plugins/vuetify'
-import primevue from './plugins/primevue'
 
 // Create app instance
 const app = createApp(App)
@@ -29,7 +26,6 @@ const pinia = createPinia()
 app.use(pinia)
 app.use(router)
 app.use(vuetify)
-app.use(primevue)
 app.use(snackbar)
 
 // Register global components

@@ -1,12 +1,19 @@
 """
-API v1 Endpoints Package
+API Endpoints Package
 
-This package contains all the API v1 endpoint modules.
+This package contains all API endpoint modules for the v1 API.
 """
 
-# Import endpoint modules here to make them available when importing from this package
-# from . import users, items, etc.
-from . import payroll
+from fastapi import APIRouter
 
-# Export the payroll router
-router = payroll.router
+# Import all endpoint modules here
+from . import tax, tax_calculation
+
+# Create main API router
+api_router = APIRouter()
+
+# Include all endpoint routers
+api_router.include_router(tax.router, prefix="/tax", tags=["tax"])
+api_router.include_router(tax_calculation.router, prefix="/tax", tags=["tax"])
+
+__all__ = ["api_router"]

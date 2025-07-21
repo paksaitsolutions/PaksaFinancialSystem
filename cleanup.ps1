@@ -1,9 +1,12 @@
 # Paksa Financial System - Cleanup and Reorganization Script
 # This script will:
 # 1. Clean Python cache files
-# 2. Organize frontend structure
-# 3. Organize backend structure
-# 4. Remove empty directories
+# 2. Remove test and build artifacts
+# 3. Clean Node.js and Vite caches
+# 4. Remove temporary and backup files
+# 5. Organize frontend structure
+# 6. Organize backend structure
+# 7. Remove empty directories
 
 # Set error action preference
 $ErrorActionPreference = "Stop"
@@ -20,46 +23,65 @@ function Write-Status {
         "SUCCESS" { "Green" }
         "WARNING" { "Yellow" }
         "ERROR"   { "Red" }
-        default    { "Cyan" }
+        default   { "Cyan" }
     }
     
     Write-Host "[$timestamp] [$Status] $Message" -ForegroundColor $color
 }
 
-# Function to remove Python cache files
+# Function to remove Python cache files and test artifacts
 function Remove-PythonCache {
-    Write-Status "Cleaning Python cache files..."
+    Write-Status "Cleaning Python cache files and test artifacts..."
     
     $paths = @(
-        "d:\Paksa Financial System\backend"
-        # Add other paths if needed
+        "d:\Paksa Financial System\backend",
+        "d:\Paksa Financial System\tests"
+    )
+    
+    $patterns = @(
+        "__pycache__",
+        "*.pyc",
+        "*.pyo", 
+        "*.pyd",
+        "*.py,cover",
+        ".coverage",
+        ".pytest_cache",
+        ".mypy_cache",
+        ".hypothesis",
+        ".tox",
+        ".eggs",
+        "*.egg-info",
+        "build",
+        "dist"
     )
     
     $totalRemoved = 0
     
     foreach ($path in $paths) {
         if (Test-Path $path) {
-            # Remove __pycache__ directories
-            $cacheDirs = Get-ChildItem -Path $path -Directory -Recurse -Filter "__pycache__" -ErrorAction SilentlyContinue
-            $cacheDirs | ForEach-Object {
-                try {
-                    Remove-Item -Path $_.FullName -Recurse -Force -ErrorAction Stop
-                    $totalRemoved++
-                    Write-Status "Removed: $($_.FullName)" -Status "SUCCESS"
-                } catch {
-                    Write-Status "Failed to remove $($_.FullName): $_" -Status "WARNING"
-                }
-            }
-            
-            # Remove .pyc, .pyo, .pyd files
-            $cacheFiles = Get-ChildItem -Path $path -Include @("*.pyc", "*.pyo", "*.pyd") -Recurse -File -ErrorAction SilentlyContinue
-            $cacheFiles | ForEach-Object {
-                try {
-                    Remove-Item -Path $_.FullName -Force -ErrorAction Stop
-                    $totalRemoved++
-                    Write-Status "Removed: $($_.FullName)" -Status "SUCCESS"
-                } catch {
-                    Write-Status "Failed to remove $($_.FullName): $_" -Status "WARNING"
+            foreach ($pattern in $patterns) {
+                if ($pattern -match "^\w" -and -not ($pattern -match "\*")) {
+                    # It's a directory pattern
+                    Get-ChildItem -Path $path -Directory -Recurse -Filter $pattern -ErrorAction SilentlyContinue | ForEach-Object {
+                        try {
+                            Remove-Item -Path $_.FullName -Recurse -Force -ErrorAction Stop
+                            $totalRemoved++
+                            Write-Status "Removed directory: $($_.FullName)" -Status "SUCCESS"
+                        } catch {
+                            Write-Status "Failed to remove $($_.FullName): $_" -Status "WARNING"
+                        }
+                    }
+                } else {
+                    # It's a file pattern
+                    Get-ChildItem -Path $path -Include $pattern -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object {
+                        try {
+                            Remove-Item -Path $_.FullName -Force -ErrorAction Stop
+                            $totalRemoved++
+                            Write-Status "Removed file: $($_.FullName)" -Status "SUCCESS"
+                        } catch {
+                            Write-Status "Failed to remove $($_.FullName): $_" -Status "WARNING"
+                        }
+                    }
                 }
             }
         }
@@ -68,74 +90,149 @@ function Remove-PythonCache {
     Write-Status "Removed $totalRemoved Python cache files/directories" -Status "SUCCESS"
 }
 
+# Function to clean Node.js and frontend build artifacts
+function Remove-NodeArtifacts {
+    Write-Status "Cleaning Node.js and frontend build artifacts..."
+    
+    $frontendPath = "d:\Paksa Financial System\frontend"
+    $patterns = @(
+        "node_modules",
+        ".vite",
+        "dist",
+        ".nuxt",
+        ".next",
+        "out",
+        "build",
+        "coverage",
+        ".cache",
+        "*.log"
+    )
+    
+    $totalRemoved = 0
+    
+    if (Test-Path $frontendPath) {
+        # Remove package-lock.json and yarn.lock
+        $lockFiles = @("package-lock.json", "yarn.lock")
+        foreach ($lockFile in $lockFiles) {
+            $lockFilePath = Join-Path $frontendPath $lockFile
+            if (Test-Path $lockFilePath) {
+                try {
+                    Remove-Item -Path $lockFilePath -Force -ErrorAction Stop
+                    $totalRemoved++
+                    Write-Status "Removed lock file: $lockFilePath" -Status "SUCCESS"
+                } catch {
+                    Write-Status "Failed to remove $lockFilePath : $_" -Status "WARNING"
+                }
+            }
+        }
+        
+        # Remove other patterns
+        foreach ($pattern in $patterns) {
+            if ($pattern -match "^\w" -and -not ($pattern -match "\*")) {
+                # It's a directory pattern
+                Get-ChildItem -Path $frontendPath -Directory -Recurse -Filter $pattern -ErrorAction SilentlyContinue | ForEach-Object {
+                    try {
+                        Remove-Item -Path $_.FullName -Recurse -Force -ErrorAction Stop
+                        $totalRemoved++
+                        Write-Status "Removed directory: $($_.FullName)" -Status "SUCCESS"
+                    } catch {
+                        Write-Status "Failed to remove $($_.FullName): $_" -Status "WARNING"
+                    }
+                }
+            } else {
+                # It's a file pattern
+                Get-ChildItem -Path $frontendPath -Include $pattern -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object {
+                    try {
+                        Remove-Item -Path $_.FullName -Force -ErrorAction Stop
+                        $totalRemoved++
+                        Write-Status "Removed file: $($_.FullName)" -Status "SUCCESS"
+                    } catch {
+                        Write-Status "Failed to remove $($_.FullName): $_" -Status "WARNING"
+                    }
+                }
+            }
+        }
+    }
+    
+    Write-Status "Removed $totalRemoved Node.js/frontend artifacts" -Status "SUCCESS"
+}
+
+# Function to remove temporary and backup files
+function Remove-TemporaryFiles {
+    Write-Status "Removing temporary and backup files..."
+    
+    $tempFiles = Get-ChildItem -Path "d:\Paksa Financial System" -Recurse -File -Include @("*.tmp", "*.bak", "*.swp", "~*") -ErrorAction SilentlyContinue
+    $totalRemoved = 0
+    
+    foreach ($file in $tempFiles) {
+        try {
+            Remove-Item -Path $file.FullName -Force -ErrorAction Stop
+            $totalRemoved++
+            Write-Status "Removed temporary file: $($file.FullName)" -Status "SUCCESS"
+        } catch {
+            Write-Status "Failed to remove $($file.FullName): $_" -Status "WARNING"
+        }
+    }
+    
+    Write-Status "Removed $totalRemoved temporary/backup files" -Status "SUCCESS"
+}
+
 # Function to organize frontend structure
 function Optimize-FrontendStructure {
     Write-Status "Organizing frontend structure..."
     
     $frontendPath = "d:\Paksa Financial System\frontend\src"
     
-    # 1. Consolidate stores directory
+    if (-not (Test-Path $frontendPath)) {
+        Write-Status "Frontend directory not found at $frontendPath" -Status "WARNING"
+        return
+    }
+    
+    # 1. Check for duplicate stores directory
     $storesPath = Join-Path $frontendPath "stores"
     $storePath = Join-Path $frontendPath "store"
     
-    if (Test-Path $storesPath) {
-        Write-Status "Found duplicate 'stores' directory. Merging into 'store'..."
-        
-        # Create store directory if it doesn't exist
-        if (-not (Test-Path $storePath)) {
-            New-Item -ItemType Directory -Path $storePath | Out-Null
-            Write-Status "Created directory: $storePath" -Status "SUCCESS"
-        }
+    if ((Test-Path $storesPath) -and (Test-Path $storePath)) {
+        Write-Status "Found both 'stores' and 'store' directories. Merging into 'store'..."
         
         # Move all files from stores to store
-        Get-ChildItem -Path $storesPath -Recurse -File | ForEach-Object {
-            $relativePath = $_.FullName.Substring($storesPath.Length)
-            $targetPath = Join-Path $storePath $relativePath.TrimStart('\\')
-            $targetDir = Split-Path -Parent $targetPath
-            
-            if (-not (Test-Path $targetDir)) {
-                New-Item -ItemType Directory -Path $targetDir -Force | Out-Null
-            }
-            
-            # If file exists, check which one is newer
-            if (Test-Path $targetPath) {
-                $existingFile = Get-Item $targetPath
-                if ($_.LastWriteTime -gt $existingFile.LastWriteTime) {
-                    Move-Item -Path $_.FullName -Destination $targetPath -Force
-                    Write-Status "Updated (newer): $relativePath" -Status "SUCCESS"
-                } else {
-                    Write-Status "Skipped (older or same): $relativePath" -Status "WARNING"
+        Get-ChildItem -Path $storesPath -File -ErrorAction SilentlyContinue | ForEach-Object {
+            $destination = Join-Path $storePath $_.Name
+            if (-not (Test-Path $destination)) {
+                try {
+                    Move-Item -Path $_.FullName -Destination $destination -Force -ErrorAction Stop
+                    Write-Status "Moved: $($_.Name)" -Status "SUCCESS"
+                } catch {
+                    Write-Status "Failed to move $($_.Name): $_" -Status "WARNING"
                 }
             } else {
-                Move-Item -Path $_.FullName -Destination $targetPath -Force
-                Write-Status "Moved: $relativePath" -Status "SUCCESS"
+                Write-Status "Skipped (already exists): $($_.Name)" -Status "WARNING"
             }
         }
         
-        # Remove empty directories
-        Remove-Item -Path $storesPath -Recurse -Force
-        Write-Status "Removed empty directory: $storesPath" -Status "SUCCESS"
+        # Remove the now empty stores directory
+        try {
+            Remove-Item -Path $storesPath -Force -Recurse -ErrorAction Stop
+            Write-Status "Removed empty directory: $storesPath" -Status "SUCCESS"
+        } catch {
+            Write-Status "Failed to remove $storesPath : $_" -Status "WARNING"
+        }
     }
     
-    # 2. Consolidate duplicate service files
-    $jsService = Join-Path $frontendPath "services\accounting\reconciliationService.js"
-    $tsService = Join-Path $frontendPath "services\gl\reconciliationService.ts"
+    # 2. Clean up any empty directories
+    Get-ChildItem -Path $frontendPath -Directory -Recurse -ErrorAction SilentlyContinue | 
+        Where-Object { -not (Get-ChildItem -Path $_.FullName -Recurse -File -ErrorAction SilentlyContinue) } | 
+        Sort-Object -Property FullName -Descending | 
+        ForEach-Object {
+            try {
+                Remove-Item -Path $_.FullName -Force -Recurse -ErrorAction Stop
+                Write-Status "Removed empty directory: $($_.FullName)" -Status "SUCCESS"
+            } catch {
+                Write-Status "Failed to remove empty directory $($_.FullName): $_" -Status "WARNING"
+            }
+        }
     
-    if (Test-Path $jsService -and Test-Path $tsService) {
-        Write-Status "Found both JS and TS versions of reconciliationService"
-        
-        # Keep the TypeScript version as it's the newer standard
-        Remove-Item -Path $jsService -Force
-        Write-Status "Removed JS version (keeping TypeScript): $jsService" -Status "SUCCESS"
-        
-        # Update any imports that might reference the old path
-        $tsContent = Get-Content -Path $tsService -Raw
-        $updatedContent = $tsContent -replace "from '.*accounting/reconciliationService'", "from '../services/gl/reconciliationService'"
-        $updatedContent | Set-Content -Path $tsService -NoNewline
-        Write-Status "Updated imports in TypeScript service file" -Status "SUCCESS"
-    }
-    
-    Write-Status "Frontend structure organization complete" -Status "SUCCESS"
+    Write-Status "Frontend structure optimization complete" -Status "SUCCESS"
 }
 
 # Function to organize backend structure
@@ -144,112 +241,132 @@ function Optimize-BackendStructure {
     
     $backendPath = "d:\Paksa Financial System\backend"
     
-    # 1. Consolidate API endpoints
-    $apiV1Dirs = Get-ChildItem -Path $backendPath -Directory -Recurse | 
-        Where-Object { $_.Name -eq "v1" -and $_.Parent.Name -eq "api" } |
-        Select-Object -ExpandProperty FullName | Sort-Object
+    if (-not (Test-Path $backendPath)) {
+        Write-Status "Backend directory not found at $backendPath" -Status "WARNING"
+        return
+    }
     
-    if ($apiV1Dirs.Count -gt 1) {
-        Write-Status "Found multiple api/v1 directories. Consolidating..." -Status "WARNING"
-        
-        # The first one will be our primary API directory
-        $primaryApi = $apiV1Dirs[0]
-        Write-Status "Primary API directory: $primaryApi" -Status "INFO"
-        
-        # Process other API directories
-        for ($i = 1; $i -lt $apiV1Dirs.Count; $i++) {
-            $currentApi = $apiV1Dirs[$i]
-            Write-Status "Merging API directory: $currentApi" -Status "INFO"
-            
-            # Move all files to primary API directory
-            Get-ChildItem -Path $currentApi -Recurse -File | ForEach-Object {
-                $relativePath = $_.FullName.Substring($currentApi.Length)
-                $targetPath = Join-Path $primaryApi $relativePath.TrimStart('\\')
-                $targetDir = Split-Path -Parent $targetPath
-                
-                if (-not (Test-Path $targetDir)) {
-                    New-Item -ItemType Directory -Path $targetDir -Force | Out-Null
-                }
-                
-                # If file exists, check content and keep the newer version
-                if (Test-Path $targetPath) {
-                    $existingFile = Get-Item $targetPath
-                    if ($_.LastWriteTime -gt $existingFile.LastWriteTime) {
-                        Move-Item -Path $_.FullName -Destination $targetPath -Force
-                        Write-Status "  Updated (newer): $relativePath" -Status "SUCCESS"
-                    } else {
-                        Write-Status "  Skipped (older or same): $relativePath" -Status "WARNING"
-                    }
-                } else {
-                    Move-Item -Path $_.FullName -Destination $targetPath -Force
-                    Write-Status "  Moved: $relativePath" -Status "SUCCESS"
+    # 1. Clean up migrations
+    $migrationsPath = Join-Path $backendPath "migrations"
+    if (Test-Path $migrationsPath) {
+        Get-ChildItem -Path $migrationsPath -File -Filter "*.py" -Recurse | 
+            Where-Object { $_.Name -ne "__init__.py" } | 
+            ForEach-Object {
+                try {
+                    Remove-Item -Path $_.FullName -Force -ErrorAction Stop
+                    Write-Status "Removed migration file: $($_.FullName)" -Status "SUCCESS"
+                } catch {
+                    Write-Status "Failed to remove $($_.FullName): $_" -Status "WARNING"
                 }
             }
-            
-            # Remove empty directories
-            try {
-                Remove-Item -Path $currentApi -Recurse -Force -ErrorAction Stop
-                Write-Status "  Removed empty directory: $currentApi" -Status "SUCCESS"
-            } catch {
-                Write-Status "  Could not remove directory (may not be empty): $currentApi" -Status "WARNING"
+    }
+    
+    # 2. Clean up cache and test artifacts
+    $patterns = @(
+        "__pycache__",
+        "*.pyc",
+        "*.pyo", 
+        "*.pyd",
+        "*.py,cover",
+        ".coverage",
+        ".pytest_cache",
+        ".mypy_cache"
+    )
+    
+    foreach ($pattern in $patterns) {
+        if ($pattern -match "^\w" -and -not ($pattern -match "\*")) {
+            # It's a directory pattern
+            Get-ChildItem -Path $backendPath -Directory -Recurse -Filter $pattern -ErrorAction SilentlyContinue | ForEach-Object {
+                try {
+                    Remove-Item -Path $_.FullName -Recurse -Force -ErrorAction Stop
+                    Write-Status "Removed directory: $($_.FullName)" -Status "SUCCESS"
+                } catch {
+                    Write-Status "Failed to remove $($_.FullName): $_" -Status "WARNING"
+                }
+            }
+        } else {
+            # It's a file pattern
+            Get-ChildItem -Path $backendPath -Include $pattern -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object {
+                try {
+                    Remove-Item -Path $_.FullName -Force -ErrorAction Stop
+                    Write-Status "Removed file: $($_.FullName)" -Status "SUCCESS"
+                } catch {
+                    Write-Status "Failed to remove $($_.FullName): $_" -Status "WARNING"
+                }
             }
         }
     }
     
-    Write-Status "Backend structure organization complete" -Status "SUCCESS"
+    # 3. Clean up any empty directories
+    Get-ChildItem -Path $backendPath -Directory -Recurse -ErrorAction SilentlyContinue | 
+        Where-Object { -not (Get-ChildItem -Path $_.FullName -Recurse -File -ErrorAction SilentlyContinue) } | 
+        Sort-Object -Property FullName -Descending | 
+        ForEach-Object {
+            try {
+                Remove-Item -Path $_.FullName -Force -Recurse -ErrorAction Stop
+                Write-Status "Removed empty directory: $($_.FullName)" -Status "SUCCESS"
+            } catch {
+                Write-Status "Failed to remove empty directory $($_.FullName): $_" -Status "WARNING"
+            }
+        }
+    
+    Write-Status "Backend structure optimization complete" -Status "SUCCESS"
 }
 
 # Function to remove empty directories
 function Remove-EmptyDirectories {
-    param(
-        [string]$path
-    )
+    Write-Status "Removing empty directories..."
     
-    Write-Status "Removing empty directories in: $path" -Status "INFO"
+    $basePath = "d:\Paksa Financial System"
+    $emptyDirs = @()
     
-    do {
-        $dirs = Get-ChildItem -Path $path -Directory -Recurse | 
-                Where-Object { 
-                    $_.GetFiles('*', 'AllDirectories').Count -eq 0 -and 
-                    $_.GetDirectories().Count -eq 0 
-                } |
-                Select-Object -ExpandProperty FullName |
-                Sort-Object -Property Length -Descending
-        
-        $count = $dirs.Count
-        if ($count -gt 0) {
-            Write-Status "  Found $count empty directories to remove" -Status "INFO"
-            $dirs | ForEach-Object {
-                try {
-                    Remove-Item -Path $_ -Force -ErrorAction Stop
-                    Write-Status "  Removed empty directory: $_" -Status "SUCCESS"
-                } catch {
-                    Write-Status "  Failed to remove directory $_: $_" -Status "WARNING"
-                }
+    # First pass: find all empty directories
+    Get-ChildItem -Path $basePath -Directory -Recurse -ErrorAction SilentlyContinue | 
+        Where-Object { -not (Get-ChildItem -Path $_.FullName -Recurse -File -ErrorAction SilentlyContinue) } | 
+        Sort-Object -Property FullName -Descending | 
+        ForEach-Object { $emptyDirs += $_.FullName }
+    
+    # Second pass: remove empty directories
+    $removedCount = 0
+    foreach ($dir in $emptyDirs) {
+        try {
+            if (Test-Path $dir) {
+                Remove-Item -Path $dir -Force -Recurse -ErrorAction Stop
+                $removedCount++
+                Write-Status "Removed empty directory: $dir" -Status "SUCCESS"
             }
-        } else {
-            Write-Status "  No more empty directories to remove" -Status "SUCCESS"
+        } catch {
+            Write-Status "Failed to remove empty directory $dir : $_" -Status "WARNING"
         }
-    } while ($count -gt 0)
+    }
+    
+    Write-Status "Removed $removedCount empty directories" -Status "SUCCESS"
 }
 
-# Main execution
-Write-Status "Starting Paksa Financial System cleanup and reorganization" -Status "INFO"
-Write-Status "==================================================" -Status "INFO"
+# Main script execution
+Write-Status "Starting Paksa Financial System cleanup..." "INFO"
 
-# 1. Clean Python cache files
-Remove-PythonCache
-
-# 2. Organize frontend structure
-Optimize-FrontendStructure
-
-# 3. Organize backend structure
-Optimize-BackendStructure
-
-# 4. Remove empty directories from both frontend and backend
-Remove-EmptyDirectories -path "d:\Paksa Financial System\frontend"
-Remove-EmptyDirectories -path "d:\Paksa Financial System\backend"
-
-Write-Status "==================================================" -Status "INFO"
-Write-Status "Cleanup and reorganization completed successfully!" -Status "SUCCESS"
-Write-Status "Please review the changes and test the application." -Status "INFO"
+try {
+    # Clean Python cache and test artifacts
+    Remove-PythonCache
+    
+    # Clean Node.js and frontend artifacts
+    Remove-NodeArtifacts
+    
+    # Remove temporary and backup files
+    Remove-TemporaryFiles
+    
+    # Organize frontend structure
+    Optimize-FrontendStructure
+    
+    # Organize backend structure
+    Optimize-BackendStructure
+    
+    # Remove empty directories
+    Remove-EmptyDirectories
+    
+    Write-Status "Cleanup completed successfully!" -Status "SUCCESS"
+} catch {
+    Write-Status "Error during cleanup: $_" -Status "ERROR"
+    exit 1
+}

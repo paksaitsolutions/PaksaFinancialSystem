@@ -1,0 +1,84 @@
+// Brand colors
+$primary: #1976D2;
+$primary-light: #63A4FF;
+$primary-dark: #004BA0;
+$primary-variant: #E3F2FD;
+
+// Secondary colors
+$secondary: #424242;
+$secondary-light: #6D6D6D;
+$secondary-dark: #1B1B1B;
+$secondary-variant: #F5F5F5;
+
+// Status colors
+$success: #4CAF50;
+$success-light: #81C784;
+$success-dark: #388E3C;
+$success-variant: #E8F5E9;
+
+$warning: #FFC107;
+$warning-light: #FFD54F;
+$warning-dark: #FFA000;
+$warning-variant: #FFF8E1;
+
+$error: #F44336;
+$error-light: #E57373;
+$error-dark: #D32F2F;
+$error-variant: #FFEBEE;
+
+$info: #2196F3;
+$info-light: #64B5F6;
+$info-dark: #1976D2;
+$info-variant: #E3F2FD;
+
+// Neutral colors
+$black: #000000;
+$white: #FFFFFF;
+$gray-50: #FAFAFA;
+$gray-100: #F5F5F5;
+$gray-200: #EEEEEE;
+$gray-300: #E0E0E0;
+$gray-400: #BDBDBD;
+$gray-500: #9E9E9E;
+$gray-600: #757575;
+$gray-700: #616161;
+$gray-800: #424242;
+$gray-900: #212121;
+
+// Text colors
+$text-primary: rgba(0, 0, 0, 0.87);
+$text-secondary: rgba(0, 0, 0, 0.6);
+$text-disabled: rgba(0, 0, 0, 0.38);
+$text-hint: rgba(0, 0, 0, 0.38);
+
+// Background colors
+$background: #F5F5F5;
+$surface: #FFFFFF;
+
+// Border colors
+$border-color: rgba(0, 0, 0, 0.12);
+$divider-color: rgba(0, 0, 0, 0.12);
+
+// Shadow colors
+$shadow-key-umbra-opacity: 0.2;
+$shadow-key-penumbra-opacity: 0.14;
+$shadow-ambient-shadow-opacity: 0.12;
+
+// Vuetify theme map for light theme
+$theme-colors: (
+  'primary': $primary,
+  'secondary': $secondary,
+  'success': $success,
+  'warning': $warning,
+  'error': $error,
+  'info': $info,
+  'background': $background,
+  'surface': $surface,
+);
+
+// Export variables for use in JavaScript/TypeScript
+:export {
+  @each $key, $value in $theme-colors {
+    #{unquote($key)}: $value;
+  }
+}
