@@ -6,7 +6,10 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "type-check": "echo 'Type checking temporarily disabled'"
+    "type-check": "echo 'Type checking temporarily disabled'",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx,.vue --ignore-path .gitignore --fix",
+    "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx,.vue --fix",
+    "lint:format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json,vue}\""
   },
   "dependencies": {
     "@mdi/font": "^7.4.47",

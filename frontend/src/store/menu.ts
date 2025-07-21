@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
+import { useAuthStore } from '@/modules/auth/store';
 
 export interface MenuModule {
   id: string;
@@ -8,14 +9,19 @@ export interface MenuModule {
   route: string;
   children?: MenuModule[];
   permissions?: string[];
+  isPublic?: boolean;
+  isVisible?: boolean;
 }
 
 export const useMenuStore = defineStore('menu', () => {
   const isExpanded = ref<boolean>(true);
   const activeModule = ref<string | null>(null);
+  const isLoading = ref<boolean>(false);
+  const error = ref<string | null>(null);
+  const authStore = useAuthStore();
   
-  // Define all available modules
-  const allModules: MenuModule[] = [
+  // Define all available modules with visibility and permissions
+  const allModules = ref<MenuModule[]>([
     {
       id: 'dashboard',
       title: 'Dashboard',
@@ -105,32 +111,93 @@ export const useMenuStore = defineStore('menu', () => {
         { id: 'system', title: 'System Settings', icon: 'mdi-tune', route: '/settings/system' }
       ]
     }
-  ];
+  ]);
 
-  // Get visible modules based on user permissions
-  const visibleModules = computed<MenuModule[]>(() => {
-    // TODO: Implement permission-based filtering
-    return allModules;
+  // Fetch menu items based on user permissions
+  const fetchMenuItems = async (): Promise<void> => {
+    try {
+      isLoading.value = true;
+      error.value = null;
+      
+      // In a real app, you would fetch menu items from an API
+      // const response = await api.get('/api/menu');
+      // allModules.value = response.data;
+      
+      // For now, we'll just use the static modules but update visibility
+      updateModuleVisibility();
+    } catch (err) {
+      console.error('Failed to fetch menu items:', err);
+      error.value = 'Failed to load menu items. Please try again later.';
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
+  // Update module visibility based on user permissions
+  const updateModuleVisibility = (): void => {
+    allModules.value = allModules.value.map(module => ({
+      ...module,
+      isVisible: isModuleVisible(module)
+    }));
+  };
+
+  // Check if a module should be visible to the current user
+  const isModuleVisible = (module: MenuModule): boolean => {
+    // Public modules are always visible
+    if (module.isPublic) return true;
+    
+    // If user is not authenticated, only show public modules
+    if (!authStore.isAuthenticated) return false;
+    
+    // If no permissions required, module is visible to all authenticated users
+    if (!module.permissions || module.permissions.length === 0) return true;
+    
+    // Check if user has all required permissions
+    return module.permissions.every(permission => 
+      authStore.user?.permissions?.includes(permission)
+    );
+  };
+
+  // Computed property for visible modules
+  const visibleModules = computed(() => {
+    return allModules.value.filter(module => module.isVisible !== false);
   });
-  
+
+  // Toggle sidebar expanded state
   const toggleExpanded = (): void => {
     isExpanded.value = !isExpanded.value;
   };
 
+  // Set active module
   const setActiveModule = (module: string | null): void => {
     activeModule.value = module;
+  };
+
+  // Initialize the store
+  const init = (): void => {
+    // Update module visibility when authentication state changes
+    authStore.$subscribe(() => {
+      updateModuleVisibility();
+    });
+    
+    // Initial visibility update
+    updateModuleVisibility();
   };
 
   return {
     // State
     isExpanded,
     activeModule,
+    isLoading,
+    error,
     
     // Getters
     visibleModules,
     
     // Actions
+    fetchMenuItems,
     toggleExpanded,
-    setActiveModule
+    setActiveModule,
+    init
   };
 });

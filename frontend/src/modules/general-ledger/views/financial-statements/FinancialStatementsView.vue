@@ -80,8 +80,6 @@ const showExportDialog = ref(false);
 const activeTab = ref('balance-sheet');
 const startDateMenu = ref(false);
 const endDateMenu = ref(false);
-const toast = useToast();
-const glStore = useGLStore();
 
 // Export configuration
 const exportFileName = computed(() => `financial-statements-${activeTab.value}-${new Date().toISOString().split('T')[0]}`);

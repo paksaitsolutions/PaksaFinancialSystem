@@ -10,6 +10,7 @@
     "vue-router": "^4.2.4"
   },
   "dependencies": {
-    "dayjs": "^1.11.7"
+    "dayjs": "^1.11.7",
+    "eslint": "^9.31.0"
   }
 }

@@ -405,48 +405,46 @@ const formatTaxTypes = (types: string[]): string => {
   }).join(', ');
 };
 
-// Get color for tax type badge
-const getTaxTypeColor = (type: string): string => {
-  const colors: Record<string, string> = {
-    sales: 'blue',
-    vat: 'green',
-    gst: 'teal',
-    withholding: 'orange',
-    income: 'purple',
-    excise: 'red',
-    custom: 'indigo'
-  };
-  return colors[type] || 'grey';
-};
-
-// Format date for display
-const formatDate = (dateString: string): string => {
-  if (!dateString) return '—';
-  try {
-    return new Date(dateString).toLocaleDateString();
-  } catch (e) {
-    return '—';
+// Utility functions
+const utils = {
+  getTaxTypeColor: (type: string): string => {
+    const colors: Record<string, string> = {
+      sales: 'blue',
+      vat: 'indigo',
+      gst: 'teal',
+      withholding: 'orange',
+      income: 'purple',
+      excise: 'red',
+      custom: 'brown'
+    };
+    return colors[type] || 'grey';
+  },
+  formatDate: (dateString: string): string => {
+    if (!dateString) return 'N/A';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    } catch (e) {
+      console.error('Error formatting date:', e);
+      return 'Invalid date';
+    }
+  },
+  getStatusText: (exemption: TaxExemption): string => {
+    if (!isExemptionActive(exemption)) return 'Inactive';
+    if (exemption.validTo) {
+      const daysLeft = Math.ceil((new Date(exemption.validTo).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+      if (daysLeft <= 7) return 'Expiring';
+    }
+    return 'Active';
+  },
+  getStatusColor: (exemption: TaxExemption): string => {
+    if (!isExemptionActive(exemption)) return 'grey';
+    if (exemption.validTo) {
+      const daysLeft = Math.ceil((new Date(exemption.validTo).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+      if (daysLeft <= 7) return 'orange';
+    }
+    return 'success';
   }
-};
-
-// Get status text for exemption
-const getStatusText = (exemption: TaxExemption): string => {
-  if (!isExemptionActive(exemption)) return 'Inactive';
-  if (exemption.validTo) {
-    const daysLeft = Math.ceil((new Date(exemption.validTo).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-    if (daysLeft <= 7) return 'Expiring';
-  }
-  return 'Active';
-};
-
-// Get status color for exemption
-const getStatusColor = (exemption: TaxExemption): string => {
-  if (!isExemptionActive(exemption)) return 'grey';
-  if (exemption.validTo) {
-    const daysLeft = Math.ceil((new Date(exemption.validTo).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-    if (daysLeft <= 7) return 'orange';
-  }
-  return 'success';
 };
 
 // Load tax exemptions with proper typing
@@ -604,56 +602,13 @@ watch(
   { immediate: true }
 );
 
-// Utility methods
-const formatTaxType = (type: string) => {
-  const typeMap: Record<string, string> = {
-    sales: 'Sales Tax',
-    vat: 'VAT',
-    gst: 'GST',
-    income: 'Income Tax',
-    withholding: 'Withholding Tax',
-    excise: 'Excise Tax',
-    custom: 'Custom Tax'
-  };
-  return typeMap[type] || type;
-};
-
-// Export the utility functions so they can be used in the template
-const utils = {
-  formatTaxType,
-  formatDate,
-  getStatusText,
-  getStatusColor
-};
-
-defineExpose({
-  utils
-});
-
-const getTaxTypeColor = (type: string) => {
-  const colorMap: Record<string, string> = {
-    sales: 'blue',
-    vat: 'purple',
-    gst: 'teal',
-    income: 'orange',
-    withholding: 'red',
-    excise: 'deep-orange',
-    custom: 'grey',
-  };
-  return colorMap[type] || 'grey';
-};
-
-const formatDate = (dateString: string) => {
-  try {
-    return format(new Date(dateString), 'MMM d, yyyy');
-  } catch (error) {
-    return 'Invalid date';
-  }
-};
-
 // Lifecycle hooks
 onMounted(() => {
   loadTaxExemptions();
+});
+
+defineExpose({
+  utils
 });
 </script>
 

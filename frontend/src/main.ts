@@ -4,6 +4,7 @@ import App from './App.vue'
 import router from './router'
 import debug from './debug'
 import { useAuthStore } from './modules/auth/store'
+import { useMenuStore } from './store/menu'
 import AppSnackbar from '@/components/AppSnackbar.vue'
 import snackbar from '@/shared/composables/useSnackbar'
 
@@ -62,5 +63,13 @@ const initializeApp = async () => {
   }
 }
 
+// Initialize menu store when app starts
+const initializeMenuStore = () => {
+  const menuStore = useMenuStore()
+  menuStore.init()
+}
+
 // Start the application
-initializeApp()
+initializeApp().then(() => {
+  initializeMenuStore()
+})

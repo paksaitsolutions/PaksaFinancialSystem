@@ -3,27 +3,58 @@
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import vuetify from 'vite-plugin-vuetify';
-import path from 'path';
+import { fileURLToPath } from 'url';
 
+// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
-    vue(),
+    vue({
+      template: {
+        compilerOptions: {
+          isCustomElement: (tag) => ['md-linedivider'].includes(tag),
+        },
+      },
+    }),
     vuetify({
       autoImport: true,
+      styles: 'expose',
     }),
   ],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
   optimizeDeps: {
-    include: ['vue', 'vue-router', 'pinia', 'vuetify'], // Removed '@mdi/font' from here
+    include: [
+      'vue',
+      'vue-router',
+      'pinia',
+      'vuetify',
+      'vuetify/styles',
+      '@mdi/font/css/materialdesignicons.css',
+    ],
+  },
+  css: {
+    preprocessorOptions: {
+      scss: {
+        additionalData: `
+          @use "sass:math";
+          @import "@/assets/styles/variables";
+        `,
+      },
+    },
+  },
+  server: {
+    port: 3000,
+    host: '0.0.0.0',
+    strictPort: true,
+    open: true,
   },
   build: {
     target: 'esnext',
-    minify: 'terser', // remove 'minify: esbuild'
-    sourcemap: true, // keep one 'sourcemap' key only
+    sourcemap: true,
+    minify: 'terser',
     terserOptions: {
       compress: {
         drop_console: true,

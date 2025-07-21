@@ -219,7 +219,7 @@
         <label for="rejectReason">Reason for rejection</label>
         <Textarea 
           id="rejectReason" 
-          v-model="rejectDialog.reason" 
+          v-model="rejectNotes" 
           :autoResize="true" 
           rows="3" 
           class="w-full"
@@ -239,7 +239,7 @@
           label="Reject" 
           icon="pi pi-times" 
           class="p-button-danger" 
-          @click="handleReject" 
+          @click="rejectBudget" 
           :loading="rejectDialog.loading"
         />
       </template>
@@ -277,7 +277,11 @@ const dialog = ref({
 });
 
 const approvalDialog = ref(false);
-const rejectDialog = ref(false);
+const rejectDialog = ref({
+  visible: false,
+  loading: false,
+  error: ''
+});
 const rejectNotes = ref('');
 const approvalNotes = ref('');
 const selectedBudget = ref<Budget | null>(null);
@@ -307,6 +311,16 @@ const openEditDialog = (budget: Budget) => {
     loading: false,
     mode: 'edit',
     budget: { ...budget }
+  };
+};
+
+const openRejectDialog = (budget: Budget) => {
+  selectedBudget.value = budget;
+  rejectNotes.value = '';
+  rejectDialog.value = {
+    ...rejectDialog.value,
+    visible: true,
+    error: ''
   };
 };
 
@@ -350,32 +364,37 @@ const rejectBudget = async (): Promise<void> => {
   }
   
   if (!rejectNotes.value?.trim()) {
-    toast.add({
-      severity: 'warn',
-      summary: 'Validation Error',
-      detail: 'Please provide a reason for rejection',
-      life: 5000
-    });
+    rejectDialog.value.error = 'Please provide a reason for rejection';
     return;
   }
   
   try {
-    loading.value = true;
+    rejectDialog.value.loading = true;
     await budgetStore.rejectBudget(selectedBudget.value.id, rejectNotes.value);
     
     // Clear the form and close the dialog
     rejectNotes.value = '';
-    rejectDialog.value = false;
+    rejectDialog.value.visible = false;
     
     // Refresh the budget list
     await budgetStore.fetchBudgets();
     
-    // Success notification is handled by the store
+    toast.add({
+      severity: 'success',
+      summary: 'Success',
+      detail: 'Budget rejected successfully',
+      life: 3000
+    });
   } catch (error) {
-    // Error notification is handled by the store
     console.error('Error in rejectBudget:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: error instanceof Error ? error.message : 'Failed to reject budget',
+      life: 5000
+    });
   } finally {
-    loading.value = false;
+    rejectDialog.value.loading = false;
   }
 };
 

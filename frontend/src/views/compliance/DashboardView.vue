@@ -1,189 +1,3 @@
-<script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import { useToast } from 'primevue/usetoast';
-import { format } from 'date-fns';
-
-// Router and toast
-const router = useRouter();
-const toast = useToast();
-
-// State
-const loading = ref<boolean>(false);
-const stats = ref({
-  complianceScore: 92,
-  securityScore: 88,
-  auditScore: 95,
-  dataPrivacyScore: 90,
-  lastUpdated: new Date()
-});
-
-const securityStats = ref({
-  events24h: 12,
-  eventsTrend: -5,
-  openFindings: 5,
-  highRiskFindings: 2,
-  mediumRiskFindings: 3,
-  pendingApprovals: 4,
-  urgentApprovals: 1,
-  overdueApprovals: 1,
-});
-
-// Helper functions
-const formatDate = (date: Date | string | null | undefined): string => {
-  if (!date) return 'N/A';
-  try {
-    return format(new Date(date), 'MMM d, yyyy');
-  } catch (e) {
-    console.error('Error formatting date:', e);
-    return 'Invalid date';
-  }
-};
-
-const formatTimeAgo = (date: Date | string | null | undefined): string => {
-  if (!date) return 'Just now';
-  try {
-    const now = new Date();
-    const diffInSeconds = Math.floor((now.getTime() - new Date(date).getTime()) / 1000);
-    
-    if (diffInSeconds < 60) return 'Just now';
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
-    return `${Math.floor(diffInSeconds / 86400)}d ago`;
-  } catch (e) {
-    console.error('Error formatting time ago:', e);
-    return 'Just now';
-  }
-};
-
-const getStatusSeverity = (status: string): 'success' | 'warning' | 'danger' | 'info' => {
-  if (!status) return 'info';
-  const statusLower = status.toLowerCase();
-  if (statusLower.includes('compliant')) {
-    return statusLower.startsWith('non') ? 'danger' : 'success';
-  }
-  if (statusLower.includes('progress')) return 'info';
-  if (statusLower.includes('partial')) return 'warning';
-  return 'info';
-};
-
-const getActivityIcon = (type: string): string => {
-  switch (type) {
-    case 'audit': return 'pi pi-file-edit';
-    case 'alert': return 'pi pi-exclamation-triangle';
-    case 'approval': return 'pi pi-check-circle';
-    case 'compliance': return 'pi pi-shield';
-    case 'user': return 'pi pi-user';
-    default: return 'pi pi-info-circle';
-  }
-};
-
-const getActivityColor = (type: string): string => {
-  switch (type) {
-    case 'audit': return 'text-blue-500';
-    case 'alert': return 'text-red-500';
-    case 'approval': return 'text-green-500';
-    case 'compliance': return 'text-purple-500';
-    case 'user': return 'text-gray-500';
-    default: return 'text-gray-400';
-  }
-};
-
-// Navigation helper
-const navigateTo = (routeName: string): void => {
-  router.push({ name: routeName });
-};
-
-// Fetch dashboard data
-const fetchDashboardData = async (): Promise<void> => {
-  loading.value = true;
-  try {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    toast.add({
-      severity: 'success',
-      summary: 'Dashboard Updated',
-      detail: 'Dashboard data has been refreshed',
-      life: 3000
-    });
-  } catch (error) {
-    console.error('Error fetching dashboard data:', error);
-  } finally {
-    loading.value = false;
-  }
-};
-
-// Run security scan
-const runSecurityScan = async (): Promise<void> => {
-  loading.value = true;
-  try {
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    toast.add({
-      severity: 'success',
-      summary: 'Security Scan',
-      detail: 'Security scan completed successfully',
-      life: 3000
-    });
-  } catch (error) {
-    console.error('Error running security scan:', error);
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Failed to run security scan. Please try again.',
-      life: 3000
-    });
-  } finally {
-    loading.value = false;
-  }
-};
-
-// Lifecycle hooks
-onMounted(() => {
-  fetchDashboardData();
-});
-
-// Mock data (move to API calls in production)
-const complianceStandards = ref([
-  {
-    id: 'gdpr',
-    name: 'GDPR',
-    description: 'General Data Protection Regulation',
-    status: 'Compliant',
-    compliance: 95,
-    lastAudit: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30), // 30 days ago
-    nextAudit: new Date(Date.now() + 1000 * 60 * 60 * 24 * 60) // 60 days from now
-  },
-  {
-    id: 'pci-dss',
-    name: 'PCI DSS',
-    description: 'Payment Card Industry Data Security Standard',
-    status: 'Partial',
-    compliance: 75,
-    lastAudit: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10), // 10 days ago
-    nextAudit: new Date(Date.now() + 1000 * 60 * 60 * 24 * 80) // 80 days from now
-  }
-]);
-
-const recentActivities = ref([
-  {
-    id: 'act-001',
-    type: 'audit',
-    title: 'Security Policy Updated',
-    description: 'Password policy has been updated to meet new requirements',
-    timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-    user: 'admin@example.com'
-  },
-  {
-    id: 'act-002',
-    type: 'alert',
-    title: 'Unusual Login Detected',
-    description: 'A login from an unrecognized device was blocked.',
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-    user: 'system'
-  }
-]);
-</script>
-
 <template>
   <div class="p-4 bg-gray-50 min-h-screen">
     <!-- Header -->
@@ -337,25 +151,204 @@ const recentActivities = ref([
     </div>
   </div>
 </template>
+
+<script setup lang="ts">
+import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { useToast } from 'primevue/usetoast';
+import { format, subDays } from 'date-fns';
+
+// Router and toast
+const router = useRouter();
+const toast = useToast();
+
+// State
+const loading = ref<boolean>(false);
+const stats = ref({
+  complianceScore: 92,
+  securityScore: 88,
+  auditScore: 95,
+  dataPrivacyScore: 90,
+  lastUpdated: new Date()
+});
+
+const securityStats = ref({
+  events24h: 12,
+  eventsTrend: -5,
+  openFindings: 5,
+  highRiskFindings: 2,
+  mediumRiskFindings: 3,
+  pendingApprovals: 4,
+  urgentApprovals: 1,
+  overdueApprovals: 1,
+});
+
+// Helper functions
+const formatDate = (date: Date | string | null | undefined): string => {
+  if (!date) return 'N/A';
+  try {
+    return format(new Date(date), 'MMM d, yyyy');
+  } catch (e) {
+    console.error('Error formatting date:', e);
+    return 'Invalid date';
+  }
+};
+
+const formatTimeAgo = (date: Date | string): string => {
+  return formatDistanceToNow(new Date(date), { addSuffix: true });
+};
+
+const getStatusSeverity = (status: string): 'success' | 'warning' | 'danger' | 'info' => {
+  if (!status) return 'info';
+  const statusLower = status.toLowerCase();
+  if (statusLower.includes('compliant')) {
+    return statusLower.startsWith('non') ? 'danger' : 'success';
+  }
+  if (statusLower.includes('progress')) return 'info';
+  if (statusLower.includes('partial')) return 'warning';
+  return 'info';
+};
+
+const getActivityIcon = (type: string): string => {
+  const icons: Record<string, string> = {
+    audit: 'pi pi-shield',
+    login: 'pi pi-sign-in',
+    update: 'pi pi-pencil',
+    alert: 'pi pi-exclamation-triangle',
+    policy: 'pi pi-file-edit',
+    user: 'pi pi-user',
+    system: 'pi pi-server',
+    compliance: 'pi pi-shield',
+    approval: 'pi pi-check-circle'
+  };
+  return icons[type] || 'pi pi-info-circle';
+};
+
+const getActivityColor = (type: string): string => {
+  const colors: Record<string, string> = {
+    audit: 'text-blue-500',
+    login: 'text-green-500',
+    update: 'text-yellow-500',
+    alert: 'text-red-500',
+    policy: 'text-purple-500',
+    user: 'text-teal-500',
+    system: 'text-gray-500',
+    compliance: 'text-indigo-500',
+    approval: 'text-green-500'
+  };
+  return colors[type] || 'text-gray-400';
+};
+
+// Navigation helper
+const navigateTo = (routeName: string): void => {
+  router.push({ name: routeName });
+};
+
+// Alert severity helper
+const getAlertSeverity = (severity: string): 'success' | 'info' | 'warning' | 'danger' | 'secondary' | 'contrast' => {
+  if (!severity) return 'info';
+  const severityLower = severity.toLowerCase();
+  if (severityLower.includes('high') || severityLower.includes('critical')) return 'danger';
+  if (severityLower.includes('medium')) return 'warning';
+  if (severityLower.includes('low')) return 'info';
+  return 'info';
+};
+
+// Get compliance score color class
+const getComplianceScoreColor = (score: number): string => {
+  if (score >= 90) return 'bg-green-100 text-green-600';
+  if (score >= 70) return 'bg-blue-100 text-blue-600';
+  if (score >= 50) return 'bg-amber-100 text-amber-600';
+  return 'bg-red-100 text-red-600';
+};
+
+// Fetch dashboard data
+const fetchDashboardData = async (): Promise<void> => {
+  loading.value = true;
+  try {
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    toast.add({
+      severity: 'success',
+      summary: 'Dashboard Updated',
+      detail: 'Dashboard data has been refreshed',
+      life: 3000
+    });
+  } catch (error) {
+    console.error('Error fetching dashboard data:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to fetch dashboard data',
+      life: 3000
+    });
+  } finally {
+    loading.value = false;
+  }
+};
+
+// Run security scan
+const runSecurityScan = async (): Promise<void> => {
+  loading.value = true;
+  try {
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    toast.add({
+      severity: 'success',
+      summary: 'Scan Complete',
+      detail: 'Security scan completed successfully',
+      life: 3000
+    });
+  } catch (error) {
+    console.error('Security scan failed:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Scan Failed',
+      detail: 'Failed to complete security scan',
+      life: 3000
+    });
+  } finally {
+    loading.value = false;
+  }
+};
+
+// Handle activity action
+const handleActivityAction = (activity: any) => {
+  if (activity.action === 'review-policy') {
+    router.push({ name: 'security-policies' });
+  }
+};
+
+// Mock data
+const complianceStandards = ref([
+  {
+    id: 'gdpr',
+    name: 'GDPR',
+    description: 'General Data Protection Regulation',
+    status: 'Compliant',
+    compliance: 95,
+    lastAudit: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30), // 30 days ago
+    nextAudit: new Date(Date.now() + 1000 * 60 * 60 * 24 * 60) // 60 days from now
   },
   {
     id: 'pci-dss',
     name: 'PCI DSS',
-    status: 'non-compliant',
-    progress: 30,
-    lastAssessed: new Date('2025-03-01'),
-    completedControls: 6,
-    totalControls: 20
+    description: 'Payment Card Industry Data Security Standard',
+    status: 'Partial',
+    compliance: 75,
+    lastAudit: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10), // 10 days ago
+    nextAudit: new Date(Date.now() + 1000 * 60 * 60 * 24 * 80) // 80 days from now
   }
 ]);
 
-const recentActivities = ref<Activity[]>([
+const recentActivities = ref([
   {
     id: 'act-001',
-    type: 'policy',
-    user: 'admin',
-    timestamp: subDays(new Date(), 0.1),
-    description: 'Updated password policy to require 12 characters',
+    type: 'audit',
+    title: 'Security Policy Updated',
+    description: 'Password policy has been updated to meet new requirements',
+    timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
+    user: 'admin@example.com',
     action: { label: 'View Policy', route: '/compliance/policies/123' },
     status: 'Completed',
     highlight: true,
@@ -363,22 +356,23 @@ const recentActivities = ref<Activity[]>([
   },
   {
     id: 'act-002',
-    type: 'user',
-    user: 'johndoe',
-    timestamp: subDays(new Date(), 0.5),
-    description: 'Changed user role from Editor to Admin',
-    action: { label: 'View User', route: '/users/johndoe' },
+    type: 'login',
+    title: 'User Login',
+    description: 'User logged in from 192.168.1.100',
+    timestamp: new Date(Date.now() - 1000 * 60 * 120), // 2 hours ago
+    user: 'user@example.com',
     status: 'Completed',
-    tags: ['User Management']
+    tags: ['Authentication']
   },
   {
     id: 'act-003',
     type: 'system',
+    title: 'Nightly Backup',
+    description: 'System backup completed successfully',
+    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 12), // 12 hours ago
     user: 'system',
-    timestamp: subDays(new Date(), 1),
-    description: 'Nightly backup completed successfully',
-    action: { label: 'View Logs', route: '/system/backups' },
-    status: 'Completed'
+    status: 'Completed',
+    tags: ['System']
   }
 ]);
 
@@ -413,279 +407,14 @@ const securityAlerts = ref([
     description: 'Unusual API call pattern detected from IP 192.168.1.100',
     severity: 'high',
     timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 days ago
+    resolved: true
   }
 ]);
-
-// Format date helper
-const formatDate = (date: Date | string | null | undefined): string => {
-  if (!date) return 'N/A';
-  try {
-    return format(new Date(date), 'MMM d, yyyy');
-  } catch (e) {
-    console.error('Error formatting date:', e);
-    return 'Invalid date';
-  }
-};
-
-// Format time ago helper
-const formatTimeAgo = (date: Date | string | null | undefined): string => {
-  if (!date) return 'Just now';
-  try {
-    const now = new Date();
-    const diffInSeconds = Math.floor((now.getTime() - new Date(date).getTime()) / 1000);
-    
-    if (diffInSeconds < 60) return 'Just now';
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
-    return `${Math.floor(diffInSeconds / 86400)}d ago`;
-  } catch (e) {
-    console.error('Error formatting time ago:', e);
-    return 'Just now';
-  }
-};
-
-// Get alert severity helper
-const getAlertSeverity = (severity: string): 'success' | 'info' | 'warning' | 'danger' | 'secondary' | 'contrast' => {
-  if (!severity) return 'info';
-  const severityLower = severity.toLowerCase();
-  if (severityLower.includes('high') || severityLower.includes('critical')) return 'danger';
-  if (severityLower.includes('medium')) return 'warning';
-  if (severityLower.includes('low')) return 'info';
-  return 'info';
-};
-
-// Get compliance score color class
-const getComplianceScoreColor = (score: number): string => {
-  if (score >= 90) return 'bg-green-100 text-green-600';
-  if (score >= 70) return 'bg-blue-100 text-blue-600';
-  if (score >= 50) return 'bg-amber-100 text-amber-600';
-  return 'bg-red-100 text-red-600';
-};
-
-// Fetch dashboard data
-const fetchDashboardData = async (): Promise<void> => {
-  loading.value = true;
-  try {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    // In a real app, you would fetch data from your API
-    // const response = await api.get('/compliance/dashboard');
-    // dashboardData.value = response.data;
-    toast.add({
-      severity: 'success',
-      summary: 'Dashboard Updated',
-      detail: 'Dashboard data has been refreshed',
-      life: 3000
-    });
-  } finally {
-    loading.value = false;
-  }
-};
-
-const handleActivityAction = (activity: any) => {
-  if (activity.action === 'review-policy') {
-    router.push({ name: 'security-policies' });
-  }
-};
-
-const runSecurityScan = () => {
-  toast.add({
-    severity: 'info',
-    summary: 'Compliance Scan',
-    detail: 'Compliance scan has been queued. You will be notified when complete.',
-    life: 5000
-  });
-};
-
-const resolveAlert = (alertId: number) => {
-  const alert = securityAlerts.value.find(a => a.id === alertId);
-  if (alert) {
-    alert.resolved = true;
-    toast.add({
-      severity: 'success',
-      summary: 'Alert Resolved',
-      detail: 'The security alert has been marked as resolved.',
-      life: 3000
-    });
-  }
-};
-
-const viewAlertDetails = (alert: SecurityAlert) => {
-  // Navigate to alert details page or show in a dialog
-  console.log('Viewing alert:', alert);
-  // Example: router.push({ name: 'alert-details', params: { id: alert.id } });
-};
 
 // Lifecycle hooks
 onMounted(() => {
   fetchDashboardData();
 });
-
-// Component name
-defineOptions({
-  name: 'ComplianceDashboard'
-});
-</script>
-
-<template>
-  <div class="compliance-dashboard">
-    <!-- Header -->
-    <div class="flex justify-content-between align-items-center mb-4">
-      <h1 class="text-2xl font-bold">Compliance & Security Dashboard</h1>
-      <Button 
-        label="Run Security Scan" 
-        icon="pi pi-shield" 
-        :loading="loading"
-        @click="runSecurityScan"
-      />
-    </div>
-
-    <!-- Stats Overview -->
-    <div class="grid">
-      <div class="card">
-        <h3 class="text-lg font-semibold mb-2">Compliance Score</h3>
-        <div class="flex items-center">
-          <div class="text-3xl font-bold mr-3">{{ stats.complianceScore }}%</div>
-          <div class="flex-1">
-            <ProgressBar 
-              :model-value="stats.complianceScore" 
-              :class="getProgressBarClass(stats.complianceScore)"
-              :show-value="false"
-            />
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <h3 class="text-lg font-semibold mb-2">Security Score</h3>
-        <div class="flex items-center">
-          <div class="text-3xl font-bold mr-3">{{ stats.securityScore }}%</div>
-          <div class="flex-1">
-            <ProgressBar 
-              :model-value="stats.securityScore" 
-              :class="getProgressBarClass(stats.securityScore)"
-              :show-value="false"
-            />
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Recent Activities -->
-    <div class="card">
-      <h3 class="text-lg font-semibold mb-4">Recent Activities</h3>
-      <ul class="activity-timeline">
-        <li v-for="activity in recentActivities" :key="activity.id" class="activity-item">
-          <div class="activity-marker" :style="{ backgroundColor: getActivityColor(activity.type) }">
-            <i :class="getActivityIcon(activity.type)"></i>
-          </div>
-          <div class="activity-content">
-            <div class="font-medium">{{ activity.title }}</div>
-            <p class="text-sm text-gray-600">{{ activity.description }}</p>
-            <div class="text-xs text-gray-500 mt-1">
-              {{ formatTimeAgo(activity.timestamp) }} by {{ activity.user }}
-            </div>
-          </div>
-        </li>
-      </ul>
-    </div>
-  </div>
-</template>
-
-<script setup lang="ts">
-import { ref } from 'vue';
-import { useToast } from 'primevue/usetoast';
-import { formatDistanceToNow } from 'date-fns';
-
-// Toast
-const toast = useToast();
-
-// State
-const loading = ref<boolean>(false);
-const stats = ref({
-  complianceScore: 92,
-  securityScore: 88,
-  auditScore: 95,
-  dataPrivacyScore: 90,
-  lastUpdated: new Date()
-});
-
-// Mock data for recent activities
-const recentActivities = ref([
-  {
-    id: 'act-001',
-    type: 'audit',
-    title: 'Security Policy Updated',
-    description: 'Password policy has been updated to meet new requirements',
-    timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-    user: 'admin@example.com'
-  },
-  {
-    id: 'act-002',
-    type: 'login',
-    title: 'User Login',
-    description: 'User logged in from 192.168.1.100',
-    timestamp: new Date(Date.now() - 1000 * 60 * 120), // 2 hours ago
-    user: 'user@example.com'
-  }
-]);
-
-// Helper functions
-const formatTimeAgo = (date: Date | string): string => {
-  return formatDistanceToNow(new Date(date), { addSuffix: true });
-};
-
-const getProgressBarClass = (score: number): string => {
-  if (score >= 90) return 'progress-bar-success';
-  if (score >= 70) return 'progress-bar-warning';
-  return 'progress-bar-danger';
-};
-
-const getActivityIcon = (type: string): string => {
-  const icons: Record<string, string> = {
-    audit: 'pi pi-shield',
-    login: 'pi pi-sign-in',
-    update: 'pi pi-pencil',
-    alert: 'pi pi-exclamation-triangle'
-  };
-  return icons[type] || 'pi pi-info-circle';
-};
-
-const getActivityColor = (type: string): string => {
-  const colors: Record<string, string> = {
-    audit: '#3b82f6',
-    login: '#10b981',
-    update: '#f59e0b',
-    alert: '#ef4444'
-  };
-  return colors[type] || '#6b7280';
-};
-
-const runSecurityScan = async (): Promise<void> => {
-  loading.value = true;
-  try {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    toast.add({
-      severity: 'success',
-      summary: 'Scan Complete',
-      detail: 'Security scan completed successfully',
-      life: 3000
-    });
-  } catch (error) {
-    console.error('Security scan failed:', error);
-    toast.add({
-      severity: 'error',
-      summary: 'Scan Failed',
-      detail: 'Failed to complete security scan',
-      life: 3000
-    });
-  } finally {
-    loading.value = false;
-  }
-};
-
-// Lifecycle hooks can be added here when needed
 </script>
 
 <style scoped>

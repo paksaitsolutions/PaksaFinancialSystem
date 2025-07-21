@@ -82,40 +82,70 @@
     </v-row>
 
     <!-- Approval Dialog -->
-    <v-dialog v-model="approvalDialog" max-width="500">
-      <v-card>
+    <v-dialog v-model="approvalDialog.visible" max-width="500" :persistent="approvalDialog.loading">
+      <v-card :loading="approvalDialog.loading">
         <v-card-title>Approve Budget</v-card-title>
         <v-card-text>
           <v-textarea
             v-model="approvalNotes"
             label="Approval Notes (Optional)"
             rows="3"
+            :error-messages="approvalDialog.error"
+            :disabled="approvalDialog.loading"
+            @input="approvalDialog.error = ''"
           ></v-textarea>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn text @click="approvalDialog = false">Cancel</v-btn>
-          <v-btn color="primary" @click="handleApproval">Approve</v-btn>
+          <v-btn 
+            text 
+            @click="approvalDialog.visible = false"
+            :disabled="approvalDialog.loading"
+          >
+            Cancel
+          </v-btn>
+          <v-btn 
+            color="primary" 
+            @click="handleApproval"
+            :loading="approvalDialog.loading"
+          >
+            Approve
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
 
     <!-- Reject Dialog -->
-    <v-dialog v-model="rejectDialog" max-width="500">
-      <v-card>
+    <v-dialog v-model="rejectDialog.visible" max-width="500" :persistent="rejectDialog.loading">
+      <v-card :loading="rejectDialog.loading">
         <v-card-title>Reject Budget</v-card-title>
         <v-card-text>
           <v-textarea
             v-model="rejectNotes"
             label="Rejection Notes (Required)"
             rows="3"
+            :error-messages="rejectDialog.error"
             :rules="[v => !!v || 'Notes are required']"
+            :disabled="rejectDialog.loading"
+            @input="rejectDialog.error = ''"
           ></v-textarea>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn text @click="rejectDialog = false">Cancel</v-btn>
-          <v-btn color="error" @click="handleReject">Reject</v-btn>
+          <v-btn 
+            text 
+            @click="rejectDialog.visible = false"
+            :disabled="rejectDialog.loading"
+          >
+            Cancel
+          </v-btn>
+          <v-btn 
+            color="error" 
+            @click="handleReject"
+            :loading="rejectDialog.loading"
+          >
+            Reject
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -222,17 +252,27 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useToast } from 'primevue/usetoast'
 import { useBudgetStore } from '../../store/budget'
-import { BudgetStatus, BudgetType } from '../types/budget'
+import { Budget, BudgetStatus, BudgetType } from '../types/budget'
 
 const budgetStore = useBudgetStore()
 
 // State
+const toast = useToast()
 const loading = ref(false)
-const approvalDialog = ref(false)
-const rejectDialog = ref(false)
+const approvalDialog = ref({
+  visible: false,
+  loading: false,
+  error: ''
+})
+const rejectDialog = ref({
+  visible: false,
+  loading: false,
+  error: ''
+})
 const detailsDialog = ref(false)
-const selectedBudget = ref<any>(null)
+const selectedBudget = ref<Budget | null>(null)
 const approvalNotes = ref('')
 const rejectNotes = ref('')
 
@@ -286,25 +326,61 @@ const selectBudget = (budget: any) => {
   detailsDialog.value = true
 }
 
-const openApprovalDialog = (budget: any) => {
+const openApprovalDialog = (budget: Budget) => {
   selectedBudget.value = budget
-  approvalDialog.value = true
+  approvalNotes.value = ''
+  approvalDialog.value = {
+    ...approvalDialog.value,
+    visible: true,
+    error: ''
+  }
 }
 
-const openRejectDialog = (budget: any) => {
+const openRejectDialog = (budget: Budget) => {
   selectedBudget.value = budget
-  rejectDialog.value = true
+  rejectNotes.value = ''
+  rejectDialog.value = {
+    ...rejectDialog.value,
+    visible: true,
+    error: ''
+  }
 }
 
 const handleApproval = async () => {
-  if (selectedBudget.value) {
-    try {
-      await budgetStore.approveBudget(selectedBudget.value.id, { notes: approvalNotes.value })
-      approvalDialog.value = false
-      refreshQueue()
-    } catch (err) {
-      console.error('Error approving budget:', err)
-    }
+  if (!selectedBudget.value) {
+    toast.add({
+      severity: 'warn',
+      summary: 'No Budget Selected',
+      detail: 'Please select a budget to approve',
+      life: 5000
+    })
+    return
+  }
+
+  try {
+    approvalDialog.value.loading = true
+    await budgetStore.approveBudget(selectedBudget.value.id, { notes: approvalNotes.value })
+    
+    approvalDialog.value.visible = false
+    approvalNotes.value = ''
+    await refreshQueue()
+    
+    toast.add({
+      severity: 'success',
+      summary: 'Success',
+      detail: 'Budget approved successfully',
+      life: 3000
+    })
+  } catch (error) {
+    console.error('Error approving budget:', error)
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: error instanceof Error ? error.message : 'Failed to approve budget',
+      life: 5000
+    })
+  } finally {
+    approvalDialog.value.loading = false
   }
 }
 
@@ -315,34 +391,39 @@ const handleReject = async () => {
       summary: 'No Budget Selected',
       detail: 'Please select a budget to reject',
       life: 5000
-    });
-    return;
+    })
+    return
   }
   
   if (!rejectNotes.value?.trim()) {
-    toast.add({
-      severity: 'warn',
-      summary: 'Validation Error',
-      detail: 'Please provide a reason for rejection',
-      life: 5000
-    });
-    return;
+    rejectDialog.value.error = 'Please provide a reason for rejection'
+    return
   }
   
   try {
-    await budgetStore.rejectBudget(selectedBudget.value.id, rejectNotes.value);
+    rejectDialog.value.loading = true
+    await budgetStore.rejectBudget(selectedBudget.value.id, rejectNotes.value)
     
-    // Clear the form and close the dialog
-    rejectNotes.value = '';
-    rejectDialog.value = false;
+    rejectNotes.value = ''
+    rejectDialog.value.visible = false
+    await refreshQueue()
     
-    // Refresh the queue
-    await refreshQueue();
-    
-    // Success notification is handled by the store
+    toast.add({
+      severity: 'success',
+      summary: 'Success',
+      detail: 'Budget rejected successfully',
+      life: 3000
+    })
   } catch (error) {
-    // Error notification is handled by the store
-    console.error('Error in handleReject:', error);
+    console.error('Error in handleReject:', error)
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: error instanceof Error ? error.message : 'Failed to reject budget',
+      life: 5000
+    })
+  } finally {
+    rejectDialog.value.loading = false
   }
 }
 

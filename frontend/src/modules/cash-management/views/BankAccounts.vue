@@ -318,22 +318,8 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import { formatCurrency, formatDate } from '@/utils/formatters';
-
-// Toast implementation
-interface ToastMessage {
-  severity: 'success' | 'info' | 'warn' | 'error';
-  summary: string;
-  detail: string;
-  life?: number;
-}
-
-const useToast = () => {
-  const add = (message: ToastMessage) => {
-    console.log('Toast:', message);
-  };
-  
-  return { add };
-};
+import { useToast } from 'primevue/usetoast';
+import type { ToastMessage } from 'primevue/toast';
 
 const toast = useToast();
 
@@ -424,20 +410,6 @@ const filteredAccounts = computed(() => {
   });
 });
 
-const activeAccountsCount = computed(() => {
-  return bankAccounts.value.filter(acc => acc.is_active).length;
-});
-
-const monthlyChangePercent = computed(() => {
-  // Mock data - in a real app, this would calculate the actual change
-  return 2.5;
-});
-
-const projectedBalance = computed(() => {
-  // Mock data - in a real app, this would calculate the projected balance
-  return bankAccounts.value.reduce((sum, acc) => sum + (acc.current_balance || 0), 0) * 1.1;
-});
-
 const totalBalance = computed(() => {
   return bankAccounts.value.reduce((sum, acc) => sum + (acc.current_balance || 0), 0);
 });
@@ -447,11 +419,13 @@ const activeAccountsCount = computed(() => {
 });
 
 const monthlyChange = computed(() => 1250.75); // Mock data
+
 const monthlyChangePercent = computed(() => {
   const change = monthlyChange.value;
   const balance = totalBalance.value - change;
   return balance !== 0 ? ((change / balance) * 100).toFixed(2) : '0.00';
 });
+
 const projectedBalance = computed(() => totalBalance.value * 1.02); // Simple 2% projection
 
 // Methods

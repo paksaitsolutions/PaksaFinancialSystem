@@ -86,21 +86,8 @@ export const authRoutes: RouteRecordRaw = {
 // Root route
 export const rootRoute: RouteRecordRaw = {
   path: '/',
-  name: 'Root',
-  redirect: (to) => {
-    const authStore = useAuthStore();
-    // Always redirect to login page first
-    if (authStore.isAuthenticated) {
-      return { name: 'Dashboard' };
-    } else {
-      return { 
-        name: 'Login',
-        query: to.query.redirect 
-          ? { redirect: to.query.redirect } 
-          : undefined 
-      };
-    }
-  },
+  name: 'Home',
+  component: () => import('@/views/Home.vue'),
   meta: { 
     title: 'Home',
     requiresAuth: false

@@ -1,7 +1,7 @@
 <template>
   <v-navigation-drawer
     v-model="drawer"
-    :rail="!menuStore.isExpanded"
+    :rail="!isExpanded"
     permanent
     class="left-sidebar"
     elevation="3"
@@ -11,78 +11,59 @@
         <v-avatar size="40" color="primary" class="mr-2">
           <v-img src="/favicon.svg" alt="Logo"></v-img>
         </v-avatar>
-        <span v-if="menuStore.isExpanded" class="text-h6 font-weight-bold">Paksa Financial</span>
+        <span v-if="isExpanded" class="text-h6 font-weight-bold">Paksa Financial</span>
         <v-spacer></v-spacer>
         <v-btn
-          icon="mdi-chevron-left"
+          :icon="isExpanded ? 'mdi-chevron-left' : 'mdi-chevron-right'"
           variant="text"
           size="small"
-          @click.stop="menuStore.toggleExpanded()"
-          v-if="menuStore.isExpanded"
-        ></v-btn>
-        <v-btn
-          icon="mdi-chevron-right"
-          variant="text"
-          size="small"
-          @click.stop="menuStore.toggleExpanded()"
-          v-else
+          @click.stop="toggleMenu"
         ></v-btn>
       </div>
     </div>
 
     <v-divider></v-divider>
 
-    <v-list nav density="compact">
-      <v-list-item
-        prepend-icon="mdi-view-dashboard"
-        title="Dashboard"
-        :to="{ path: '/dashboard' }"
-        :active="isActive('/dashboard')"
-        rounded="lg"
-        class="mb-1"
-      ></v-list-item>
-    </v-list>
-
-    <v-divider class="my-2"></v-divider>
-
     <div class="sidebar-scroll">
       <v-list nav>
-        <template v-for="module in menuStore.visibleModules" :key="module.id">
-          <v-list-group :value="isModuleActive(module)">
-            <template v-slot:activator="{ props }">
+        <template v-for="item in menuItems" :key="item.id">
+          <!-- Single menu item without children -->
+          <v-list-item
+            v-if="!item.items || item.items.length === 0"
+            :prepend-icon="item.icon"
+            :title="item.label"
+            :to="item.route"
+            :active="isActive(item.route)"
+            rounded="lg"
+            class="mb-1"
+            @click="setActiveMenuItem(item.id)"
+          ></v-list-item>
+
+          <!-- Menu item with children -->
+          <v-list-group v-else :value="isModuleActive(item)">
+            <template v-slot:activator="{ props: groupProps }">
               <v-list-item
-                v-bind="props"
-                :to="module.route"
+                v-bind="groupProps"
+                :prepend-icon="item.icon"
+                :title="item.label"
+                :active="isModuleActive(item)"
                 rounded="lg"
                 class="mb-1 module-item"
-              >
-                <template v-slot:prepend>
-                  <v-avatar
-                    :color="module.color"
-                    variant="tonal"
-                    size="small"
-                    class="mr-2"
-                  >
-                    <v-icon :icon="module.icon" size="small" color="white"></v-icon>
-                  </v-avatar>
-                </template>
-                <v-list-item-title>{{ module.title }}</v-list-item-title>
-              </v-list-item>
+                @click="setActiveMenuItem(item.id)"
+              ></v-list-item>
             </template>
 
             <v-list-item
-              v-for="item in module.subItems"
-              :key="item.route"
-              :to="item.route"
-              :active="isActive(item.route)"
+              v-for="child in item.items"
+              :key="child.id"
+              :prepend-icon="child.icon"
+              :title="child.label"
+              :to="child.route"
+              :active="isActive(child.route)"
               rounded="lg"
-              class="ml-2 mb-1 sub-item"
-            >
-              <template v-slot:prepend>
-                <v-icon :icon="item.icon" size="small" class="mr-2"></v-icon>
-              </template>
-              <v-list-item-title>{{ item.name }}</v-list-item-title>
-            </v-list-item>
+              class="ml-4 mb-1 sub-item"
+              @click="setActiveMenuItem(child.id)"
+            ></v-list-item>
           </v-list-group>
         </template>
       </v-list>
@@ -92,9 +73,28 @@
       <v-divider class="mb-2"></v-divider>
       <div class="pa-2">
         <v-list nav density="compact">
-          <v-list-item prepend-icon="mdi-cog" title="Settings" to="/settings" rounded="lg" class="mb-1"></v-list-item>
-          <v-list-item prepend-icon="mdi-help-circle" title="Help" to="/help" rounded="lg" class="mb-1"></v-list-item>
-          <v-list-item prepend-icon="mdi-logout" title="Logout" @click="logout" rounded="lg"></v-list-item>
+          <v-list-item 
+            prepend-icon="mdi-cog" 
+            title="Settings" 
+            to="/settings" 
+            rounded="lg" 
+            class="mb-1"
+            @click="setActiveMenuItem('settings')"
+          ></v-list-item>
+          <v-list-item 
+            prepend-icon="mdi-help-circle" 
+            title="Help" 
+            to="/help" 
+            rounded="lg" 
+            class="mb-1"
+            @click="setActiveMenuItem('help')"
+          ></v-list-item>
+          <v-list-item 
+            prepend-icon="mdi-logout" 
+            title="Logout" 
+            @click="logout" 
+            rounded="lg"
+          ></v-list-item>
         </v-list>
       </div>
     </template>
@@ -102,35 +102,48 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter, type RouteLocationNormalizedLoaded } from 'vue-router';
 import { useMenuStore } from '../../stores/menu';
-
-interface MenuItem {
-  title: string;
-  icon: string;
-  route: string;
-  children?: MenuItem[];
-}
+import type { SidebarMenuItem } from '@/config/menu';
 
 const menuStore = useMenuStore();
 const route: RouteLocationNormalizedLoaded = useRoute();
 const router = useRouter();
 const drawer = ref<boolean>(true);
 
-const isActive = (path: string): boolean => {
+// Get menu items from store with user permissions
+const userPermissions = ref<string[]>([]); // TODO: Replace with actual user permissions
+const menuItems = computed(() => menuStore.getAuthorizedMenuItems(userPermissions.value));
+const isExpanded = computed(() => !menuStore.getIsMenuCollapsed);
+
+// Check if a route is active
+const isActive = (routePath: string | RouteLocationNormalizedLoaded | undefined): boolean => {
+  if (!routePath) return false;
+  const path = typeof routePath === 'string' ? routePath : routePath.path;
   return route.path === path || route.path.startsWith(`${path}/`);
 };
 
-const isModuleActive = (module: MenuItem): boolean => {
-  return route.path.startsWith(module.route);
+// Check if a module is active (for group items)
+const isModuleActive = (menuItem: SidebarMenuItem): boolean => {
+  if (menuItem.route && isActive(menuItem.route)) return true;
+  if (menuItem.items) {
+    return menuItem.items.some(child => isModuleActive(child));
+  }
+  return false;
 };
 
-// Special case for home path
-const isHome = computed(() => {
-  return route.path === '/' || route.name === 'home';
-});
+// Toggle menu expanded/collapsed
+const toggleMenu = () => {
+  menuStore.toggleMenu();
+};
 
+// Set active menu item
+const setActiveMenuItem = (itemId: string) => {
+  menuStore.setActiveMenuItem(itemId);
+};
+
+// Logout function
 const logout = () => {
   // Clear authentication
   localStorage.removeItem('token');
@@ -139,6 +152,13 @@ const logout = () => {
   // Redirect to login
   router.push('/auth/login');
 };
+
+// Initialize menu
+onMounted(() => {
+  // TODO: Load user permissions from auth store or API
+  // For now, we'll just show all menu items
+  userPermissions.value = [];
+});
 </script>
 
 <style>
