@@ -309,14 +309,40 @@ const handleApproval = async () => {
 }
 
 const handleReject = async () => {
-  if (selectedBudget.value && rejectNotes.value) {
-    try {
-      await budgetStore.rejectBudget(selectedBudget.value.id, rejectNotes.value)
-      rejectDialog.value = false
-      refreshQueue()
-    } catch (err) {
-      console.error('Error rejecting budget:', err)
-    }
+  if (!selectedBudget.value) {
+    toast.add({
+      severity: 'warn',
+      summary: 'No Budget Selected',
+      detail: 'Please select a budget to reject',
+      life: 5000
+    });
+    return;
+  }
+  
+  if (!rejectNotes.value?.trim()) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Validation Error',
+      detail: 'Please provide a reason for rejection',
+      life: 5000
+    });
+    return;
+  }
+  
+  try {
+    await budgetStore.rejectBudget(selectedBudget.value.id, rejectNotes.value);
+    
+    // Clear the form and close the dialog
+    rejectNotes.value = '';
+    rejectDialog.value = false;
+    
+    // Refresh the queue
+    await refreshQueue();
+    
+    // Success notification is handled by the store
+  } catch (error) {
+    // Error notification is handled by the store
+    console.error('Error in handleReject:', error);
   }
 }
 

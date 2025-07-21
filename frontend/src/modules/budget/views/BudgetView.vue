@@ -340,30 +340,40 @@ const approveBudget = async (): Promise<void> => {
 
 const rejectBudget = async (): Promise<void> => {
   if (!selectedBudget.value) {
-    console.error('No budget selected for rejection');
+    toast.add({
+      severity: 'warn',
+      summary: 'No Budget Selected',
+      detail: 'Please select a budget to reject',
+      life: 5000
+    });
+    return;
+  }
+  
+  if (!rejectNotes.value?.trim()) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Validation Error',
+      detail: 'Please provide a reason for rejection',
+      life: 5000
+    });
     return;
   }
   
   try {
     loading.value = true;
     await budgetStore.rejectBudget(selectedBudget.value.id, rejectNotes.value);
+    
+    // Clear the form and close the dialog
+    rejectNotes.value = '';
     rejectDialog.value = false;
+    
+    // Refresh the budget list
     await budgetStore.fetchBudgets();
     
-    toast.add({
-      severity: 'success',
-      summary: 'Success',
-      detail: 'Budget rejected successfully',
-      life: 3000
-    });
+    // Success notification is handled by the store
   } catch (error) {
-    console.error('Error rejecting budget:', error);
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Failed to reject budget',
-      life: 5000
-    });
+    // Error notification is handled by the store
+    console.error('Error in rejectBudget:', error);
   } finally {
     loading.value = false;
   }

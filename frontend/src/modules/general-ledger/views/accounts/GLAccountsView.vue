@@ -304,7 +304,6 @@ export default {
 
     // Computed properties
     const accounts = computed(() => glAccountsStore.state.accounts);
-    const accountTree = computed(() => glAccountsStore.state.accountTree);
     
     const filteredAccounts = computed(() => {
       return accounts.value.map(account => ({

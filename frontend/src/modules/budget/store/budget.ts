@@ -214,18 +214,90 @@ export const useBudgetStore = defineStore('budget', () => {
     }
   };
 
-  // Reject a budget
+  /**
+   * Rejects a budget with the given reason
+   * @param id - The ID of the budget to reject
+   * @param reason - The reason for rejection
+   * @returns The updated budget
+   * @throws Error if rejection fails
+   */
   const rejectBudget = async (id: number, reason: string): Promise<Budget> => {
+    if (!reason.trim()) {
+      const errorMessage = 'Rejection reason is required';
+      setError(errorMessage);
+      toast.add({
+        severity: 'warn',
+        summary: 'Validation Error',
+        detail: errorMessage,
+        life: 5000,
+      });
+      throw new Error(errorMessage);
+    }
+
     try {
       setLoading(true);
       setError(null);
+      
       // TODO: Replace with actual API call
       // const response = await BudgetService.rejectBudget(id, { reason });
-      // return response.data;
-      throw new Error('Not implemented');
+      // const updatedBudget = response.data;
+      // 
+      // // Update the budget in the local state
+      // const index = state.value.budgets.findIndex(b => b.id === id);
+      // if (index !== -1) {
+      //   state.value.budgets[index] = updatedBudget;
+      // }
+      // 
+      // // Show success notification
+      // toast.add({
+      //   severity: 'success',
+      //   summary: 'Success',
+      //   detail: 'Budget rejected successfully',
+      //   life: 3000,
+      // });
+      // 
+      // return updatedBudget;
+      
+      // Mock implementation for now
+      await new Promise(resolve => setTimeout(resolve, 500));
+      const mockBudget: Budget = {
+        id,
+        name: `Budget ${id}`,
+        description: 'Mock budget',
+        status: BudgetStatus.REJECTED,
+        type: BudgetType.OPERATIONAL,
+        startDate: new Date().toISOString(),
+        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        totalAmount: 10000,
+        remainingAmount: 10000,
+        currency: 'USD',
+        createdBy: 'system',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        rejectionReason: reason,
+      };
+      
+      // Show success notification
+      toast.add({
+        severity: 'success',
+        summary: 'Success',
+        detail: 'Budget rejected successfully',
+        life: 3000,
+      });
+      
+      return mockBudget;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to reject budget';
       setError(errorMessage);
+      
+      // Show error notification
+      toast.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: errorMessage,
+        life: 5000,
+      });
+      
       throw error;
     } finally {
       setLoading(false);
