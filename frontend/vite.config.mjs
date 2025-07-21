@@ -1,5 +1,4 @@
 /* vite.config.mjs */
-
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import vuetify from 'vite-plugin-vuetify';
@@ -17,7 +16,9 @@ export default defineConfig({
     }),
     vuetify({
       autoImport: true,
-      styles: 'expose',
+      styles: {
+        configFile: 'src/scss/settings.scss',
+      },
     }),
   ],
   resolve: {
@@ -40,13 +41,13 @@ export default defineConfig({
       scss: {
         additionalData: `
           @use "sass:math";
-          @import "@/assets/styles/variables";
-        `,
+          @use "@/scss/variables" as *;
+        `
       },
     },
   },
   server: {
-    port: 3000,
+    port: 3003,
     host: '0.0.0.0',
     strictPort: true,
     open: true,

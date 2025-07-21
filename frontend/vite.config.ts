@@ -38,12 +38,31 @@ export default defineConfig({
     port: 3003,
     host: '0.0.0.0',
     strictPort: true,
+    open: true,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api/, '')
+      }
+    },
+    headers: {
+      'Content-Security-Policy': "default-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:3000; connect-src 'self' http://localhost:3000 ws://localhost:3003;"
+    },
     hmr: {
       host: 'localhost',
-      port: 3003
+      port: 3003,
+      protocol: 'ws',
+      overlay: true
     },
     watch: {
-      usePolling: true
+      usePolling: true,
+      ignored: ['**/node_modules/**', '**/.git/**']
+    },
+    fs: {
+      strict: true,
+      allow: ['..']
     }
   },
   

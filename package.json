@@ -1,16 +1,25 @@
 {
+  "name": "paksa-financial-system",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "dev:frontend": "vite",
+    "dev:backend": "cd backend && npm run dev"
+  },
   "devDependencies": {
     "@types/node": "^24.0.10",
     "@types/vue-i18n": "^7.0.0",
     "@vitejs/plugin-vue": "^6.0.0",
     "@vue/compiler-sfc": "^3.5.17",
     "autoprefixer": "^10.4.21",
+    "concurrently": "^9.2.0",
     "graceful-fs": "^4.2.11",
     "postcss": "^8.5.6",
     "vue-router": "^4.2.4"
   },
   "dependencies": {
     "dayjs": "^1.11.7",
-    "eslint": "^9.31.0"
+    "eslint": "^9.31.0",
+    "pinia-plugin-persistedstate": "^4.4.1"
   }
 }

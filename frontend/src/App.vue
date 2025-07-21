@@ -47,8 +47,9 @@
     
     <v-main :class="{ 'ml-0': !isAuthenticated, 'ml-0': !isAuthenticated && $vuetify.display.mobile }">
       <v-container fluid class="fill-height pa-0" :class="{ 'px-4 py-2': isAuthenticated }">
+        <!-- Loading state -->
         <v-fade-transition mode="out-in">
-          <v-row v-if="isLoading" class="fill-height" align="center" justify="center">
+          <v-row v-if="isLoading" key="loading" class="fill-height" align="center" justify="center">
             <v-col cols="12" class="text-center">
               <v-progress-circular
                 indeterminate
@@ -59,12 +60,14 @@
               <div class="text-subtitle-1 mt-4">Loading application...</div>
             </v-col>
           </v-row>
-          <router-view v-else v-slot="{ Component, route }">
-            <transition name="fade" mode="out-in">
-              <component :is="Component" :key="route.path" />
-            </transition>
-          </router-view>
         </v-fade-transition>
+        
+        <!-- Router view with transition -->
+        <router-view v-slot="{ Component, route }">
+          <transition name="fade" mode="out-in">
+            <component :is="Component" :key="route.path" />
+          </transition>
+        </router-view>
       </v-container>
     </v-main>
     

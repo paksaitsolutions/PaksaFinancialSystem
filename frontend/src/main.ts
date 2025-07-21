@@ -1,5 +1,6 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
+import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 import App from './App.vue'
 import router from './router'
 import debug from './debug'
@@ -22,6 +23,9 @@ import vuetify from './plugins/vuetify'
 // Create app instance
 const app = createApp(App)
 const pinia = createPinia()
+
+// Add pinia plugins
+pinia.use(piniaPluginPersistedstate)
 
 // Use plugins with proper initialization order
 app.use(pinia)

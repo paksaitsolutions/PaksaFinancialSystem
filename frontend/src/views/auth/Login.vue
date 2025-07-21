@@ -243,6 +243,8 @@ export default defineComponent({
       this.error = '';
       
       try {
+        console.log('Attempting login with email:', this.email);
+        
         // Handle remember me
         if (this.rememberMe) {
           localStorage.setItem('rememberedEmail', this.email);
@@ -250,11 +252,25 @@ export default defineComponent({
           localStorage.removeItem('rememberedEmail');
         }
         
+        // Log the API URL being used
+        console.log('API Base URL:', import.meta.env.VITE_API_URL);
+        
         // Use the auth store to handle login
-        await this.authStore.login({
+        const loginData = {
           email: this.email,
           password: this.password,
-        });
+        };
+        
+        console.log('Sending login request with data:', { ...loginData, password: '***' });
+        
+        const loginSuccess = await this.authStore.login(loginData);
+        
+        if (!loginSuccess) {
+          console.error('Login failed - check auth store for details');
+          return;
+        }
+        
+        console.log('Login successful, resetting login attempts');
         
         // Reset login attempts on successful login
         this.loginAttempts = 0;
@@ -262,13 +278,37 @@ export default defineComponent({
         
         // Redirect to dashboard or intended route
         const redirectTo = this.$route?.query?.redirect || '/';
+        console.log('Redirecting to:', redirectTo);
         this.$router.push(redirectTo as string);
         
       } catch (error: any) {
+        console.error('Login error:', error);
         this.handleFailedLogin();
-        if (error.response && error.response.data && error.response.data.message) {
-          this.error = error.response.data.message;
+        
+        // Enhanced error handling
+        if (error.response) {
+          // The request was made and the server responded with a status code
+          // that falls out of the range of 2xx
+          console.error('Response data:', error.response.data);
+          console.error('Response status:', error.response.status);
+          console.error('Response headers:', error.response.headers);
+          
+          if (error.response.status === 401) {
+            this.error = 'Invalid email or password. Please try again.';
+          } else if (error.response.status === 403) {
+            this.error = 'Access denied. Please contact support.';
+          } else if (error.response.data && error.response.data.message) {
+            this.error = error.response.data.message;
+          } else {
+            this.error = `Server error (${error.response.status}). Please try again later.`;
+          }
+        } else if (error.request) {
+          // The request was made but no response was received
+          console.error('No response received:', error.request);
+          this.error = 'Unable to connect to the server. Please check your internet connection.';
         } else {
+          // Something happened in setting up the request that triggered an Error
+          console.error('Error setting up login request:', error.message);
           this.error = 'An error occurred during login. Please try again.';
         }
       } finally {
