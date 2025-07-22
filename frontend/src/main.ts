@@ -1,79 +1,46 @@
-import { createApp } from 'vue'
-import { createPinia } from 'pinia'
-import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
-import App from './App.vue'
-import router from './router'
-import debug from './debug'
-import { useAuthStore } from './modules/auth/store'
-import { useMenuStore } from './store/menu'
-import AppSnackbar from '@/components/AppSnackbar.vue'
-import snackbar from '@/shared/composables/useSnackbar'
+// frontend/src/main.ts
+import { createApp } from 'vue';
+import App from './App.vue';
+import { createPinia } from 'pinia';
+import router from './router';
+import './assets/styles/reset.css';
 
-// Import Vuetify styles
-import 'vuetify/styles'
-import '@mdi/font/css/materialdesignicons.css'
+// Vuetify
+import 'vuetify/styles';
+import { createVuetify } from 'vuetify';
+import * as components from 'vuetify/components';
+import * as directives from 'vuetify/directives';
+import { aliases, mdi } from 'vuetify/iconsets/mdi-svg';
 
-// Import our custom styles
-import './assets/styles/reset.css'
-import './assets/styles/main.scss'
+// Create app and plugins
+const app = createApp(App);
+const pinia = createPinia();
 
-// Import plugins
-import vuetify from './plugins/vuetify'
+// Configure Vuetify
+const vuetify = createVuetify({
+  components,
+  directives,
+  icons: {
+    defaultSet: 'mdi',
+    aliases,
+    sets: {
+      mdi,
+    },
+  },
+  theme: {
+    defaultTheme: 'light',
+  },
+  defaults: {
+    VBtn: {
+      variant: 'flat',
+    },
+  },
+});
 
-// Create app instance
-const app = createApp(App)
-const pinia = createPinia()
+// Use plugins
+app.use(pinia);
+app.use(router);
+app.use(vuetify);
 
-// Add pinia plugins
-pinia.use(piniaPluginPersistedstate)
-
-// Use plugins with proper initialization order
-app.use(pinia)
-app.use(router)
-app.use(vuetify)
-app.use(snackbar)
-
-// Register global components
-app.component('AppSnackbar', AppSnackbar)
-
-// Global error handler
-app.config.errorHandler = (err, instance, info) => {
-  console.error('Vue error:', err)
-  console.error('Error in component:', instance)
-  console.error('Error info:', info)
-  
-  // Show error in snackbar if available
-  const snackbar = app.config.globalProperties.$snackbar
-  if (snackbar && snackbar.showError) {
-    const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred'
-    snackbar.showError(errorMessage)
-  }
-}
-
-// Initialize debug
-debug.init()
-
-// Initialize auth state before mounting
-const initializeApp = async () => {
-  const authStore = useAuthStore()
-  
-  try {
-    await authStore.initialize()
-  } catch (error) {
-    console.error('Failed to initialize auth state:', error)
-  } finally {
-    // Mount the app regardless of auth initialization result
-    app.mount('#app')
-  }
-}
-
-// Initialize menu store when app starts
-const initializeMenuStore = () => {
-  const menuStore = useMenuStore()
-  menuStore.init()
-}
-
-// Start the application
-initializeApp().then(() => {
-  initializeMenuStore()
-})
+// Mount the app
+app.mount('#app');

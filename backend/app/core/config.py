@@ -3,58 +3,52 @@ Application configuration settings.
 """
 import os
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union, TypeVar
+from urllib.parse import urlparse, quote_plus
+import re
 
 from pydantic import (
     BaseModel,
+    EmailStr,
     Field,
-    ValidationError,
     field_validator,
     model_validator,
-    validator,
-    GetCoreSchemaHandler,
-    EmailStr,
     field_serializer,
+    HttpUrl
 )
 from pydantic_settings import BaseSettings
-from pydantic_core import core_schema
-from pydantic import field_validator
-from urllib.parse import urlparse, quote_plus
-from typing import Any, Dict, List, Optional, TypeVar, Union, Annotated
-
-# Import our database URL utilities
-from .db_utils import get_database_url, validate_database_url
 
 T = TypeVar('T')
 
-
-class DatabaseUrl(str):
-    """Custom field type for database URLs with proper validation."""
+def validate_database_url(url: str) -> str:
+    """Validate database URL format."""
+    if not url:
+        raise ValueError("Database URL cannot be empty")
     
-    @classmethod
-    def __get_pydantic_core_schema__(
-        cls, source_type: Any, handler: GetCoreSchemaHandler
-    ) -> core_schema.CoreSchema:
-        return core_schema.no_info_plain_validator_function(
-            cls.validate,
-            serialization=core_schema.plain_serializer_function_ser_schema(
-                lambda x: str(x) if x is not None else None
-            ),
-        )
+    # Check for SQLite URL format
+    if url.startswith('sqlite'):
+        if not re.match(r'^sqlite(\+\w+)?:///.*\.db$', url):
+            raise ValueError("Invalid SQLite database URL format. Expected format: 'sqlite+aiosqlite:///path/to/database.db'")
+        return url
     
-    @classmethod
-    def validate(cls, v: Any) -> str:
-        if not isinstance(v, str):
-            raise ValueError("Database URL must be a string")
-        return validate_database_url(v)
+    # Check for PostgreSQL URL format
+    if url.startswith('postgresql'):
+        if not re.match(r'^postgresql(\+\w+)?://[^:]+:[^@]+@[^:/]+(?:\d+)?/\w+$', url):
+            raise ValueError("Invalid PostgreSQL database URL format. Expected format: 'postgresql+asyncpg://user:password@host:port/dbname'")
+        return url
+    
+    raise ValueError("Unsupported database URL format. Supported formats: SQLite, PostgreSQL")
 
 
 class Settings(BaseSettings):
+    """Application settings."""
+    
     # Application settings
     PROJECT_NAME: str = "Paksa Financial System"
     PROJECT_DESCRIPTION: str = "Comprehensive financial management platform"
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
+    API_VERSION: str = "1.0.0"  # Add missing API_VERSION
     
     # Security
     SECRET_KEY: str = os.getenv("SECRET_KEY", "dev-secret-key-change-in-production")
@@ -87,32 +81,35 @@ class Settings(BaseSettings):
         raise ValueError(v)
     
     # Database settings
-    # Database connection settings
-    DB_ENGINE: str = os.getenv("DB_ENGINE", "sqlite").lower()
-    DB_NAME: str = os.getenv("POSTGRES_DB", "paksa_finance")
-    DB_USER: str = os.getenv("POSTGRES_USER", "postgres")
-    DB_PASSWORD: str = os.getenv("POSTGRES_PASSWORD", "postgres")
-    DB_HOST: str = os.getenv("POSTGRES_HOST", "localhost")
-    DB_PORT: str = os.getenv("POSTGRES_PORT", "5432")
+    class Config:
+        env_file = ".env"
+        env_file_encoding = 'utf-8'
+        extra = 'allow'  # Allow extra fields in .env file
     
-    # SQLite specific settings
-    SQLITE_DB_PATH: str = os.getenv("SQLITE_DB_PATH", "./instance/paksa_finance.db")
+    # Database connection settings
+    DB_ENGINE: str = "sqlite"
+    POSTGRES_DB: str = "paksa_finance"
+    POSTGRES_USER: str = "postgres"
+    POSTGRES_PASSWORD: str = "postgres"
+    POSTGRES_HOST: str = "localhost"
+    POSTGRES_PORT: str = "5432"
+    SQLITE_DB_PATH: str = "./instance/paksa_finance.db"
     
     # Connection pool settings
-    DB_POOL_SIZE: int = int(os.getenv("DB_POOL_SIZE", "20"))
-    DB_MAX_OVERFLOW: int = int(os.getenv("DB_MAX_OVERFLOW", "10"))
-    DB_POOL_RECYCLE: int = int(os.getenv("DB_POOL_RECYCLE", "300"))  # 5 minutes
-    DB_ECHO: bool = os.getenv("DB_ECHO", "False").lower() in ("true", "1", "t")
+    DB_POOL_SIZE: int = 20
+    DB_MAX_OVERFLOW: int = 10
+    DB_POOL_RECYCLE: int = 300  # 5 minutes
+    DB_ECHO: bool = False
     
     # Database URL - will be set by the model validator
-    DATABASE_URI: DatabaseUrl = ""
+    DATABASE_URI: str = ""
     
     @model_validator(mode='after')
     def set_database_uri(self) -> 'Settings':
         """Set the database URI based on the database engine."""
         if self.DB_ENGINE == "postgresql":
             # PostgreSQL connection string
-            self.DATABASE_URI = f"postgresql+asyncpg://{self.DB_USER}:{quote_plus(self.DB_PASSWORD)}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+            self.DATABASE_URI = f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
         else:
             # SQLite connection string (default)
             # Ensure the directory exists
@@ -123,6 +120,11 @@ class Settings(BaseSettings):
         # Validate the database URL
         self.DATABASE_URI = validate_database_url(self.DATABASE_URI)
         return self
+    
+    @field_serializer('DATABASE_URI')
+    def serialize_database_uri(self, uri: str) -> str:
+        """Serialize the database URI for JSON output."""
+        return uri
         
     @property
     def IS_SQLITE(self) -> bool:
@@ -133,6 +135,14 @@ class Settings(BaseSettings):
     def IS_POSTGRESQL(self) -> bool:
         """Check if using PostgreSQL database."""
         return 'postgresql' in self.DATABASE_URI or 'postgresql+asyncpg' in self.DATABASE_URI
+    
+    @property
+    def SQLALCHEMY_DATABASE_URI(self) -> str:
+        """Get the database URI in a format compatible with SQLAlchemy and Alembic."""
+        # Convert asyncpg to psycopg2 for synchronous operations
+        if 'postgresql+asyncpg' in self.DATABASE_URI:
+            return self.DATABASE_URI.replace('postgresql+asyncpg://', 'postgresql+psycopg2://')
+        return self.DATABASE_URI
     
     @field_serializer('DATABASE_URI')
     def serialize_database_uri(self, uri: str, _info: Any) -> str:

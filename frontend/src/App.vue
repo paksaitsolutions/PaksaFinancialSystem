@@ -106,7 +106,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '@/modules/auth/store';
 import { useDisplay } from 'vuetify';
@@ -143,19 +143,25 @@ const fabPosition = computed(() => {
   return { bottom: `${offset}px`, right: `${offset}px` };
 });
 
-// Initialize auth state
-const initialize = async () => {
+// Initialize auth state and handle routing
+const initializeAuth = async () => {
   try {
     await authStore.initialize();
     isAuthenticated.value = authStore.isAuthenticated;
     
-    // Redirect to login if not authenticated and not on login page
-    if (!isAuthenticated.value && !route.path.includes('/auth')) {
+    const publicPages = ['/login', '/forgot-password', '/reset-password'];
+    const isPublicPage = publicPages.some(page => route.path.startsWith(page));
+    
+    if (!isAuthenticated.value && !isPublicPage) {
+      // Redirect to login if not authenticated and not on a public page
       const redirect = route.fullPath !== '/' ? { redirect: route.fullPath } : {};
-      router.push({ name: 'login', query: redirect });
+      await router.push({ name: 'login', query: redirect });
+    } else if (isAuthenticated.value && isPublicPage) {
+      // Redirect to dashboard if authenticated and on a public page
+      await router.push('/dashboard');
     }
   } catch (error) {
-    console.error('Error initializing app:', error);
+    console.error('Error initializing auth:', error);
   } finally {
     isLoading.value = false;
   }
@@ -183,6 +189,16 @@ const unsubscribe = authStore.$onAction(({ name, after }) => {
   }
 });
 
+// Initialize on mount
+onMounted(() => {
+  initializeAuth();
+});
+
+// Cleanup on unmount
+onUnmounted(() => {
+  unsubscribe();
+});
+
 // Watch route changes to handle auth redirects
 router.beforeEach((to, from, next) => {
   // If route requires auth and user is not authenticated, redirect to login
@@ -194,7 +210,7 @@ router.beforeEach((to, from, next) => {
 });
 
 // Initialize on mount
-onMounted(initialize);
+onMounted(initializeAuth);
 
 // Clean up on unmount
 onUnmounted(() => {

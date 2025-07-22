@@ -21,58 +21,6 @@ $spacers: (
   15: $spacer * 32,  // 256px
 );
 
-// Generate spacing utility classes
-@each $size, $length in $spacers {
-  // Margin
-  .m-#{$size} { margin: $length !important; }
-  .mt-#{$size}, .my-#{$size} { margin-top: $length !important; }
-  .mr-#{$size}, .mx-#{$size} { margin-right: $length !important; }
-  .mb-#{$size}, .my-#{$size} { margin-bottom: $length !important; }
-  .ml-#{$size}, .mx-#{$size} { margin-left: $length !important; }
-  
-  // Padding
-  .p-#{$size} { padding: $length !important; }
-  .pt-#{$size}, .py-#{$size} { padding-top: $length !important; }
-  .pr-#{$size}, .px-#{$size} { padding-right: $length !important; }
-  .pb-#{$size}, .py-#{$size} { padding-bottom: $length !important; }
-  .pl-#{$size}, .px-#{$size} { padding-left: $length !important; }
-}
-
-// Negative margins (for offset utilities)
-@each $size, $length in $spacers {
-  @if $size != 0 {
-    .nmt-#{$size} { margin-top: -$length !important; }
-    .nmr-#{$size} { margin-right: -$length !important; }
-    .nmb-#{$size} { margin-bottom: -$length !important; }
-    .nml-#{$size} { margin-left: -$length !important; }
-    .nmx-#{$size} { margin-left: -$length !important; margin-right: -$length !important; }
-    .nmy-#{$size} { margin-top: -$length !important; margin-bottom: -$length !important; }
-  }
-}
-
-// Responsive spacing utilities
-@each $breakpoint in map-keys($grid-breakpoints) {
-  @include media-breakpoint-up($breakpoint) {
-    $infix: breakpoint-infix($breakpoint, $grid-breakpoints);
-    
-    @each $size, $length in $spacers {
-      // Margin
-      .m#{$infix}-#{$size} { margin: $length !important; }
-      .mt#{$infix}-#{$size}, .my#{$infix}-#{$size} { margin-top: $length !important; }
-      .mr#{$infix}-#{$size}, .mx#{$infix}-#{$size} { margin-right: $length !important; }
-      .mb#{$infix}-#{$size}, .my#{$infix}-#{$size} { margin-bottom: $length !important; }
-      .ml#{$infix}-#{$size}, .mx#{$infix}-#{$size} { margin-left: $length !important; }
-      
-      // Padding
-      .p#{$infix}-#{$size} { padding: $length !important; }
-      .pt#{$infix}-#{$size}, .py#{$infix}-#{$size} { padding-top: $length !important; }
-      .pr#{$infix}-#{$size}, .px#{$infix}-#{$size} { padding-right: $length !important; }
-      .pb#{$infix}-#{$size}, .py#{$infix}-#{$size} { padding-bottom: $length !important; }
-      .pl#{$infix}-#{$size}, .px#{$infix}-#{$size} { padding-left: $length !important; }
-    }
-  }
-}
-
 // Spacing for specific components
 $card-spacer-x: map-get($spacers, 4) !default;  // 16px
 $card-spacer-y: map-get($spacers, 4) !default;  // 16px

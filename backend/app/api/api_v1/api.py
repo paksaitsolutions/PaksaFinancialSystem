@@ -16,6 +16,8 @@ from app.modules.core_financials.budget.api import router as budget_router
 from app.modules.extended_financials.project_accounting.api import router as project_router
 
 # Import cross-cutting modules
+from app.modules.cross_cutting.auth.router import router as auth_router
+
 try:
     from app.modules.cross_cutting.bi_ai.api import router as bi_router
     has_bi_module = True
@@ -35,6 +37,9 @@ except ImportError:
     has_tax_module = False
 
 api_router = APIRouter(prefix="/api/v1")
+
+# Authentication
+api_router.include_router(auth_router, prefix="/auth", tags=["Authentication"])
 
 # Core Financial Modules
 api_router.include_router(gl_router, prefix="/gl", tags=["General Ledger"])

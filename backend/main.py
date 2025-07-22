@@ -37,17 +37,30 @@ async def lifespan(app: FastAPI):
     """Application lifespan context manager."""
     # Startup
     logger.info("=" * 50)
-    logger.info(f"Starting {settings.APP_NAME}...")
+    logger.info(f"Starting {settings.PROJECT_NAME}...")
+    logger.info(f"Version: {settings.VERSION}")
     logger.info(f"Environment: {settings.ENVIRONMENT}")
     logger.info(f"Debug mode: {settings.DEBUG}")
-    logger.info(f"Database URL: {settings.SQLALCHEMY_DATABASE_URI}")
+    logger.info(f"Database Engine: {settings.DB_ENGINE}")
+    
+    if settings.IS_SQLITE:
+        logger.info(f"SQLite Database Path: {settings.SQLITE_DB_PATH}")
+    else:
+        logger.info(f"PostgreSQL Database: {settings.POSTGRES_USER}@{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}")
+    
     logger.info("=" * 50)
     
     # Initialize services, database connections, etc.
     try:
         # Initialize database
+        logger.info("Initializing database...")
         from app.db.init_db import init_db
-        await init_db()
+        try:
+            await init_db()
+            logger.info("Database initialization completed successfully")
+        except Exception as e:
+            logger.error(f"Failed to initialize database: {str(e)}", exc_info=True)
+            raise
         logger.info("Database initialization complete")
     except Exception as e:
         logger.error(f"Error during startup: {str(e)}", exc_info=True)
@@ -61,8 +74,8 @@ async def lifespan(app: FastAPI):
 
 # Create FastAPI application
 app = FastAPI(
-    title=settings.APP_NAME,
-    description="Comprehensive Financial Management System",
+    title=settings.PROJECT_NAME,
+    description=settings.PROJECT_DESCRIPTION,
     version=settings.API_VERSION,
     docs_url="/api/docs" if settings.ENVIRONMENT != "production" else None,
     redoc_url="/api/redoc" if settings.ENVIRONMENT != "production" else None,
@@ -122,11 +135,17 @@ async def global_exception_handler(request, exc: Exception) -> JSONResponse:
 async def root(request: Request) -> Dict[str, Any]:
     """Root endpoint with basic API information."""
     return {
-        "application": settings.PROJECT_NAME,
+        "app": settings.PROJECT_NAME,
         "version": settings.VERSION,
         "environment": settings.ENVIRONMENT,
-        "documentation": "/api/docs" if settings.ENVIRONMENT != "production" else None,
-        "status": "operational",
+        "debug": settings.DEBUG,
+        "database": {
+            "engine": settings.DB_ENGINE,
+            "name": settings.POSTGRES_DB if settings.IS_POSTGRESQL else settings.SQLITE_DB_PATH.split('/')[-1]
+        },
+        "docs_url": "/docs",
+        "redoc_url": "/redoc",
+        "openapi_url": "/openapi.json",
         "request_id": request.state.request_id if hasattr(request.state, 'request_id') else None,
     }
 

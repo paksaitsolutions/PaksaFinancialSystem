@@ -12,9 +12,45 @@ from app.modules.core_financials.fixed_assets.models import Asset, DepreciationS
 
 async def init_db() -> None:
     """Initialize database tables."""
-    async with engine.begin() as conn:
+    from sqlalchemy import inspect
+    from sqlalchemy.exc import SQLAlchemyError
+    import logging
+    
+    logger = logging.getLogger(__name__)
+    
+    try:
+        # Test the database connection
+        logger.info("Testing database connection...")
+        async with engine.connect() as conn:
+            await conn.execute("SELECT 1")
+        logger.info("Database connection successful")
+        
         # Create all tables
-        await conn.run_sync(Base.metadata.create_all)
+        logger.info("Creating database tables...")
+        async with engine.begin() as conn:
+            # Check if tables already exist
+            inspector = await conn.run_sync(
+                lambda sync_conn: inspect(sync_conn.engine)
+            )
+            existing_tables = await conn.run_sync(
+                lambda sync_conn: inspector.get_table_names()
+            )
+            
+            if existing_tables:
+                logger.info(f"Found {len(existing_tables)} existing tables")
+            else:
+                logger.info("No existing tables found, creating schema...")
+            
+            # Create all tables
+            await conn.run_sync(Base.metadata.create_all)
+            logger.info("Database tables created successfully")
+            
+    except SQLAlchemyError as e:
+        logger.error(f"Database error during initialization: {str(e)}")
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error during database initialization: {str(e)}")
+        raise
 
 async def create_sample_data() -> None:
     """Create sample data for testing."""
