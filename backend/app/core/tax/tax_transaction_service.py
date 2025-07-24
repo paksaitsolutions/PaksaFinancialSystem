@@ -5,7 +5,7 @@ from decimal import Decimal
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 
-from app.db.models.tax_transaction import (
+from ..models.finance.tax_transaction import (
     TaxTransaction, 
     TaxTransactionStatus,
     TaxTransactionType,
@@ -19,7 +19,7 @@ from app.schemas.tax import (
     TaxTransactionComponentInDB
 )
 from app.core.exceptions import NotFoundException, ValidationException
-from app.db.session import with_db_session
+from app.core.db.session import with_db_session
 from app.core.auth import get_current_user
 
 class TaxTransactionService:

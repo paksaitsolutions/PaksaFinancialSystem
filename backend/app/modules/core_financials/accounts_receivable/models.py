@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String, Text, Decimal, DateTime, Date, B
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from sqlalchemy.dialects.postgresql import UUID, JSONB
-from app.models.base import Base
+from app.core.db.base import Base
 import enum
 import uuid
 

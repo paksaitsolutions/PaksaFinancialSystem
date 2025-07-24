@@ -177,7 +177,7 @@ class TaxReportExporter:
         
         This method runs in a background task and updates the export status.
         """
-        from app.db.session import SessionLocal
+        from app.core.db.session import SessionLocal
         
         db = SessionLocal()
         export_record = None

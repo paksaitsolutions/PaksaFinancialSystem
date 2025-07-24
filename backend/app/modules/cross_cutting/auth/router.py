@@ -10,9 +10,9 @@ from jose import JWTError, jwt
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from core.config import settings
-from core.database import get_db
-from .models import User
+from app.core.config import settings
+from app.core.database import get_db
+from app.modules.cross_cutting.auth.models import User
 
 router = APIRouter(tags=["Authentication"])
 

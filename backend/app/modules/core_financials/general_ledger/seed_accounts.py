@@ -3,7 +3,7 @@ Seed script to populate Chart of Accounts with business-specific structure
 """
 
 from sqlalchemy.orm import Session
-from app.core.database import get_db
+from app.core.db.base import get_db
 from app.modules.core_financials.general_ledger.models import GLAccount
 from .chart_of_accounts_data import CHART_OF_ACCOUNTS_DATA
 import logging

@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import date
 
-from app.core.database import get_db
+from app.core.db.base import get_db
 from .services import CustomerService, ARInvoiceService, ARPaymentService, ARAnalyticsService, ARPredictionService
 from .schemas import (
     CustomerCreate, CustomerUpdate, CustomerResponse, CustomerSearchRequest,

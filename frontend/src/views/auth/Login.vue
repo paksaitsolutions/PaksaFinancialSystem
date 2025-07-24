@@ -1,92 +1,170 @@
 <template>
-  <v-container fluid class="fill-height pa-0 gradient-bg">
-    <v-row class="fill-height" no-gutters>
-      <!-- Left Side (Form) -->
-      <v-col cols="12" md="6" class="d-flex justify-center align-center">
-        <v-card max-width="400" class="pa-6 elevation-10">
-          <v-card-title class="text-h5 font-weight-bold">Login</v-card-title>
-          <v-card-text>
-            <v-form @submit.prevent="handleLogin">
-              <v-text-field
-                v-model="email"
-                label="Email"
-                type="email"
-                required
-                class="mb-4"
-              ></v-text-field>
+  <v-app>
+    <v-main>
+      <v-container fluid class="pa-0 fill-height">
+        <v-row no-gutters class="login-wrapper">
+          <!-- Left Panel: Login -->
+          <v-col cols="12" md="6" class="left-panel">
+            <div class="login-box">
+              <div class="logo-wrapper d-flex align-center mb-6">
+                <v-img
+                  src="@/assets/PFS Logo.png"
+                  alt="Paksa Logo"
+                  max-width="48"
+                  max-height="48"
+                  class="mr-2"
+                  cover
+                />
+                <span class="logo-title">Welcome Back</span>
+              </div>
 
-              <v-text-field
-                v-model="password"
-                label="Password"
-                :type="showPassword ? 'text' : 'password'"
-                :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
-                @click:append-inner="showPassword = !showPassword"
-                required
-                class="mb-4"
-              ></v-text-field>
+              <h2 class="mb-4">Login to your account</h2>
+              <p class="login-subtitle mb-6">Enter your credentials to continue</p>
 
-              <v-row align="center" class="mb-2">
-                <v-col cols="6">
+              <v-form @submit.prevent="handleLogin" ref="form">
+                <v-text-field
+                  v-model="email"
+                  label="Email"
+                  type="email"
+                  required
+                  class="mb-4"
+                  variant="outlined"
+                />
+
+                <v-text-field
+                  v-model="password"
+                  label="Password"
+                  type="password"
+                  required
+                  class="mb-4"
+                  variant="outlined"
+                />
+
+                <div class="d-flex justify-space-between align-center mb-4">
                   <v-checkbox
-                    v-model="keepLoggedIn"
+                    v-model="rememberMe"
                     label="Keep me logged in"
-                    dense
-                  ></v-checkbox>
-                </v-col>
-                <v-col cols="6" class="text-right">
-                  <a class="text-subtitle-2" href="/auth/forgot-password">Forgot password?</a>
-                </v-col>
-              </v-row>
+                    density="compact"
+                    class="ma-0"
+                  />
+                  <a href="#" class="forgot">Forgot password?</a>
+                </div>
 
-              <v-btn
-                :loading="authStore.isLoading"
-                type="submit"
-                color="primary"
-                block
-                class="mt-2"
-              >
-                Login
-              </v-btn>
-            </v-form>
-          </v-card-text>
+                <v-btn
+                  type="submit"
+                  block
+                  color="primary"
+                  class="login-btn"
+                  :loading="authStore.isLoading"
+                >
+                  Login
+                </v-btn>
+              </v-form>
 
-          <v-card-actions class="justify-center">
-            <span class="text-body-2">Don't have an account?</span>
-            <router-link to="/auth/register" class="ml-1 text-primary">
-              Sign up
-            </router-link>
-          </v-card-actions>
-        </v-card>
-      </v-col>
+              <div class="signup-link mt-4">
+                Don’t have an account?
+                <router-link to="/auth/register">Sign up</router-link>
+              </div>
+            </div>
+          </v-col>
 
-      <!-- Right Side (Banner) -->
-      <v-col md="6" class="d-none d-md-flex align-center justify-center">
-        <div class="px-10 py-8 text-center">
-          <h2 class="text-h4 font-weight-bold mb-2">Welcome to Paksa Financial</h2>
-          <p class="text-subtitle-1">Changing the way financial management works</p>
-        </div>
-      </v-col>
-    </v-row>
-  </v-container>
+          <!-- Right Panel -->
+          <v-col cols="12" md="6" class="right-panel d-flex align-center justify-center">
+            <div class="slogan text-center">
+              <h1>Welcome to Paksa Financial</h1>
+              <p>Changing the way financial management works</p>
+            </div>
+          </v-col>
+        </v-row>
+      </v-container>
+    </v-main>
+  </v-app>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useAuthStore } from '@/modules/auth/store/auth.store';
 
+const authStore = useAuthStore();
 const email = ref('');
 const password = ref('');
-const keepLoggedIn = ref(true);
-const showPassword = ref(false);
-const authStore = useAuthStore();
+const rememberMe = ref(false);
 
 const handleLogin = async () => {
+  if (!email.value || !password.value) return;
   await authStore.login(email.value, password.value);
 };
 </script>
 
 <style scoped>
-.gradient-bg {
-  background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+.login-wrapper {
+  height: 100vh;
+  background: #f5f7fa;
+}
+
+.left-panel {
+  padding: 64px 48px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-box {
+  width: 100%;
+  max-width: 400px;
+  background: #fff;
+  padding: 32px;
+  border-radius: 12px;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.05);
+}
+
+.logo-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.logo-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #7c3aed;
+}
+
+.login-subtitle {
+  color: #6b7280;
+  font-size: 0.95rem;
+}
+
+.right-panel {
+  background: linear-gradient(to right, #56a8fa, #1976d2);
+  color: #fff;
+}
+
+.slogan h1 {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 16px;
+}
+
+.slogan p {
+  font-size: 1.25rem;
+  font-weight: 400;
+  color: #f3e9ff;
+}
+
+.forgot {
+  font-size: 0.9rem;
+  color: #1976d2;
+  text-decoration: none;
+}
+
+.signup-link {
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.login-btn {
+  font-weight: 600;
+  font-size: 1rem;
 }
 </style>

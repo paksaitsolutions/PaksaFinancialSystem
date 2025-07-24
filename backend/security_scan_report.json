@@ -1,0 +1,1220 @@
+[
+  {
+    "file": "conftest.py",
+    "line": 21,
+    "type": "Hardcoded Secret",
+    "description": "Potential hardcoded secret found: TEST_DATABASE_URL = \"sqlite+aiosqlite:///:memory:\"",
+    "severity": "Critical"
+  },
+  {
+    "file": "tests\\conftest.py",
+    "line": 28,
+    "type": "Hardcoded Secret",
+    "description": "Potential hardcoded secret found: TEST_DATABASE_URL = \"sqlite:///:memory:\"",
+    "severity": "Critical"
+  },
+  {
+    "file": "tests\\conftest.py",
+    "line": 32,
+    "type": "Hardcoded Secret",
+    "description": "Potential hardcoded secret found: TEST_USER_PASSWORD = \"testpass123\"",
+    "severity": "Critical"
+  },
+  {
+    "file": "app\\core\\tax\\report_cache.py",
+    "line": 99,
+    "type": "Insecure Deserialization",
+    "description": "Potential insecure deserialization vulnerability",
+    "severity": "Critical"
+  },
+  {
+    "file": "app\\core\\tax\\report_cache.py",
+    "line": 101,
+    "type": "Insecure Deserialization",
+    "description": "Potential insecure deserialization vulnerability",
+    "severity": "Critical"
+  },
+  {
+    "file": "app\\core\\tax\\report_cache.py",
+    "line": 104,
+    "type": "Insecure Deserialization",
+    "description": "Potential insecure deserialization vulnerability",
+    "severity": "Critical"
+  },
+  {
+    "file": "venv\\Lib\\site-packages\\pip\\_vendor\\certifi\\cacert.pem",
+    "line": 0,
+    "type": "Insecure File Permissions",
+    "description": "File has overly permissive permissions: 666",
+    "severity": "High"
+  },
+  {
+    "file": ".venv\\Lib\\site-packages\\pip\\_vendor\\certifi\\cacert.pem",
+    "line": 0,
+    "type": "Insecure File Permissions",
+    "description": "File has overly permissive permissions: 666",
+    "severity": "High"
+  },
+  {
+    "file": ".env",
+    "line": 0,
+    "type": "Insecure File Permissions",
+    "description": "File has overly permissive permissions: 666",
+    "severity": "High"
+  },
+  {
+    "file": "app\\core\\config\\settings.py",
+    "line": 0,
+    "type": "Insecure File Permissions",
+    "description": "File has overly permissive permissions: 666",
+    "severity": "High"
+  },
+  {
+    "file": "app\\core\\tax\\default_tax_rules.yaml",
+    "line": 0,
+    "type": "Insecure File Permissions",
+    "description": "File has overly permissive permissions: 666",
+    "severity": "High"
+  },
+  {
+    "file": "debug_tests.py",
+    "line": 59,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "debug_tests.py",
+    "line": 61,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "debug_test_output.py",
+    "line": 10,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "incremental_app.py",
+    "line": 137,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "inspect_settings.py",
+    "line": 19,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "list_packages.py",
+    "line": 14,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "run_debug.py",
+    "line": 65,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "security_analysis.py",
+    "line": 30,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: eval",
+    "severity": "High"
+  },
+  {
+    "file": "security_analysis.py",
+    "line": 30,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "security_analysis.py",
+    "line": 30,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: pickle.loads",
+    "severity": "High"
+  },
+  {
+    "file": "security_analysis.py",
+    "line": 30,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: yaml.load",
+    "severity": "High"
+  },
+  {
+    "file": "security_analysis.py",
+    "line": 30,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: pickle.load",
+    "severity": "High"
+  },
+  {
+    "file": "security_analysis.py",
+    "line": 31,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: subprocess.Popen",
+    "severity": "High"
+  },
+  {
+    "file": "security_analysis.py",
+    "line": 31,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: os.system",
+    "severity": "High"
+  },
+  {
+    "file": "security_analysis.py",
+    "line": 31,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: os.popen",
+    "severity": "High"
+  },
+  {
+    "file": "security_analysis.py",
+    "line": 32,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: pickle.load",
+    "severity": "High"
+  },
+  {
+    "file": "security_analysis.py",
+    "line": 32,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: marshal.load",
+    "severity": "High"
+  },
+  {
+    "file": "security_analysis.py",
+    "line": 32,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: shelve.open",
+    "severity": "High"
+  },
+  {
+    "file": "security_analysis.py",
+    "line": 41,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "security_analysis.py",
+    "line": 42,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "security_analysis.py",
+    "line": 43,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "simple_env_check.py",
+    "line": 17,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\core\\database.py",
+    "line": 152,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\core\\database.py",
+    "line": 192,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\core\\database.py",
+    "line": 216,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\core\\database.py",
+    "line": 271,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\core\\database.py",
+    "line": 272,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\core\\database.py",
+    "line": 273,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\core\\database.py",
+    "line": 274,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\core\\database.py",
+    "line": 275,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\core\\database.py",
+    "line": 278,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\core\\database.py",
+    "line": 279,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\core\\database.py",
+    "line": 311,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\core\\database.py",
+    "line": 318,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\core\\database.py",
+    "line": 352,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\core\\database.py",
+    "line": 362,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\core\\middleware_config.py",
+    "line": 42,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: eval",
+    "severity": "High"
+  },
+  {
+    "file": "app\\crud\\accounts_payable.py",
+    "line": 40,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\crud\\accounts_payable.py",
+    "line": 53,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\crud\\accounts_payable.py",
+    "line": 162,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\crud\\accounts_payable.py",
+    "line": 281,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\crud\\accounts_payable.py",
+    "line": 308,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\crud\\accounts_payable.py",
+    "line": 422,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\crud\\accounts_receivable.py",
+    "line": 43,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\crud\\accounts_receivable.py",
+    "line": 120,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\crud\\accounts_receivable.py",
+    "line": 158,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\crud\\accounts_receivable.py",
+    "line": 189,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\crud\\base_ap.py",
+    "line": 76,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\crud\\base_ap.py",
+    "line": 184,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\crud\\base_ap.py",
+    "line": 215,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\crud\\chart_of_accounts.py",
+    "line": 48,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\crud\\chart_of_accounts.py",
+    "line": 70,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\crud\\chart_of_accounts.py",
+    "line": 114,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\crud\\chart_of_accounts.py",
+    "line": 127,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\crud\\chart_of_accounts.py",
+    "line": 151,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\crud\\chart_of_accounts.py",
+    "line": 360,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\crud\\chart_of_accounts.py",
+    "line": 391,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\crud\\journal_entry.py",
+    "line": 53,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\crud\\journal_entry.py",
+    "line": 75,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\crud\\journal_entry.py",
+    "line": 141,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\crud\\journal_entry.py",
+    "line": 147,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\crud\\journal_entry.py",
+    "line": 158,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\crud\\journal_entry.py",
+    "line": 293,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\middleware\\rate_limiter.py",
+    "line": 169,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\middleware\\security.py",
+    "line": 86,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: eval",
+    "severity": "High"
+  },
+  {
+    "file": "app\\middleware\\security.py",
+    "line": 144,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\middleware\\security.py",
+    "line": 145,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\models\\currency.py",
+    "line": 178,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\models\\currency.py",
+    "line": 185,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\models\\general_ledger.py",
+    "line": 136,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\models\\general_ledger.py",
+    "line": 396,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\models\\permission.py",
+    "line": 79,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\models\\role.py",
+    "line": 32,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\models\\role.py",
+    "line": 39,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\models\\role.py",
+    "line": 74,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\models\\role.py",
+    "line": 81,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\models\\user.py",
+    "line": 75,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\models\\user.py",
+    "line": 82,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\models\\user.py",
+    "line": 127,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\models\\user.py",
+    "line": 152,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\services\\base.py",
+    "line": 21,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\services\\base.py",
+    "line": 27,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\services\\base.py",
+    "line": 61,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\services\\accounting\\account_balance_service.py",
+    "line": 449,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\services\\bi_ai\\ai_service.py",
+    "line": 83,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\services\\compliance\\audit_service.py",
+    "line": 28,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: eval",
+    "severity": "High"
+  },
+  {
+    "file": "app\\services\\compliance\\security_event_service.py",
+    "line": 29,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: eval",
+    "severity": "High"
+  },
+  {
+    "file": "app\\services\\compliance\\security_policy_service.py",
+    "line": 628,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: eval",
+    "severity": "High"
+  },
+  {
+    "file": "app\\services\\compliance\\security_policy_service.py",
+    "line": 670,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\services\\compliance\\security_policy_service.py",
+    "line": 671,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\services\\tax\\analytics_service.py",
+    "line": 129,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\services\\tax\\analytics_service.py",
+    "line": 146,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\services\\tax\\analytics_service.py",
+    "line": 171,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\services\\tax\\analytics_service.py",
+    "line": 192,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\services\\tax\\analytics_service.py",
+    "line": 210,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\services\\tax\\compliance_service.py",
+    "line": 108,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\services\\tax\\compliance_service.py",
+    "line": 259,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\schemas\\accounting\\reconciliation.py",
+    "line": 143,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: eval",
+    "severity": "High"
+  },
+  {
+    "file": "app\\schemas\\accounting\\reconciliation.py",
+    "line": 164,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: eval",
+    "severity": "High"
+  },
+  {
+    "file": "app\\schemas\\bi_ai\\ai_model.py",
+    "line": 46,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: eval",
+    "severity": "High"
+  },
+  {
+    "file": "app\\schemas\\bi_ai\\ai_model.py",
+    "line": 78,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: eval",
+    "severity": "High"
+  },
+  {
+    "file": "app\\modules\\core\\database.py",
+    "line": 152,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\modules\\core\\database.py",
+    "line": 192,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\modules\\core\\database.py",
+    "line": 216,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\modules\\core\\database.py",
+    "line": 271,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\modules\\core\\database.py",
+    "line": 272,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\modules\\core\\database.py",
+    "line": 273,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\modules\\core\\database.py",
+    "line": 274,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\modules\\core\\database.py",
+    "line": 275,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\modules\\core\\database.py",
+    "line": 278,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\modules\\core\\database.py",
+    "line": 279,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\modules\\core\\database.py",
+    "line": 311,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\modules\\core\\database.py",
+    "line": 318,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\modules\\core\\database.py",
+    "line": 352,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\modules\\core\\database.py",
+    "line": 362,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\modules\\core_financials\\accounting\\models.py",
+    "line": 303,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\modules\\core_financials\\accounting\\services.py",
+    "line": 41,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\modules\\core_financials\\accounting\\services.py",
+    "line": 71,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\modules\\core_financials\\accounts_payable\\ai_services.py",
+    "line": 111,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\modules\\core_financials\\accounts_payable\\ai_services.py",
+    "line": 320,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\modules\\core_financials\\accounts_payable\\models.py",
+    "line": 159,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: eval",
+    "severity": "High"
+  },
+  {
+    "file": "app\\modules\\core_financials\\accounts_payable\\models.py",
+    "line": 203,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: eval",
+    "severity": "High"
+  },
+  {
+    "file": "app\\modules\\core_financials\\accounts_payable\\models.py",
+    "line": 207,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: eval",
+    "severity": "High"
+  },
+  {
+    "file": "app\\modules\\core_financials\\accounts_payable\\models.py",
+    "line": 208,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: eval",
+    "severity": "High"
+  },
+  {
+    "file": "app\\modules\\core_financials\\accounts_payable\\models.py",
+    "line": 225,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: eval",
+    "severity": "High"
+  },
+  {
+    "file": "app\\modules\\core_financials\\accounts_payable\\schemas.py",
+    "line": 202,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: eval",
+    "severity": "High"
+  },
+  {
+    "file": "app\\modules\\core_financials\\accounts_payable\\schemas.py",
+    "line": 203,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: eval",
+    "severity": "High"
+  },
+  {
+    "file": "app\\modules\\core_financials\\cash_management\\services.py",
+    "line": 593,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\modules\\core_financials\\general_ledger\\advanced_models.py",
+    "line": 69,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: eval",
+    "severity": "High"
+  },
+  {
+    "file": "app\\modules\\core_financials\\general_ledger\\advanced_services.py",
+    "line": 353,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\modules\\core_financials\\general_ledger\\advanced_services.py",
+    "line": 384,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: eval",
+    "severity": "High"
+  },
+  {
+    "file": "app\\modules\\core_financials\\general_ledger\\advanced_services.py",
+    "line": 385,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: eval",
+    "severity": "High"
+  },
+  {
+    "file": "app\\modules\\core_financials\\general_ledger\\advanced_services.py",
+    "line": 670,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: eval",
+    "severity": "High"
+  },
+  {
+    "file": "app\\modules\\core_financials\\general_ledger\\advanced_services.py",
+    "line": 671,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: eval",
+    "severity": "High"
+  },
+  {
+    "file": "app\\modules\\core_financials\\general_ledger\\services.py",
+    "line": 21,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\modules\\core_financials\\general_ledger\\services.py",
+    "line": 27,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\modules\\core_financials\\general_ledger\\services.py",
+    "line": 80,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\modules\\core_financials\\general_ledger\\services.py",
+    "line": 106,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\modules\\core_financials\\payroll\\services.py",
+    "line": 20,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\modules\\core_financials\\payroll\\services.py",
+    "line": 26,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\modules\\core_financials\\payroll\\services.py",
+    "line": 75,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\core\\db\\session.py",
+    "line": 43,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\core\\security\\middleware.py",
+    "line": 104,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: eval",
+    "severity": "High"
+  },
+  {
+    "file": "app\\core\\security\\middleware.py",
+    "line": 150,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: eval",
+    "severity": "High"
+  },
+  {
+    "file": "app\\core\\tax\\report_cache.py",
+    "line": 99,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: pickle.loads",
+    "severity": "High"
+  },
+  {
+    "file": "app\\core\\tax\\report_cache.py",
+    "line": 99,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: pickle.load",
+    "severity": "High"
+  },
+  {
+    "file": "app\\core\\tax\\report_cache.py",
+    "line": 101,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: pickle.loads",
+    "severity": "High"
+  },
+  {
+    "file": "app\\core\\tax\\report_cache.py",
+    "line": 101,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: pickle.load",
+    "severity": "High"
+  },
+  {
+    "file": "app\\core\\tax\\report_cache.py",
+    "line": 104,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: pickle.loads",
+    "severity": "High"
+  },
+  {
+    "file": "app\\core\\tax\\report_cache.py",
+    "line": 104,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: pickle.load",
+    "severity": "High"
+  },
+  {
+    "file": "app\\core\\tax\\report_cache.py",
+    "line": 166,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\core\\tax\\tax_reporting_service.py",
+    "line": 206,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "app\\core\\tax\\tax_reporting_service.py",
+    "line": 212,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "alembic\\versions\\add_recurring_journals_and_allocation_rules.py",
+    "line": 20,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "alembic\\versions\\add_recurring_journals_and_allocation_rules.py",
+    "line": 27,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "alembic\\versions\\add_recurring_journals_and_allocation_rules.py",
+    "line": 33,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "alembic\\versions\\add_recurring_journals_and_allocation_rules.py",
+    "line": 149,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "alembic\\versions\\add_recurring_journals_and_allocation_rules.py",
+    "line": 150,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "alembic\\versions\\add_recurring_journals_and_allocation_rules.py",
+    "line": 151,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "alembic\\versions\\add_tax_transaction_tables.py",
+    "line": 117,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "alembic\\versions\\add_tax_transaction_tables.py",
+    "line": 118,
+    "type": "Dangerous Function",
+    "description": "Use of potentially dangerous function: exec",
+    "severity": "High"
+  },
+  {
+    "file": "pyproject.toml",
+    "line": 0,
+    "type": "Dependency Check",
+    "description": "Consider running a dependency checker like safety or dependabot",
+    "severity": "Medium"
+  },
+  {
+    "file": "setup.py",
+    "line": 0,
+    "type": "Dependency Check",
+    "description": "Consider running a dependency checker like safety or dependabot",
+    "severity": "Medium"
+  }
+]

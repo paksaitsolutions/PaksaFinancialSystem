@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import and_, or_, func, desc, text, update, case, cast, Date, Integer, Numeric
 
 from app.core.exceptions import NotFoundError, ValidationError, BusinessRuleError
-from app.core.database import Base
+from app.core.db.base import Base
 from . import models, schemas
 from ..accounting.models import GLAccount, JournalEntry, JournalEntryLine, AccountType
 from ..accounting.schemas import JournalEntryCreate, JournalEntryLineCreate

@@ -3,7 +3,7 @@ Fixed Assets models for asset management, depreciation, and disposal.
 """
 from sqlalchemy import Column, Integer, String, Decimal, Date, DateTime, Boolean, ForeignKey, Text, Enum
 from sqlalchemy.orm import relationship
-from app.models.base import BaseModel, AuditModel
+from app.core.db.base import BaseModel, AuditModel
 import enum
 
 class AssetStatus(enum.Enum):

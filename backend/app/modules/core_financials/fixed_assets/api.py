@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status, Request, U
 from fastapi.responses import JSONResponse, StreamingResponse
 from sqlalchemy.orm import Session
 
-from app.core.database import get_db
+from app.core.db.base import get_db
 from app.core.security import get_current_user
 from app.schemas.user import UserInDB
 from . import schemas, models, services

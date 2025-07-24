@@ -4,7 +4,7 @@ Payroll API endpoints.
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.db.base import get_db
+from app.core.db.base import get_db
 from app.modules.core_financials.payroll.services import EmployeeService, PayrollService
 from app.modules.core_financials.payroll.schemas import (
     EmployeeCreate, EmployeeUpdate, EmployeeResponse,

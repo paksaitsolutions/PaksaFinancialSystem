@@ -14,7 +14,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import JSONB, UUID as PG_UUID
 from sqlalchemy.orm import relationship, validates
 
-from app.models.base import Base
+from app.core.db.base import Base
 
 if TYPE_CHECKING:
     from app.models.user_models import User

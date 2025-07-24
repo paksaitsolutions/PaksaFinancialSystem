@@ -19,7 +19,7 @@ from sqlalchemy.orm import Session, joinedload, contains_eager
 from sqlalchemy import and_, or_, func, desc, text, update, case, cast, Date, Integer, Numeric, not_
 
 from app.core.exceptions import NotFoundError, ValidationError, BusinessRuleError
-from app.core.database import Base
+from app.core.db.base import Base
 from app.core.security import get_password_hash, verify_password
 from . import models, schemas, exceptions
 from ..accounting.models import GLAccount, JournalEntry, JournalEntryLine, AccountType

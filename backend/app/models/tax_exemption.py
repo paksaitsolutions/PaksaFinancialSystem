@@ -1,7 +1,7 @@
 from sqlalchemy import Column, String, Boolean, Date, JSON, ForeignKey, DateTime, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
-from app.db.base_class import Base
+from app.core.db.base import Base
 import uuid
 from datetime import date
 from typing import List, Optional, Dict, Any

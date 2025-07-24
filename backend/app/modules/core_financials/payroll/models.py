@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Date, Float, ForeignKey, Decimal, Text, Boolean
 from sqlalchemy.orm import relationship
-from app.models.base import BaseModel, AuditModel
+from app.core.db.base import BaseModel, AuditModel
 
 class Employee(AuditModel):
     __tablename__ = 'employees'

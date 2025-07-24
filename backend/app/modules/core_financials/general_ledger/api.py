@@ -5,7 +5,7 @@ from datetime import date
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.db.base import get_db
+from app.core.db import get_db
 from app.modules.core_financials.general_ledger.services import AccountService, JournalEntryService
 from app.modules.core_financials.general_ledger.schemas import (
     AccountCreate, AccountUpdate, AccountResponse,

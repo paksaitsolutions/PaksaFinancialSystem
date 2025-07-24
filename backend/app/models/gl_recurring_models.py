@@ -14,7 +14,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID, JSONB
 from sqlalchemy.orm import relationship, validates
 
-from app.models.base import Base
+from app.core.db.base import Base
 from app.models.gl_models import JournalEntry, JournalEntryStatus, ChartOfAccounts
 
 class RecurrenceFrequency(str, Enum):

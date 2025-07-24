@@ -7,7 +7,7 @@ from sqlalchemy import Column, DateTime, Enum as SQLEnum, ForeignKey, JSON, Stri
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import relationship
 
-from app.db.base_class import Base
+from app.core.db.base import Base
 from app.models.mixins import TimestampMixin
 
 

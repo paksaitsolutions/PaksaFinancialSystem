@@ -3,7 +3,7 @@ Cash Management models for bank accounts, transactions, and reconciliation.
 """
 from sqlalchemy import Column, Integer, String, Decimal, Date, DateTime, Boolean, ForeignKey, Text, Enum
 from sqlalchemy.orm import relationship
-from app.models.base import BaseModel, AuditModel
+from app.core.db.base import BaseModel, AuditModel
 import enum
 
 class AccountType(enum.Enum):

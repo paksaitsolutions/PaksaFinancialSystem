@@ -48,7 +48,7 @@ from app.core.tax.tax_policy_service import (
     TaxRule as TaxRuleModel
 )
 from app.core.config import settings
-from app.db.session import get_db_context
+from app.core.db.session import get_db_context
 from app.crud import tax_exemption as tax_exemption_crud
 from app.crud import tax_exemption_certificate
 
@@ -182,7 +182,7 @@ class TaxCalculationService:
     def _get_db(self) -> Session:
         """Get a database session, creating one if needed."""
         if self.db is None:
-            from app.db.session import SessionLocal
+            from app.core.db.session import SessionLocal
             self.db = SessionLocal()
         return self.db
         

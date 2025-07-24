@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 from app import schemas, crud, models
 from app.core.tax import tax_reporting_service
 from app.core.security import get_current_active_user
-from app.db.session import get_db
+from app.core.db.session import get_db
 from app.core.config import settings
 
 router = APIRouter()

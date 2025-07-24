@@ -1,10 +1,10 @@
 """
 General Ledger models for chart of accounts, journal entries, and financial periods.
 """
-from sqlalchemy import Column, Integer, String, Decimal, Date, DateTime, Boolean, ForeignKey, Text, Enum
+from sqlalchemy import Column, Integer, String, Date, DateTime, Boolean, ForeignKey, Text, Enum, Numeric
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from app.models.base import BaseModel, AuditModel
+from app.core.db.base import BaseModel
 import enum
 
 class AccountType(enum.Enum):
@@ -14,7 +14,7 @@ class AccountType(enum.Enum):
     REVENUE = "revenue"
     EXPENSE = "expense"
 
-class Account(AuditModel):
+class Account(BaseModel):
     __tablename__ = 'accounts'
     
     account_code = Column(String(20), unique=True, nullable=False)
@@ -28,15 +28,15 @@ class Account(AuditModel):
     children = relationship("Account")
     journal_entries = relationship("JournalEntryLine", back_populates="account")
 
-class JournalEntry(AuditModel):
+class JournalEntry(BaseModel):
     __tablename__ = 'journal_entries'
     
     entry_number = Column(String(50), unique=True, nullable=False)
     entry_date = Column(Date, nullable=False)
     description = Column(Text, nullable=False)
     reference = Column(String(100))
-    total_debit = Column(Decimal(15, 2), default=0)
-    total_credit = Column(Decimal(15, 2), default=0)
+    total_debit = Column(Numeric(15, 2), default=0)
+    total_credit = Column(Numeric(15, 2), default=0)
     status = Column(String(20), default='draft')
     
     lines = relationship("JournalEntryLine", back_populates="journal_entry")
@@ -47,8 +47,8 @@ class JournalEntryLine(BaseModel):
     journal_entry_id = Column(Integer, ForeignKey('journal_entries.id'), nullable=False)
     account_id = Column(Integer, ForeignKey('accounts.id'), nullable=False)
     description = Column(Text)
-    debit_amount = Column(Decimal(15, 2), default=0)
-    credit_amount = Column(Decimal(15, 2), default=0)
+    debit_amount = Column(Numeric(15, 2), default=0)
+    credit_amount = Column(Numeric(15, 2), default=0)
     
     journal_entry = relationship("JournalEntry", back_populates="lines")
     account = relationship("Account", back_populates="journal_entries")

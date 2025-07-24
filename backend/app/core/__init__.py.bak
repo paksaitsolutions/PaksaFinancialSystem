@@ -1,0 +1,48 @@
+"""
+Paksa Financial System - Core Package
+Version: 1.0.0
+Copyright (c) 2025 Paksa IT Solutions. All rights reserved.
+
+This is the core package for the Paksa Financial System.
+"""
+
+# Re-export database components from the modules.core.database module
+from app.core.database import (
+    # Database engine and session
+    engine,
+    async_session_factory,
+    SessionLocal,
+    
+    # Base model and types
+    BaseModel,
+    ModelType,
+    
+    # Session management
+    get_db,
+    get_db_session,
+    get_db_sync,
+    
+    # Database initialization
+    init_db,
+    seed_database,
+    seed_users,
+    
+    # Metadata
+    metadata,
+    
+    # SQLAlchemy types
+    Column,
+    DateTime,
+    Text,
+    func,
+    
+    # SQLAlchemy async types
+    AsyncSession,
+    AsyncEngine,
+    AsyncConnection,
+    
+    # Other utilities
+    declarative_base,
+    declared_attr,
+    sessionmaker,
+)

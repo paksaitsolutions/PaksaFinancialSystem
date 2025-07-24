@@ -27,7 +27,7 @@ from app.core.tax.tax_policy_service import TaxType, TaxJurisdiction, tax_policy
 from app.core.tax.tax_calculation_service import tax_calculation_service
 from app.core.config import settings
 from app.core.redis_utils import redis_manager, ReportManager, cache
-from app.db.session import async_session
+from app.core.db.session import async_session
 
 # Type variable for generic function return type
 T = TypeVar('T')

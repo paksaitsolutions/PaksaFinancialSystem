@@ -1,4 +1,3 @@
-# Ensure this is at the top of your models.py file
 import enum  # Python standard library enum
 from sqlalchemy import (
     Column, Integer, String, Text, Numeric, Date, DateTime, Boolean, ForeignKey, Index, 
