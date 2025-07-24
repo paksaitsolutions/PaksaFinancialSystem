@@ -1,18 +1,24 @@
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import IsolationForest
-from sklearn.linear_model import LinearRegression
-from sklearn.preprocessing import StandardScaler
-from typing import Dict, List, Any, Optional
+from sklearn.ensemble import IsolationForest, RandomForestRegressor, GradientBoostingRegressor
+from sklearn.linear_model import LinearRegression, LogisticRegression
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.metrics import mean_squared_error, accuracy_score, classification_report
+from sklearn.cluster import KMeans
+from typing import Dict, List, Any, Optional, Tuple
 import joblib
 import os
+import logging
 
 class MLFramework:
     def __init__(self):
         self.models = {}
         self.scalers = {}
         self.model_dir = "models"
+        self.model_metadata = {}
         os.makedirs(self.model_dir, exist_ok=True)
+        self.logger = logging.getLogger(__name__)
     
     def train_model(self, model_name: str, model_type: str, X: np.ndarray, y: Optional[np.ndarray] = None):
         """Train and save a model"""

@@ -38,19 +38,18 @@ Paksa Financial System is a multi-tenant, modular financial ERP platform. It sup
 - [x] Add frontend UI for inviting/registering users
 - [x] Implement email invitation logic
 - [x] Expand endpoints for role assignment and permission management
-- [ ] Assign roles: Admin, Manager, Accountant, Viewer, Custom Role
-- [ ] Set permissions per module per company
-- [ ] Multi-factor authentication (MFA) support
-- [ ] Login history and user activity logs
-- [ ] Password policies and reset flows
-- [ ] Company-specific user isolation
-- [ ] Cross-company user access (for service providers)
-- [ ] User session management per tenant
+- [x] Assign roles: Admin, Manager, Accountant, Viewer, Custom Role
+- [x] Set permissions per module per company
+- [x] Multi-factor authentication (MFA) support
+- [x] Login history and user activity logs
+- [x] Password policies and reset flows
+- [x] Company-specific user isolation
+- [x] Cross-company user access (for service providers)
+- [x] User session management per tenant
 
 ### 0.4 Enhanced Settings Module
 **Definition:** Company-level configuration and preferences with tenant isolation
 - [/] Configure invoice templates and branding per company
-
 [x] Set default currency, tax rates, languages per company
 [x] Manage payment methods and terms per company
 [x] Customize document numbering per company (e.g. INV-0001)
@@ -75,15 +74,15 @@ Paksa Financial System is a multi-tenant, modular financial ERP platform. It sup
 
 ### 0.6 Enhanced Authentication & Login
 **Definition:** Multi-tenant login system that ties each user to specific company profiles
-- [ ] Company-specific login URL (optional: company code)
-- [ ] Email & password-based login with tenant context
-- [ ] Role-based redirection after login per company
-- [ ] Session timeouts and auto logout per tenant
-- [ ] "Keep me logged in" functionality with tenant isolation
-- [ ] Password reset via email with company branding
-- [ ] Support for external auth (OAuth, SSO) per company
-- [ ] Company selection interface for multi-company users
-- [ ] Tenant-aware session management
+- [x] Company-specific login URL (optional: company code)
+- [x] Email & password-based login with tenant context
+- [x] Role-based redirection after login per company
+- [x] Session timeouts and auto logout per tenant
+- [x] "Keep me logged in" functionality with tenant isolation
+- [x] Password reset via email with company branding
+- [x] Support for external auth (OAuth, SSO) per company
+- [x] Company selection interface for multi-company users
+- [x] Tenant-aware session management
 
 ## 1. Core Financial Modules
 
@@ -170,6 +169,28 @@ Paksa Financial System is a multi-tenant, modular financial ERP platform. It sup
  - [x] Create tax calculator component
  - [x] Add database models and migrations
  - [x] Implement TypeScript types and services
+ ### 1.5 Cash Management
+- [x] Implement bank account management
+- [x] Build bank reconciliation logic
+- [x] Add cash flow forecasting
+- [x] Integrate with banking APIs
+- [x] Create cash position reporting
+- [x] Replace placeholder views with functional components
+
+### 1.6 Fixed Assets
+- [ ] Complete asset lifecycle management
+- [ ] Implement depreciation calculations
+- [ ] Add maintenance scheduling
+- [ ] Build disposal management
+- [ ] Create asset reporting
+- [ ] Replace placeholder views with functional components
+
+### 1.7 Tax Management
+- [x] Complete tax calculation engine
+- [x] Implement tax exemption certificates
+- [x] Add tax policy management
+- [x] Build tax reporting
+- [x] Replace placeholder views with functional components
 
 
 ### 1.8 Budgeting
@@ -272,11 +293,16 @@ Paksa Financial System is a multi-tenant, modular financial ERP platform. It sup
 ## 6. AI/BI Features
 
 ### 6.1 Analytics
-- [ ] Implement data warehouse
-- [ ] Add reporting engine
-- [ ] Create dashboards
-- [ ] Add custom report builder
-- [ ] Implement scheduled reports
+
+- [x] Replace mock data with real analytics
+- [x] Implement comprehensive data aggregation
+- [x] Optimize analytics queries for performance
+- [x] Add reporting engine
+- [x] Create functional dashboards (not just UI)
+- [x] Add custom report builder
+- [x] Implement scheduled reports
+- [x] Build data warehouse
+
 
 ### 6.2 AI Integration
 - [x] Add ML model framework
