@@ -97,13 +97,13 @@ Paksa Financial System is a multi-tenant, modular financial ERP platform. It sup
 ### 1.2 Accounts Receivable
 - [x] Create customer management interface
 - [x] Implement invoice generation
-- [x] Build payment receipt processing
-- [x] Add collections management
-- [x] Implement aging reports
-- [x] Replace placeholder views with functional components
-- [x] Complete backend API integration
-- [x] Add customer credit limit management
-- [ ] Implement AI-powered collections insights
+[x] Build payment receipt processing
+[x] Add collections management
+[x] Implement aging reports
+[x] Replace placeholder views with functional components
+[x] Complete backend API integration
+[x] Add customer credit limit management
+[ ] Implement AI-powered collections insights
 
 ### 1.3 General Ledger
 - [x] Complete financial statement generation
