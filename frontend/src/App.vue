@@ -1,10 +1,8 @@
 <template>
   <v-app>
-    <app-navigation v-if="isAuthenticated" />
+    <NavigationDrawer v-if="isAuthenticated" />
     
-    <v-app-bar v-if="isAuthenticated" color="primary" :elevation="1">
-      <v-app-bar-nav-icon @click="$emit('toggle-drawer')"></v-app-bar-nav-icon>
-      <v-toolbar-title class="text-h6 font-weight-medium">Paksa Financial System</v-toolbar-title>
+    <AppHeader v-if="isAuthenticated" />
       
       <v-spacer></v-spacer>
       
@@ -115,8 +113,8 @@ import { useAuthStore } from '@/modules/auth/store';
 import { useDisplay } from 'vuetify';
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts';
 import AppSnackbar from '@/components/AppSnackbar.vue';
-import AppNavigation from '@/components/AppNavigation.vue';
-import KeyboardShortcutsDialog from '@/components/common/KeyboardShortcutsDialog.vue';
+import NavigationDrawer from '@/components/layout/NavigationDrawer.vue';
+import AppHeader from '@/components/layout/AppHeader.vue';
 import Breadcrumbs from '@/components/common/Breadcrumbs.vue';
 
 const router = useRouter();

@@ -1,10 +1,20 @@
 <template>
-  <v-app-bar color="primary" app>
-    <v-app-bar-nav-icon @click="toggleDrawer"></v-app-bar-nav-icon>
+  <v-app-bar color="primary" app elevation="1">
+    <v-app-bar-nav-icon 
+      v-if="isMobile" 
+      @click="navigationStore.toggleDrawer()"
+    ></v-app-bar-nav-icon>
     
-    <v-app-bar-title>
-      <router-link to="/" class="text-decoration-none text-white">
-        Paksa Financial System
+    <v-app-bar-title class="app-title">
+      <router-link to="/" class="text-decoration-none text-white d-flex align-center">
+        <v-img
+          src="/logo.svg"
+          alt="Paksa Financial"
+          height="24"
+          width="24"
+          class="mr-2"
+        />
+        <span class="title-text">Paksa Financial System</span>
       </router-link>
     </v-app-bar-title>
     
@@ -63,6 +73,8 @@
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import { useNavigationStore } from '@/stores/navigation';
+import { useResponsive } from '@/composables/useResponsive';
 import ThemeToggle from '@/components/common/ThemeToggle.vue';
 import KeyboardShortcutsDialog from '@/components/common/KeyboardShortcutsDialog.vue';
 
@@ -77,6 +89,8 @@ const emit = defineEmits(['update:drawer']);
 
 const router = useRouter();
 const authStore = useAuthStore();
+const navigationStore = useNavigationStore();
+const { isMobile } = useResponsive();
 
 const userName = computed(() => authStore.userName);
 
@@ -88,4 +102,20 @@ const logout = async () => {
   await authStore.logout();
   router.push('/auth/login');
 };
+</script>
+
+<style scoped>
+.app-title {
+  font-weight: 600;
+}
+
+.title-text {
+  font-size: 1.125rem;
+}
+
+@media (max-width: 600px) {
+  .title-text {
+    font-size: 1rem;
+  }
+}
 </script>
