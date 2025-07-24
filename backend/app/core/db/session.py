@@ -2,33 +2,39 @@
 Database session management.
 """
 import os
-from contextlib import asynccontextmanager, contextmanager
-from typing import AsyncGenerator, Generator
+from contextlib import asynccontextmanager
+from typing import AsyncGenerator
 from pathlib import Path
-from typing import AsyncGenerator, Generator, TypeVar, Any
 
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from sqlalchemy.orm import Session
-from sqlalchemy.orm import sessionmaker
+from app.core.config import settings
 
-# Use a simple SQLite configuration for now
-DB_DIR = Path("./instance")
-DB_PATH = DB_DIR / "paksa_finance.db"
-DB_URI = f"sqlite+aiosqlite:///{DB_PATH}"
+# Use environment-based configuration
+DB_URI = os.getenv("DATABASE_URL", settings.DATABASE_URL)
 
-# Ensure the database directory exists
-DB_DIR.mkdir(parents=True, exist_ok=True)
+# Handle SQLite path creation if using SQLite
+if "sqlite" in DB_URI:
+    db_path = DB_URI.split("///")[-1] if "///" in DB_URI else "paksa_finance.db"
+    DB_DIR = Path(db_path).parent
+    DB_DIR.mkdir(parents=True, exist_ok=True)
 
 print(f"\n=== Database Configuration ===")
-print(f"Using SQLite database at: {DB_PATH}")
+print(f"Database URI: {DB_URI}")
+print(f"Environment: {settings.ENVIRONMENT}")
 print("==========================\n")
 
-# Create async engine
+# Create async engine with proper configuration
+connect_args = {}
+if "sqlite" in DB_URI:
+    connect_args["check_same_thread"] = False
+
 engine = create_async_engine(
     DB_URI,
-    echo=True,
+    echo=settings.DEBUG,
     future=True,
-    connect_args={"check_same_thread": False}
+    connect_args=connect_args,
+    pool_pre_ping=True,
+    pool_recycle=300 if "postgresql" in DB_URI else -1
 )
 
 # Create async session factory

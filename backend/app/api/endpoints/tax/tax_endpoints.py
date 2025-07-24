@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db.session import get_db
 from app.core.api_response import success_response, error_response
+from app.core.permissions import require_permission, Permission
 from app.crud.tax.tax_crud import tax_crud
 from app.crud.tax.tax_reports import tax_reports_crud
 from app.schemas.tax.tax_schemas import (
@@ -27,6 +28,7 @@ async def create_tax_rate(
     *,
     db: AsyncSession = Depends(get_db),
     tax_rate_in: TaxRateCreate,
+    _: bool = Depends(require_permission(Permission.TAX_WRITE)),
 ) -> Any:
     """Create a new tax rate."""
     tax_rate = await tax_crud.create_tax_rate(db, obj_in=tax_rate_in)

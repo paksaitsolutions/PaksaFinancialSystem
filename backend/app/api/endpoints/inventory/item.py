@@ -8,7 +8,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db.session import get_db
+from app.core.db.router import db_router
 from app.core.api_response import success_response, error_response
+from app.core.permissions import require_permission, Permission
 from app.crud.inventory.item import inventory_item_crud
 from app.schemas.inventory.item import (
     InventoryItemCreate,
@@ -23,6 +25,7 @@ async def create_inventory_item(
     *,
     db: AsyncSession = Depends(get_db),
     item_in: InventoryItemCreate,
+    _: bool = Depends(require_permission(Permission.INVENTORY_WRITE)),
 ) -> Any:
     """
     Create a new inventory item.
@@ -45,7 +48,8 @@ async def create_inventory_item(
 @router.get("/")
 async def get_inventory_items(
     *,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(db_router.get_read_session),
+    _: bool = Depends(require_permission(Permission.INVENTORY_READ)),
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(20, ge=1, le=100, description="Page size"),
     sort_by: Optional[str] = Query(None, description="Field to sort by"),
@@ -93,8 +97,9 @@ async def get_inventory_items(
 @router.get("/{item_id}", response_model=InventoryItemResponse)
 async def get_inventory_item(
     *,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(db_router.get_read_session),
     item_id: UUID,
+    _: bool = Depends(require_permission(Permission.INVENTORY_READ)),
 ) -> Any:
     """
     Get a specific inventory item by ID.
@@ -114,6 +119,7 @@ async def update_inventory_item(
     db: AsyncSession = Depends(get_db),
     item_id: UUID,
     item_in: InventoryItemUpdate,
+    _: bool = Depends(require_permission(Permission.INVENTORY_WRITE)),
 ) -> Any:
     """
     Update an inventory item.
@@ -145,6 +151,7 @@ async def delete_inventory_item(
     *,
     db: AsyncSession = Depends(get_db),
     item_id: UUID,
+    _: bool = Depends(require_permission(Permission.INVENTORY_DELETE)),
 ) -> Any:
     """
     Delete an inventory item.
