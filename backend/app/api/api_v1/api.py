@@ -101,6 +101,7 @@ api_router.include_router(
     tags=["inventory", "transactions"],
 )
 
+<<<<<<< HEAD
 api_router.include_router(
     ar_collections_ai.router,
     prefix="/accounts-receivable/collections-ai",
@@ -145,132 +146,62 @@ except ImportError as e:
     print(f"Warning: Could not import general ledger module: {e}")
 
 try:
-    # Intercompany module
-    from app.api.endpoints.intercompany import router as intercompany_router
-    api_router.include_router(intercompany_router, prefix="/intercompany", tags=["Intercompany"])
-except ImportError as e:
-    print(f"Warning: Could not import intercompany module: {e}")
+    from app.ai.api.ai_endpoints import router as ai_router
+    api_router.include_router(ai_router, prefix="/ai", tags=["AI"])
+except ImportError:
+    pass
 
+# Accounts Payable
 try:
-    # Allocation module
-    from app.api.endpoints.allocation import router as allocation_router
-    api_router.include_router(allocation_router, prefix="/allocation", tags=["Allocation"])
-except ImportError as e:
-    print(f"Warning: Could not import allocation module: {e}")
+    from app.api.endpoints.accounts_payable import vendor, invoice, payment, credit_memo, form_1099
+    api_router.include_router(vendor.router, prefix="/accounts-payable/vendors", tags=["Accounts Payable"])
+    api_router.include_router(invoice.router, prefix="/accounts-payable/invoices", tags=["Accounts Payable"])
+    api_router.include_router(payment.router, prefix="/accounts-payable/payments", tags=["Accounts Payable"])
+    api_router.include_router(credit_memo.router, prefix="/accounts-payable/credit-memos", tags=["Accounts Payable"])
+    api_router.include_router(form_1099.router, prefix="/accounts-payable/1099", tags=["Accounts Payable"])
+except ImportError:
+    pass
 
+# Inventory
 try:
-    # Period Close module
-    from app.api.endpoints.period_close import router as period_close_router
-    api_router.include_router(period_close_router, prefix="/period-close", tags=["Period Close"])
-except ImportError as e:
-    print(f"Warning: Could not import period close module: {e}")
+    from app.api.endpoints.inventory import (
+        item, adjustment, category, purchase_order, reports, 
+        barcode, cycle_count, forecast, location, transaction
+    )
+    api_router.include_router(item.router, prefix="/inventory/items", tags=["Inventory"])
+    api_router.include_router(adjustment.router, prefix="/inventory/adjustments", tags=["Inventory"])
+    api_router.include_router(category.router, prefix="/inventory/categories", tags=["Inventory"])
+    api_router.include_router(purchase_order.router, prefix="/inventory/purchase-orders", tags=["Inventory"])
+    api_router.include_router(reports.router, prefix="/inventory/reports", tags=["Inventory"])
+    api_router.include_router(barcode.router, prefix="/inventory/barcode", tags=["Inventory"])
+    api_router.include_router(cycle_count.router, prefix="/inventory/cycle-counts", tags=["Inventory"])
+    api_router.include_router(forecast.router, prefix="/inventory/forecast", tags=["Inventory"])
+    api_router.include_router(location.router, prefix="/inventory/locations", tags=["Inventory"])
+    api_router.include_router(transaction.router, prefix="/inventory/transactions", tags=["Inventory"])
+except ImportError:
+    pass
 
-<<<<<<< HEAD
-# Add more routers here as needed
-
-# Include additional modules
+# Other endpoints
 try:
-    # Authentication module
-    from app.modules.cross_cutting.auth.router import router as auth_router
-    api_router.include_router(auth_router, prefix="/auth", tags=["Authentication"])
-except ImportError as e:
-    print(f"Warning: Could not import auth module: {e}")
-    
-try:
-    # Financial Statements module
-    from app.api.endpoints.financial_statements import router as financial_statements_router
-    api_router.include_router(financial_statements_router, prefix="/financial-statements", tags=["Financial Statements"])
-except ImportError as e:
-    print(f"Warning: Could not import financial statements module: {e}")
-    
-try:
-    # Currency module
-    from app.api.endpoints.currency import router as currency_router
-    api_router.include_router(currency_router, prefix="/currency", tags=["Currency"])
-except ImportError as e:
-    print(f"Warning: Could not import currency module: {e}")
-
-try:
-    # General Ledger module
-    from app.api.endpoints.gl import router as gl_router
-    api_router.include_router(gl_router, prefix="/gl", tags=["General Ledger"])
-except ImportError as e:
-    print(f"Warning: Could not import general ledger module: {e}")
-
-try:
-    # Intercompany module
-    from app.api.endpoints.intercompany import router as intercompany_router
-    api_router.include_router(intercompany_router, prefix="/intercompany", tags=["Intercompany"])
-except ImportError as e:
-    print(f"Warning: Could not import intercompany module: {e}")
-
-try:
-    # Allocation module
-    from app.api.endpoints.allocation import router as allocation_router
-    api_router.include_router(allocation_router, prefix="/allocation", tags=["Allocation"])
-except ImportError as e:
-    print(f"Warning: Could not import allocation module: {e}")
-
-try:
-    # Period Close module
-    from app.api.endpoints.period_close import router as period_close_router
-    api_router.include_router(period_close_router, prefix="/period-close", tags=["Period Close"])
-except ImportError as e:
-    print(f"Warning: Could not import period close module: {e}")
-=======
-try:
-    # RBAC module
-    from app.api.endpoints.rbac import router as rbac_router
-    api_router.include_router(rbac_router, prefix="/rbac", tags=["RBAC"])
-except ImportError as e:
-    print(f"Warning: Could not import RBAC module: {e}")
-
-try:
-    # Password module
-    from app.api.endpoints.password import router as password_router
-    api_router.include_router(password_router, prefix="/password", tags=["Password"])
-except ImportError as e:
-    print(f"Warning: Could not import password module: {e}")
-
-try:
-    # Session module
-    from app.api.endpoints.session import router as session_router
-    api_router.include_router(session_router, prefix="/session", tags=["Session"])
-except ImportError as e:
-    print(f"Warning: Could not import session module: {e}")
-
-try:
-    # Audit module
-    from app.api.endpoints.audit import router as audit_router
-    api_router.include_router(audit_router, prefix="/audit", tags=["Audit"])
-except ImportError as e:
-    print(f"Warning: Could not import audit module: {e}")
-
-try:
-    # Encryption module
-    from app.api.endpoints.encryption import router as encryption_router
-    api_router.include_router(encryption_router, prefix="/encryption", tags=["Encryption"])
-except ImportError as e:
-    print(f"Warning: Could not import encryption module: {e}")
-
-try:
-    # Compliance module
-    from app.api.endpoints.compliance import router as compliance_router
-    api_router.include_router(compliance_router, prefix="/compliance", tags=["Compliance"])
-except ImportError as e:
-    print(f"Warning: Could not import compliance module: {e}")
-
-try:
-    # Retention module
-    from app.api.endpoints.retention import router as retention_router
-    api_router.include_router(retention_router, prefix="/retention", tags=["Retention"])
-except ImportError as e:
-    print(f"Warning: Could not import retention module: {e}")
-
-try:
-    # Backup module
-    from app.api.endpoints.backup import router as backup_router
-    api_router.include_router(backup_router, prefix="/backup", tags=["Backup"])
-except ImportError as e:
-    print(f"Warning: Could not import backup module: {e}")
->>>>>>> 8870336 (WIP: local changes before pulling from upstream master)
+    from app.api.endpoints import (
+        financial_statements, currency, gl, intercompany, allocation, 
+        period_close, rbac, password, session, audit, encryption, 
+        compliance, retention, backup, user
+    )
+    api_router.include_router(financial_statements.router, prefix="/financial-statements", tags=["Financial Statements"])
+    api_router.include_router(currency.router, prefix="/currency", tags=["Currency"])
+    api_router.include_router(gl.router, prefix="/gl", tags=["General Ledger"])
+    api_router.include_router(intercompany.router, prefix="/intercompany", tags=["Intercompany"])
+    api_router.include_router(allocation.router, prefix="/allocation", tags=["Allocation"])
+    api_router.include_router(period_close.router, prefix="/period-close", tags=["Period Close"])
+    api_router.include_router(rbac.router, prefix="/rbac", tags=["RBAC"])
+    api_router.include_router(password.router, prefix="/password", tags=["Password"])
+    api_router.include_router(session.router, prefix="/session", tags=["Session"])
+    api_router.include_router(audit.router, prefix="/audit", tags=["Audit"])
+    api_router.include_router(encryption.router, prefix="/encryption", tags=["Encryption"])
+    api_router.include_router(compliance.router, prefix="/compliance", tags=["Compliance"])
+    api_router.include_router(retention.router, prefix="/retention", tags=["Retention"])
+    api_router.include_router(backup.router, prefix="/backup", tags=["Backup"])
+    api_router.include_router(user.router, prefix="/users", tags=["Users"])
+except ImportError:
+    pass
