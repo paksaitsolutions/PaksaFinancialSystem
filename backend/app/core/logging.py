@@ -1,54 +1,105 @@
 """
-Logging configuration for the application.
+Application logging configuration.
 """
 import logging
-import logging.config
-from pathlib import Path
-from typing import Optional, Dict, Any
+import sys
+from typing import Dict, Any
+from datetime import datetime
+import json
 
-from ..core.config import settings
+from app.core.config import settings
 
-def setup_logging() -> None:
-    """
-    Configure logging for the application.
+class JSONFormatter(logging.Formatter):
+    """JSON log formatter."""
     
-    Sets up console and file logging based on configuration.
-    """
-    log_level = logging.DEBUG if settings.DEBUG else logging.INFO
+    def format(self, record: logging.LogRecord) -> str:
+        """Format log record as JSON."""
+        log_entry = {
+            "timestamp": datetime.utcnow().isoformat(),
+            "level": record.levelname,
+            "logger": record.name,
+            "message": record.getMessage(),
+            "module": record.module,
+            "function": record.funcName,
+            "line": record.lineno,
+        }
+        
+        # Add extra fields
+        if hasattr(record, 'tenant_id'):
+            log_entry['tenant_id'] = record.tenant_id
+        if hasattr(record, 'user_id'):
+            log_entry['user_id'] = record.user_id
+        if hasattr(record, 'request_id'):
+            log_entry['request_id'] = record.request_id
+        if hasattr(record, 'duration'):
+            log_entry['duration'] = record.duration
+        
+        # Add exception info
+        if record.exc_info:
+            log_entry['exception'] = self.formatException(record.exc_info)
+        
+        return json.dumps(log_entry)
+
+def setup_logging():
+    """Setup application logging."""
+    # Root logger
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.INFO if not settings.DEBUG else logging.DEBUG)
     
-    # Create logs directory if it doesn't exist
-    logs_dir = Path("logs")
-    logs_dir.mkdir(exist_ok=True)
+    # Remove default handlers
+    for handler in root_logger.handlers[:]:
+        root_logger.removeHandler(handler)
     
-    # Define log format
-    log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    date_format = "%Y-%m-%d %H:%M:%S"
+    # Console handler
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setFormatter(JSONFormatter())
+    root_logger.addHandler(console_handler)
     
-    # Configure root logger
-    logging.basicConfig(
-        level=log_level,
-        format=log_format,
-        datefmt=date_format,
-        handlers=[
-            logging.StreamHandler(),
-            logging.handlers.RotatingFileHandler(
-                filename=logs_dir / "app.log",
-                maxBytes=10 * 1024 * 1024,  # 10MB
-                backupCount=5,
-                encoding="utf-8"
-            )
-        ]
+    # Application logger
+    app_logger = logging.getLogger("app")
+    app_logger.setLevel(logging.INFO)
+    
+    # Database logger
+    db_logger = logging.getLogger("sqlalchemy.engine")
+    db_logger.setLevel(logging.WARNING if not settings.DEBUG else logging.INFO)
+    
+    return app_logger
+
+# Global logger instance
+logger = setup_logging()
+
+def log_request(request_id: str, method: str, path: str, tenant_id: str = None, user_id: str = None):
+    """Log HTTP request."""
+    logger.info(
+        f"Request {method} {path}",
+        extra={
+            "request_id": request_id,
+            "tenant_id": tenant_id,
+            "user_id": user_id,
+            "method": method,
+            "path": path
+        }
     )
-    
-    # Set log level for specific loggers
-    logging.getLogger("sqlalchemy.engine").setLevel(
-        logging.DEBUG if settings.DEBUG else logging.WARNING
+
+def log_response(request_id: str, status_code: int, duration: float):
+    """Log HTTP response."""
+    logger.info(
+        f"Response {status_code}",
+        extra={
+            "request_id": request_id,
+            "status_code": status_code,
+            "duration": duration
+        }
     )
-    logging.getLogger("uvicorn.access").handlers = logging.getLogger().handlers
-    
-    # Suppress noisy loggers
-    logging.getLogger("uvicorn").propagate = False
-    logging.getLogger("uvicorn.access").propagate = False
-    
-    logger = logging.getLogger(__name__)
-    logger.info("Logging configured successfully")
+
+def log_error(error: Exception, request_id: str = None, tenant_id: str = None):
+    """Log application error."""
+    logger.error(
+        f"Error: {str(error)}",
+        exc_info=True,
+        extra={
+            "request_id": request_id,
+            "tenant_id": tenant_id,
+            "error_type": type(error).__name__
+        }
+    )
