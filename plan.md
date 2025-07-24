@@ -256,14 +256,11 @@ Paksa Financial System is a multi-tenant, modular financial ERP platform. It sup
 - [ ] Build data warehouse
 
 ### 6.2 AI Integration
-- [ ] Implement actual ML functionality (currently stubs)
-- [ ] Add real anomaly detection algorithms
-- [ ] Integrate ML frameworks (TensorFlow/PyTorch)
-- [ ] Build predictive analytics with real models
+- [ ] Add ML model framework
+- [ ] Implement anomaly detection
+- [ ] Add predictive analytics
 - [ ] Create recommendation engine
 - [ ] Implement natural language queries
-- [ ] Remove placeholder AI endpoints or mark as "coming soon"
-- [ ] Add proper error handling for AI services
 
 ## 7. Deployment & DevOps
 
