@@ -1,26 +1,28 @@
-import { defineConfig } from 'vitest/config';
-import vue from '@vitejs/plugin-vue';
+import { defineConfig } from 'vitest/config'
+import vue from '@vitejs/plugin-vue'
+import { resolve } from 'path'
 
 export default defineConfig({
   plugins: [vue()],
   test: {
     globals: true,
     environment: 'jsdom',
-    setupFiles: ['./src/test-setup.ts'],
     coverage: {
-      reporter: ['text', 'json', 'html'],
-      exclude: [
-        'node_modules/',
-        'src/test-utils/',
-        '**/*.d.ts',
-        '**/*.test.ts',
-        '**/*.spec.ts',
-      ],
-    },
+      provider: 'v8',
+      reporter: ['text', 'html', 'lcov'],
+      threshold: {
+        global: {
+          branches: 80,
+          functions: 80,
+          lines: 80,
+          statements: 80
+        }
+      }
+    }
   },
   resolve: {
     alias: {
-      '@': '/src',
-    },
-  },
-});
+      '@': resolve(__dirname, './src')
+    }
+  }
+})
