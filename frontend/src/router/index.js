@@ -359,6 +359,11 @@ const routes = [
         component: () => import('../views/period-close/PeriodCloseView.vue')
       },
       {
+        path: 'roles',
+        name: 'roles',
+        component: () => import('../views/rbac/RoleManagementView.vue')
+      },
+      {
         path: 'help',
         name: 'help',
         component: ModuleView,
