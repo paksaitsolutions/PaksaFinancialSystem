@@ -36,4 +36,32 @@ api_router.include_router(tax_management.router, prefix="/tax", tags=["tax"])
 # Authentication MFA
 api_router.include_router(auth_mfa.router, prefix="/auth/mfa", tags=["auth", "mfa"])
 
+# Operations
+try:
+    from app.api.endpoints.operations import router as operations_router
+    api_router.include_router(operations_router, prefix="/operations", tags=["operations"])
+except ImportError as e:
+    print(f"Warning: Could not import operations module: {e}")
+
+# Data Migration
+try:
+    from app.api.endpoints.data_migration import router as data_migration_router
+    api_router.include_router(data_migration_router, prefix="/data-migration", tags=["data-migration"])
+except ImportError as e:
+    print(f"Warning: Could not import data migration module: {e}")
+
+# User Administration
+try:
+    from app.api.endpoints.user_admin import router as user_admin_router
+    api_router.include_router(user_admin_router, prefix="/user-admin", tags=["user-admin"])
+except ImportError as e:
+    print(f"Warning: Could not import user admin module: {e}")
+
+# Localization
+try:
+    from app.api.endpoints.localization import router as localization_router
+    api_router.include_router(localization_router, prefix="/localization", tags=["localization"])
+except ImportError as e:
+    print(f"Warning: Could not import localization module: {e}")
+
 # Add additional routers below as needed, using the same style.

@@ -188,7 +188,7 @@ const apRoutes: RouteRecordRaw = {
   component: defineComponent({ template: '<router-view />' }),
   redirect: '/ap/vendors',
   children: [
-    { path: 'vendors', component: () => import('@/views/PlaceholderView.vue'), meta: { title: 'Vendors', breadcrumb: 'Vendors' } },
+    { path: 'vendors', component: () => import('@/views/accounts-payable/VendorsView.vue'), meta: { title: 'Vendors', breadcrumb: 'Vendors' } },
     { path: 'invoices', component: () => import('@/views/PlaceholderView.vue'), meta: { title: 'AP Invoices', breadcrumb: 'Invoices' } },
     { path: 'payments', component: () => import('@/views/PlaceholderView.vue'), meta: { title: 'Payments', breadcrumb: 'Payments' } },
     { path: 'analytics', component: () => import('@/views/PlaceholderView.vue'), meta: { title: 'AP Analytics', breadcrumb: 'Analytics' } }
@@ -201,7 +201,7 @@ const arRoutes: RouteRecordRaw = {
   component: defineComponent({ template: '<router-view />' }),
   redirect: '/ar/customers',
   children: [
-    { path: 'customers', component: () => import('@/views/PlaceholderView.vue'), meta: { title: 'Customers' } },
+    { path: 'customers', component: () => import('@/views/accounts-receivable/CustomersView.vue'), meta: { title: 'Customers' } },
     { path: 'invoices', component: () => import('@/views/PlaceholderView.vue'), meta: { title: 'AR Invoices' } },
     { path: 'payments', component: () => import('@/views/PlaceholderView.vue'), meta: { title: 'Payments' } },
     { path: 'analytics', component: () => import('@/views/PlaceholderView.vue'), meta: { title: 'AR Analytics' } }

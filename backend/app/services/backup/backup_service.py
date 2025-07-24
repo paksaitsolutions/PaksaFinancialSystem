@@ -19,7 +19,8 @@ class BackupService:
     
     def __init__(self, db: Session):
         self.db = db
-        self.backup_dir = '/tmp/backups'
+        from app.core.config import settings
+        self.backup_dir = os.path.join(settings.UPLOAD_DIR, 'backups')
         os.makedirs(self.backup_dir, exist_ok=True)
     
     def create_backup(

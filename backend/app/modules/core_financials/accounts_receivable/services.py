@@ -108,7 +108,7 @@ class CustomerService:
     def _create_customer_gl_entry(self, customer: Customer):
         """Create GL account for customer if needed"""
         # This would integrate with GL module to create customer receivable account
-        pass
+        raise NotImplementedError("GL integration for customer accounts not implemented yet")
 
 class ARInvoiceService:
     def __init__(self, db: Session):
@@ -273,7 +273,7 @@ class ARInvoiceService:
         # Dr. Accounts Receivable
         # Cr. Revenue
         # Cr. Tax Payable (if applicable)
-        pass
+        raise NotImplementedError("GL integration for invoice entries not implemented yet")
     
     def _recalculate_invoice_totals(self, invoice: ARInvoice):
         """Recalculate invoice totals based on lines"""
@@ -286,7 +286,7 @@ class ARInvoiceService:
     def _send_invoice_email(self, invoice: ARInvoice):
         """Send invoice via email"""
         # Integrate with email service
-        pass
+        raise NotImplementedError("Email service integration not implemented yet")
 
 class ARPaymentService:
     def __init__(self, db: Session):
@@ -398,7 +398,7 @@ class ARPaymentService:
         """Create GL entries for payment"""
         # Dr. Cash/Bank Account
         # Cr. Accounts Receivable
-        pass
+        raise NotImplementedError("GL integration for payment entries not implemented yet")
 
 class ARAnalyticsService:
     def __init__(self, db: Session):
