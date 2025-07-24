@@ -1,10 +1,8 @@
 <template>
   <v-app>
-    <app-navigation v-if="isAuthenticated" />
+    <NavigationDrawer v-if="isAuthenticated" />
     
-    <v-app-bar v-if="isAuthenticated" color="primary" :elevation="1">
-      <v-app-bar-nav-icon @click="$emit('toggle-drawer')"></v-app-bar-nav-icon>
-      <v-toolbar-title class="text-h6 font-weight-medium">Paksa Financial System</v-toolbar-title>
+    <AppHeader v-if="isAuthenticated" />
       
       <v-spacer></v-spacer>
       
@@ -62,6 +60,9 @@
           </v-row>
         </v-fade-transition>
         
+        <!-- Breadcrumbs -->
+        <Breadcrumbs v-if="isAuthenticated && !isLoading" />
+        
         <!-- Router view with transition -->
         <router-view v-slot="{ Component, route }">
           <transition name="fade" mode="out-in">
@@ -110,13 +111,19 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '@/modules/auth/store';
 import { useDisplay } from 'vuetify';
+import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts';
 import AppSnackbar from '@/components/AppSnackbar.vue';
-import AppNavigation from '@/components/AppNavigation.vue';
+import NavigationDrawer from '@/components/layout/NavigationDrawer.vue';
+import AppHeader from '@/components/layout/AppHeader.vue';
+import Breadcrumbs from '@/components/common/Breadcrumbs.vue';
 
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
 const display = useDisplay();
+
+// Initialize keyboard shortcuts
+useKeyboardShortcuts();
 
 const isAuthenticated = ref(false);
 const isLoading = ref(true);

@@ -31,18 +31,26 @@ export default createVuetify({
           info: '#2196F3',
           success: '#4CAF50',
           warning: '#FFC107',
+          background: '#FFFFFF',
+          surface: '#F5F5F5',
+          'on-background': '#000000',
+          'on-surface': '#000000'
         }
       },
       dark: {
         dark: true,
         colors: {
           primary: '#2196F3',
-          secondary: '#424242',
+          secondary: '#616161',
           accent: '#FF4081',
           error: '#FF5252',
           info: '#2196F3',
           success: '#4CAF50',
           warning: '#FFC107',
+          background: '#121212',
+          surface: '#1E1E1E',
+          'on-background': '#FFFFFF',
+          'on-surface': '#FFFFFF'
         }
       }
     }

@@ -7,6 +7,7 @@ const payrollRoutes: RouteRecordRaw[] = [
     component: () => import('../../views/ModuleView.vue'),
     meta: {
       title: 'Payroll',
+      breadcrumb: 'Payroll',
       requiresAuth: true
     },
     children: [
@@ -23,7 +24,8 @@ const payrollRoutes: RouteRecordRaw[] = [
         name: 'EmployeeManagement',
         component: () => import('../../modules/payroll/views/EmployeeManagementView.vue'),
         meta: {
-          title: 'Employee Management'
+          title: 'Employee Management',
+          breadcrumb: 'Employees'
         }
       },
       {
@@ -40,7 +42,8 @@ const payrollRoutes: RouteRecordRaw[] = [
         name: 'PayrollProcessing',
         component: () => import('../../modules/payroll/components/PayrollProcessing.vue'),
         meta: {
-          title: 'Payroll Processing'
+          title: 'Payroll Processing',
+          breadcrumb: 'Processing'
         }
       },
       {
@@ -64,7 +67,8 @@ const payrollRoutes: RouteRecordRaw[] = [
         name: 'BenefitsManagement',
         component: () => import('../../modules/payroll/components/BenefitsManagement.vue'),
         meta: {
-          title: 'Benefits Management'
+          title: 'Benefits Management',
+          breadcrumb: 'Benefits'
         }
       },
       {
