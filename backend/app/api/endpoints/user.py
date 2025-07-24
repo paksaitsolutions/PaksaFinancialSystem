@@ -12,6 +12,7 @@ from app.utils.totp_manager import TOTPManager
 from fastapi import Body
 from app.models.user import UserLoginHistory, UserActivityLog
 from app.utils.password_policy import PasswordPolicy
+import json
 
 router = APIRouter(prefix="/users", tags=["User Management"])
 
@@ -99,6 +100,42 @@ async def list_company_users(company_id: str, db: AsyncSession = Depends(get_db)
     from sqlalchemy import select
     result = await db.execute(select(User).where(User.company_id == company_id))
     return result.scalars().all()
+
+# Cross-company access endpoints
+@router.post("/service-provider/grant-access/{user_id}")
+async def grant_company_access(user_id: str, company_ids: List[str] = Body(...), db: AsyncSession = Depends(get_db)):
+    user = await db.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if not user.is_service_provider:
+        user.is_service_provider = True
+    user.accessible_companies = json.dumps(company_ids)
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
+    return {"service_provider": True, "accessible_companies": company_ids}
+
+@router.post("/service-provider/revoke-access/{user_id}")
+async def revoke_company_access(user_id: str, db: AsyncSession = Depends(get_db)):
+    user = await db.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    user.is_service_provider = False
+    user.accessible_companies = None
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
+    return {"service_provider": False}
+
+@router.get("/service-provider/validate-access/{user_id}/{company_id}")
+async def validate_service_provider_access(user_id: str, company_id: str, db: AsyncSession = Depends(get_db)):
+    user = await db.get(User, user_id)
+    if not user or not user.is_service_provider or not user.accessible_companies:
+        raise HTTPException(status_code=403, detail="Access denied")
+    company_ids = json.loads(user.accessible_companies)
+    if company_id not in company_ids:
+        raise HTTPException(status_code=403, detail="Access to company denied")
+    return {"access_granted": True}
 
 # MFA Endpoints
 @router.post("/enable-mfa/{user_id}")

@@ -57,6 +57,10 @@ class User(BaseModel):
     login_history = relationship("UserLoginHistory", back_populates="user")
     activity_logs = relationship("UserActivityLog", back_populates="user")
     
+    # Cross-company access (for service providers)
+    is_service_provider = Column(Boolean(), default=False)
+    accessible_companies = Column(Text, nullable=True)  # Comma-separated company IDs or JSON list
+    
     # Self-referential relationship for created_by/updated_by
     created_users = relationship(
         "User",

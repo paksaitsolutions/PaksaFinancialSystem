@@ -27,6 +27,8 @@ class UserSession(BaseModel):
     # Session identification
     session_token = Column(String(255), unique=True, nullable=False, index=True)
     user_id = Column(GUID(), ForeignKey("users.id"), nullable=False)
+    # Tenant context
+    company_id = Column(GUID(), ForeignKey("companies.id"), nullable=False, index=True)
     
     # Session details
     ip_address = Column(String(45), nullable=True)

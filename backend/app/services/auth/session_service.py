@@ -52,37 +52,35 @@ class SessionService:
             status=SessionStatus.ACTIVE
         )
         
+    def create_session(
+        self,
+        user_id: UUID,
+        company_id: UUID,
+        ip_address: str = None,
+        user_agent: str = None,
+        remember_me: bool = False
+    ) -> UserSession:
+        """Create a new user session scoped to a tenant/company."""
+        config = self.get_active_config()
+        self._enforce_concurrent_session_limit(user_id, config.max_concurrent_sessions)
+        session_token = self._generate_session_token()
+        if remember_me:
+            expires_at = datetime.utcnow() + timedelta(days=config.remember_me_duration_days)
+        else:
+            expires_at = datetime.utcnow() + timedelta(minutes=config.session_timeout_minutes)
+        session = UserSession(
+            session_token=session_token,
+            user_id=user_id,
+            company_id=company_id,
+            ip_address=ip_address,
+            user_agent=user_agent,
+            expires_at=expires_at,
+            status=SessionStatus.ACTIVE
+        )
         self.db.add(session)
         self.db.commit()
         self.db.refresh(session)
-        
         return session
-    
-    def get_session(self, session_token: str) -> Optional[UserSession]:
-        """Get session by token."""
-        return self.db.query(UserSession).filter(
-            UserSession.session_token == session_token
-        ).first()
-    
-    def validate_session(self, session_token: str) -> Dict[str, Any]:
-        """Validate session and return status."""
-        session = self.get_session(session_token)
-        
-        if not session:
-            return {'valid': False, 'reason': 'Session not found'}
-        
-        if session.status != SessionStatus.ACTIVE:
-            return {'valid': False, 'reason': f'Session {session.status}'}
-        
-        if session.is_expired():
-            self._expire_session(session)
-            return {'valid': False, 'reason': 'Session expired'}
-        
-        # Update last activity
-        session.last_activity = datetime.utcnow()
-        self.db.commit()
-        
-        return {
             'valid': True,
             'session': session,
             'user_id': session.user_id,
