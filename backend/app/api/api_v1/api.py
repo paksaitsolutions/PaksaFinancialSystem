@@ -28,3 +28,32 @@ api_router.include_router(
 )
 
 # Add more routers here as needed
+
+# Include additional modules
+try:
+    # Authentication module
+    from app.modules.cross_cutting.auth.router import router as auth_router
+    api_router.include_router(auth_router, prefix="/auth", tags=["Authentication"])
+except ImportError as e:
+    print(f"Warning: Could not import auth module: {e}")
+    
+try:
+    # Financial Statements module
+    from app.api.endpoints.financial_statements import router as financial_statements_router
+    api_router.include_router(financial_statements_router, prefix="/financial-statements", tags=["Financial Statements"])
+except ImportError as e:
+    print(f"Warning: Could not import financial statements module: {e}")
+    
+try:
+    # Currency module
+    from app.api.endpoints.currency import router as currency_router
+    api_router.include_router(currency_router, prefix="/currency", tags=["Currency"])
+except ImportError as e:
+    print(f"Warning: Could not import currency module: {e}")
+
+try:
+    # General Ledger module
+    from app.api.endpoints.gl import router as gl_router
+    api_router.include_router(gl_router, prefix="/gl", tags=["General Ledger"])
+except ImportError as e:
+    print(f"Warning: Could not import general ledger module: {e}")

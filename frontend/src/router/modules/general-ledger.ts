@@ -102,7 +102,7 @@ export const generalLedgerRoutes: RouteRecordRaw = {
     {
       path: 'financial-statements',
       name: 'financial-statements',
-      component: lazyLoad('FinancialStatements'),
+      component: () => import('@/modules/general-ledger/views/financial-statements/FinancialStatementsView.vue'),
       meta: { 
         title: 'Financial Statements',
         icon: 'pi pi-file-pdf',

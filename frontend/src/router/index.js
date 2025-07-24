@@ -339,6 +339,11 @@ const routes = [
         props: { title: 'Settings' }
       },
       {
+        path: 'settings/currency',
+        name: 'settings-currency',
+        component: () => import('../views/settings/CurrencyManagementView.vue')
+      },
+      {
         path: 'help',
         name: 'help',
         component: ModuleView,
