@@ -1,70 +1,28 @@
 """
-Customer model for Accounts Receivable module.
+Customer model for accounts receivable.
 """
 import uuid
-from sqlalchemy import Column, String, Boolean, ForeignKey, Text, Enum, Numeric
+from sqlalchemy import Column, String, Boolean, Text, Numeric
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
 from app.models.base import Base
-from app.models.enums import CustomerStatus, PaymentTerms
 
 class Customer(Base):
-    """Customer model for managing client information."""
+    """Customer model."""
     
     __tablename__ = "customer"
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    code = Column(String(20), unique=True, nullable=False, index=True)
-    name = Column(String(100), nullable=False, index=True)
-    legal_name = Column(String(150))
-    tax_id = Column(String(50), index=True)
-    status = Column(Enum(CustomerStatus), default=CustomerStatus.ACTIVE, nullable=False, index=True)
-    
-    # Contact information
-    email = Column(String(100))
-    phone = Column(String(30))
-    website = Column(String(255))
-    
-    # Address
-    address_line1 = Column(String(100))
-    address_line2 = Column(String(100))
-    city = Column(String(50))
-    state = Column(String(50))
-    postal_code = Column(String(20))
-    country = Column(String(50))
-    
-    # Payment information
-    payment_terms = Column(Enum(PaymentTerms), default=PaymentTerms.NET_30)
-    currency_id = Column(UUID(as_uuid=True), ForeignKey("currency.id"))
-    credit_limit = Column(Numeric(precision=18, scale=2))
-    
-    # Notes
-    notes = Column(Text)
+    name = Column(String(200), nullable=False, index=True)
+    email = Column(String(100), index=True)
+    phone = Column(String(20))
+    address = Column(Text)
+    credit_limit = Column(Numeric(precision=18, scale=2), default=0)
+    is_active = Column(Boolean, default=True)
     
     # Relationships
-    currency = relationship("Currency")
-    contacts = relationship("CustomerContact", back_populates="customer", cascade="all, delete-orphan")
+    invoices = relationship("Invoice", back_populates="customer")
     
     def __repr__(self):
-        return f"<Customer {self.code}: {self.name}>"
-
-
-class CustomerContact(Base):
-    """Contact person for a customer."""
-    
-    __tablename__ = "customer_contact"
-    
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    customer_id = Column(UUID(as_uuid=True), ForeignKey("customer.id"), nullable=False)
-    name = Column(String(100), nullable=False)
-    position = Column(String(100))
-    email = Column(String(100))
-    phone = Column(String(30))
-    is_primary = Column(Boolean, default=False)
-    
-    # Relationships
-    customer = relationship("Customer", back_populates="contacts")
-    
-    def __repr__(self):
-        return f"<CustomerContact {self.name} for {self.customer.name}>"
+        return f"<Customer {self.name}>"
