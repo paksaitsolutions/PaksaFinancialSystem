@@ -11,8 +11,8 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sess
 from sqlalchemy.orm import Session
 from sqlalchemy.orm import sessionmaker
 
-# Database configuration
-DB_DIR = Path("D:/Paksa Financial System/backend/instance")
+# Use a simple SQLite configuration for now
+DB_DIR = Path("./instance")
 DB_PATH = DB_DIR / "paksa_finance.db"
 DB_URI = f"sqlite+aiosqlite:///{DB_PATH}"
 
@@ -20,7 +20,7 @@ DB_URI = f"sqlite+aiosqlite:///{DB_PATH}"
 DB_DIR.mkdir(parents=True, exist_ok=True)
 
 print(f"\n=== Database Configuration ===")
-print(f"Using database at: {DB_PATH}")
+print(f"Using SQLite database at: {DB_PATH}")
 print("==========================\n")
 
 # Create async engine
@@ -46,34 +46,10 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
     async with async_session_factory() as session:
         try:
             yield session
-        finally:
-            await session.close()
-
-# Create session factory
-SessionLocal = sessionmaker(
-    autocommit=False,
-    autoflush=False,
-    bind=engine,
-    class_=AsyncSession,
-    expire_on_commit=True,
-)
-
-async def get_db() -> AsyncSession:
-    """
-    Async dependency function that yields database sessions.
-    
-    This should be used as a FastAPI dependency to get a database session.
-    The session is automatically closed when the request is done.
-    
-    Example:
-        @app.get("/items/")
-        async def read_items(db: AsyncSession = Depends(get_db)):
-            result = await db.execute(select(Item))
-            return result.scalars().all()
-    """
-    async with SessionLocal() as session:
-        try:
-            yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
         finally:
             await session.close()
 
@@ -89,26 +65,16 @@ async def get_db_context() -> AsyncGenerator[AsyncSession, None]:
             db.add(some_object)
             await db.commit()
     """
-    db = SessionLocal()
-    try:
-        yield db
-    except Exception:
-        await db.rollback()
-        raise
-    finally:
-        await db.close()
+    async with async_session_factory() as session:
+        try:
+            yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
+        finally:
+            await session.close()
 
 # For backward compatibility
+SessionLocal = async_session_factory
 SessionType = AsyncSession
-
-def get_db_session() -> AsyncSession:
-    """
-    Get a database session.
-    
-    This is a simple function that returns a database session.
-    It's the caller's responsibility to close the session.
-    
-    Returns:
-        Session: A SQLAlchemy database session.
-    """
-    return SessionLocal()

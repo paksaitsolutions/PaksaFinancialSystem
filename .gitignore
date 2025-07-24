@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 *.so
 .Python
+env/
 build/
 develop-eggs/
 dist/
@@ -15,126 +16,42 @@ lib64/
 parts/
 sdist/
 var/
-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+.pytest_cache/
+.coverage
+htmlcov/
 
 # Virtual Environment
 venv/
-env/
 ENV/
-
-# Node.js / Frontend
-node_modules/
-.npm
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-.pnp.*
-
-# Testing
-coverage/
-*.lcov
-.nyc_output/
-
-# Build
-/dist
-/build
+.env
 
 # IDE
 .idea/
 .vscode/
 *.swp
 *.swo
-*~
 
-# Environment variables
-.env
-.env.*
-!.env.example
-
-# Database
-*.sqlite3
+# SQLite
 *.db
+*.sqlite3
 
 # Logs
-logs/
 *.log
 
-# Local development
-.DS_Store
-
-# Editor directories and files
-.idea
-.vscode
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-
-# Test files
-**/__tests__/
-**/*.test.*
-**/*.spec.*
-**/test/
-**/tests/
-**/coverage/
-
-# Build output
-**/dist/
-**/build/
-
-# Dependency directories
-**/node_modules/
-
-# Debug logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Local development
-.local
-
-# Vite specific
-.vite/
-*.local
-
-# Testing
-.coverage
-htmlcov/
-.pytest_cache/
-
-# Frontend
+# Node
 node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+npm-debug.log
+yarn-error.log
+.pnpm-debug.log
 
-# Build files
-frontend/build/
-frontend/.next/
+# Build
+/frontend/dist/
+/frontend/.nuxt/
+/frontend/.output/
 
-# Local development
-.local/
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# VS Code
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-
-# PyCharm
-.idea/
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
+# OS specific
+.DS_Store
+Thumbs.db

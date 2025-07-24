@@ -82,76 +82,46 @@ app = FastAPI(
 # Setup middleware with development flag based on environment
 setup_middleware(app, is_development=settings.ENVIRONMENT == "development")
 
-# Include API router
-app.include_router(api_router)
+# Set up custom OpenAPI documentation
+from app.core.openapi import setup_openapi
+setup_openapi(app)
 
-# Global exception handlers
-@app.exception_handler(StarletteHTTPException)
-async def http_exception_handler(request, exc: StarletteHTTPException) -> JSONResponse:
-    """Handle HTTP exceptions with consistent error format."""
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={
-            "status": "error",
-            "message": exc.detail,
-            "error": exc.detail if settings.DEBUG else None,
-        },
-    )
+# Include API router with prefix
+app.include_router(api_router, prefix=settings.API_V1_STR)
 
-@app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
-    """Handle request validation errors with detailed error messages."""
-    errors = []
-    for error in exc.errors():
-        errors.append({
-            "loc": error["loc"],
-            "msg": error["msg"],
-            "type": error["type"],
-        })
-    
-    return JSONResponse(
-        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        content={
-            "status": "error",
-            "message": "Validation error",
-            "errors": errors if settings.DEBUG else None,
-        },
-    )
-
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
-    """Global exception handler for uncaught exceptions."""
-    logger.error(f"Unhandled exception: {exc}", exc_info=True)
-    return JSONResponse(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={
-            "status": "error",
-            "message": "Internal server error",
-            "error": str(exc) if settings.DEBUG else None,
-        },
-    )
+# Set up global error handlers
+from app.middleware.error_handler import setup_error_handlers
+setup_error_handlers(app)
 
 # Root endpoint
 @app.get("/", include_in_schema=False)
 async def root(request: Request):
     """Root endpoint with basic API information."""
-    return {
-        "status": "success",
-        "message": f"Welcome to {settings.PROJECT_NAME} API",
-        "version": settings.API_VERSION,
-        "environment": settings.ENVIRONMENT,
-        "documentation": {
-            "swagger": "/api/docs",
-            "redoc": "/api/redoc",
-            "openapi": "/api/openapi.json",
-        } if settings.ENVIRONMENT != "production" else None,
-    }
+    from app.core.api_response import success_response
+    
+    return success_response(
+        message=f"Welcome to {settings.PROJECT_NAME} API",
+        data={
+            "version": settings.API_VERSION,
+            "environment": settings.ENVIRONMENT,
+            "documentation": {
+                "swagger": "/api/docs",
+                "redoc": "/api/redoc",
+                "openapi": "/api/openapi.json",
+            } if settings.ENVIRONMENT != "production" else None,
+        }
+    )
 
 # Health check endpoint
 @app.get("/health", include_in_schema=False)
 async def health_check():
     """Health check endpoint for load balancers and monitoring."""
-    return {"status": "ok"}
+    from app.core.api_response import success_response
+    
+    return success_response(
+        message="Service is healthy",
+        data={"status": "ok"}
+    )
 
 # This allows running the app with: python -m app.main
 if __name__ == "__main__":
