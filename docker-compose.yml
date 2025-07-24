@@ -1,78 +1,77 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database
-  postgres:
-    image: postgres:16-alpine
-    container_name: paksa_postgres
+  db:
+    image: postgres:15
     environment:
-      POSTGRES_DB: paksa_finance
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: paksa_financial
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_REPLICATION_USER: replicator
+      POSTGRES_REPLICATION_PASSWORD: replicator_password
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./database/init:/docker-entrypoint-initdb.d
-    networks:
-      - paksa_network
+      - ./postgres/postgresql.conf:/etc/postgresql/postgresql.conf
+      - ./postgres/pg_hba.conf:/etc/postgresql/pg_hba.conf
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
 
-  # Redis Cache
+  db_replica:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: paksa_financial
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      PGUSER: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_replica_data:/var/lib/postgresql/data
+    depends_on:
+      - db
+    command: |
+      bash -c '
+      until pg_basebackup --pgdata=/var/lib/postgresql/data --format=p --write-recovery-conf --checkpoint=fast --label=myclone --host=db --port=5432 --username=replicator --verbose --progress --wal-method=stream; do
+        echo "Waiting for master to connect..."
+        sleep 1s
+      done
+      echo "Backup done, starting replica..."
+      chmod 0700 /var/lib/postgresql/data
+      postgres
+      '
+
   redis:
     image: redis:7-alpine
-    container_name: paksa_redis
     ports:
       - "6379:6379"
-    volumes:
-      - redis_data:/data
-    networks:
-      - paksa_network
 
-  # Backend API
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: paksa_backend
-    environment:
-      - DATABASE_URI=postgresql+asyncpg://postgres:postgres@postgres:5432/paksa_finance
-      - REDIS_URL=redis://redis:6379
-      - ENVIRONMENT=development
+    build: ./backend
     ports:
       - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://user:password@db/paksa_financial
+      DATABASE_READ_REPLICA_URL: postgresql+asyncpg://user:password@db_replica/paksa_financial
+      USE_READ_REPLICA: "true"
+      REDIS_URL: redis://redis:6379
+      ENVIRONMENT: development
+      DEBUG: "true"
     depends_on:
-      - postgres
+      - db
       - redis
     volumes:
       - ./backend:/app
-      - /app/venv
-    networks:
-      - paksa_network
-    restart: unless-stopped
 
-  # Frontend
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: paksa_frontend
-    environment:
-      - VITE_API_BASE_URL=http://localhost:8000
+    build: ./frontend
     ports:
       - "3000:3000"
-    depends_on:
-      - backend
     volumes:
       - ./frontend:/app
-      - /app/node_modules
-    networks:
-      - paksa_network
-    restart: unless-stopped
+    depends_on:
+      - backend
 
 volumes:
   postgres_data:
-  redis_data:
-
-networks:
-  paksa_network:
-    driver: bridge
+  postgres_replica_data:

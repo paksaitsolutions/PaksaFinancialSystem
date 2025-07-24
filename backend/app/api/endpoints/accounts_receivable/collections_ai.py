@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db.session import get_db
 from app.core.api_response import success_response
+from app.core.permissions import require_permission, Permission
 from app.crud.accounts_receivable.collections_ai import collections_ai_crud
 from app.schemas.accounts_receivable.collections_ai import (
     CustomerRiskProfile, CollectionPrediction, CollectionsInsights, CollectionStrategy
@@ -20,6 +21,7 @@ router = APIRouter()
 async def get_customer_risk_profiles(
     *,
     db: AsyncSession = Depends(get_db),
+    _: bool = Depends(require_permission(Permission.AR_READ)),
 ) -> Any:
     """
     Get AI-powered customer risk profiles.
