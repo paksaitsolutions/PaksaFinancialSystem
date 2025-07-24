@@ -11,6 +11,9 @@ from app.api.endpoints.procurement import procurement_endpoints as procurement
 from app.api.endpoints.hrm import hrm_endpoints as hrm
 from app.api.endpoints.bi_ai import bi_ai_endpoints as bi_ai
 from app.api.endpoints.ai_assistant import ai_assistant_endpoints as ai_assistant
+from app.api.endpoints import monitoring
+from app.api.endpoints import integrations
+from app.api.endpoints import performance
 
 api_router = APIRouter()
 
@@ -87,5 +90,14 @@ api_router.include_router(bi_ai.router, prefix="/bi-ai", tags=["bi-ai", "analyti
 
 # AI Assistant
 api_router.include_router(ai_assistant.router, prefix="/ai-assistant", tags=["ai-assistant", "chat"])
+
+# Monitoring
+api_router.include_router(monitoring.router, prefix="/monitoring", tags=["monitoring"])
+
+# Integrations
+api_router.include_router(integrations.router, prefix="/integrations", tags=["integrations"])
+
+# Performance
+api_router.include_router(performance.router, prefix="/performance", tags=["performance"])
 
 # Add additional routers below as needed, using the same style.
