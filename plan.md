@@ -153,24 +153,19 @@ Paksa Financial System is a multi-tenant, modular financial ERP platform. It sup
 - [ ] Replace placeholder views with functional components
 
 ### 1.7 Tax Management
-- [x] Complete tax calculation engine
-- [x] Implement tax exemption certificates
-- [x] Add tax policy management
-- [x] Build tax reporting
-- [x] Replace placeholder views with functional components
-- [x] Complete tax calculation engine
-- [x] Implement tax exemption certificates
-- [x] Add tax policy management
-- [x] Build tax reporting
-- [x] Replace placeholder views with functional components
-- [x] Add tax jurisdiction management
-- [x] Implement tax rate management
-- [x] Create tax transaction processing
-- [x] Build tax return functionality
-- [x] Add comprehensive tax API endpoints
-- [x] Create tax calculator component
-- [x] Add database models and migrations
-- [x] Implement TypeScript types and services
+[x] Complete tax calculation engine
+[x] Implement tax exemption certificates
+[x] Add tax policy management
+[x] Build tax reporting
+[x] Replace placeholder views with functional components
+[x] Add tax jurisdiction management
+[x] Implement tax rate management
+[x] Create tax transaction processing
+[x] Build tax return functionality
+[x] Add comprehensive tax API endpoints
+[x] Create tax calculator component
+[x] Add database models and migrations
+[x] Implement TypeScript types and services
 
 ### 1.8 Budgeting
 - [ ] Fix Budget module UI errors
