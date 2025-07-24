@@ -4,7 +4,7 @@ const payrollRoutes: RouteRecordRaw[] = [
   {
     path: '/payroll',
     name: 'Payroll',
-    component: () => import('@/views/ModuleView.vue'),
+    component: () => import('../../views/ModuleView.vue'),
     meta: {
       title: 'Payroll',
       requiresAuth: true
@@ -13,7 +13,7 @@ const payrollRoutes: RouteRecordRaw[] = [
       {
         path: '',
         name: 'PayrollDashboard',
-        component: () => import('@/modules/payroll/views/PayrollView.vue'),
+        component: () => import('../../modules/payroll/views/PayrollView.vue'),
         meta: {
           title: 'Payroll Dashboard'
         }
@@ -21,7 +21,7 @@ const payrollRoutes: RouteRecordRaw[] = [
       {
         path: 'employees',
         name: 'EmployeeManagement',
-        component: () => import('@/modules/payroll/views/EmployeeManagementView.vue'),
+        component: () => import('../../modules/payroll/views/EmployeeManagementView.vue'),
         meta: {
           title: 'Employee Management'
         }
@@ -29,7 +29,7 @@ const payrollRoutes: RouteRecordRaw[] = [
       {
         path: 'employees/:id',
         name: 'EmployeeDetail',
-        component: () => import('@/modules/payroll/components/employee/EmployeeDetail.vue'),
+        component: () => import('../../modules/payroll/components/employee/EmployeeDetail.vue'),
         props: true,
         meta: {
           title: 'Employee Details'
@@ -38,7 +38,7 @@ const payrollRoutes: RouteRecordRaw[] = [
       {
         path: 'payrun',
         name: 'PayrollRun',
-        component: () => import('@/modules/payroll/views/PayrollRunView.vue'),
+        component: () => import('../../modules/payroll/views/PayrollRunView.vue'),
         meta: {
           title: 'Payroll Run'
         }
@@ -46,7 +46,7 @@ const payrollRoutes: RouteRecordRaw[] = [
       {
         path: 'payslips',
         name: 'Payslips',
-        component: () => import('@/modules/payroll/views/PayslipsView.vue'),
+        component: () => import('../../modules/payroll/views/PayslipsView.vue'),
         meta: {
           title: 'Payslips'
         }
@@ -54,7 +54,7 @@ const payrollRoutes: RouteRecordRaw[] = [
       {
         path: 'deductions-benefits',
         name: 'DeductionsBenefits',
-        component: () => import('@/modules/payroll/views/PayrollDeductionsBenefitsView.vue'),
+        component: () => import('../../modules/payroll/views/PayrollDeductionsBenefitsView.vue'),
         meta: {
           title: 'Deductions & Benefits'
         }
@@ -62,7 +62,7 @@ const payrollRoutes: RouteRecordRaw[] = [
       {
         path: 'taxes',
         name: 'PayrollTaxes',
-        component: () => import('@/modules/payroll/views/PayrollTaxesView.vue'),
+        component: () => import('../../modules/payroll/views/PayrollTaxesView.vue'),
         meta: {
           title: 'Payroll Taxes'
         }
@@ -70,7 +70,7 @@ const payrollRoutes: RouteRecordRaw[] = [
       {
         path: 'reports',
         name: 'PayrollReports',
-        component: () => import('@/modules/payroll/views/PayrollReportsView.vue'),
+        component: () => import('../../modules/payroll/views/PayrollReportsView.vue'),
         meta: {
           title: 'Payroll Reports'
         }
@@ -78,7 +78,7 @@ const payrollRoutes: RouteRecordRaw[] = [
       {
         path: 'settings',
         name: 'PayrollSettings',
-        component: () => import('@/modules/payroll/views/PayrollSettingsView.vue'),
+        component: () => import('../../modules/payroll/views/PayrollSettingsView.vue'),
         meta: {
           title: 'Payroll Settings'
         }
