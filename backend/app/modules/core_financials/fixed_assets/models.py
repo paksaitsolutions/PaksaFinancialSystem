@@ -1,74 +1,102 @@
-"""
-Fixed Assets models for asset management, depreciation, and disposal.
-"""
-from sqlalchemy import Column, Integer, String, Decimal, Date, DateTime, Boolean, ForeignKey, Text, Enum
+from sqlalchemy import Column, Integer, String, Date, DateTime, Boolean, ForeignKey, Text, Enum, Numeric
 from sqlalchemy.orm import relationship
-from app.core.db.base import BaseModel, AuditModel
+from sqlalchemy.sql import func
+from app.core.db.base import BaseModel
 import enum
+from datetime import date, datetime
+from decimal import Decimal
 
 class AssetStatus(enum.Enum):
     ACTIVE = "active"
     DISPOSED = "disposed"
+    UNDER_MAINTENANCE = "under_maintenance"
     RETIRED = "retired"
-    UNDER_CONSTRUCTION = "under_construction"
 
 class DepreciationMethod(enum.Enum):
     STRAIGHT_LINE = "straight_line"
     DECLINING_BALANCE = "declining_balance"
     UNITS_OF_PRODUCTION = "units_of_production"
 
-class Asset(AuditModel):
-    __tablename__ = 'assets'
+class MaintenanceStatus(enum.Enum):
+    SCHEDULED = "scheduled"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    CANCELLED = "cancelled"
+
+class FixedAsset(BaseModel):
+    __tablename__ = 'fixed_assets'
     
     asset_number = Column(String(50), unique=True, nullable=False)
-    asset_name = Column(String(100), nullable=False)
-    asset_category = Column(String(50), nullable=False)
+    name = Column(String(255), nullable=False)
     description = Column(Text)
-    acquisition_date = Column(Date, nullable=False)
-    acquisition_cost = Column(Decimal(15, 2), nullable=False)
-    salvage_value = Column(Decimal(15, 2), default=0)
-    useful_life_years = Column(Integer, nullable=False)
-    depreciation_method = Column(Enum(DepreciationMethod), default=DepreciationMethod.STRAIGHT_LINE)
-    accumulated_depreciation = Column(Decimal(15, 2), default=0)
-    book_value = Column(Decimal(15, 2), nullable=False)
-    status = Column(Enum(AssetStatus), default=AssetStatus.ACTIVE)
-    location = Column(String(100))
+    category = Column(String(100), nullable=False)
+    location = Column(String(255))
     
-    depreciation_schedules = relationship("DepreciationSchedule", back_populates="asset")
+    # Financial details
+    purchase_date = Column(Date, nullable=False)
+    purchase_cost = Column(Numeric(15, 2), nullable=False)
+    salvage_value = Column(Numeric(15, 2), default=0)
+    useful_life_years = Column(Integer, nullable=False)
+    
+    # Depreciation
+    depreciation_method = Column(Enum(DepreciationMethod), default=DepreciationMethod.STRAIGHT_LINE)
+    accumulated_depreciation = Column(Numeric(15, 2), default=0)
+    
+    # Status and dates
+    status = Column(Enum(AssetStatus), default=AssetStatus.ACTIVE)
+    disposal_date = Column(Date)
+    disposal_amount = Column(Numeric(15, 2))
+    disposal_reason = Column(Text)
+    
+    # Vendor information
+    vendor_name = Column(String(255))
+    warranty_expiry = Column(Date)
+    
+    # Relationships
+    depreciation_entries = relationship("DepreciationEntry", back_populates="asset")
     maintenance_records = relationship("MaintenanceRecord", back_populates="asset")
 
-class DepreciationSchedule(BaseModel):
-    __tablename__ = 'depreciation_schedules'
+class DepreciationEntry(BaseModel):
+    __tablename__ = 'depreciation_entries'
     
-    asset_id = Column(Integer, ForeignKey('assets.id'), nullable=False)
+    asset_id = Column(Integer, ForeignKey('fixed_assets.id'), nullable=False)
     period_date = Column(Date, nullable=False)
-    depreciation_amount = Column(Decimal(15, 2), nullable=False)
-    accumulated_depreciation = Column(Decimal(15, 2), nullable=False)
-    book_value = Column(Decimal(15, 2), nullable=False)
-    is_posted = Column(Boolean, default=False)
+    depreciation_amount = Column(Numeric(15, 2), nullable=False)
+    accumulated_depreciation = Column(Numeric(15, 2), nullable=False)
+    book_value = Column(Numeric(15, 2), nullable=False)
     
-    asset = relationship("Asset", back_populates="depreciation_schedules")
+    # Relationships
+    asset = relationship("FixedAsset", back_populates="depreciation_entries")
 
-class MaintenanceRecord(AuditModel):
+class MaintenanceRecord(BaseModel):
     __tablename__ = 'maintenance_records'
     
-    asset_id = Column(Integer, ForeignKey('assets.id'), nullable=False)
-    maintenance_date = Column(Date, nullable=False)
-    maintenance_type = Column(String(50), nullable=False)
+    asset_id = Column(Integer, ForeignKey('fixed_assets.id'), nullable=False)
+    maintenance_type = Column(String(100), nullable=False)  # Preventive, Corrective, Emergency
     description = Column(Text, nullable=False)
-    cost = Column(Decimal(15, 2), default=0)
-    vendor = Column(String(100))
+    
+    # Scheduling
+    scheduled_date = Column(Date, nullable=False)
+    completed_date = Column(Date)
+    status = Column(Enum(MaintenanceStatus), default=MaintenanceStatus.SCHEDULED)
+    
+    # Cost and vendor
+    estimated_cost = Column(Numeric(15, 2))
+    actual_cost = Column(Numeric(15, 2))
+    vendor_name = Column(String(255))
+    
+    # Notes and attachments
+    notes = Column(Text)
     next_maintenance_date = Column(Date)
     
-    asset = relationship("Asset", back_populates="maintenance_records")
+    # Relationships
+    asset = relationship("FixedAsset", back_populates="maintenance_records")
 
-class AssetDisposal(AuditModel):
-    __tablename__ = 'asset_disposals'
+class AssetCategory(BaseModel):
+    __tablename__ = 'asset_categories'
     
-    asset_id = Column(Integer, ForeignKey('assets.id'), nullable=False)
-    disposal_date = Column(Date, nullable=False)
-    disposal_method = Column(String(50), nullable=False)
-    sale_proceeds = Column(Decimal(15, 2), default=0)
-    disposal_cost = Column(Decimal(15, 2), default=0)
-    gain_loss = Column(Decimal(15, 2), default=0)
-    reason = Column(Text)
+    name = Column(String(100), unique=True, nullable=False)
+    description = Column(Text)
+    default_useful_life = Column(Integer)
+    default_depreciation_method = Column(Enum(DepreciationMethod), default=DepreciationMethod.STRAIGHT_LINE)
+    default_salvage_rate = Column(Numeric(5, 4), default=0)  # Percentage of purchase cost
