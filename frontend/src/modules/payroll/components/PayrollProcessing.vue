@@ -1,10 +1,11 @@
 <template>
   <div class="payroll-processing">
+    <ResponsiveContainer>
     <v-card>
       <v-card-title class="d-flex align-center">
         <h2>Payroll Processing</h2>
         <v-spacer></v-spacer>
-        <v-btn color="primary" @click="openCreateRunDialog">
+        <v-btn color="primary" @click="openCreateRunDialog" data-shortcut="create">
           <v-icon left>mdi-plus</v-icon>
           New Payroll Run
         </v-btn>
@@ -107,8 +108,8 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn text @click="createRunDialog = false">Cancel</v-btn>
-          <v-btn color="primary" @click="createPayrollRun" :disabled="!createFormValid">Create</v-btn>
+          <v-btn text @click="createRunDialog = false" data-shortcut="close">Cancel</v-btn>
+          <v-btn color="primary" @click="createPayrollRun" :disabled="!createFormValid" data-shortcut="save">Create</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -187,12 +188,24 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    </v-card>
+    </ResponsiveContainer>
   </div>
 </template>
 
 <script>
+import ResponsiveContainer from '@/components/layout/ResponsiveContainer.vue'
+import { useResponsive } from '@/composables/useResponsive'
+
 export default {
   name: 'PayrollProcessing',
+  components: {
+    ResponsiveContainer
+  },
+  setup() {
+    const { isMobile } = useResponsive()
+    return { isMobile }
+  },
   data: () => ({
     loading: false,
     employeesLoading: false,

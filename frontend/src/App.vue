@@ -62,6 +62,9 @@
           </v-row>
         </v-fade-transition>
         
+        <!-- Breadcrumbs -->
+        <Breadcrumbs v-if="isAuthenticated && !isLoading" />
+        
         <!-- Router view with transition -->
         <router-view v-slot="{ Component, route }">
           <transition name="fade" mode="out-in">
@@ -110,13 +113,19 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '@/modules/auth/store';
 import { useDisplay } from 'vuetify';
+import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts';
 import AppSnackbar from '@/components/AppSnackbar.vue';
 import AppNavigation from '@/components/AppNavigation.vue';
+import KeyboardShortcutsDialog from '@/components/common/KeyboardShortcutsDialog.vue';
+import Breadcrumbs from '@/components/common/Breadcrumbs.vue';
 
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
 const display = useDisplay();
+
+// Initialize keyboard shortcuts
+useKeyboardShortcuts();
 
 const isAuthenticated = ref(false);
 const isLoading = ref(true);

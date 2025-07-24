@@ -5,6 +5,7 @@ import { createPinia } from 'pinia';
 import router from './router';
 import './assets/styles/reset.css';
 import './assets/styles/theme.css';
+import './assets/styles/responsive.css';
 
 // Vuetify
 import 'vuetify/styles';

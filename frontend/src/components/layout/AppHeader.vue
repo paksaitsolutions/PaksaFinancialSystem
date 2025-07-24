@@ -16,6 +16,8 @@
     
     <ThemeToggle />
     
+    <KeyboardShortcutsDialog />
+    
     <v-btn icon>
       <v-badge dot color="error">
         <v-icon>mdi-bell</v-icon>
@@ -62,6 +64,7 @@ import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import ThemeToggle from '@/components/common/ThemeToggle.vue';
+import KeyboardShortcutsDialog from '@/components/common/KeyboardShortcutsDialog.vue';
 
 const props = defineProps({
   drawer: {

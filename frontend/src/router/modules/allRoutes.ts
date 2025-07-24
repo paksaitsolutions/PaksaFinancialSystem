@@ -90,6 +90,7 @@ export const rootRoute: RouteRecordRaw = {
   component: () => import('@/views/Home.vue'),
   meta: { 
     title: 'Home',
+    breadcrumb: 'Dashboard',
     requiresAuth: false
   }
 };
@@ -187,10 +188,10 @@ const apRoutes: RouteRecordRaw = {
   component: defineComponent({ template: '<router-view />' }),
   redirect: '/ap/vendors',
   children: [
-    { path: 'vendors', component: () => import('@/views/PlaceholderView.vue'), meta: { title: 'Vendors' } },
-    { path: 'invoices', component: () => import('@/views/PlaceholderView.vue'), meta: { title: 'AP Invoices' } },
-    { path: 'payments', component: () => import('@/views/PlaceholderView.vue'), meta: { title: 'Payments' } },
-    { path: 'analytics', component: () => import('@/views/PlaceholderView.vue'), meta: { title: 'AP Analytics' } }
+    { path: 'vendors', component: () => import('@/views/PlaceholderView.vue'), meta: { title: 'Vendors', breadcrumb: 'Vendors' } },
+    { path: 'invoices', component: () => import('@/views/PlaceholderView.vue'), meta: { title: 'AP Invoices', breadcrumb: 'Invoices' } },
+    { path: 'payments', component: () => import('@/views/PlaceholderView.vue'), meta: { title: 'Payments', breadcrumb: 'Payments' } },
+    { path: 'analytics', component: () => import('@/views/PlaceholderView.vue'), meta: { title: 'AP Analytics', breadcrumb: 'Analytics' } }
   ]
 };
 
