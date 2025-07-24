@@ -1,27 +1,22 @@
 """
-Database module for the application.
+Database core module.
 
-This module contains database connection utilities, session management,
-and other database-related functionality.
+This module provides centralized database configuration and session management.
 """
-
-from .session import SessionLocal, async_session_factory, get_db, get_db_session, get_db_context, SessionType
-from .base import Base, BaseModel
-from .utils import get_database_url, validate_database_url
-from .init_db import init_db, seed_database, seed_users
+from .session import (
+    engine,
+    async_session_factory,
+    get_db,
+    get_db_context,
+    SessionLocal,
+    SessionType
+)
 
 __all__ = [
-    "SessionLocal",
-    "async_session_factory",
+    "engine",
+    "async_session_factory", 
     "get_db",
-    "get_db_session",
     "get_db_context",
-    "SessionType",
-    "Base",
-    "BaseModel",
-    "get_database_url",
-    "validate_database_url",
-    "init_db",
-    "seed_database",
-    "seed_users"
+    "SessionLocal",
+    "SessionType"
 ]

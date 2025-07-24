@@ -5,6 +5,12 @@ from app.api.endpoints.inventory import item as inventory_item, adjustment as in
 from app.api.endpoints.accounts_receivable import collections_ai as ar_collections_ai
 from app.api.endpoints.tax import tax_endpoints as tax_management
 from app.api.endpoints.auth import mfa as auth_mfa
+from app.api.endpoints.invoicing import invoice_endpoints as invoicing
+from app.api.endpoints.accounting import accounting_endpoints as accounting
+from app.api.endpoints.procurement import procurement_endpoints as procurement
+from app.api.endpoints.hrm import hrm_endpoints as hrm
+from app.api.endpoints.bi_ai import bi_ai_endpoints as bi_ai
+from app.api.endpoints.ai_assistant import ai_assistant_endpoints as ai_assistant
 
 api_router = APIRouter()
 
@@ -35,5 +41,51 @@ api_router.include_router(tax_management.router, prefix="/tax", tags=["tax"])
 
 # Authentication MFA
 api_router.include_router(auth_mfa.router, prefix="/auth/mfa", tags=["auth", "mfa"])
+
+# Operations
+try:
+    from app.api.endpoints.operations import router as operations_router
+    api_router.include_router(operations_router, prefix="/operations", tags=["operations"])
+except ImportError as e:
+    print(f"Warning: Could not import operations module: {e}")
+
+# Data Migration
+try:
+    from app.api.endpoints.data_migration import router as data_migration_router
+    api_router.include_router(data_migration_router, prefix="/data-migration", tags=["data-migration"])
+except ImportError as e:
+    print(f"Warning: Could not import data migration module: {e}")
+
+# User Administration
+try:
+    from app.api.endpoints.user_admin import router as user_admin_router
+    api_router.include_router(user_admin_router, prefix="/user-admin", tags=["user-admin"])
+except ImportError as e:
+    print(f"Warning: Could not import user admin module: {e}")
+
+# Localization
+try:
+    from app.api.endpoints.localization import router as localization_router
+    api_router.include_router(localization_router, prefix="/localization", tags=["localization"])
+except ImportError as e:
+    print(f"Warning: Could not import localization module: {e}")
+=======
+# Invoicing
+api_router.include_router(invoicing.router, prefix="/invoicing", tags=["invoicing"])
+
+# Accounting
+api_router.include_router(accounting.router, prefix="/accounting", tags=["accounting"])
+
+# Procurement
+api_router.include_router(procurement.router, prefix="/procurement", tags=["procurement"])
+
+# HRM
+api_router.include_router(hrm.router, prefix="/hrm", tags=["hrm"])
+
+# BI/AI Dashboard
+api_router.include_router(bi_ai.router, prefix="/bi-ai", tags=["bi-ai", "analytics"])
+
+# AI Assistant
+api_router.include_router(ai_assistant.router, prefix="/ai-assistant", tags=["ai-assistant", "chat"])
 
 # Add additional routers below as needed, using the same style.

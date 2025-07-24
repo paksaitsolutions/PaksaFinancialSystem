@@ -20,7 +20,6 @@ export const formatPercentage = (value: number, decimals: number = 2): string =>
 export const formatDate = (date: Date | string, format: string = 'PPpp'): string => {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
   
-  // Simple date formatting - in production, use date-fns or similar
   if (format === 'PPpp') {
     return dateObj.toLocaleString();
   }
