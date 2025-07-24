@@ -60,6 +60,14 @@ const payrollRoutes: RouteRecordRaw[] = [
         }
       },
       {
+        path: 'benefits',
+        name: 'BenefitsManagement',
+        component: () => import('../../modules/payroll/components/BenefitsManagement.vue'),
+        meta: {
+          title: 'Benefits Management'
+        }
+      },
+      {
         path: 'deductions-benefits',
         name: 'DeductionsBenefits',
         component: () => import('../../modules/payroll/views/PayrollDeductionsBenefitsView.vue'),
