@@ -68,6 +68,14 @@ const payrollRoutes: RouteRecordRaw[] = [
         }
       },
       {
+        path: 'tax-calculator',
+        name: 'TaxCalculator',
+        component: () => import('../../modules/payroll/components/TaxCalculator.vue'),
+        meta: {
+          title: 'Tax Calculator'
+        }
+      },
+      {
         path: 'taxes',
         name: 'PayrollTaxes',
         component: () => import('../../modules/payroll/views/PayrollTaxesView.vue'),

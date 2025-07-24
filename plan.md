@@ -26,7 +26,7 @@
 ### 1.4 Payroll
 - [x] Complete employee management
 - [x] Implement payroll processing
-- [ ] Add tax calculation engine
+- [x] Add tax calculation engine
 - [ ] Build benefits management
 - [ ] Create payroll reporting
 

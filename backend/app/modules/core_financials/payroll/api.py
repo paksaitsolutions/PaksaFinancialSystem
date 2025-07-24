@@ -9,6 +9,7 @@ from app.core.db.base import get_db
 # Import the employee API router
 from app.modules.core_financials.payroll.api.employee_api import router as employee_router
 from app.modules.core_financials.payroll.api.payroll_processing_api import router as payroll_processing_router
+from app.modules.core_financials.payroll.api.tax_calculation_api import router as tax_calculation_router
 
 from app.modules.core_financials.payroll.services import EmployeeService, PayrollService
 from app.modules.core_financials.payroll.schemas import (
@@ -23,6 +24,7 @@ payroll_service = PayrollService()
 # Include the employee router
 router.include_router(employee_router)
 router.include_router(payroll_processing_router)
+router.include_router(tax_calculation_router)
 
 # Legacy Employee endpoints - these will be deprecated in favor of the new employee API
 @router.post("/legacy/employees/", response_model=EmployeeResponse, status_code=status.HTTP_201_CREATED, deprecated=True)

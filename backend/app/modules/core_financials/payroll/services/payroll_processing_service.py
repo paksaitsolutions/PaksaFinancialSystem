@@ -161,9 +161,24 @@ class PayrollProcessingService:
             # Calculate gross pay
             gross_pay = basic_salary + overtime_pay + bonus + allowances
             
-            # Calculate deductions (simplified)
-            tax_deductions = gross_pay * Decimal("0.20")  # 20% tax placeholder
-            other_deductions = gross_pay * Decimal("0.05")  # 5% other deductions
+            # Calculate taxes using tax calculation engine
+            from app.modules.core_financials.payroll.services.tax_calculation_service import TaxCalculationService
+            from app.modules.core_financials.payroll.schemas.tax_calculation import TaxCalculationRequest, FilingStatusEnum
+            
+            tax_request = TaxCalculationRequest(
+                employee_id=employee.id,
+                gross_pay=gross_pay,
+                pay_period="monthly",
+                filing_status=FilingStatusEnum.SINGLE,
+                allowances=0,
+                additional_withholding=Decimal("0.00"),
+                state="CA",
+                year=2024
+            )
+            
+            tax_result = TaxCalculationService.calculate_taxes(tax_request)
+            tax_deductions = tax_result.total_tax
+            other_deductions = gross_pay * Decimal("0.02")  # 2% other deductions
             total_deductions = tax_deductions + other_deductions
             
             # Calculate net pay
