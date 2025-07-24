@@ -92,6 +92,14 @@ const payrollRoutes: RouteRecordRaw[] = [
         }
       },
       {
+        path: 'reporting',
+        name: 'PayrollReporting',
+        component: () => import('../../modules/payroll/components/PayrollReporting.vue'),
+        meta: {
+          title: 'Payroll Reporting'
+        }
+      },
+      {
         path: 'reports',
         name: 'PayrollReports',
         component: () => import('../../modules/payroll/views/PayrollReportsView.vue'),
