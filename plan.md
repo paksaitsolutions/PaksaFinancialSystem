@@ -10,11 +10,11 @@
 - [ ] Implement 1099 reporting
 
 ### 1.2 Accounts Receivable
-- [ ] Create customer management interface
-- [ ] Implement invoice generation
-- [ ] Build payment receipt processing
-- [ ] Add collections management
-- [ ] Implement aging reports
+- [x] Create customer management interface
+- [x] Implement invoice generation
+- [x] Build payment receipt processing
+- [x] Add collections management
+- [x] Implement aging reports
 
 ### 1.3 General Ledger
 - [x] Complete financial statement generation
