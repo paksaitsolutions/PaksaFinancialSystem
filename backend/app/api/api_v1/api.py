@@ -57,3 +57,24 @@ try:
     api_router.include_router(gl_router, prefix="/gl", tags=["General Ledger"])
 except ImportError as e:
     print(f"Warning: Could not import general ledger module: {e}")
+
+try:
+    # Intercompany module
+    from app.api.endpoints.intercompany import router as intercompany_router
+    api_router.include_router(intercompany_router, prefix="/intercompany", tags=["Intercompany"])
+except ImportError as e:
+    print(f"Warning: Could not import intercompany module: {e}")
+
+try:
+    # Allocation module
+    from app.api.endpoints.allocation import router as allocation_router
+    api_router.include_router(allocation_router, prefix="/allocation", tags=["Allocation"])
+except ImportError as e:
+    print(f"Warning: Could not import allocation module: {e}")
+
+try:
+    # Period Close module
+    from app.api.endpoints.period_close import router as period_close_router
+    api_router.include_router(period_close_router, prefix="/period-close", tags=["Period Close"])
+except ImportError as e:
+    print(f"Warning: Could not import period close module: {e}")
