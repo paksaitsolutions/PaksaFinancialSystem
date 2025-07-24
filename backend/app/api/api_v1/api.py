@@ -4,6 +4,7 @@ API v1 router.
 from fastapi import APIRouter
 
 from app.api.endpoints.accounts_payable import vendor, invoice, payment, credit_memo, form_1099
+from app.api.endpoints.inventory import item as inventory_item, adjustment as inventory_adjustment, category as inventory_category, purchase_order as inventory_purchase_order, reports as inventory_reports, barcode as inventory_barcode, cycle_count as inventory_cycle_count, forecast as inventory_forecast, location as inventory_location, transaction as inventory_transaction
 
 # Create API v1 router
 api_router = APIRouter()
@@ -37,6 +38,66 @@ api_router.include_router(
     form_1099.router,
     prefix="/accounts-payable/1099",
     tags=["accounts-payable", "1099-reporting"],
+)
+
+api_router.include_router(
+    inventory_item.router,
+    prefix="/inventory/items",
+    tags=["inventory", "items"],
+)
+
+api_router.include_router(
+    inventory_adjustment.router,
+    prefix="/inventory/adjustments",
+    tags=["inventory", "adjustments"],
+)
+
+api_router.include_router(
+    inventory_category.router,
+    prefix="/inventory/categories",
+    tags=["inventory", "categories"],
+)
+
+api_router.include_router(
+    inventory_purchase_order.router,
+    prefix="/inventory/purchase-orders",
+    tags=["inventory", "purchase-orders"],
+)
+
+api_router.include_router(
+    inventory_reports.router,
+    prefix="/inventory/reports",
+    tags=["inventory", "reports"],
+)
+
+api_router.include_router(
+    inventory_barcode.router,
+    prefix="/inventory/barcode",
+    tags=["inventory", "barcode"],
+)
+
+api_router.include_router(
+    inventory_cycle_count.router,
+    prefix="/inventory/cycle-counts",
+    tags=["inventory", "cycle-counts"],
+)
+
+api_router.include_router(
+    inventory_forecast.router,
+    prefix="/inventory/forecast",
+    tags=["inventory", "forecast"],
+)
+
+api_router.include_router(
+    inventory_location.router,
+    prefix="/inventory/locations",
+    tags=["inventory", "locations"],
+)
+
+api_router.include_router(
+    inventory_transaction.router,
+    prefix="/inventory/transactions",
+    tags=["inventory", "transactions"],
 )
 
 # Add more routers here as needed
