@@ -6,8 +6,8 @@ from typing import List
 router = APIRouter()
 
 def get_service():
-    # Placeholder for dependency injection
-    pass
+    """Get AR service instance."""
+    raise NotImplementedError("AR service dependency injection not implemented yet")
 
 @router.get('/customers', response_model=List[CustomerSchema])
 def list_customers(service: AccountsReceivableService = Depends(get_service)):

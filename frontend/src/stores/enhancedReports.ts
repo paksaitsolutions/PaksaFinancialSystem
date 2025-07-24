@@ -3,26 +3,26 @@ import { ref, computed } from 'vue';
 import enhancedReportsService from '@/services/enhancedReportsService';
 
 export const useEnhancedReportsStore = defineStore('enhancedReports', () => {
-  const reports = ref([]);
-  const templates = ref([]);
-  const schedules = ref([]);
-  const loading = ref(false);
-  const currentCompanyId = ref(null);
+  const reports = ref<any[]>([]);
+  const templates = ref<any[]>([]);
+  const schedules = ref<any[]>([]);
+  const loading = ref<boolean>(false);
+  const currentCompanyId = ref<string | null>(null);
 
   const recentReports = computed(() => 
     reports.value
-      .filter(r => r.status === 'completed')
-      .sort((a, b) => new Date(b.generated_at) - new Date(a.generated_at))
+      .filter((r: any) => r.status === 'completed')
+      .sort((a: any, b: any) => new Date(b.generated_at).getTime() - new Date(a.generated_at).getTime())
       .slice(0, 10)
   );
 
   const favoriteReports = computed(() => 
-    reports.value.filter(r => r.is_favorite)
+    reports.value.filter((r: any) => r.is_favorite)
   );
 
   const reportsByType = computed(() => {
-    const grouped = {};
-    reports.value.forEach(report => {
+    const grouped: Record<string, any[]> = {};
+    reports.value.forEach((report: any) => {
       if (!grouped[report.report_type]) {
         grouped[report.report_type] = [];
       }
