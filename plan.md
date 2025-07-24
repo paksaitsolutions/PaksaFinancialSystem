@@ -461,13 +461,19 @@ Paksa Financial System is a multi-tenant, modular financial ERP platform. It sup
 - [x] Add tenant API endpoints for management
 
 ### 17.3 Frontend Multi-Tenant Support
-- [ ] Implement company selection interface
-- [ ] Add tenant-aware routing
-- [ ] Implement company-specific theming and branding
-- [ ] Add tenant context management (Vuex/Pinia)
-- [ ] Implement tenant-aware API calls
-- [ ] Add company switching functionality
-- [ ] Implement tenant-specific feature flags
+- [x] Implement company selection interface
+- [x] Add tenant-aware routing
+- [x] Implement company-specific theming and branding
+- [x] Add tenant context management (Vuex/Pinia)
+- [x] Implement tenant-aware API calls
+- [x] Add company switching functionality
+- [x] Implement tenant-specific feature flags
+- [x] Create tenant store with Pinia
+- [x] Build company selector and switcher components
+- [x] Add tenant routing guards
+- [x] Implement tenant-aware API interceptors
+- [x] Create feature flags composable
+- [x] Build tenant-aware navigation
 
 ### 17.4 Security & Isolation
 - [ ] Implement tenant data isolation
@@ -547,7 +553,7 @@ Paksa Financial System is a multi-tenant, modular financial ERP platform. It sup
 ### 19.2 Usage Flow
 - All operations (invoices, payroll, etc.) are scoped per company
 - No cross-company data leakage
-- Reports and documents use company logo, name, numbering
+- Reports and documents use company logo, name, numbering, address, website, email
 - Users can switch between companies if authorized
 - All data remains isolated per tenant
 
