@@ -8,16 +8,16 @@ Paksa Financial System is a multi-tenant, modular financial ERP platform. It sup
 
 ### 0.1 Company Profile Module
 **Definition:** Allows a company to register and configure its unique identity and environment.
-- [ ] Register new company with basic info (name, email, industry, etc.)
-- [ ] Upload logo and branding
-- [ ] Setup default currency, language, and time zone
-- [ ] Configure fiscal year and tax settings
-- [ ] Setup default chart of accounts
-- [ ] Assign company admin and initial users
-- [ ] Enable/disable modules per company
-- [ ] Set up company-specific numbering formats (Invoice #, PO #, etc.)
-- [ ] Configure company-specific database isolation
-- [ ] Setup company subscription and billing
+- [x] Register new company with basic info (name, email, industry, etc.)
+- [x] Upload logo and branding
+- [x] Setup default currency, language, and time zone
+- [x] Configure fiscal year and tax settings
+- [x] Setup default chart of accounts
+- [x] Assign company admin and initial users
+- [x] Enable/disable modules per company
+- [x] Set up company-specific numbering formats (Invoice #, PO #, etc.)
+- [x] Configure company-specific database isolation
+- [x] Setup company subscription and billing
 
 ### 0.2 Super Admin Module
 **Definition:** System-wide administration and control panel for platform owner(s)
@@ -46,28 +46,29 @@ Paksa Financial System is a multi-tenant, modular financial ERP platform. It sup
 
 ### 0.4 Enhanced Settings Module
 **Definition:** Company-level configuration and preferences with tenant isolation
-- [ ] Configure invoice templates and branding per company
-- [ ] Set default currency, tax rates, languages per company
-- [ ] Manage payment methods and terms per company
-- [ ] Customize document numbering per company (e.g. INV-0001)
-- [ ] Define custom fields per company (vendors, invoices, reports)
-- [ ] Configure notifications and email templates per company
-- [ ] Company-specific integrations and API keys
-- [ ] Tenant-specific feature toggles
-- [ ] Company data retention policies
+- [/] Configure invoice templates and branding per company
+
+[x] Set default currency, tax rates, languages per company
+[x] Manage payment methods and terms per company
+[x] Customize document numbering per company (e.g. INV-0001)
+[x] Define custom fields per company (vendors, invoices, reports)
+[x] Configure notifications and email templates per company
+[x] Company-specific integrations and API keys
+[x] Tenant-specific feature toggles
+[x] Company data retention policies
 
 ### 0.5 Enhanced Reports Module
 **Definition:** Generate financial, operational, and compliance reports with multi-tenant support
-- [ ] Income Statement (Profit & Loss) per company
-- [ ] Balance Sheet per company
-- [ ] Cash Flow Statement per company
-- [ ] Tax Summary Reports (VAT, GST) per company
-- [ ] Payables / Receivables Aging Reports per company
-- [ ] Audit Logs and User Activity Reports per company
-- [ ] Cross-company consolidated reports (for holding companies)
-- [ ] Export PDF / Excel / CSV with company branding
-- [ ] Schedule recurring reports via email per company
-- [ ] Company-specific report templates
+- [x] Income Statement (Profit & Loss) per company
+- [x] Balance Sheet per company
+- [x] Cash Flow Statement per company
+- [x] Tax Summary Reports (VAT, GST) per company
+- [x] Payables / Receivables Aging Reports per company
+- [x] Audit Logs and User Activity Reports per company
+- [x] Cross-company consolidated reports (for holding companies)
+- [x] Export PDF / Excel / CSV with company branding
+- [x] Schedule recurring reports via email per company
+- [x] Company-specific report templates
 
 ### 0.6 Enhanced Authentication & Login
 **Definition:** Multi-tenant login system that ties each user to specific company profiles

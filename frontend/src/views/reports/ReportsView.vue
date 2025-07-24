@@ -119,7 +119,7 @@
       :is-favorite="isFavorite"
       @refresh="loadReportData"
       @close="closeReportRunner"
-      @export="exportReport"
+      @export="handleExportReport"
       @toggle-favorite="toggleFavorite"
       @schedule="openScheduleDialog"
       @customize="openCustomizeDialog"
@@ -218,13 +218,13 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { useReportsStore } from '@/stores/reports';
+import { useEnhancedReports } from '@/composables/useEnhancedReports';
 import ReportList from './components/ReportList.vue';
 import ReportRunnerDialog from './components/ReportRunnerDialog.vue';
 import type { Report } from '@/types/reports';
 
 const router = useRouter();
-const reportsStore = useReportsStore();
+const { loading, reports, loadCompanyReports, generateReport, exportReport } = useEnhancedReports();
 const reportListRef = ref<InstanceType<typeof ReportList>>();
 
 // Breadcrumb
@@ -263,22 +263,21 @@ const scheduleDialog = ref({
 });
 
 // Computed
-const categories = computed(() => reportsStore.categories);
-const favoriteReports = computed(() => reportsStore.favoriteReports);
-const recentReports = computed(() => reportsStore.recentReports);
+const categories = computed(() => [
+  { id: 'financial', name: 'Financial Reports', icon: 'pi pi-chart-line', count: 5 },
+  { id: 'operational', name: 'Operational Reports', icon: 'pi pi-cog', count: 3 },
+  { id: 'compliance', name: 'Compliance Reports', icon: 'pi pi-shield', count: 2 }
+]);
+const favoriteReports = computed(() => reports.value.filter(r => r.is_favorite));
+const recentReports = computed(() => reports.value.slice(0, 5));
 const isFavorite = computed(() => {
   if (!reportRunner.value.report) return false;
-  return reportsStore.favorites.some(fav => fav.reportId === reportRunner.value.report?.id);
+  return favoriteReports.value.some(fav => fav.id === reportRunner.value.report?.id);
 });
 
 // Methods
 const refreshReports = async () => {
-  loading.value = true;
-  try {
-    await reportsStore.fetchReports();
-  } finally {
-    loading.value = false;
-  }
+  await loadCompanyReports();
 };
 
 const selectCategory = (categoryId: string) => {
@@ -348,14 +347,10 @@ const closeReportRunner = () => {
   }, 300);
 };
 
-const exportReport = async (format: string) => {
+const handleExportReport = async (format: string) => {
   if (!reportRunner.value.report) return;
   
-  try {
-    await reportsStore.exportReport(reportRunner.value.report.id, format as any);
-  } catch (error) {
-    console.error('Error exporting report:', error);
-  }
+  await exportReport(reportRunner.value.report.id, format);
 };
 
 const toggleFavorite = async () => {
@@ -493,7 +488,7 @@ const generateMockData = (report: Report) => {
 
 // Lifecycle hooks
 onMounted(async () => {
-  await reportsStore.initialize();
+  await loadCompanyReports();
 });
 </script>
 

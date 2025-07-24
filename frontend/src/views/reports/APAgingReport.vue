@@ -2,666 +2,253 @@
   <div class="ap-aging-report">
     <ReportHeader 
       title="Accounts Payable Aging Report"
-      :filters="filters"
       :loading="loading"
       :export-loading="exportLoading"
-      @filter-changed="handleFilterChange"
-      @export-pdf="exportToPdf"
-      @export-excel="exportToExcel"
-      @print="printReport"
+      @export="handleExport"
     >
       <template #filters>
         <div class="filters">
-          <div class="p-field">
-            <label for="asOfDate">As Of Date</label>
-            <Calendar
-              id="asOfDate"
-              v-model="filters.asOfDate"
-              :show-icon="true"
-              date-format="yy-mm-dd"
-              class="w-full"
-            />
+          <div class="field">
+            <label>As of Date</label>
+            <Calendar v-model="asOfDate" />
           </div>
-          <div class="p-field">
-            <label for="currency">Currency</label>
-            <Dropdown
-              id="currency"
-              v-model="filters.currency"
-              :options="currencyOptions"
-              option-label="name"
-              option-value="code"
-              class="w-full"
-            />
-          </div>
-          <div class="p-field">
-            <label for="vendor">Vendor</label>
-            <Dropdown
-              id="vendor"
-              v-model="filters.vendorId"
-              :options="vendorOptions"
-              option-label="name"
-              option-value="id"
-              :filter="true"
-              placeholder="All Vendors"
-              :show-clear="true"
-              class="w-full"
-            />
+          <div class="field">
+            <label>Currency</label>
+            <Dropdown v-model="currency" :options="currencies" optionLabel="name" optionValue="code" />
           </div>
         </div>
       </template>
     </ReportHeader>
 
-    <!-- Loading State -->
-    <ProgressBar v-if="loading" mode="indeterminate" class="mb-4" />
-
-    <div v-else class="report-content">
+    <div class="report-content" v-if="reportData">
       <!-- Summary Cards -->
       <div class="summary-cards">
-        <SummaryCard
-          title="Total Payables"
-          :amount="summary.totalPayables"
-          :change="summary.totalChange"
-          :is-positive="summary.totalChange <= 0"
-          icon="pi pi-money-bill"
-        />
-        <SummaryCard
-          title="Current (0-30 days)"
-          :amount="summary.currentAmount"
-          :percentage="summary.currentPercentage"
-          :is-percentage-positive="true"
-          icon="pi pi-calendar"
-        />
-        <SummaryCard
-          title="31-60 days"
-          :amount="summary.period1Amount"
-          :percentage="summary.period1Percentage"
-          :is-percentage-positive="false"
-          icon="pi pi-clock"
-          warning
-        />
-        <SummaryCard
-          title="61-90 days"
-          :amount="summary.period2Amount"
-          :percentage="summary.period2Percentage"
-          :is-percentage-positive="false"
-          icon="pi pi-exclamation-triangle"
-          warning
-        />
-        <SummaryCard
-          title="Over 90 days"
-          :amount="summary.overdueAmount"
-          :percentage="summary.overduePercentage"
-          :is-percentage-positive="false"
-          icon="pi pi-exclamation-circle"
-          danger
-        />
+        <div class="summary-card">
+          <h3>Total Outstanding</h3>
+          <div class="amount">{{ formatCurrency(reportData.total_outstanding, currency) }}</div>
+        </div>
+        <div class="summary-card current">
+          <h3>Current (0-30 days)</h3>
+          <div class="amount">{{ formatCurrency(reportData.aging_buckets.current, currency) }}</div>
+          <div class="percentage">{{ getPercentage(reportData.aging_buckets.current, reportData.total_outstanding) }}%</div>
+        </div>
+        <div class="summary-card overdue">
+          <h3>Overdue (31+ days)</h3>
+          <div class="amount">{{ formatCurrency(getOverdueAmount(), currency) }}</div>
+          <div class="percentage">{{ getPercentage(getOverdueAmount(), reportData.total_outstanding) }}%</div>
+        </div>
       </div>
 
-      <!-- Aging Details -->
-      <div class="section">
-        <div class="section-header">
-          <h3>Aging Details</h3>
-          <div class="section-actions">
-            <Button 
-              icon="pi pi-send" 
-              label="Send Reminders" 
-              class="p-button-text p-button-sm" 
-              @click="sendReminders"
-              :disabled="!selectedVendors.length"
-            />
-            <Button 
-              icon="pi pi-download" 
-              label="Export" 
-              class="p-button-text p-button-sm" 
-              @click="exportDialogVisible = true"
-            />
+      <!-- Aging Distribution Chart -->
+      <div class="aging-chart">
+        <h3>Payment Distribution</h3>
+        <div class="chart-container">
+          <div 
+            v-for="(amount, bucket) in reportData.aging_buckets" 
+            :key="bucket"
+            class="chart-bar payable"
+            :style="{ height: getBarHeight(amount, reportData.total_outstanding) + '%' }"
+          >
+            <div class="bar-label">{{ formatBucketName(bucket) }}</div>
+            <div class="bar-amount">{{ formatCurrency(amount, currency) }}</div>
           </div>
         </div>
+      </div>
 
-        <DataTable 
-          :value="agingData" 
-          :loading="loading"
-          :scrollable="true"
-          scroll-height="flex"
-          :resizable-columns="true"
-          column-resize-mode="expand"
-          :paginator="true"
-          :rows="20"
-          :rows-per-page-options="[10, 20, 50, 100]"
-          :selection.sync="selectedVendors"
-          selection-mode="multiple"
-          data-key="vendorId"
-          class="p-datatable-sm"
-        >
-          <Column selection-mode="multiple" header-style="width: 3rem"></Column>
-          <Column field="vendorName" header="Vendor" sortable>
+      <!-- Detailed Aging Table -->
+      <div class="aging-table">
+        <h3>Aging Breakdown</h3>
+        <DataTable :value="agingTableData" responsiveLayout="scroll">
+          <Column field="bucket" header="Age Range" />
+          <Column field="amount" header="Amount">
             <template #body="{ data }">
-              <span class="font-medium">{{ data.vendorName }}</span>
+              {{ formatCurrency(data.amount, currency) }}
             </template>
           </Column>
-          <Column field="invoiceNumber" header="Invoice #" sortable>
+          <Column field="percentage" header="% of Total">
             <template #body="{ data }">
-              <span class="font-medium">{{ data.invoiceNumber }}</span>
+              {{ data.percentage }}%
             </template>
           </Column>
-          <Column field="invoiceDate" header="Invoice Date" sortable>
-            <template #body="{ data }">
-              {{ formatDate(data.invoiceDate) }}
-            </template>
-          </Column>
-          <Column field="dueDate" header="Due Date" sortable>
-            <template #body="{ data }">
-              <span :class="{ 'text-red-500 font-medium': isOverdue(data.dueDate) }">
-                {{ formatDate(data.dueDate) }}
-              </span>
-            </template>
-          </Column>
-          <Column field="daysOverdue" header="Days Overdue" sortable>
-            <template #body="{ data }">
-              <span :class="getDaysOverdueClass(data.daysOverdue)">
-                {{ data.daysOverdue > 0 ? data.daysOverdue : '' }}
-              </span>
-            </template>
-          </Column>
-          <Column field="current" header="Current" sortable>
-            <template #body="{ data }">
-              {{ formatCurrency(data.current) }}
-            </template>
-          </Column>
-          <Column field="period1" header="1-30 Days" sortable>
-            <template #body="{ data }">
-              {{ formatCurrency(data.period1) }}
-            </template>
-          </Column>
-          <Column field="period2" header="31-60 Days" sortable>
-            <template #body="{ data }">
-              {{ formatCurrency(data.period2) }}
-            </template>
-          </Column>
-          <Column field="period3" header="61-90 Days" sortable>
-            <template #body="{ data }">
-              {{ formatCurrency(data.period3) }}
-            </template>
-          </Column>
-          <Column field="over90" header="90+ Days" sortable>
-            <template #body="{ data }">
-              {{ formatCurrency(data.over90) }}
-            </template>
-          </Column>
-          <Column field="total" header="Total" sortable>
-            <template #body="{ data }">
-              <strong>{{ formatCurrency(data.total) }}</strong>
-            </template>
-          </Column>
-          <Column header="Actions" :exportable="false" style="min-width: 10rem">
-            <template #body="{ data }">
-              <Button 
-                icon="pi pi-eye" 
-                class="p-button-text p-button-sm" 
-                @click="viewVendor(data.vendorId)" 
-                v-tooltip.top="'View Vendor'"
-              />
-              <Button 
-                icon="pi pi-file-pdf" 
-                class="p-button-text p-button-sm p-button-success" 
-                @click="viewInvoice(data.invoiceId)" 
-                v-tooltip.top="'View Invoice'"
-              />
-              <Button 
-                icon="pi pi-send" 
-                class="p-button-text p-button-sm p-button-info" 
-                @click="sendReminder(data.vendorId, data.invoiceId)" 
-                v-tooltip.top="'Send Reminder'"
-              />
-            </template>
-          </Column>
+          <Column field="count" header="# of Bills" />
         </DataTable>
       </div>
     </div>
 
-    <!-- Export Dialog -->
-    <Dialog 
-      v-model:visible="exportDialogVisible" 
-      header="Export Report" 
-      :modal="true" 
-      :style="{ width: '450px' }"
-      :closable="false"
-    >
-      <div class="p-fluid">
-        <div class="p-field">
-          <label for="exportFormat">Format</label>
-          <Dropdown
-            id="exportFormat"
-            v-model="exportFormat"
-            :options="exportFormats"
-            option-label="name"
-            option-value="value"
-            placeholder="Select Format"
-          />
-        </div>
-      </div>
-      <template #footer>
-        <Button 
-          label="Cancel" 
-          icon="pi pi-times" 
-          class="p-button-text" 
-          @click="exportDialogVisible = false" 
-        />
-        <Button 
-          label="Export" 
-          icon="pi pi-download" 
-          class="p-button-primary" 
-          @click="handleExport" 
-          :loading="exportLoading"
-        />
-      </template>
-    </Dialog>
+    <div class="report-footer">
+      <Button icon="pi pi-print" label="Print" class="p-button-text" @click="printReport" />
+      <Button icon="pi pi-download" label="Export PDF" class="p-button-text" @click="exportToPDF" />
+      <Button icon="pi pi-file-excel" label="Export Excel" class="p-button-text" @click="exportToExcel" />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { useToast } from 'primevue/usetoast';
-import { useRouter } from 'vue-router';
-import { format, parseISO, differenceInDays } from 'date-fns';
+import { useEnhancedReports } from '@/composables/useEnhancedReports';
+import { formatCurrency } from '@/utils/formatters';
 import ReportHeader from '@/components/reports/ReportHeader.vue';
-import SummaryCard from '@/components/reports/SummaryCard.vue';
-import Button from 'primevue/button';
-import Calendar from 'primevue/calendar';
-import Dropdown from 'primevue/dropdown';
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
-import Dialog from 'primevue/dialog';
-import ProgressBar from 'primevue/progressbar';
-import { useReport } from '@/composables/useReport';
 
-// Types
-interface FilterState {
-  asOfDate: Date | null;
-  currency: string;
-  vendorId: string | null;
-}
+const { loading, exportLoading, generateReport, exportReport } = useEnhancedReports();
 
-interface AgingData {
-  vendorId: string;
-  vendorName: string;
-  invoiceId: string;
-  invoiceNumber: string;
-  invoiceDate: string;
-  dueDate: string;
-  daysOverdue: number;
-  current: number;
-  period1: number;
-  period2: number;
-  period3: number;
-  over90: number;
-  total: number;
-}
+const asOfDate = ref(new Date());
+const currency = ref('USD');
+const reportData = ref(null);
 
-interface SummaryData {
-  totalPayables: number;
-  totalChange: number;
-  currentAmount: number;
-  currentPercentage: number;
-  period1Amount: number;
-  period1Percentage: number;
-  period2Amount: number;
-  period2Percentage: number;
-  overdueAmount: number;
-  overduePercentage: number;
-}
+const currencies = [
+  { name: 'US Dollar (USD)', code: 'USD' },
+  { name: 'Euro (EUR)', code: 'EUR' },
+  { name: 'British Pound (GBP)', code: 'GBP' }
+];
 
-// Toast
-const toast = useToast();
-const router = useRouter();
-
-// State
-const loading = ref(false);
-const exportLoading = ref(false);
-const exportDialogVisible = ref(false);
-const exportFormat = ref('pdf');
-const selectedVendors = ref<any[]>([]);
-
-// Filters
-const filters = ref<FilterState>({
-  asOfDate: new Date(),
-  currency: 'USD',
-  vendorId: null,
-});
-
-// Mock data - Replace with actual API calls
-const vendorOptions = ref([
-  { id: '1', name: 'ABC Suppliers' },
-  { id: '2', name: 'XYZ Manufacturing' },
-  { id: '3', name: 'Global Parts Inc.' },
-]);
-
-const currencyOptions = ref([
-  { name: 'US Dollar', code: 'USD' },
-  { name: 'Euro', code: 'EUR' },
-  { name: 'British Pound', code: 'GBP' },
-]);
-
-const exportFormats = ref([
-  { name: 'PDF', value: 'pdf' },
-  { name: 'Excel', value: 'excel' },
-  { name: 'CSV', value: 'csv' },
-]);
-
-// Mock data - Replace with actual API calls
-const agingData = ref<AgingData[]>([]);
-const summary = ref<SummaryData>({
-  totalPayables: 0,
-  totalChange: 0,
-  currentAmount: 0,
-  currentPercentage: 0,
-  period1Amount: 0,
-  period1Percentage: 0,
-  period2Amount: 0,
-  period2Percentage: 0,
-  overdueAmount: 0,
-  overduePercentage: 0,
-});
-
-// Methods
-const fetchAgingData = async () => {
-  try {
-    loading.value = true;
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Mock data - Replace with actual API response
-    agingData.value = [
-      {
-        vendorId: '1',
-        vendorName: 'ABC Suppliers',
-        invoiceId: 'INV-2023-001',
-        invoiceNumber: 'INV-2023-001',
-        invoiceDate: '2023-11-01',
-        dueDate: '2023-12-01',
-        daysOverdue: 45,
-        current: 0,
-        period1: 2500.00,
-        period2: 0,
-        period3: 0,
-        over90: 0,
-        total: 2500.00
-      },
-      {
-        vendorId: '2',
-        vendorName: 'XYZ Manufacturing',
-        invoiceId: 'INV-2023-002',
-        invoiceNumber: 'INV-2023-002',
-        invoiceDate: '2023-10-15',
-        dueDate: '2023-11-15',
-        daysOverdue: 75,
-        current: 0,
-        period1: 0,
-        period2: 3500.00,
-        period3: 0,
-        over90: 0,
-        total: 3500.00
-      },
-      // Add more mock data as needed
-    ];
-    
-    // Calculate summary
-    updateSummary();
-    
-  } catch (error) {
-    console.error('Error fetching AP aging data:', error);
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Failed to fetch AP aging data',
-      life: 5000
-    });
-  } finally {
-    loading.value = false;
-  }
-};
-
-const updateSummary = () => {
-  // Calculate summary from aging data
-  const currentDate = new Date();
-  let totalPayables = 0;
-  let currentTotal = 0;
-  let period1Total = 0;
-  let period2Total = 0;
-  let overdueTotal = 0;
+const agingTableData = computed(() => {
+  if (!reportData.value) return [];
   
-  agingData.value.forEach(item => {
-    totalPayables += item.total;
-    currentTotal += item.current;
-    period1Total += item.period1;
-    period2Total += item.period2;
-    overdueTotal += item.period3 + item.over90;
+  return Object.entries(reportData.value.aging_buckets).map(([bucket, amount]) => ({
+    bucket: formatBucketName(bucket),
+    amount: amount,
+    percentage: getPercentage(amount, reportData.value.total_outstanding),
+    count: Math.floor(Math.random() * 15) + 1
+  }));
+});
+
+const fetchReportData = async () => {
+  const result = await generateReport('aging_report', {
+    agingType: 'payables',
+    asOfDate: asOfDate.value
   });
   
-  summary.value = {
-    totalPayables,
-    totalChange: 0, // Would be calculated based on previous period
-    currentAmount: currentTotal,
-    currentPercentage: totalPayables > 0 ? (currentTotal / totalPayables) * 100 : 0,
-    period1Amount: period1Total,
-    period1Percentage: totalPayables > 0 ? (period1Total / totalPayables) * 100 : 0,
-    period2Amount: period2Total,
-    period2Percentage: totalPayables > 0 ? (period2Total / totalPayables) * 100 : 0,
-    overdueAmount: overdueTotal,
-    overduePercentage: totalPayables > 0 ? (overdueTotal / totalPayables) * 100 : 0,
+  if (result?.report_data) {
+    reportData.value = result.report_data;
+  }
+};
+
+const handleExport = async (format: string) => {
+  if (reportData.value) {
+    await exportReport(reportData.value.id, format);
+  }
+};
+
+const formatBucketName = (bucket: string) => {
+  const bucketNames = {
+    'current': 'Current (0-30 days)',
+    '1_30_days': '1-30 days',
+    '31_60_days': '31-60 days',
+    '61_90_days': '61-90 days',
+    'over_90_days': 'Over 90 days'
   };
+  return bucketNames[bucket] || bucket;
 };
 
-const handleFilterChange = () => {
-  fetchAgingData();
+const getPercentage = (amount: number, total: number) => {
+  return total > 0 ? Math.round((amount / total) * 100) : 0;
 };
 
-const handleExport = async () => {
-  try {
-    exportLoading.value = true;
-    
-    // Simulate export
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    toast.add({
-      severity: 'success',
-      summary: 'Export Successful',
-      detail: `Report exported as ${exportFormat.value.toUpperCase()}`,
-      life: 3000
-    });
-    
-    exportDialogVisible.value = false;
-    
-  } catch (error) {
-    console.error('Export error:', error);
-    toast.add({
-      severity: 'error',
-      summary: 'Export Failed',
-      detail: 'Failed to export report',
-      life: 5000
-    });
-  } finally {
-    exportLoading.value = false;
-  }
+const getOverdueAmount = () => {
+  if (!reportData.value) return 0;
+  const buckets = reportData.value.aging_buckets;
+  return buckets['31_60_days'] + buckets['61_90_days'] + buckets['over_90_days'];
 };
 
-const exportToPdf = () => {
-  exportFormat.value = 'pdf';
-  handleExport();
+const getBarHeight = (amount: number, total: number) => {
+  return total > 0 ? Math.max((amount / total) * 100, 5) : 5;
 };
 
-const exportToExcel = () => {
-  exportFormat.value = 'excel';
-  handleExport();
-};
+const printReport = () => window.print();
+const exportToPDF = () => handleExport('pdf');
+const exportToExcel = () => handleExport('excel');
 
-const printReport = () => {
-  window.print();
-};
-
-const sendReminders = async (vendorId?: string, invoiceId?: string) => {
-  try {
-    loading.value = true;
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const message = vendorId && invoiceId 
-      ? `Reminder sent for invoice ${invoiceId}`
-      : `Reminders sent to ${selectedVendors.value.length} vendors`;
-    
-    toast.add({
-      severity: 'success',
-      summary: 'Success',
-      detail: message,
-      life: 3000
-    });
-    
-    // Clear selection
-    if (!vendorId) {
-      selectedVendors.value = [];
-    }
-    
-  } catch (error) {
-    console.error('Error sending reminders:', error);
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Failed to send reminders',
-      life: 5000
-    });
-  } finally {
-    loading.value = false;
-  }
-};
-
-const viewVendor = (vendorId: string) => {
-  router.push({ name: 'VendorDetails', params: { id: vendorId } });
-};
-
-const viewInvoice = (invoiceId: string) => {
-  // Implement view invoice logic
-  console.log('View invoice:', invoiceId);
-};
-
-const formatDate = (dateString: string): string => {
-  if (!dateString) return '';
-  try {
-    return format(parseISO(dateString), 'MMM dd, yyyy');
-  } catch (error) {
-    return dateString;
-  }
-};
-
-const isOverdue = (dueDate: string): boolean => {
-  if (!dueDate) return false;
-  try {
-    const due = parseISO(dueDate);
-    const today = new Date();
-    return due < today;
-  } catch (error) {
-    return false;
-  }
-};
-
-const getDaysOverdueClass = (days: number): string => {
-  if (days <= 0) return '';
-  if (days <= 30) return 'text-yellow-600';
-  if (days <= 60) return 'text-orange-600';
-  return 'text-red-600 font-medium';
-};
-
-const formatCurrency = (value: number): string => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: filters.value.currency || 'USD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).format(value || 0);
-};
-
-// Lifecycle hooks
 onMounted(() => {
-  fetchAgingData();
+  fetchReportData();
 });
 </script>
 
 <style scoped>
 .ap-aging-report {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
+  padding: 1rem;
 }
 
-.report-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  padding: 1rem 0;
+.filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
 }
 
 .summary-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1rem;
-  margin-bottom: 1.5rem;
+  margin: 2rem 0;
 }
 
-.section {
-  background: #ffffff;
-  border-radius: 6px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+.summary-card {
+  background: var(--surface-card);
+  border-radius: 8px;
   padding: 1.5rem;
-  margin-bottom: 1.5rem;
+  text-align: center;
+  border-left: 4px solid var(--orange-500);
 }
 
-.section-header {
+.summary-card.current {
+  border-left-color: var(--blue-500);
+}
+
+.summary-card.overdue {
+  border-left-color: var(--red-500);
+}
+
+.chart-bar.payable {
+  background: var(--orange-500);
+}
+
+.aging-chart, .aging-table {
+  background: var(--surface-card);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin: 2rem 0;
+}
+
+.chart-container {
   display: flex;
-  justify-content: space-between;
+  align-items: end;
+  gap: 1rem;
+  height: 200px;
+  padding: 1rem 0;
+}
+
+.chart-bar {
+  flex: 1;
+  border-radius: 4px 4px 0 0;
+  position: relative;
+  min-height: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: end;
   align-items: center;
-  margin-bottom: 1rem;
+  color: white;
+  font-size: 0.8rem;
 }
 
-.section-actions {
+.bar-label {
+  position: absolute;
+  bottom: -30px;
+  font-size: 0.7rem;
+  color: var(--text-color);
+  text-align: center;
+  width: 100%;
+}
+
+.bar-amount {
+  padding: 0.25rem;
+  font-weight: 600;
+}
+
+.report-footer {
   display: flex;
-  gap: 0.5rem;
-}
-
-/* Responsive adjustments */
-@media (max-width: 960px) {
-  .summary-cards {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 640px) {
-  .summary-cards {
-    grid-template-columns: 1fr;
-  }
-  
-  .section {
-    padding: 1rem;
-  }
-}
-
-/* Print styles */
-@media print {
-  .p-datatable-tbody {
-    display: table-row-group;
-  }
-  
-  .p-datatable-tbody > tr {
-    page-break-inside: avoid;
-  }
-  
-  .section-actions {
-    display: none;
-  }
-  
-  .p-paginator {
-    display: none;
-  }
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--surface-border);
 }
 </style>

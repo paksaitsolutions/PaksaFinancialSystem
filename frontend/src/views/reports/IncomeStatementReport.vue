@@ -2,9 +2,8 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useStore } from 'vuex';
-import { format } from 'date-fns';
 import { useToast } from 'primevue/usetoast';
-import { useReport } from '@/composables/useReport';
+import enhancedReportsService from '@/services/enhancedReportsService';
 import { formatCurrency, formatPercentage, formatDate } from '@/utils/formatters';
 import ReportHeader from '@/components/reports/ReportHeader.vue';
 import SummaryCard from '@/components/reports/SummaryCard.vue';
@@ -18,7 +17,9 @@ const router = useRouter();
 const route = useRoute();
 const store = useStore();
 const toast = useToast();
-const { dateRange, loading, exportLoading, handleDateRangeUpdate } = useReport();
+const loading = ref(false);
+const exportLoading = ref(false);
+const dateRange = ref({ start: new Date(), end: new Date() });
 
 // Component state
 const reportingPeriod = ref('this_month');
@@ -299,9 +300,17 @@ const getPercentageColor = (value: number, section: string) => {
 const fetchReportData = async () => {
   try {
     loading.value = true;
-    // TODO: Replace with actual API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    console.log('Fetching income statement data...');
+    const companyId = store.state.auth.currentCompany?.id || 'default-company';
+    
+    const report = await enhancedReportsService.generateIncomeStatement(
+      companyId,
+      dateRange.value.start,
+      dateRange.value.end
+    );
+    
+    if (report.data?.report_data) {
+      updateSummaryFromReportData(report.data.report_data);
+    }
   } catch (error) {
     console.error('Error fetching income statement data:', error);
     toast.add({
@@ -315,11 +324,37 @@ const fetchReportData = async () => {
   }
 };
 
+const updateSummaryFromReportData = (reportData: any) => {
+  if (reportData.revenue) {
+    summary.value.totalRevenue = reportData.revenue.total_revenue;
+  }
+  if (reportData.expenses) {
+    summary.value.totalExpenses = reportData.expenses.total_expenses;
+  }
+  summary.value.netIncome = reportData.net_income || 0;
+};
+
 const handleExport = async (format: string) => {
   try {
     exportLoading.value = true;
-    // TODO: Implement export functionality
-    console.log(`Exporting to ${format}...`);
+    const companyId = store.state.auth.currentCompany?.id || 'default-company';
+    
+    const report = await enhancedReportsService.generateIncomeStatement(
+      companyId,
+      dateRange.value.start,
+      dateRange.value.end
+    );
+    
+    if (report.data?.id) {
+      if (format === 'pdf') {
+        await enhancedReportsService.exportReportToPDF(report.data.id);
+      } else if (format === 'excel') {
+        await enhancedReportsService.exportReportToExcel(report.data.id);
+      } else if (format === 'csv') {
+        await enhancedReportsService.exportReportToCSV(report.data.id);
+      }
+    }
+    
     toast.add({
       severity: 'success',
       summary: 'Export Started',
