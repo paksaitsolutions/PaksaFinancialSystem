@@ -3,8 +3,13 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import date
 
-from app.core.database import get_db
-from .services import VendorService, InvoiceService, PaymentService, APAnalyticsService
+from app.core.db import get_db
+
+# Import services with string literals to avoid circular imports
+from .services.vendor_service import VendorService
+from .services.invoice_service import InvoiceService
+from .services.payment_service import PaymentService
+from .services.analytics_service import APAnalyticsService
 
 router = APIRouter(prefix="/ap", tags=["Accounts Payable"])
 
