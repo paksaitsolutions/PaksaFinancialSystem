@@ -1,148 +1,202 @@
-import { apiClient } from '@/utils/apiClient';
-import type { AxiosError } from 'axios';
+import { api } from '@/utils/api';
 
-// Types
-export interface EncryptionKey {
+export interface EncryptedUserProfile {
   id: string;
-  name: string;
-  algorithm: string;
-  keySize: number;
-  status: 'active' | 'inactive' | 'expired' | 'compromised';
-  createdAt: string;
-  expiresAt: string | null;
-  keyMaterial?: string;
+  user_id: string;
+  ssn?: string;
+  phone_number?: string;
+  address_line1?: string;
+  address_line2?: string;
+  city?: string;
+  state?: string;
+  zip_code?: string;
+  bank_account_number?: string;
+  routing_number?: string;
+  tax_id?: string;
+  emergency_contact_name?: string;
+  emergency_contact_phone?: string;
 }
 
-export interface EncryptionLog {
-  id: string;
-  timestamp: string;
-  action: string;
-  keyName: string;
-  status: 'success' | 'failed' | 'warning';
-  initiatedBy: string;
+export interface EncryptedUserProfileCreate {
+  ssn?: string;
+  phone_number?: string;
+  address_line1?: string;
+  address_line2?: string;
+  city?: string;
+  state?: string;
+  zip_code?: string;
+  bank_account_number?: string;
+  routing_number?: string;
+  tax_id?: string;
+  emergency_contact_name?: string;
+  emergency_contact_phone?: string;
 }
 
-export interface Settings {
-  keyRotationInterval: number;
-  autoRotate: boolean;
-  encryptionLevel: string;
-  requireMfa: boolean;
+export interface EncryptionStatus {
+  encryption_enabled: boolean;
+  key_configured: boolean;
+  encrypted_user_profiles: number;
+  encryption_algorithm: string;
+  key_derivation: string;
 }
 
-interface GenerateKeyRequest {
-  name: string;
-  algorithm: string;
-  keySize: number;
-  expiresAt?: string | null;
-}
+/**
+ * Encryption Service
+ * Provides methods to interact with the encryption API endpoints
+ */
+export default {
+  /**
+   * Create or update encrypted user profile
+   * @param userId - User ID
+   * @param profile - Profile data to encrypt
+   * @returns Promise with the encrypted profile
+   */
+  async createUserProfile(userId: string, profile: EncryptedUserProfileCreate) {
+    return api.post(`/encryption/user-profile/${userId}`, profile);
+  },
 
-interface ImportKeyRequest {
-  name: string;
-  keyMaterial: string;
-  password?: string;
-}
+  /**
+   * Get encrypted user profile (automatically decrypted)
+   * @param userId - User ID
+   * @returns Promise with the decrypted profile
+   */
+  async getUserProfile(userId: string) {
+    return api.get(`/encryption/user-profile/${userId}`);
+  },
 
-// Helper to handle API errors
-const handleApiError = (error: unknown): never => {
-  if ((error as AxiosError)?.isAxiosError) {
-    const axiosError = error as AxiosError<{ message?: string }>;
-    const errorMessage = (axiosError.response?.data as any)?.message || axiosError.message;
-    throw new Error(errorMessage || 'An unknown error occurred');
+  /**
+   * Get encryption status and statistics
+   * @returns Promise with encryption status
+   */
+  async getEncryptionStatus() {
+    return api.get('/encryption/status');
+  },
+
+  /**
+   * Encrypt arbitrary data
+   * @param data - Data to encrypt
+   * @returns Promise with encrypted data
+   */
+  async encryptData(data: string) {
+    return api.post('/encryption/encrypt', { data });
+  },
+
+  /**
+   * Decrypt data
+   * @param encryptedData - Encrypted data to decrypt
+   * @returns Promise with decrypted data
+   */
+  async decryptData(encryptedData: string) {
+    return api.post('/encryption/decrypt', { encrypted_data: encryptedData });
+  },
+
+  /**
+   * Utility functions for encryption
+   */
+  utils: {
+    /**
+     * Check if field contains sensitive data
+     */
+    isSensitiveField(fieldName: string): boolean {
+      const sensitiveFields = [
+        'ssn', 'social_security_number', 'phone_number', 'bank_account',
+        'routing_number', 'tax_id', 'credit_card', 'password'
+      ];
+      
+      return sensitiveFields.some(field => 
+        fieldName.toLowerCase().includes(field)
+      );
+    },
+
+    /**
+     * Mask sensitive data for display
+     */
+    maskSensitiveData(value: string, fieldType: string): string {
+      if (!value) return '';
+      
+      switch (fieldType.toLowerCase()) {
+        case 'ssn':
+        case 'social_security_number':
+          return `***-**-${value.slice(-4)}`;
+        
+        case 'phone_number':
+          return `***-***-${value.slice(-4)}`;
+        
+        case 'bank_account':
+        case 'bank_account_number':
+          return `****${value.slice(-4)}`;
+        
+        case 'credit_card':
+          return `****-****-****-${value.slice(-4)}`;
+        
+        default:
+          return `****${value.slice(-4)}`;
+      }
+    },
+
+    /**
+     * Format field name for display
+     */
+    formatFieldName(fieldName: string): string {
+      return fieldName
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, l => l.toUpperCase());
+    },
+
+    /**
+     * Get encryption status color for UI
+     */
+    getEncryptionStatusColor(status: EncryptionStatus): string {
+      if (!status.encryption_enabled) return 'error';
+      if (!status.key_configured) return 'warning';
+      return 'success';
+    },
+
+    /**
+     * Get encryption status message
+     */
+    getEncryptionStatusMessage(status: EncryptionStatus): string {
+      if (!status.encryption_enabled) {
+        return 'Encryption is disabled';
+      }
+      if (!status.key_configured) {
+        return 'Encryption key not configured';
+      }
+      return `Encryption active with ${status.encryption_algorithm}`;
+    },
+
+    /**
+     * Validate sensitive data format
+     */
+    validateSensitiveData(value: string, fieldType: string): { valid: boolean; message?: string } {
+      if (!value) return { valid: true };
+      
+      switch (fieldType.toLowerCase()) {
+        case 'ssn':
+        case 'social_security_number':
+          const ssnRegex = /^\d{3}-?\d{2}-?\d{4}$/;
+          return {
+            valid: ssnRegex.test(value.replace(/-/g, '')),
+            message: 'SSN must be in format XXX-XX-XXXX'
+          };
+        
+        case 'phone_number':
+          const phoneRegex = /^\+?1?[-.\s]?\(?[0-9]{3}\)?[-.\s]?[0-9]{3}[-.\s]?[0-9]{4}$/;
+          return {
+            valid: phoneRegex.test(value),
+            message: 'Phone number must be in valid format'
+          };
+        
+        case 'zip_code':
+          const zipRegex = /^\d{5}(-\d{4})?$/;
+          return {
+            valid: zipRegex.test(value),
+            message: 'ZIP code must be in format XXXXX or XXXXX-XXXX'
+          };
+        
+        default:
+          return { valid: true };
+      }
+    }
   }
-  throw error instanceof Error ? error : new Error('An unknown error occurred');
 };
-
-export const encryptionService = {
-  // Key Management
-  async getKeys(): Promise<EncryptionKey[]> {
-    try {
-      return await apiClient.get<EncryptionKey[]>('/encryption/keys');
-    } catch (error) {
-      console.error('Error fetching encryption keys:', error);
-      return handleApiError(error);
-    }
-  },
-
-  async generateKey(data: GenerateKeyRequest): Promise<EncryptionKey> {
-    try {
-      return await apiClient.post<EncryptionKey>('/encryption/keys/generate', data);
-    } catch (error) {
-      console.error('Error generating encryption key:', error);
-      return handleApiError(error);
-    }
-  },
-
-  async importKey(data: ImportKeyRequest): Promise<EncryptionKey> {
-    try {
-      return await apiClient.post<EncryptionKey>('/encryption/keys/import', data);
-    } catch (error) {
-      console.error('Error importing encryption key:', error);
-      return handleApiError(error);
-    }
-  },
-
-  async rotateKey(keyId: string): Promise<EncryptionKey> {
-    try {
-      return await apiClient.post<EncryptionKey>(`/encryption/keys/${keyId}/rotate`, {});
-    } catch (error) {
-      console.error('Error rotating encryption key:', error);
-      return handleApiError(error);
-    }
-  },
-
-  async updateKeyStatus(keyId: string, status: 'active' | 'inactive'): Promise<EncryptionKey> {
-    try {
-      return await apiClient.patch<EncryptionKey>(`/encryption/keys/${keyId}/status`, { status });
-    } catch (error) {
-      console.error('Error updating key status:', error);
-      return handleApiError(error);
-    }
-  },
-
-  async deleteKey(keyId: string): Promise<void> {
-    try {
-      await apiClient.delete(`/encryption/keys/${keyId}`);
-    } catch (error) {
-      console.error('Error deleting encryption key:', error);
-      return handleApiError(error);
-    }
-  },
-
-  // Logs
-  async getLogs(): Promise<EncryptionLog[]> {
-    try {
-      return await apiClient.get<EncryptionLog[]>('/encryption/logs');
-    } catch (error) {
-      console.error('Error fetching encryption logs:', error);
-      return handleApiError(error);
-    }
-  },
-
-  // Settings
-  async getSettings(): Promise<Settings> {
-    try {
-      return await apiClient.get<Settings>('/encryption/settings');
-    } catch (error) {
-      console.error('Error fetching encryption settings:', error);
-      // Return default settings if API fails
-      return {
-        keyRotationInterval: 90,
-        autoRotate: true,
-        encryptionLevel: 'high',
-        requireMfa: true
-      };
-    }
-  },
-
-  async updateSettings(settings: Partial<Settings>): Promise<Settings> {
-    try {
-      return await apiClient.patch<Settings>('/encryption/settings', settings);
-    } catch (error) {
-      console.error('Error updating encryption settings:', error);
-      return handleApiError(error);
-      };
-    }
-  }
-};
-
-export default encryptionService;
