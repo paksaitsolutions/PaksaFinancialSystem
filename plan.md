@@ -17,18 +17,18 @@
 - [ ] Implement aging reports
 
 ### 1.3 General Ledger
-- [ ] Complete financial statement generation
-- [ ] Implement multi-currency support
-- [ ] Add intercompany transactions
-- [ ] Build allocation rules engine
-- [ ] Implement period close process
+- [x] Complete financial statement generation
+- [x] Implement multi-currency support
+- [x] Add intercompany transactions
+- [x] Build allocation rules engine
+- [x] Implement period close process
 
 ### 1.4 Payroll
-- [ ] Complete employee management
-- [ ] Implement payroll processing
-- [ ] Add tax calculation engine
-- [ ] Build benefits management
-- [ ] Create payroll reporting
+- [x] Complete employee management
+- [x] Implement payroll processing
+- [x] Add tax calculation engine
+- [x] Build benefits management
+- [x] Create payroll reporting
 
 ## 2. Frontend Implementation
 

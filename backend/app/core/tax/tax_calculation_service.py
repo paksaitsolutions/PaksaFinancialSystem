@@ -209,7 +209,7 @@ class TaxCalculationService:
             f"cust:{customer_id or ''}:{customer_type or ''}",
             f"exempt:{exemption_certificate_id or ''}"
         ]
-        return f"tax_rules:{hashlib.md5('|'.join(key_parts).encode('utf-8')).hexdigest()}"
+        return f"tax_rules:{hashlib.sha256('|'.join(key_parts).encode('utf-8')).hexdigest()}"
         
     async def _cache_tax_rules_result(self, cache_key: str, rules: List[Dict]) -> None:
         """Cache the result of a tax rules lookup."""

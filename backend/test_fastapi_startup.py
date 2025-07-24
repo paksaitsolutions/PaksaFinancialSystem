@@ -2,6 +2,9 @@
 Test FastAPI startup with simplified database configuration.
 """
 import asyncio
+import logging
+
+logging.basicConfig(level=logging.ERROR)
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -35,7 +38,9 @@ async def db_test():
             result = await conn.execute(text("SELECT 1"))
             return {"status": "ok", "db_connection": "success", "result": result.scalar()}
     except Exception as e:
-        return {"status": "error", "db_connection": "failed", "error": str(e)}
+        import logging
+        logging.error("Database test failed", exc_info=True)
+        return {"status": "error", "db_connection": "failed", "error": "An internal error occurred."}
 
 if __name__ == "__main__":
     print("Starting FastAPI server...")

@@ -281,7 +281,7 @@ const paymentTermsOptions = [
 
 // Validation rules
 const emailRules = [
-  v => !v || /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(v) || 'Email must be valid',
+  v => !v || /^\w+([.-]\w+)*@\w+([.-]\w+)*(\.\w{2,3})+$/.test(v) || 'Email must be valid',
 ];
 
 // Computed

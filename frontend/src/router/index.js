@@ -339,6 +339,26 @@ const routes = [
         props: { title: 'Settings' }
       },
       {
+        path: 'settings/currency',
+        name: 'settings-currency',
+        component: () => import('../views/settings/CurrencyManagementView.vue')
+      },
+      {
+        path: 'intercompany',
+        name: 'intercompany',
+        component: () => import('../views/intercompany/IntercompanyTransactionsView.vue')
+      },
+      {
+        path: 'allocation',
+        name: 'allocation',
+        component: () => import('../views/allocation/AllocationRulesView.vue')
+      },
+      {
+        path: 'period-close',
+        name: 'period-close',
+        component: () => import('../views/period-close/PeriodCloseView.vue')
+      },
+      {
         path: 'help',
         name: 'help',
         component: ModuleView,

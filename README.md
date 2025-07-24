@@ -348,3 +348,4 @@ The application should now be running on `http://127.0.0.1:8000`.
 ## 📜 License
 
 This project is proprietary of Paksa IT Solutions. All rights reserved.
+# Employee Management Module Completed
