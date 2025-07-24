@@ -5,6 +5,9 @@ from fastapi import APIRouter
 
 from app.api.endpoints.accounts_payable import vendor, invoice, payment, credit_memo, form_1099
 from app.api.endpoints.inventory import item as inventory_item, adjustment as inventory_adjustment, category as inventory_category, purchase_order as inventory_purchase_order, reports as inventory_reports, barcode as inventory_barcode, cycle_count as inventory_cycle_count, forecast as inventory_forecast, location as inventory_location, transaction as inventory_transaction
+from app.api.endpoints.accounts_receivable import collections_ai as ar_collections_ai
+from app.api.endpoints.tax import tax_endpoints as tax_management
+from app.api.endpoints.tax import tax_endpoints as tax_management
 
 # Create API v1 router
 api_router = APIRouter()
@@ -98,6 +101,18 @@ api_router.include_router(
     inventory_transaction.router,
     prefix="/inventory/transactions",
     tags=["inventory", "transactions"],
+)
+
+api_router.include_router(
+    ar_collections_ai.router,
+    prefix="/accounts-receivable/collections-ai",
+    tags=["accounts-receivable", "ai"],
+)
+
+api_router.include_router(
+    tax_management.router,
+    prefix="/tax",
+    tags=["tax"],
 )
 
 # Add more routers here as needed
