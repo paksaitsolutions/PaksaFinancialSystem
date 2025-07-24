@@ -71,6 +71,11 @@ export const useNavigationStore = defineStore('navigation', {
           { title: 'Allocation Rules', icon: 'mdi-distribute-horizontal-left', to: '/allocation' },
           { title: 'Intercompany', icon: 'mdi-swap-horizontal', to: '/intercompany' }
         ]
+      },
+      {
+        title: 'Super Admin',
+        icon: 'mdi-shield-crown',
+        to: '/super-admin'
       }
     ] as NavigationItem[]
   }),

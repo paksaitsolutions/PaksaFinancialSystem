@@ -1,6 +1,3 @@
-"""
-Base Pydantic schemas for API validation and serialization.
-"""
 from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, ConfigDict
@@ -14,14 +11,8 @@ class BaseCreateSchema(BaseSchema):
 class BaseUpdateSchema(BaseSchema):
     pass
 
-class BaseResponseSchema(BaseSchema):
+class AuditResponseSchema(BaseSchema):
     id: int
-    created_at: datetime
+    created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     is_active: bool = True
-
-class AuditResponseSchema(BaseResponseSchema):
-    version: int = 1
-    created_by: Optional[str] = None
-    updated_by: Optional[str] = None
-    is_deleted: bool = False

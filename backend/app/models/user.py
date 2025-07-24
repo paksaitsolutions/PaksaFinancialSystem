@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional, List, TYPE_CHECKING
-from sqlalchemy import Boolean, Column, String, DateTime, ForeignKey, Text
+from sqlalchemy import Boolean, Column, String, DateTime, ForeignKey, Text, Integer
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -48,6 +48,18 @@ class User(BaseModel):
     # Audit fields
     created_by = Column(GUID(), ForeignKey('users.id'), nullable=True)
     updated_by = Column(GUID(), ForeignKey('users.id'), nullable=True)
+
+    # MFA support
+    mfa_enabled = Column(Boolean(), default=False)
+    mfa_secret = Column(String(32), nullable=True)  # TOTP secret
+
+    # Login history relationship
+    login_history = relationship("UserLoginHistory", back_populates="user")
+    activity_logs = relationship("UserActivityLog", back_populates="user")
+    
+    # Cross-company access (for service providers)
+    is_service_provider = Column(Boolean(), default=False)
+    accessible_companies = Column(Text, nullable=True)  # Comma-separated company IDs or JSON list
     
     # Self-referential relationship for created_by/updated_by
     created_users = relationship(
@@ -151,3 +163,26 @@ class PasswordResetToken(BaseModel):
         from sqlalchemy import select
         result = await db.execute(select(cls).where(cls.token == token))
         return result.scalars().first()
+
+# Model for login history
+class UserLoginHistory(BaseModel):
+    __tablename__ = "user_login_history"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(GUID(), ForeignKey('users.id'), nullable=False, index=True)
+    login_time = Column(DateTime(timezone=True), server_default=func.now())
+    ip_address = Column(String(45), nullable=True)
+    user_agent = Column(String(255), nullable=True)
+    success = Column(Boolean(), default=True)
+    user = relationship("User", back_populates="login_history")
+
+# Model for user activity logs
+class UserActivityLog(BaseModel):
+    __tablename__ = "user_activity_logs"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(GUID(), ForeignKey('users.id'), nullable=False, index=True)
+    activity_time = Column(DateTime(timezone=True), server_default=func.now())
+    activity_type = Column(String(50), nullable=False)
+    description = Column(Text, nullable=True)
+    ip_address = Column(String(45), nullable=True)
+    user_agent = Column(String(255), nullable=True)
+    user = relationship("User", back_populates="activity_logs")

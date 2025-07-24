@@ -1,28 +1,20 @@
-"""
-General Ledger service layer for business logic.
-"""
-from datetime import date
-from decimal import Decimal
 from typing import List, Optional
+from decimal import Decimal
+from datetime import date
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
-from sqlalchemy.orm import selectinload
-from app.services.base import BaseService
-from app.modules.core_financials.general_ledger.models import Account, JournalEntry, JournalEntryLine
-from app.modules.core_financials.general_ledger.schemas import (
-    AccountCreate, AccountUpdate, JournalEntryCreate, TrialBalanceItem
-)
+from sqlalchemy import select, func, and_
+from app.crud.base import CRUDBase
+from app.modules.core_financials.general_ledger.models import Account, JournalEntry, JournalEntryLine, AccountType
+from app.modules.core_financials.general_ledger.schemas import AccountCreate, AccountUpdate, JournalEntryCreate, TrialBalanceItem
 
-class AccountService(BaseService[Account, AccountCreate, AccountUpdate]):
+class AccountService(CRUDBase[Account, AccountCreate, AccountUpdate]):
     def __init__(self):
         super().__init__(Account)
-
+    
     async def get_by_code(self, db: AsyncSession, account_code: str) -> Optional[Account]:
-        result = await db.execute(
-            select(Account).where(Account.account_code == account_code)
-        )
+        result = await db.execute(select(Account).where(Account.account_code == account_code))
         return result.scalar_one_or_none()
-
+    
     async def get_chart_of_accounts(self, db: AsyncSession) -> List[Account]:
         result = await db.execute(
             select(Account)
@@ -31,20 +23,18 @@ class AccountService(BaseService[Account, AccountCreate, AccountUpdate]):
         )
         return result.scalars().all()
 
-class JournalEntryService(BaseService[JournalEntry, JournalEntryCreate, None]):
+class JournalEntryService(CRUDBase[JournalEntry, JournalEntryCreate, None]):
     def __init__(self):
         super().__init__(JournalEntry)
-
-    async def create_journal_entry(
-        self, db: AsyncSession, *, entry_data: JournalEntryCreate
-    ) -> JournalEntry:
-        # Validate that debits equal credits
+    
+    async def create_journal_entry(self, db: AsyncSession, entry_data: JournalEntryCreate) -> JournalEntry:
+        # Validate debits equal credits
         total_debits = sum(line.debit_amount for line in entry_data.lines)
         total_credits = sum(line.credit_amount for line in entry_data.lines)
         
         if total_debits != total_credits:
             raise ValueError("Total debits must equal total credits")
-
+        
         # Generate entry number
         entry_number = await self._generate_entry_number(db)
         
@@ -60,7 +50,7 @@ class JournalEntryService(BaseService[JournalEntry, JournalEntryCreate, None]):
         
         db.add(journal_entry)
         await db.flush()
-
+        
         # Create journal entry lines
         for line_data in entry_data.lines:
             line = JournalEntryLine(
@@ -71,51 +61,52 @@ class JournalEntryService(BaseService[JournalEntry, JournalEntryCreate, None]):
                 credit_amount=line_data.credit_amount
             )
             db.add(line)
-
+        
         await db.commit()
         await db.refresh(journal_entry)
         return journal_entry
-
+    
+    async def get_trial_balance(self, db: AsyncSession, as_of_date: date) -> List[TrialBalanceItem]:
+        # Get account balances
+        query = select(
+            Account.account_code,
+            Account.account_name,
+            func.coalesce(func.sum(JournalEntryLine.debit_amount), 0).label('total_debits'),
+            func.coalesce(func.sum(JournalEntryLine.credit_amount), 0).label('total_credits')
+        ).select_from(
+            Account.__table__.outerjoin(
+                JournalEntryLine.__table__.join(JournalEntry.__table__)
+            )
+        ).where(
+            and_(
+                Account.is_active == True,
+                JournalEntry.entry_date <= as_of_date
+            )
+        ).group_by(
+            Account.id, Account.account_code, Account.account_name
+        ).order_by(Account.account_code)
+        
+        result = await db.execute(query)
+        rows = result.fetchall()
+        
+        trial_balance_items = []
+        for row in rows:
+            net_balance = row.total_debits - row.total_credits
+            debit_balance = net_balance if net_balance > 0 else Decimal('0')
+            credit_balance = abs(net_balance) if net_balance < 0 else Decimal('0')
+            
+            trial_balance_items.append(TrialBalanceItem(
+                account_code=row.account_code,
+                account_name=row.account_name,
+                debit_balance=debit_balance,
+                credit_balance=credit_balance
+            ))
+        
+        return trial_balance_items
+    
     async def _generate_entry_number(self, db: AsyncSession) -> str:
         result = await db.execute(
             select(func.count(JournalEntry.id))
         )
         count = result.scalar() or 0
-        return f"JE{count + 1:06d}"
-
-    async def get_trial_balance(
-        self, db: AsyncSession, as_of_date: date
-    ) -> List[TrialBalanceItem]:
-        # This is a simplified trial balance calculation
-        # In production, you'd want more sophisticated logic
-        query = """
-        SELECT 
-            a.account_code,
-            a.account_name,
-            COALESCE(SUM(jel.debit_amount), 0) as total_debits,
-            COALESCE(SUM(jel.credit_amount), 0) as total_credits
-        FROM accounts a
-        LEFT JOIN journal_entry_lines jel ON a.id = jel.account_id
-        LEFT JOIN journal_entries je ON jel.journal_entry_id = je.id
-        WHERE a.is_active = true 
-        AND (je.entry_date IS NULL OR je.entry_date <= :as_of_date)
-        GROUP BY a.id, a.account_code, a.account_name
-        ORDER BY a.account_code
-        """
-        
-        result = await db.execute(query, {"as_of_date": as_of_date})
-        rows = result.fetchall()
-        
-        trial_balance = []
-        for row in rows:
-            debit_balance = row.total_debits - row.total_credits
-            credit_balance = row.total_credits - row.total_debits
-            
-            trial_balance.append(TrialBalanceItem(
-                account_code=row.account_code,
-                account_name=row.account_name,
-                debit_balance=max(debit_balance, 0),
-                credit_balance=max(credit_balance, 0)
-            ))
-        
-        return trial_balance
+        return f"JE-{count + 1:06d}"
