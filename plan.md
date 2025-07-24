@@ -34,10 +34,13 @@ Paksa Financial System is a multi-tenant, modular financial ERP platform. It sup
 
 ### 0.3 Enhanced User Management Module
 **Definition:** Company-specific user role and access control with multi-tenant support
-- [ ] Invite / register users per company
-- [ ] Assign roles: Admin, Manager, Accountant, Viewer, Custom Role
-- [ ] Set permissions per module per company
-- [ ] Multi-factor authentication (MFA) support
+- [x] Invite / register users per company (backend API)
+- [x] Add frontend UI for inviting/registering users
+- [x] Implement email invitation logic
+- [x] Expand endpoints for role assignment and permission management
+- [x] Assign roles: Admin, Manager, Accountant, Viewer, Custom Role
+- [x] Set permissions per module per company
+- [x] Multi-factor authentication (MFA) support
 - [ ] Login history and user activity logs
 - [ ] Password policies and reset flows
 - [ ] Company-specific user isolation
@@ -117,6 +120,11 @@ Paksa Financial System is a multi-tenant, modular financial ERP platform. It sup
 - [x] Implement recurring journal entries
 - [x] Add trial balance automation
 - [x] Build comprehensive audit trail
+- [x] Fix missing backend services and CRUD operations
+- [x] Add missing database models and migrations
+- [x] Complete frontend API integration
+- [x] Add journal entry form component
+- [x] Implement proper base classes and schemas
 
 ### 1.4 Payroll
 - [x] Complete employee management
@@ -145,11 +153,19 @@ Paksa Financial System is a multi-tenant, modular financial ERP platform. It sup
 - [ ] Replace placeholder views with functional components
 
 ### 1.7 Tax Management
-- [ ] Complete tax calculation engine
-- [ ] Implement tax exemption certificates
-- [ ] Add tax policy management
-- [ ] Build tax reporting
-- [ ] Replace placeholder views with functional components
+- [x] Complete tax calculation engine
+- [x] Implement tax exemption certificates
+- [x] Add tax policy management
+- [x] Build tax reporting
+- [x] Replace placeholder views with functional components
+- [x] Add tax jurisdiction management
+- [x] Implement tax rate management
+- [x] Create tax transaction processing
+- [x] Build tax return functionality
+- [x] Add comprehensive tax API endpoints
+- [x] Create tax calculator component
+- [x] Add database models and migrations
+- [x] Implement TypeScript types and services
 
 ### 1.8 Budgeting
 - [ ] Fix Budget module UI errors
