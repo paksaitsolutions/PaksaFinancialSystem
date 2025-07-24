@@ -434,7 +434,7 @@ const generateMockData = (report: Report) => {
       data: Array.from({ length: 50 }, (_, i) => ({
         id: i + 1,
         date: new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        account: `Account ${Math.floor(Math.random() * 10) + 1}`,
+        account: `Account ${Math.floor(crypto.getRandomValues(new Uint32Array(1))[0] / (0xFFFFFFFF + 1) * 10) + 1}`,
         description: `Transaction ${i + 1}`,
         debit: Math.random() > 0.3 ? (Math.random() * 1000).toFixed(2) : null,
         credit: Math.random() > 0.7 ? (Math.random() * 1000).toFixed(2) : null,
@@ -446,11 +446,11 @@ const generateMockData = (report: Report) => {
       data: Array.from({ length: 50 }, (_, i) => ({
         id: i + 1,
         item: `Item ${String.fromCharCode(65 + (i % 26))}${Math.floor(i / 26) + 1}`,
-        category: ['Electronics', 'Clothing', 'Food', 'Office', 'Other'][Math.floor(Math.random() * 5)],
-        quantity: Math.floor(Math.random() * 100) + 1,
-        unitPrice: (Math.random() * 100 + 1).toFixed(2),
-        totalValue: (Math.random() * 10000 + 1).toFixed(2),
-        lastUpdated: new Date(Date.now() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000).toISOString(),
+        category: ['Electronics', 'Clothing', 'Food', 'Office', 'Other'][Math.floor(crypto.getRandomValues(new Uint32Array(1))[0] / (0xFFFFFFFF + 1) * 5)],
+        quantity: Math.floor(crypto.getRandomValues(new Uint32Array(1))[0] / (0xFFFFFFFF + 1) * 100) + 1,
+        unitPrice: ((crypto.getRandomValues(new Uint32Array(1))[0] / (0xFFFFFFFF + 1) * 100) + 1).toFixed(2),
+        totalValue: ((crypto.getRandomValues(new Uint32Array(1))[0] / (0xFFFFFFFF + 1) * 10000) + 1).toFixed(2),
+        lastUpdated: new Date(Date.now() - Math.floor(crypto.getRandomValues(new Uint32Array(1))[0] / (0xFFFFFFFF + 1) * 30) * 24 * 60 * 60 * 1000).toISOString(),
       })),
     },
     'sales': {
@@ -460,10 +460,10 @@ const generateMockData = (report: Report) => {
         orderId: `ORD-${1000 + i}`,
         customer: `Customer ${String.fromCharCode(65 + (i % 10))}`,
         product: ['Laptop', 'Phone', 'Tablet', 'Monitor', 'Keyboard', 'Mouse', 'Headphones', 'Charger', 'Case', 'Stand'][i % 10],
-        quantity: Math.floor(Math.random() * 5) + 1,
+        quantity: Math.floor(crypto.getRandomValues(new Uint32Array(1))[0] / (0xFFFFFFFF + 1) * 5) + 1,
         price: [999.99, 699.99, 399.99, 249.99, 129.99, 49.99, 199.99, 29.99, 39.99, 59.99][i % 10],
         total: 0, // Will be calculated
-        date: new Date(Date.now() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000).toISOString(),
+        date: new Date(Date.now() - Math.floor(crypto.getRandomValues(new Uint32Array(1))[0] / (0xFFFFFFFF + 1) * 30) * 24 * 60 * 60 * 1000).toISOString(),
       })).map(item => ({
         ...item,
         total: (item.quantity * item.price).toFixed(2),
