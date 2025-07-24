@@ -4,6 +4,7 @@ import App from './App.vue';
 import { createPinia } from 'pinia';
 import router from './router';
 import './assets/styles/reset.css';
+import './assets/styles/theme.css';
 
 // Vuetify
 import 'vuetify/styles';
@@ -41,6 +42,11 @@ const vuetify = createVuetify({
 app.use(pinia);
 app.use(router);
 app.use(vuetify);
+
+// Initialize theme
+import { useThemeStore } from './stores/theme';
+const themeStore = useThemeStore();
+themeStore.loadThemePreference();
 
 // Mount the app
 app.mount('#app');

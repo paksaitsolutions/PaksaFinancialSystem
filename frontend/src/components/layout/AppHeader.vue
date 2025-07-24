@@ -14,6 +14,8 @@
       <v-icon>mdi-magnify</v-icon>
     </v-btn>
     
+    <ThemeToggle />
+    
     <v-btn icon>
       <v-badge dot color="error">
         <v-icon>mdi-bell</v-icon>
@@ -59,6 +61,7 @@
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import ThemeToggle from '@/components/common/ThemeToggle.vue';
 
 const props = defineProps({
   drawer: {
