@@ -80,3 +80,40 @@ class CustomerStatus(str, enum.Enum):
     HOLD = "hold"
     PENDING_APPROVAL = "pending_approval"
     BLOCKED = "blocked"
+
+class InventoryStatus(str, enum.Enum):
+    """Status of an inventory item."""
+    ACTIVE = "active"
+    INACTIVE = "inactive"
+    DISCONTINUED = "discontinued"
+
+class ValuationMethod(str, enum.Enum):
+    """Inventory valuation methods."""
+    FIFO = "fifo"
+    LIFO = "lifo"
+    AVERAGE = "average"
+    STANDARD = "standard"
+
+class TransactionType(str, enum.Enum):
+    """Inventory transaction types."""
+    RECEIPT = "receipt"
+    ISSUE = "issue"
+    ADJUSTMENT = "adjustment"
+    TRANSFER = "transfer"
+
+class PurchaseOrderStatus(str, enum.Enum):
+    """Purchase order status."""
+    DRAFT = "draft"
+    APPROVED = "approved"
+    SENT = "sent"
+    PARTIALLY_RECEIVED = "partially_received"
+    RECEIVED = "received"
+    CLOSED = "closed"
+    CANCELLED = "cancelled"
+
+class CycleCountStatus(str, enum.Enum):
+    """Cycle count status."""
+    PENDING = "pending"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    CANCELLED = "cancelled"
