@@ -32,10 +32,22 @@ const server = http.createServer((req, res) => {
     : path.join(PUBLIC_DIR, req.url);
   
   // Security: Prevent directory traversal
-  filePath = path.normalize(filePath);
-  if (!filePath.startsWith(PUBLIC_DIR)) {
-    res.statusCode = 403;
-    res.end('Forbidden');
+  try {
+    try {
+      filePath = fs.realpathSync(path.resolve(PUBLIC_DIR, '.' + req.url));
+      if (!filePath.startsWith(PUBLIC_DIR)) {
+        res.statusCode = 403;
+        res.end('Forbidden');
+        return;
+      }
+    } catch (error) {
+      res.statusCode = 400;
+      res.end('Bad Request');
+      return;
+    }
+  } catch (error) {
+    res.statusCode = 400;
+    res.end('Bad Request');
     return;
   }
   

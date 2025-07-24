@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const rateLimit = require('express-rate-limit');
 
 const app = express();
 const PORT = 3000;
@@ -12,8 +13,14 @@ const staticPath = fs.existsSync(path.join(__dirname, 'dist'))
 
 app.use(express.static(staticPath));
 
+// Configure rate limiter: maximum of 100 requests per 15 minutes
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+});
+
 // Handle SPA routing - serve index.html for all routes
-app.get('*', (req, res) => {
+app.get('*', limiter, (req, res) => {
   // Try to serve index.html from dist first, then fallback to root
   const indexPath = fs.existsSync(path.join(staticPath, 'index.html'))
     ? path.join(staticPath, 'index.html')
