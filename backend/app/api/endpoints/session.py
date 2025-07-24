@@ -43,12 +43,13 @@ async def create_session(
     service = get_session_service(db)
     
     try:
-        session = service.create_session(
-            user_id=request.user_id,
-            ip_address=request.ip_address,
-            user_agent=request.user_agent,
-            remember_me=request.remember_me
-        )
+            session = service.create_session(
+                user_id=request.user_id,
+                company_id=request.company_id,
+                ip_address=request.ip_address,
+                user_agent=request.user_agent,
+                remember_me=request.remember_me
+            )
         return session
     except Exception as e:
         raise HTTPException(
