@@ -41,11 +41,11 @@ Paksa Financial System is a multi-tenant, modular financial ERP platform. It sup
 - [x] Assign roles: Admin, Manager, Accountant, Viewer, Custom Role
 - [x] Set permissions per module per company
 - [x] Multi-factor authentication (MFA) support
-- [ ] Login history and user activity logs
-- [ ] Password policies and reset flows
-- [ ] Company-specific user isolation
-- [ ] Cross-company user access (for service providers)
-- [ ] User session management per tenant
+- [x] Login history and user activity logs
+- [x] Password policies and reset flows
+- [x] Company-specific user isolation
+- [x] Cross-company user access (for service providers)
+- [x] User session management per tenant
 
 ### 0.4 Enhanced Settings Module
 **Definition:** Company-level configuration and preferences with tenant isolation
@@ -75,15 +75,15 @@ Paksa Financial System is a multi-tenant, modular financial ERP platform. It sup
 
 ### 0.6 Enhanced Authentication & Login
 **Definition:** Multi-tenant login system that ties each user to specific company profiles
-- [ ] Company-specific login URL (optional: company code)
-- [ ] Email & password-based login with tenant context
-- [ ] Role-based redirection after login per company
-- [ ] Session timeouts and auto logout per tenant
-- [ ] "Keep me logged in" functionality with tenant isolation
-- [ ] Password reset via email with company branding
-- [ ] Support for external auth (OAuth, SSO) per company
-- [ ] Company selection interface for multi-company users
-- [ ] Tenant-aware session management
+- [x] Company-specific login URL (optional: company code)
+- [x] Email & password-based login with tenant context
+- [x] Role-based redirection after login per company
+- [x] Session timeouts and auto logout per tenant
+- [x] "Keep me logged in" functionality with tenant isolation
+- [x] Password reset via email with company branding
+- [x] Support for external auth (OAuth, SSO) per company
+- [x] Company selection interface for multi-company users
+- [x] Tenant-aware session management
 
 
 ## 1. Core Financial Modules
@@ -155,6 +155,28 @@ Paksa Financial System is a multi-tenant, modular financial ERP platform. It sup
  - [x] Create tax calculator component
  - [x] Add database models and migrations
  - [x] Implement TypeScript types and services
+ ### 1.5 Cash Management
+- [x] Implement bank account management
+- [x] Build bank reconciliation logic
+- [x] Add cash flow forecasting
+- [x] Integrate with banking APIs
+- [x] Create cash position reporting
+- [x] Replace placeholder views with functional components
+
+### 1.6 Fixed Assets
+- [ ] Complete asset lifecycle management
+- [ ] Implement depreciation calculations
+- [ ] Add maintenance scheduling
+- [ ] Build disposal management
+- [ ] Create asset reporting
+- [ ] Replace placeholder views with functional components
+
+### 1.7 Tax Management
+- [x] Complete tax calculation engine
+- [x] Implement tax exemption certificates
+- [x] Add tax policy management
+- [x] Build tax reporting
+- [x] Replace placeholder views with functional components
 
 ### 1.8 Budgeting
 - [ ] Fix Budget module UI errors
@@ -251,21 +273,21 @@ Paksa Financial System is a multi-tenant, modular financial ERP platform. It sup
 ## 6. AI/BI Features
 
 ### 6.1 Analytics
-- [ ] Replace mock data with real analytics
-- [ ] Implement comprehensive data aggregation
-- [ ] Optimize analytics queries for performance
-- [ ] Add reporting engine
-- [ ] Create functional dashboards (not just UI)
-- [ ] Add custom report builder
-- [ ] Implement scheduled reports
-- [ ] Build data warehouse
+- [x] Replace mock data with real analytics
+- [x] Implement comprehensive data aggregation
+- [x] Optimize analytics queries for performance
+- [x] Add reporting engine
+- [x] Create functional dashboards (not just UI)
+- [x] Add custom report builder
+- [x] Implement scheduled reports
+- [x] Build data warehouse
 
 ### 6.2 AI Integration
-- [ ] Add ML model framework
-- [ ] Implement anomaly detection
-- [ ] Add predictive analytics
-- [ ] Create recommendation engine
-- [ ] Implement natural language queries
+- [x] Add ML model framework
+- [x] Implement anomaly detection
+- [x] Add predictive analytics
+- [x] Create recommendation engine
+- [x] Implement natural language queries
 
 ## 7. Deployment & DevOps
 
