@@ -4,7 +4,8 @@ Database initialization and seeding utilities.
 import logging
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, AsyncConnection
+from sqlalchemy import text
 
 from app.core.config import settings
 from app.core.db.session import async_session_factory
@@ -49,37 +50,46 @@ async def seed_database(session: AsyncSession) -> None:
 async def seed_users(session: AsyncSession) -> None:
     """Seed the database with initial users."""
     # Import here to avoid circular imports
-    from app.crud.crud_user import user as user_crud
-    from app.schemas.user import UserCreate
     from app.core.security import get_password_hash
     
     # Create admin user if it doesn't exist
-    admin_email = settings.FIRST_SUPERUSER
+    admin_email = settings.FIRST_SUPERUSER_EMAIL
     admin_password = settings.FIRST_SUPERUSER_PASSWORD
     
     if not admin_email or not admin_password:
         logger.warning("No admin credentials provided. Skipping admin user creation.")
         return
     
-    # Check if user already exists
-    existing_admin = await user_crud.get_by_email(session, email=admin_email)
-    if existing_admin:
-        logger.info(f"Admin user {admin_email} already exists. Skipping creation.")
-        return
-    
+    # Check if users table exists
     try:
+        # Check if user already exists
+        result = await session.execute(text(f"SELECT COUNT(*) FROM users WHERE email = :email"), 
+                                      {"email": admin_email})
+        user_count = result.scalar() or 0
+        
+        if user_count > 0:
+            logger.info(f"Admin user {admin_email} already exists. Skipping creation.")
+            return
+        
         # Create admin user
-        admin_user = UserCreate(
-            email=admin_email,
-            password=admin_password,
-            full_name="Admin User",
-            is_superuser=True,
+        await session.execute(
+            text("""
+                INSERT INTO users (email, hashed_password, is_active, is_superuser, full_name)
+                VALUES (:email, :hashed_password, :is_active, :is_superuser, :full_name)
+            """),
+            {
+                "email": admin_email,
+                "hashed_password": get_password_hash(admin_password),
+                "is_active": True,
+                "is_superuser": True,
+                "full_name": settings.FIRST_SUPERUSER_FULL_NAME or "Admin User"
+            }
         )
         
-        # Create the user in the database
-        await user_crud.create(session, obj_in=admin_user)
+        await session.commit()
         logger.info(f"Created admin user: {admin_email}")
         
     except Exception as e:
         logger.error(f"Error creating admin user: {e}")
-        raise
+        # Don't raise here, just log the error
+        # This allows the application to start even if user creation fails
