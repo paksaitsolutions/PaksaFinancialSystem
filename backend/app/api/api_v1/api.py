@@ -1,30 +1,30 @@
 """
-Main API router that includes all endpoint routers.
+API v1 router.
 """
+from fastapi import APIRouter
 
-def setup_routers(router):
-    """
-    Set up all API routers.
-    This function is called from api_v1/__init__.py after the router is initialized.
-    """
-    # Import only the modules that are currently available
-    try:
-        # Core financial modules
-        from app.modules.core_financials.accounts_payable.api import router as ap_router
-        router.include_router(ap_router, prefix="/ap", tags=["Accounts Payable"])
-    except ImportError as e:
-        print(f"Warning: Could not import accounts_payable module: {e}")
+from app.api.endpoints.accounts_payable import vendor, invoice, payment
 
-    try:
-        # Authentication module
-        from app.modules.cross_cutting.auth.router import router as auth_router
-        router.include_router(auth_router, prefix="/auth", tags=["Authentication"])
-    except ImportError as e:
-        print(f"Warning: Could not import auth module: {e}")
+# Create API v1 router
+api_router = APIRouter()
 
-    # Health check endpoint
-    @router.get("/health")
-    async def health_check():
-        return {"status": "healthy", "message": "Paksa Financial System API is running"}
-    
-    return router
+# Include all API endpoints
+api_router.include_router(
+    vendor.router,
+    prefix="/accounts-payable/vendors",
+    tags=["accounts-payable", "vendors"],
+)
+
+api_router.include_router(
+    invoice.router,
+    prefix="/accounts-payable/invoices",
+    tags=["accounts-payable", "invoices"],
+)
+
+api_router.include_router(
+    payment.router,
+    prefix="/accounts-payable/payments",
+    tags=["accounts-payable", "payments"],
+)
+
+# Add more routers here as needed
