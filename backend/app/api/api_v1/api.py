@@ -1,6 +1,15 @@
+<<<<<<< master
 
+=======
+>>>>>>> master
 from fastapi import APIRouter
 
+<<<<<<< HEAD
+# Create API v1 router
+api_router = APIRouter()
+
+# Core modules
+=======
 from app.api.endpoints.accounts_payable import vendor, invoice, payment, credit_memo, form_1099
 from app.api.endpoints.inventory import item as inventory_item, adjustment as inventory_adjustment, category as inventory_category, purchase_order as inventory_purchase_order, reports as inventory_reports, barcode as inventory_barcode, cycle_count as inventory_cycle_count, forecast as inventory_forecast, location as inventory_location, transaction as inventory_transaction
 from app.api.endpoints.accounts_receivable import collections_ai as ar_collections_ai
@@ -101,7 +110,10 @@ api_router.include_router(
     tags=["inventory", "transactions"],
 )
 
+<<<<<<< master
 <<<<<<< HEAD
+=======
+>>>>>>> master
 api_router.include_router(
     ar_collections_ai.router,
     prefix="/accounts-receivable/collections-ai",
@@ -117,6 +129,7 @@ api_router.include_router(
 # Add more routers here as needed
 
 # Include additional modules
+<<<<<<< master
 try:
     # Authentication module
     from app.modules.cross_cutting.auth.router import router as auth_router
@@ -144,6 +157,32 @@ try:
     api_router.include_router(gl_router, prefix="/gl", tags=["General Ledger"])
 except ImportError as e:
     print(f"Warning: Could not import general ledger module: {e}")
+=======
+>>>>>>> 81d4f4a4b7e16b7004c3e9a1812b97dcbb09f727
+try:
+    from app.modules.core_financials.general_ledger.api import router as gl_router
+    api_router.include_router(gl_router, prefix="/general-ledger", tags=["General Ledger"])
+except ImportError:
+    pass
+
+try:
+    from app.modules.core_financials.tax.api import router as tax_router
+    api_router.include_router(tax_router, prefix="/tax", tags=["Tax"])
+except ImportError:
+    pass
+
+try:
+    from app.modules.accounts_receivable.api.ar_endpoints import router as ar_router
+    api_router.include_router(ar_router, prefix="/accounts-receivable", tags=["Accounts Receivable"])
+except ImportError:
+    pass
+
+try:
+    from app.modules.super_admin.api.super_admin_endpoints import router as super_admin_router
+    api_router.include_router(super_admin_router, prefix="/super-admin", tags=["Super Admin"])
+except ImportError:
+    pass
+>>>>>>> master
 
 try:
     from app.ai.api.ai_endpoints import router as ai_router
