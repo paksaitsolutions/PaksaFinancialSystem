@@ -24,7 +24,7 @@
 - [ ] Implement period close process
 
 ### 1.4 Payroll
-- [ ] Complete employee management
+- [x] Complete employee management
 - [ ] Implement payroll processing
 - [ ] Add tax calculation engine
 - [ ] Build benefits management

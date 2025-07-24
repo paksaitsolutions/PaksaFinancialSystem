@@ -5,6 +5,10 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.db.base import get_db
+
+# Import the employee API router
+from app.modules.core_financials.payroll.api.employee_api import router as employee_router
+
 from app.modules.core_financials.payroll.services import EmployeeService, PayrollService
 from app.modules.core_financials.payroll.schemas import (
     EmployeeCreate, EmployeeUpdate, EmployeeResponse,
@@ -15,8 +19,11 @@ router = APIRouter()
 employee_service = EmployeeService()
 payroll_service = PayrollService()
 
-# Employee endpoints
-@router.post("/employees/", response_model=EmployeeResponse, status_code=status.HTTP_201_CREATED)
+# Include the employee router
+router.include_router(employee_router)
+
+# Legacy Employee endpoints - these will be deprecated in favor of the new employee API
+@router.post("/legacy/employees/", response_model=EmployeeResponse, status_code=status.HTTP_201_CREATED, deprecated=True)
 async def create_employee(
     employee: EmployeeCreate,
     db: AsyncSession = Depends(get_db)
@@ -30,7 +37,7 @@ async def create_employee(
         )
     return await employee_service.create(db, obj_in=employee)
 
-@router.get("/employees/", response_model=List[EmployeeResponse])
+@router.get("/legacy/employees/", response_model=List[EmployeeResponse], deprecated=True)
 async def get_employees(
     skip: int = 0,
     limit: int = 100,
@@ -41,7 +48,7 @@ async def get_employees(
         return await employee_service.get_active_employees(db)
     return await employee_service.get_multi(db, skip=skip, limit=limit)
 
-@router.get("/employees/{employee_id}", response_model=EmployeeResponse)
+@router.get("/legacy/employees/{employee_id}", response_model=EmployeeResponse, deprecated=True)
 async def get_employee(
     employee_id: int,
     db: AsyncSession = Depends(get_db)
@@ -54,7 +61,7 @@ async def get_employee(
         )
     return employee
 
-@router.put("/employees/{employee_id}", response_model=EmployeeResponse)
+@router.put("/legacy/employees/{employee_id}", response_model=EmployeeResponse, deprecated=True)
 async def update_employee(
     employee_id: int,
     employee_update: EmployeeUpdate,
