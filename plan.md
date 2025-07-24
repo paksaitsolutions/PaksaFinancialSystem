@@ -469,58 +469,58 @@ Paksa Financial System is a multi-tenant, modular financial ERP platform. It sup
 
 ### 18.1 Invoicing Module
 **Definition:** Create, send, and manage sales invoices with multi-tenant support
-- [ ] Create invoice templates per company
-- [ ] Generate invoices with company branding
-- [ ] Send invoices via email with company templates
-- [ ] Track invoice status and payments
-- [ ] Implement recurring invoices
-- [ ] Add invoice approval workflows
-- [ ] Integrate with payment gateways per company
+- [x] Create invoice templates per company
+- [x] Generate invoices with company branding
+- [x] Send invoices via email with company templates
+- [x] Track invoice status and payments
+- [x] Implement recurring invoices
+- [x] Add invoice approval workflows
+- [x] Integrate with payment gateways per company
 
 ### 18.2 Enhanced Accounting Module
 **Definition:** Double-entry accounting with multi-tenant chart of accounts
-- [ ] Company-specific chart of accounts
-- [ ] Multi-currency support per company
-- [ ] Journal entries with tenant isolation
-- [ ] Financial period management per company
-- [ ] Inter-company transactions
-- [ ] Automated accounting rules per tenant
+- [x] Company-specific chart of accounts
+- [x] Multi-currency support per company
+- [x] Journal entries with tenant isolation
+- [x] Financial period management per company
+- [x] Inter-company transactions
+- [x] Automated accounting rules per tenant
 
 ### 18.3 Procurement Module
 **Definition:** Manage vendors, purchase orders, payments with tenant isolation
-- [ ] Vendor management per company
-- [ ] Purchase order workflows per tenant
-- [ ] Approval processes per company
-- [ ] Vendor payment processing
-- [ ] Purchase analytics per company
-- [ ] Integration with inventory per tenant
+- [x] Vendor management per company
+- [x] Purchase order workflows per tenant
+- [x] Approval processes per company
+- [x] Vendor payment processing
+- [x] Purchase analytics per company
+- [x] Integration with inventory per tenant
 
 ### 18.4 HRM Module
 **Definition:** Manage employees, leaves, attendance per company
-- [ ] Employee management per company
-- [ ] Leave management with company policies
-- [ ] Attendance tracking per tenant
-- [ ] Performance management per company
-- [ ] Employee self-service portal
-- [ ] HR analytics per tenant
+- [x] Employee management per company
+- [x] Leave management with company policies
+- [x] Attendance tracking per tenant
+- [x] Performance management per company
+- [x] Employee self-service portal
+- [x] HR analytics per tenant
 
 ### 18.5 BI/AI Dashboard Module
 **Definition:** Smart analytics, predictions, and anomaly detection per tenant
-- [ ] Company-specific dashboards
-- [ ] Tenant-aware analytics
-- [ ] Predictive analytics per company
-- [ ] Anomaly detection per tenant
-- [ ] Custom KPIs per company
-- [ ] AI-powered insights per tenant
+- [x] Company-specific dashboards
+- [x] Tenant-aware analytics
+- [x] Predictive analytics per company
+- [x] Anomaly detection per tenant
+- [x] Custom KPIs per company
+- [x] AI-powered insights per tenant
 
 ### 18.6 AI Assistant Module
 **Definition:** Embedded financial assistant chatbot per company
-- [ ] Company-specific AI training
-- [ ] Tenant-aware responses
-- [ ] Company data integration
-- [ ] Multi-language support per tenant
-- [ ] Custom AI workflows per company
-- [ ] AI analytics per tenant
+- [x] Company-specific AI training
+- [x] Tenant-aware responses
+- [x] Company data integration
+- [x] Multi-language support per tenant
+- [x] Custom AI workflows per company
+- [x] AI analytics per tenant
 
 ## 19. System Behavior & Flows
 
@@ -534,7 +534,7 @@ Paksa Financial System is a multi-tenant, modular financial ERP platform. It sup
 ### 19.2 Usage Flow
 - All operations (invoices, payroll, etc.) are scoped per company
 - No cross-company data leakage
-- Reports and documents use company logo, name, numbering
+- Reports and documents use company logo, name, numbering, address, website, email
 - Users can switch between companies if authorized
 - All data remains isolated per tenant
 
@@ -548,132 +548,3 @@ Paksa Financial System is a multi-tenant, modular financial ERP platform. It sup
 - [ ] Caching: Tenant-aware cache keys
 - [ ] Logging: Tenant-specific log aggregation navigation links
 - [ ] Ensure UI/UX consistency across modules
-
-### 16.3 Documentation Accuracy
-- [ ] Update README to reflect actual implementation status
-- [ ] Remove claims of completed features that are not done
-- [ ] Sync documentation with actual codebase
-- [ ] Update tech stack descriptions to match reality
-- [ ] Clarify AI/BI feature availability
-
-## 17. Multi-Tenant Architecture & Infrastructure
-
-### 17.1 Database Architecture
-- [ ] Implement tenant-aware database models
-- [ ] Add tenant_id to all relevant tables
-- [ ] Setup database isolation strategies (shared DB with tenant_id vs separate schemas)
-- [ ] Implement tenant-aware migrations
-- [ ] Add database-level security policies
-- [ ] Setup tenant data backup and restore
-- [ ] Implement cross-tenant data prevention
-
-### 17.2 API & Backend Architecture
-- [ ] Implement tenant context middleware
-- [ ] Add tenant-aware API endpoints
-- [ ] Implement tenant-based request routing
-- [ ] Add tenant validation and authorization
-- [ ] Setup tenant-specific caching
-- [ ] Implement tenant-aware background jobs
-- [ ] Add tenant usage tracking and limits
-
-### 17.3 Frontend Multi-Tenant Support
-- [ ] Implement company selection interface
-- [ ] Add tenant-aware routing
-- [ ] Implement company-specific theming and branding
-- [ ] Add tenant context management (Vuex/Pinia)
-- [ ] Implement tenant-aware API calls
-- [ ] Add company switching functionality
-- [ ] Implement tenant-specific feature flags
-
-### 17.4 Security & Isolation
-- [ ] Implement tenant data isolation
-- [ ] Add cross-tenant access prevention
-- [ ] Implement tenant-aware audit logging
-- [ ] Add tenant-specific security policies
-- [ ] Implement tenant data encryption
-- [ ] Add tenant-aware rate limiting
-- [ ] Implement tenant session isolation
-## 18. Additional Planned Modules
-
-### 18.1 Invoicing Module
-**Definition:** Create, send, and manage sales invoices with multi-tenant support
-- [ ] Create invoice templates per company
-- [ ] Generate invoices with company branding
-- [ ] Send invoices via email with company templates
-- [ ] Track invoice status and payments
-- [ ] Implement recurring invoices
-- [ ] Add invoice approval workflows
-- [ ] Integrate with payment gateways per company
-
-### 18.2 Enhanced Accounting Module
-**Definition:** Double-entry accounting with multi-tenant chart of accounts
-- [ ] Company-specific chart of accounts
-- [ ] Multi-currency support per company
-- [ ] Journal entries with tenant isolation
-- [ ] Financial period management per company
-- [ ] Inter-company transactions
-- [ ] Automated accounting rules per tenant
-
-### 18.3 Procurement Module
-**Definition:** Manage vendors, purchase orders, payments with tenant isolation
-- [ ] Vendor management per company
-- [ ] Purchase order workflows per tenant
-- [ ] Approval processes per company
-- [ ] Vendor payment processing
-- [ ] Purchase analytics per company
-- [ ] Integration with inventory per tenant
-
-### 18.4 HRM Module
-**Definition:** Manage employees, leaves, attendance per company
-- [ ] Employee management per company
-- [ ] Leave management with company policies
-- [ ] Attendance tracking per tenant
-- [ ] Performance management per company
-- [ ] Employee self-service portal
-- [ ] HR analytics per tenant
-
-### 18.5 BI/AI Dashboard Module
-**Definition:** Smart analytics, predictions, and anomaly detection per tenant
-- [ ] Company-specific dashboards
-- [ ] Tenant-aware analytics
-- [ ] Predictive analytics per company
-- [ ] Anomaly detection per tenant
-- [ ] Custom KPIs per company
-- [ ] AI-powered insights per tenant
-
-### 18.6 AI Assistant Module
-**Definition:** Embedded financial assistant chatbot per company
-- [ ] Company-specific AI training
-- [ ] Tenant-aware responses
-- [ ] Company data integration
-- [ ] Multi-language support per tenant
-- [ ] Custom AI workflows per company
-- [ ] AI analytics per tenant
-
-## 19. System Behavior & Flows
-
-### 19.1 Login Flow
-1. User goes to login page
-2. Chooses company (or enters company code)
-3. Logs in using email/password with tenant context
-4. App loads company-specific settings, modules, branding
-5. User operates within company-isolated environment
-
-### 19.2 Usage Flow
-- All operations (invoices, payroll, etc.) are scoped per company
-- No cross-company data leakage
-- Reports and documents use company logo, name, numbering
-- Users can switch between companies if authorized
-- All data remains isolated per tenant
-
-### 19.3 Multi-Tenant Technical Implementation
-- [ ] Frontend: Login form with company selection
-- [ ] Backend: Multi-tenant architecture (tenant ID per request)
-- [ ] Database: Auto-migrate per company with tenant isolation
-- [ ] REST/GraphQL APIs: Tenant-aware with context validation
-- [ ] Scheduled jobs: Per company with tenant isolation
-- [ ] Permissions: Fine-grained access per user, per company
-- [ ] Caching: Tenant-aware cache keys
-- [ ] Logging: Tenant-specific log aggregation
-- [ ] Recovery
-
