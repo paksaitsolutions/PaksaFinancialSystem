@@ -6,8 +6,8 @@
 - [x] Implement vendor management UI/UX
 - [x] Complete invoice processing workflow
 - [x] Build payment processing system
-- [ ] Add vendor credit management
-- [ ] Implement 1099 reporting
+- [x] Add vendor credit management
+- [x] Implement 1099 reporting
 
 ### 1.2 Accounts Receivable
 - [ ] Create customer management interface
