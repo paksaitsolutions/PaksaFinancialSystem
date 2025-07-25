@@ -1,21 +1,24 @@
 <template>
-  <BaseDataTable
-    title="Customers"
-    icon="mdi-account-group"
-    entity-name="Customer"
-    :headers="headers"
-    :items="customers"
-    :loading="loading"
-    :show-create="true"
-    @create="createCustomer"
-    @edit="editCustomer"
-    @delete="deleteCustomer"
-  />
+  <AppLayout title="Accounts Receivable - Customers">
+    <BaseDataTable
+      title="Customers"
+      icon="mdi-account-group"
+      entity-name="Customer"
+      :headers="headers"
+      :items="customers"
+      :loading="loading"
+      :show-create="true"
+      @create="createCustomer"
+      @edit="editCustomer"
+      @delete="deleteCustomer"
+    />
+  </AppLayout>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import BaseDataTable from '@/components/common/BaseDataTable.vue'
+import AppLayout from '@/layouts/AppLayout.vue'
 
 const customers = ref([])
 const loading = ref(false)

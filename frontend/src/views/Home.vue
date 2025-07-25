@@ -213,28 +213,44 @@ const modules = ref([
     route: '/inventory'
   },
   {
-    name: 'Budget Management',
-    description: 'Budget planning and analysis',
-    icon: 'mdi-chart-line',
+    name: 'Financial Reports',
+    description: 'Comprehensive financial reporting',
+    icon: 'mdi-chart-bar',
+    color: 'orange',
+    status: 'active',
+    route: '/reports'
+  },
+  {
+    name: 'Main Dashboard',
+    description: 'Executive dashboard and analytics',
+    icon: 'mdi-view-dashboard',
+    color: 'red',
+    status: 'active',
+    route: '/main-dashboard'
+  },
+  {
+    name: 'Super Admin',
+    description: 'System administration panel',
+    icon: 'mdi-shield-crown',
+    color: 'deep-purple',
+    status: 'active',
+    route: '/admin'
+  },
+  {
+    name: 'Settings',
+    description: 'Company configuration and settings',
+    icon: 'mdi-cog',
     color: 'indigo',
     status: 'active',
-    route: '/budget'
+    route: '/settings'
   },
   {
-    name: 'Fixed Assets',
-    description: 'Asset lifecycle and depreciation',
-    icon: 'mdi-office-building',
+    name: 'Role Management',
+    description: 'User roles and permissions',
+    icon: 'mdi-account-key',
     color: 'brown',
     status: 'active',
-    route: '/assets'
-  },
-  {
-    name: 'Cash Management',
-    description: 'Bank reconciliation and cash flow',
-    icon: 'mdi-bank',
-    color: 'cyan',
-    status: 'active',
-    route: '/cash'
+    route: '/rbac'
   }
 ])
 
@@ -246,8 +262,7 @@ onMounted(() => {
 })
 
 const navigateToModule = (module: any) => {
-  // For now, show a message since modules aren't fully implemented
-  alert(`${module.name} module will be available soon!`)
+  router.push(module.route)
 }
 
 const logout = () => {

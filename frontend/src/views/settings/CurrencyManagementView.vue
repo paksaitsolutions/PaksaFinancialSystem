@@ -1,6 +1,6 @@
 <template>
-  <div class="currency-management">
-    <v-container fluid>
+  <AppLayout title="Settings - Currency Management">
+    <div class="currency-management">
       <v-row>
         <v-col cols="12">
           <v-card>
@@ -125,8 +125,6 @@
           </v-card>
         </v-col>
       </v-row>
-    </v-container>
-
     <!-- Currency Dialog -->
     <v-dialog v-model="currencyDialog" max-width="500px">
       <v-card>
@@ -245,11 +243,17 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-  </div>
+    </div>
+  </AppLayout>
 </template>
 
 <script>
+import AppLayout from '@/layouts/AppLayout.vue'
+
 export default {
+  components: {
+    AppLayout
+  },
   name: 'CurrencyManagementView',
   data: () => ({
     activeTab: 'currencies',

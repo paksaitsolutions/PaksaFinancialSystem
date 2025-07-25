@@ -23,7 +23,7 @@
               </v-card-title>
 
               <v-card-text>
-                <v-form ref="form" v-model="valid" @submit.prevent="login">
+                <v-form ref="form" v-model="valid" @submit.prevent="login" lazy-validation>
                   <v-text-field
                     v-model="email"
                     label="Email"
@@ -31,7 +31,7 @@
                     prepend-inner-icon="mdi-email"
                     :rules="emailRules"
                     required
-                    outlined
+                    variant="outlined"
                     class="mb-3"
                   ></v-text-field>
 
@@ -44,7 +44,7 @@
                     @click:append-inner="showPassword = !showPassword"
                     :rules="passwordRules"
                     required
-                    outlined
+                    variant="outlined"
                     class="mb-3"
                   ></v-text-field>
 
@@ -80,7 +80,6 @@
                     size="large"
                     block
                     :loading="loading"
-                    :disabled="!valid"
                     class="mb-3"
                   >
                     Sign In
@@ -118,7 +117,7 @@
                         color="primary"
                         variant="outlined"
                         class="mt-2"
-                        @click="fillDemoCredentials('admin')"
+                        @click.prevent="fillDemoCredentials('admin')"
                       >
                         Use Admin
                       </v-btn>
@@ -134,7 +133,7 @@
                         color="secondary"
                         variant="outlined"
                         class="mt-2"
-                        @click="fillDemoCredentials('user')"
+                        @click.prevent="fillDemoCredentials('user')"
                       >
                         Use User
                       </v-btn>
@@ -161,19 +160,17 @@ const email = ref('')
 const password = ref('')
 const rememberMe = ref(false)
 const showPassword = ref(false)
-const valid = ref(false)
+const valid = ref(true)
 const loading = ref(false)
 const errorMessage = ref('')
 
 // Validation rules
 const emailRules = [
-  (v: string) => !!v || 'Email is required',
-  (v: string) => /.+@.+\..+/.test(v) || 'Email must be valid'
+  (v: string) => !!v || 'Email is required'
 ]
 
 const passwordRules = [
-  (v: string) => !!v || 'Password is required',
-  (v: string) => v.length >= 6 || 'Password must be at least 6 characters'
+  (v: string) => !!v || 'Password is required'
 ]
 
 // Demo credentials
@@ -189,26 +186,26 @@ const fillDemoCredentials = (type: 'admin' | 'user') => {
 
 // Login function
 const login = async () => {
-  if (!valid.value) return
+  if (!email.value || !password.value) {
+    errorMessage.value = 'Please enter both email and password'
+    return
+  }
 
   loading.value = true
   errorMessage.value = ''
 
   try {
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500))
+    await new Promise(resolve => setTimeout(resolve, 1000))
     
     // Mock authentication logic
     if (email.value === 'admin@paksa.com' && password.value === 'admin123') {
-      // Store auth data
       localStorage.setItem('user', JSON.stringify({
         email: email.value,
         name: 'Admin User',
         role: 'admin'
       }))
       localStorage.setItem('token', 'mock-jwt-token-admin')
-      
-      // Redirect to dashboard
       router.push('/')
     } else if (email.value === 'user@paksa.com' && password.value === 'user123') {
       localStorage.setItem('user', JSON.stringify({
@@ -217,10 +214,9 @@ const login = async () => {
         role: 'user'
       }))
       localStorage.setItem('token', 'mock-jwt-token-user')
-      
       router.push('/')
     } else {
-      errorMessage.value = 'Invalid email or password. Please try the demo credentials.'
+      errorMessage.value = 'Invalid credentials. Use demo accounts: admin@paksa.com/admin123 or user@paksa.com/user123'
     }
   } catch (error) {
     errorMessage.value = 'Login failed. Please try again.'
