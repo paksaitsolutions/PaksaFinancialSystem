@@ -1,0 +1,43 @@
+# Alerting configuration for production monitoring
+groups:
+  - name: paksa_financial_alerts
+    rules:
+      - alert: ApplicationDown
+        expr: up{job="paksa-financial"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Paksa Financial application is down"
+
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error rate detected"
+
+      - alert: DatabaseDown
+        expr: database_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Database is unreachable"
+
+      - alert: HighCPUUsage
+        expr: cpu_usage_percent > 80
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage"
+
+      - alert: DiskSpaceLow
+        expr: disk_usage_percent > 90
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Low disk space"

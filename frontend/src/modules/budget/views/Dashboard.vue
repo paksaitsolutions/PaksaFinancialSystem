@@ -43,45 +43,45 @@
       <div class="flex justify-content-between align-items-center mb-4">
         <h3>Budget vs Actual</h3>
         <div>
-          <Dropdown 
+          <v-select 
             v-model="selectedPeriod" 
-            :options="periods" 
-            optionLabel="name" 
-            placeholder="Select Period"
-            class="w-full md:w-14rem"
+            :items="periods" 
+            item-title="name"
+            item-value="code"
+            label="Select Period"
+            style="width: 200px"
           />
         </div>
       </div>
-      <Chart type="bar" :data="budgetChartData" :options="chartOptions" />
+      <div style="height: 400px; display: flex; align-items: center; justify-content: center; background: #f5f5f5; border-radius: 8px;">
+        <div class="text-center">
+          <v-icon size="48" color="grey">mdi-chart-bar</v-icon>
+          <p class="text-h6 mt-2">Budget vs Actual Chart</p>
+          <p class="text-body-2">Chart visualization would be implemented here</p>
+        </div>
+      </div>
     </div>
 
     <!-- Recent Budget Activities -->
     <div class="card mt-4">
-      <DataTable 
-        :value="recentActivities" 
-        :paginator="true" 
-        :rows="5"
-        :rowsPerPageOptions="[5, 10, 20]"
-        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+      <v-data-table 
+        :items="recentActivities" 
+        :headers="tableHeaders"
+        items-per-page="5"
+        class="elevation-1"
       >
-        <Column field="date" header="Date" sortable>
-          <template #body="{ data }">
-            {{ formatDate(data.date) }}
-          </template>
-        </Column>
-        <Column field="description" header="Description" sortable></Column>
-        <Column field="amount" header="Amount" sortable>
-          <template #body="{ data }">
-            {{ formatCurrency(data.amount) }}
-          </template>
-        </Column>
-        <Column field="status" header="Status" sortable>
-          <template #body="{ data }">
-            <Tag :value="data.status" :severity="getStatusSeverity(data.status)" />
-          </template>
-        </Column>
-      </DataTable>
+        <template #item.date="{ item }">
+          {{ formatDate(item.date) }}
+        </template>
+        <template #item.amount="{ item }">
+          {{ formatCurrency(item.amount) }}
+        </template>
+        <template #item.status="{ item }">
+          <v-chip :color="getStatusColor(item.status)" size="small">
+            {{ item.status }}
+          </v-chip>
+        </template>
+      </v-data-table>
     </div>
   </div>
 </template>
@@ -91,13 +91,17 @@ import { ref, computed, onMounted } from 'vue';
 import { useFormatting } from '../../composables/useFormatting';
 import PageHeader from '../../components/layout/PageHeader.vue';
 import StatCard from '../../components/common/StatCard.vue';
-import Chart from 'primevue/chart';
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
-import Tag from 'primevue/tag';
-import Dropdown from 'primevue/dropdown';
+// Removed PrimeVue imports - using Vuetify components
 
-const { formatCurrency, formatDate } = useFormatting();
+const formatCurrency = (value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US').format(date);
+
+const tableHeaders = [
+  { title: 'Date', key: 'date' },
+  { title: 'Description', key: 'description' },
+  { title: 'Amount', key: 'amount' },
+  { title: 'Status', key: 'status' }
+];
 
 // Mock data - replace with actual API calls
 const totalBudget = ref(1250000);
@@ -205,14 +209,14 @@ const recentActivities = ref([
 ]);
 
 // Helper functions
-const getStatusSeverity = (status: string) => {
+const getStatusColor = (status: string) => {
   switch (status.toLowerCase()) {
     case 'completed':
       return 'success';
     case 'pending approval':
       return 'warning';
     case 'rejected':
-      return 'danger';
+      return 'error';
     default:
       return 'info';
   }

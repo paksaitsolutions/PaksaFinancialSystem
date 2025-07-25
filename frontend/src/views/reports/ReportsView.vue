@@ -239,7 +239,6 @@ const breadcrumbItems = [
 
 // State
 const selectedCategoryId = ref<string | null>(null);
-const loading = ref(false);
 
 // Report Runner
 const reportRunner = ref({

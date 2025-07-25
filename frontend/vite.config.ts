@@ -11,17 +11,28 @@ export default defineConfig({
   },
   server: {
     port: 3000,
-    host: '0.0.0.0'
+    host: true,
+    headers: {
+      // Security headers for development
+      'X-Frame-Options': 'SAMEORIGIN',
+      'X-Content-Type-Options': 'nosniff',
+      'Referrer-Policy': 'strict-origin-when-cross-origin'
+    }
   },
   build: {
-    target: 'es2015',
     rollupOptions: {
       output: {
         manualChunks: {
           vendor: ['vue', 'vue-router', 'pinia'],
-          ui: ['vuetify']
+          vuetify: ['vuetify'],
+          'general-ledger': ['./src/modules/general-ledger'],
+          'accounts-payable': ['./src/modules/accounts-payable'],
+          'budget': ['./src/modules/budget'],
+          'reports': ['./src/views/reports'],
+          'admin': ['./src/views/admin', './src/views/rbac', './src/views/settings']
         }
       }
-    }
+    },
+    chunkSizeWarningLimit: 1000
   }
 })

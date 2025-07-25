@@ -49,7 +49,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: '',
         name: 'GeneralLedger',
-        component: () => import('@/views/accounting/GeneralLedgerView.vue')
+        component: () => import(/* webpackChunkName: "general-ledger" */ '@/modules/general-ledger/views/Dashboard.vue')
       },
       {
         path: 'chart-of-accounts',
@@ -81,7 +81,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: '',
         name: 'AccountsPayable',
-        component: () => import('@/views/accounts-payable/APDashboard.vue')
+        component: () => import(/* webpackChunkName: "accounts-payable" */ '@/modules/accounts-payable/views/VendorsAdvancedView.vue')
       }
     ]
   },
@@ -105,7 +105,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: '',
         name: 'Reports',
-        component: () => import('@/views/reports/SimpleReportsView.vue')
+        component: () => import(/* webpackChunkName: "reports" */ '@/views/reports/ReportsView.vue')
       }
     ]
   },
@@ -138,6 +138,18 @@ const routes: RouteRecordRaw[] = [
     name: 'CurrencySettings',
     component: () => import('@/views/settings/CurrencyManagementView.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/invoicing/create',
+    name: 'CreateInvoice',
+    component: () => import('@/layouts/MainLayout.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: '',
+        component: () => import('@/views/invoicing/CreateInvoice.vue')
+      }
+    ]
   },
   {
     path: '/rbac',
@@ -260,7 +272,7 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
-  // Temporarily disable auth for testing
+  console.log('Router navigation:', from.path, '->', to.path)
   next()
 })
 
