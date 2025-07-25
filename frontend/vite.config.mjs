@@ -51,6 +51,17 @@ export default defineConfig({
     host: '0.0.0.0',
     strictPort: true,
     open: true,
+    hmr: {
+      port: 3003,
+      host: 'localhost'
+    },
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false
+      }
+    }
   },
   build: {
     target: 'esnext',
