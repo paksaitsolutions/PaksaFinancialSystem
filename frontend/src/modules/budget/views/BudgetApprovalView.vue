@@ -50,7 +50,7 @@
             <v-data-table
               :headers="headers"
               :items="filteredQueue"
-              :loading="loading"
+              :loading="isLoading"
               :items-per-page="10"
               class="elevation-1"
               @click:row="(item) => selectBudget(item)"
@@ -260,7 +260,7 @@ const budgetStore = useBudgetStore()
 
 // State
 const toast = useToast()
-const loading = ref(false)
+const isLoading = ref(false)
 const approvalDialog = ref({
   visible: false,
   loading: false,

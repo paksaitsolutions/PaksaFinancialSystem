@@ -36,7 +36,7 @@
             <v-card 
               class="quick-action-card" 
               elevation="2"
-              @click="router.push(action.route)"
+              @click="navigateToRoute(action.route)"
             >
               <v-card-text class="text-center pa-6">
                 <v-avatar :color="action.color" size="64" class="mb-3">
@@ -164,7 +164,7 @@ const quickActions = ref([
     description: 'New customer invoice',
     icon: 'mdi-file-document-plus',
     color: 'success',
-    route: '/ar'
+    route: '/invoicing/create'
   },
   {
     title: 'View Reports',
@@ -288,8 +288,26 @@ onMounted(() => {
   }
 })
 
+const navigateToRoute = (route: string) => {
+  console.log('Navigating to route:', route)
+  try {
+    router.push(route).catch(err => {
+      console.error('Navigation error:', err)
+    })
+  } catch (error) {
+    console.error('Router push error:', error)
+  }
+}
+
 const navigateToModule = (module: any) => {
-  router.push(module.route)
+  console.log('Navigating to module:', module.name, 'route:', module.route)
+  try {
+    router.push(module.route).catch(err => {
+      console.error('Module navigation error:', err)
+    })
+  } catch (error) {
+    console.error('Module router push error:', error)
+  }
 }
 
 const logout = () => {
