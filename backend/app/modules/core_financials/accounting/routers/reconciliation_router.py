@@ -10,7 +10,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 
-from core.database import get_db
+from app.core.database import get_db
 from .. import schemas, services
 from ..models import ReconciliationStatus, ReconciliationMatchType
 from ..services import reconciliation_service

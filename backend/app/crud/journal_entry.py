@@ -22,7 +22,7 @@ from schemas.journal_entry import (
     JournalEntryItemCreate,
     JournalEntryFilter
 )
-from core.exceptions import (
+from app.core.exceptions import (
     NotFoundException, 
     BadRequestException,
     ValidationException

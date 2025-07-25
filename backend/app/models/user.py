@@ -102,7 +102,7 @@ class User(BaseModel):
         password: str
     ) -> Optional['User']:
         """Authenticate a user by email and password."""
-        from core.security import verify_password
+        from app.core.security import verify_password
         
         user = await cls.get_by_email(db, email=email)
         if not user:

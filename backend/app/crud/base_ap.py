@@ -10,8 +10,8 @@ from sqlalchemy import and_, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from core.database import Base
-from core.exceptions import (
+from app.core.database import Base
+from app.core.exceptions import (
     BadRequestException,
     NotFoundException,
     ValidationException

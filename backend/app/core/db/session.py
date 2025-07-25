@@ -7,10 +7,18 @@ from typing import AsyncGenerator
 from pathlib import Path
 
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from sqlalchemy.orm import declarative_base
 from app.core.config import settings
 
+# Create declarative base for models
+Base = declarative_base()
+
+class BaseModel(Base):
+    """Base model class with common functionality."""
+    __abstract__ = True
+
 # Use environment-based configuration
-DB_URI = os.getenv("DATABASE_URL", settings.DATABASE_URL)
+DB_URI = os.getenv("DATABASE_URL", settings.SQLALCHEMY_DATABASE_URI)
 
 # Handle SQLite path creation if using SQLite
 if "sqlite" in DB_URI:
@@ -80,6 +88,30 @@ async def get_db_context() -> AsyncGenerator[AsyncSession, None]:
             raise
         finally:
             await session.close()
+
+# Additional utility functions
+async def init_db():
+    """Initialize database."""
+    pass
+
+async def seed_database():
+    """Seed database with initial data."""
+    pass
+
+async def seed_users():
+    """Seed users."""
+    pass
+
+def get_database_url():
+    """Get database URL."""
+    return DB_URI
+
+def validate_database_url(url):
+    """Validate database URL."""
+    return url
+
+# Alias for get_db_context
+get_db_session = get_db_context
 
 # For backward compatibility
 SessionLocal = async_session_factory

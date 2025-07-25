@@ -61,17 +61,20 @@ def create_database_engine() -> AsyncEngine:
     is_sqlite = 'sqlite' in db_uri.lower()
     
     if is_sqlite:
-        # SQLite specific settings
+        # SQLite specific settings - remove pool settings that aren't valid for SQLite
         db_path = getattr(settings, 'SQLITE_DB_PATH', ':memory:')
         if db_path != ":memory:":
             db_dir = os.path.dirname(db_path)
             if db_dir and not os.path.exists(db_dir):
                 os.makedirs(db_dir, exist_ok=True)
         
-        engine_options.update({
+        # Remove pool settings for SQLite
+        engine_options = {
+            "echo": echo,
+            "future": True,
             "connect_args": {"check_same_thread": False},
             "poolclass": NullPool,  # Use NullPool for SQLite in async mode
-        })
+        }
     else:
         # PostgreSQL/other database settings
         engine_options.update({

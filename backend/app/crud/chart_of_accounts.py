@@ -17,7 +17,7 @@ from schemas.chart_of_accounts import (
     ChartOfAccountsTree,
     ChartOfAccountsWithBalance
 )
-from core.exceptions import (
+from app.core.exceptions import (
     NotFoundException,
     BadRequestException,
     ValidationException
