@@ -1,0 +1,24 @@
+# Security enhancements
+slowapi==0.1.9
+python-multipart==0.0.6
+cryptography==41.0.7
+bcrypt==4.1.2
+passlib[bcrypt]==1.7.4
+python-jose[cryptography]==3.3.0
+redis==5.0.1
+
+# Input validation and sanitization
+bleach==6.1.0
+html5lib==1.1
+validators==0.22.0
+
+# Rate limiting
+limits==3.6.0
+flask-limiter==3.5.0
+
+# CSRF protection
+itsdangerous==2.1.2
+
+# Additional security
+secure==0.3.0
+safety==2.3.5
