@@ -4,97 +4,307 @@
     :rail="!isExpanded"
     permanent
     class="left-sidebar"
-    elevation="3"
+    elevation="2"
+    width="280"
+    rail-width="72"
   >
+    <!-- Header -->
     <div class="sidebar-header">
-      <div class="d-flex align-center px-2">
-        <v-avatar size="40" color="primary" class="mr-2">
-          <v-img src="/favicon.svg" alt="Logo"></v-img>
+      <div class="d-flex align-center px-4 py-3">
+        <v-avatar size="40" color="primary" class="mr-3 cursor-pointer" @click="goToHome">
+          <v-icon color="white">mdi-currency-usd</v-icon>
         </v-avatar>
-        <span v-if="isExpanded" class="text-h6 font-weight-bold">Paksa Financial</span>
-        <v-spacer></v-spacer>
+        <div v-if="isExpanded" class="flex-grow-1 cursor-pointer" @click="goToHome">
+          <div class="text-h6 font-weight-bold text-primary">Paksa Financial</div>
+          <div class="text-caption text-medium-emphasis">Enterprise System</div>
+        </div>
         <v-btn
           :icon="isExpanded ? 'mdi-chevron-left' : 'mdi-chevron-right'"
           variant="text"
           size="small"
-          @click.stop="toggleMenu"
-        ></v-btn>
+          @click="toggleMenu"
+        />
       </div>
     </div>
 
-    <v-divider></v-divider>
+    <v-divider />
 
+    <!-- Navigation Menu -->
     <div class="sidebar-scroll">
-      <v-list nav>
-        <template v-for="item in menuItems" :key="item.id">
-          <!-- Single menu item without children -->
-          <v-list-item
-            v-if="!item.items || item.items.length === 0"
-            :prepend-icon="item.icon"
-            :title="item.label"
-            :to="item.route"
-            :active="isActive(item.route)"
-            rounded="lg"
-            class="mb-1"
-            @click="setActiveMenuItem(item.id)"
-          ></v-list-item>
+      <v-list nav class="pa-2">
+        <!-- Dashboard -->
+        <v-list-item
+          prepend-icon="mdi-view-dashboard"
+          title="Dashboard"
+          to="/dashboard"
+          rounded="lg"
+          class="mb-1"
+        />
 
-          <!-- Menu item with children -->
-          <v-list-group v-else :value="isModuleActive(item)">
-            <template v-slot:activator="{ props: groupProps }">
-              <v-list-item
-                v-bind="groupProps"
-                :prepend-icon="item.icon"
-                :title="item.label"
-                :active="isModuleActive(item)"
-                rounded="lg"
-                class="mb-1 module-item"
-                @click="setActiveMenuItem(item.id)"
-              ></v-list-item>
-            </template>
-
+        <!-- General Ledger -->
+        <v-list-group value="gl">
+          <template #activator="{ props }">
             <v-list-item
-              v-for="child in item.items"
-              :key="child.id"
-              :prepend-icon="child.icon"
-              :title="child.label"
-              :to="child.route"
-              :active="isActive(child.route)"
+              v-bind="props"
+              prepend-icon="mdi-book-open-variant"
+              title="General Ledger"
               rounded="lg"
-              class="ml-4 mb-1 sub-item"
-              @click="setActiveMenuItem(child.id)"
-            ></v-list-item>
-          </v-list-group>
-        </template>
+              class="mb-1"
+            />
+          </template>
+          
+          <v-list-item
+            prepend-icon="mdi-file-tree"
+            title="Chart of Accounts"
+            to="/gl/chart-of-accounts"
+            rounded="lg"
+            class="ml-4 mb-1"
+          />
+          <v-list-item
+            prepend-icon="mdi-book-edit"
+            title="Journal Entries"
+            to="/gl/journal-entries"
+            rounded="lg"
+            class="ml-4 mb-1"
+          />
+          <v-list-item
+            prepend-icon="mdi-scale-balance"
+            title="Trial Balance"
+            to="/gl/trial-balance"
+            rounded="lg"
+            class="ml-4 mb-1"
+          />
+          <v-list-item
+            prepend-icon="mdi-file-document"
+            title="Financial Statements"
+            to="/gl/financial-statements"
+            rounded="lg"
+            class="ml-4 mb-1"
+          />
+        </v-list-group>
+
+        <!-- Accounts Payable -->
+        <v-list-group value="ap">
+          <template #activator="{ props }">
+            <v-list-item
+              v-bind="props"
+              prepend-icon="mdi-credit-card"
+              title="Accounts Payable"
+              rounded="lg"
+              class="mb-1"
+            />
+          </template>
+          
+          <v-list-item
+            prepend-icon="mdi-account-group"
+            title="Vendors"
+            to="/ap/vendors"
+            rounded="lg"
+            class="ml-4 mb-1"
+          />
+          <v-list-item
+            prepend-icon="mdi-file-document-outline"
+            title="Bills"
+            to="/ap/bills"
+            rounded="lg"
+            class="ml-4 mb-1"
+          />
+          <v-list-item
+            prepend-icon="mdi-cash"
+            title="Payments"
+            to="/ap/payments"
+            rounded="lg"
+            class="ml-4 mb-1"
+          />
+        </v-list-group>
+
+        <!-- Accounts Receivable -->
+        <v-list-group value="ar">
+          <template #activator="{ props }">
+            <v-list-item
+              v-bind="props"
+              prepend-icon="mdi-wallet"
+              title="Accounts Receivable"
+              rounded="lg"
+              class="mb-1"
+            />
+          </template>
+          
+          <v-list-item
+            prepend-icon="mdi-account-multiple"
+            title="Customers"
+            to="/ar/customers"
+            rounded="lg"
+            class="ml-4 mb-1"
+          />
+          <v-list-item
+            prepend-icon="mdi-file-document"
+            title="Invoices"
+            to="/ar/invoices"
+            rounded="lg"
+            class="ml-4 mb-1"
+          />
+          <v-list-item
+            prepend-icon="mdi-cash-register"
+            title="Receipts"
+            to="/ar/receipts"
+            rounded="lg"
+            class="ml-4 mb-1"
+          />
+        </v-list-group>
+
+        <!-- Cash Management -->
+        <v-list-group value="cash">
+          <template #activator="{ props }">
+            <v-list-item
+              v-bind="props"
+              prepend-icon="mdi-bank"
+              title="Cash Management"
+              rounded="lg"
+              class="mb-1"
+            />
+          </template>
+          
+          <v-list-item
+            prepend-icon="mdi-bank-outline"
+            title="Bank Accounts"
+            to="/cash/accounts"
+            rounded="lg"
+            class="ml-4 mb-1"
+          />
+          <v-list-item
+            prepend-icon="mdi-swap-horizontal"
+            title="Transactions"
+            to="/cash/transactions"
+            rounded="lg"
+            class="ml-4 mb-1"
+          />
+          <v-list-item
+            prepend-icon="mdi-check-circle"
+            title="Reconciliation"
+            to="/cash/reconciliation"
+            rounded="lg"
+            class="ml-4 mb-1"
+          />
+        </v-list-group>
+
+        <!-- Fixed Assets -->
+        <v-list-item
+          prepend-icon="mdi-office-building"
+          title="Fixed Assets"
+          to="/assets"
+          rounded="lg"
+          class="mb-1"
+        />
+
+        <!-- Payroll -->
+        <v-list-item
+          prepend-icon="mdi-account-cash"
+          title="Payroll"
+          to="/payroll"
+          rounded="lg"
+          class="mb-1"
+        />
+
+        <!-- Inventory -->
+        <v-list-item
+          prepend-icon="mdi-package-variant"
+          title="Inventory"
+          to="/inventory"
+          rounded="lg"
+          class="mb-1"
+        />
+
+        <!-- Reports -->
+        <v-list-group value="reports">
+          <template #activator="{ props }">
+            <v-list-item
+              v-bind="props"
+              prepend-icon="mdi-chart-line"
+              title="Reports"
+              rounded="lg"
+              class="mb-1"
+            />
+          </template>
+          
+          <v-list-item
+            prepend-icon="mdi-finance"
+            title="Financial Reports"
+            to="/reports/financial"
+            rounded="lg"
+            class="ml-4 mb-1"
+          />
+          <v-list-item
+            prepend-icon="mdi-chart-bar"
+            title="Analytics"
+            to="/reports/analytics"
+            rounded="lg"
+            class="ml-4 mb-1"
+          />
+        </v-list-group>
+
+        <!-- Compliance -->
+        <v-list-group value="compliance">
+          <template #activator="{ props }">
+            <v-list-item
+              v-bind="props"
+              prepend-icon="mdi-shield-check"
+              title="Compliance"
+              rounded="lg"
+              class="mb-1"
+            />
+          </template>
+          
+          <v-list-item
+            prepend-icon="mdi-view-dashboard-outline"
+            title="Dashboard"
+            to="/compliance/dashboard"
+            rounded="lg"
+            class="ml-4 mb-1"
+          />
+          <v-list-item
+            prepend-icon="mdi-security"
+            title="Security Events"
+            to="/compliance/security/events"
+            rounded="lg"
+            class="ml-4 mb-1"
+          />
+          <v-list-item
+            prepend-icon="mdi-file-lock"
+            title="Policies"
+            to="/compliance/security/policies"
+            rounded="lg"
+            class="ml-4 mb-1"
+          />
+        </v-list-group>
       </v-list>
     </div>
 
-    <template v-slot:append>
-      <v-divider class="mb-2"></v-divider>
+    <!-- Footer -->
+    <template #append>
+      <v-divider class="mb-2" />
       <div class="pa-2">
         <v-list nav density="compact">
-          <v-list-item 
-            prepend-icon="mdi-cog" 
-            title="Settings" 
-            to="/settings" 
-            rounded="lg" 
-            class="mb-1"
-            @click="setActiveMenuItem('settings')"
-          ></v-list-item>
-          <v-list-item 
-            prepend-icon="mdi-help-circle" 
-            title="Help" 
-            to="/help" 
-            rounded="lg" 
-            class="mb-1"
-            @click="setActiveMenuItem('help')"
-          ></v-list-item>
-          <v-list-item 
-            prepend-icon="mdi-logout" 
-            title="Logout" 
-            @click="logout" 
+          <v-list-item
+            prepend-icon="mdi-cog"
+            title="Settings"
+            to="/settings"
             rounded="lg"
-          ></v-list-item>
+            class="mb-1"
+          />
+          <v-list-item
+            prepend-icon="mdi-help-circle"
+            title="Help"
+            to="/help"
+            rounded="lg"
+            class="mb-1"
+          />
+          <v-list-item
+            prepend-icon="mdi-logout"
+            title="Logout"
+            @click="logout"
+            rounded="lg"
+          />
         </v-list>
       </div>
     </template>
@@ -102,104 +312,64 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { useRoute, useRouter, type RouteLocationNormalizedLoaded } from 'vue-router';
-import { useMenuStore } from '../../stores/menu';
-import type { SidebarMenuItem } from '@/config/menu';
+import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 
-const menuStore = useMenuStore();
-const route: RouteLocationNormalizedLoaded = useRoute();
-const router = useRouter();
-const drawer = ref<boolean>(true);
+const router = useRouter()
+const drawer = ref(true)
+const isExpanded = ref(true)
 
-// Get menu items from store with user permissions
-const userPermissions = ref<string[]>([]); // TODO: Replace with actual user permissions
-const menuItems = computed(() => menuStore.getAuthorizedMenuItems(userPermissions.value));
-const isExpanded = computed(() => !menuStore.getIsMenuCollapsed);
-
-// Check if a route is active
-const isActive = (routePath: string | RouteLocationNormalizedLoaded | undefined): boolean => {
-  if (!routePath) return false;
-  const path = typeof routePath === 'string' ? routePath : routePath.path;
-  return route.path === path || route.path.startsWith(`${path}/`);
-};
-
-// Check if a module is active (for group items)
-const isModuleActive = (menuItem: SidebarMenuItem): boolean => {
-  if (menuItem.route && isActive(menuItem.route)) return true;
-  if (menuItem.items) {
-    return menuItem.items.some(child => isModuleActive(child));
-  }
-  return false;
-};
-
-// Toggle menu expanded/collapsed
 const toggleMenu = () => {
-  menuStore.toggleMenu();
-};
+  isExpanded.value = !isExpanded.value
+}
 
-// Set active menu item
-const setActiveMenuItem = (itemId: string) => {
-  menuStore.setActiveMenuItem(itemId);
-};
+const goToHome = () => {
+  router.push('/')
+}
 
-// Logout function
 const logout = () => {
-  // Clear authentication
-  localStorage.removeItem('token');
-  localStorage.removeItem('user');
-  
-  // Redirect to login
-  router.push('/auth/login');
-};
-
-// Initialize menu
-onMounted(() => {
-  // TODO: Load user permissions from auth store or API
-  // For now, we'll just show all menu items
-  userPermissions.value = [];
-});
+  localStorage.removeItem('token')
+  localStorage.removeItem('user')
+  router.push('/auth/login')
+}
 </script>
 
-<style>
+<style scoped>
 .sidebar-header {
-  height: 64px;
-  display: flex;
-  align-items: center;
+  border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
 }
 
 .left-sidebar {
-  border-right: 1px solid rgba(0, 0, 0, 0.12);
+  border-right: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
 }
 
 .sidebar-scroll {
-  height: calc(100vh - 180px);
+  height: calc(100vh - 140px);
   overflow-y: auto;
 }
 
-.v-list-item--active {
-  background-color: rgba(25, 118, 210, 0.12) !important;
-  color: rgb(25, 118, 210) !important;
+:deep(.v-list-item--active) {
+  background-color: rgba(var(--v-theme-primary), 0.12);
+  color: rgb(var(--v-theme-primary));
 }
 
-.v-list-item:hover {
-  background-color: rgba(0, 0, 0, 0.04);
+:deep(.v-list-item--active .v-list-item__prepend .v-icon) {
+  color: rgb(var(--v-theme-primary));
 }
 
-.v-list-item--active:hover {
-  background-color: rgba(25, 118, 210, 0.16) !important;
+:deep(.v-list-item:hover) {
+  background-color: rgba(var(--v-theme-on-surface), 0.04);
 }
 
-.v-list-group__items .v-list-item--active {
-  background-color: rgba(25, 118, 210, 0.12) !important;
-}
-
-.v-navigation-drawer--rail .v-list-item-title {
+:deep(.v-navigation-drawer--rail .v-list-item-title) {
   opacity: 0;
 }
 
-.module-item .v-list-item__content,
-.sub-item .v-list-item__content {
-  opacity: 1 !important;
+:deep(.v-list-group__items .v-list-item) {
+  padding-inline-start: 16px !important;
+}
+
+.cursor-pointer {
+  cursor: pointer;
 }
 </style>

@@ -136,16 +136,19 @@ const refreshData = () => {
 
 const getModuleIcon = () => {
   // Find the module that matches the current title
-  const module = menuStore.modules.find(m => m.title === props.title);
+  const menuItems = menuStore.getMenuItems || [];
+  const module = menuItems.find(m => m.label === props.title);
   if (module) {
     return module.icon;
   }
   
   // Check if this is a subpage
-  for (const module of menuStore.modules) {
-    const subItem = module.subItems.find(s => s.name === props.title);
-    if (subItem) {
-      return subItem.icon;
+  for (const module of menuItems) {
+    if (module.items) {
+      const subItem = module.items.find(s => s.label === props.title);
+      if (subItem) {
+        return subItem.icon;
+      }
     }
   }
   
