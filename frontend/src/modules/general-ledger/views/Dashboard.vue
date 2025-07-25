@@ -89,11 +89,14 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { accountsApi, journalEntriesApi } from '@/services/api';
+import { useLoadingState } from '@/composables/useStateManagement';
 
 const formatCurrency = (value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
 const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US').format(date);
 
 const router = useRouter();
+const { setLoading, setError } = useLoadingState();
 
 const journalHeaders = [
   { title: 'Date', key: 'date' },
@@ -108,30 +111,14 @@ const balanceHeaders = [
   { title: 'Balance', key: 'balance' }
 ];
 
-// Mock data - replace with actual API calls
+// Real data from API
 const today = new Date();
-const assetsTotal = ref(1250000);
-const liabilitiesTotal = ref(450000);
-const equityTotal = ref(800000);
-const netIncome = ref(125000);
-
-const recentEntries = ref([
-  { id: 1, date: new Date('2025-07-15'), reference: 'JE-2025-001', description: 'Monthly accrual', total: 12500.75 },
-  { id: 2, date: new Date('2025-07-14'), reference: 'JE-2025-002', description: 'Depreciation', total: 3500.25 },
-  { id: 3, date: new Date('2025-07-10'), reference: 'JE-2025-003', description: 'Bank charges', total: 125.50 },
-  { id: 4, date: new Date('2025-07-05'), reference: 'JE-2025-004', description: 'Revenue recognition', total: 45200.00 },
-  { id: 5, date: new Date('2025-07-01'), reference: 'JE-2025-005', description: 'Payroll accrual', total: 32500.00 },
-]);
-
-const accountBalances = ref([
-  { id: 1, name: 'Cash and Cash Equivalents', balance: 450000 },
-  { id: 2, name: 'Accounts Receivable', balance: 325000 },
-  { id: 3, name: 'Inventory', balance: 275000 },
-  { id: 4, name: 'Property, Plant & Equipment', balance: 200000 },
-  { id: 5, name: 'Accounts Payable', balance: -175000 },
-  { id: 6, name: 'Short-term Loans', balance: -125000 },
-  { id: 7, name: 'Long-term Debt', balance: -150000 },
-]);
+const assetsTotal = ref(0);
+const liabilitiesTotal = ref(0);
+const equityTotal = ref(0);
+const netIncome = ref(0);
+const recentEntries = ref([]);
+const accountBalances = ref([]);
 
 const netIncomeClass = computed(() => ({
   'text-success': netIncome.value >= 0,
@@ -143,10 +130,66 @@ function viewJournalEntry() {
   router.push('/gl/journal-entries');
 }
 
+// Fetch data from API
+const fetchDashboardData = async () => {
+  try {
+    setLoading(true);
+    
+    // Fetch accounts and calculate totals
+    const accountsResponse = await accountsApi.getAll();
+    const accounts = accountsResponse.items || [];
+    
+    accountBalances.value = accounts.map(account => ({
+      id: account.id,
+      name: account.name,
+      balance: account.balance || 0
+    }));
+    
+    // Calculate totals by account type
+    assetsTotal.value = accounts
+      .filter(acc => acc.account_type === 'asset')
+      .reduce((sum, acc) => sum + (acc.balance || 0), 0);
+    
+    liabilitiesTotal.value = accounts
+      .filter(acc => acc.account_type === 'liability')
+      .reduce((sum, acc) => sum + (acc.balance || 0), 0);
+    
+    equityTotal.value = accounts
+      .filter(acc => acc.account_type === 'equity')
+      .reduce((sum, acc) => sum + (acc.balance || 0), 0);
+    
+    // Fetch recent journal entries
+    const entriesResponse = await journalEntriesApi.getAll({ limit: 5, sort: '-entry_date' });
+    recentEntries.value = (entriesResponse.items || []).map(entry => ({
+      id: entry.id,
+      date: new Date(entry.entry_date),
+      reference: entry.entry_number,
+      description: entry.description,
+      total: entry.total_debit || entry.total_credit || 0
+    }));
+    
+    // Calculate net income (revenue - expenses)
+    const revenue = accounts
+      .filter(acc => acc.account_type === 'revenue')
+      .reduce((sum, acc) => sum + (acc.balance || 0), 0);
+    
+    const expenses = accounts
+      .filter(acc => acc.account_type === 'expense')
+      .reduce((sum, acc) => sum + (acc.balance || 0), 0);
+    
+    netIncome.value = revenue - expenses;
+    
+  } catch (error) {
+    console.error('Error fetching dashboard data:', error);
+    setError('Failed to load dashboard data');
+  } finally {
+    setLoading(false);
+  }
+};
+
 // Fetch data when component mounts
 onMounted(() => {
-  // TODO: Replace with actual API calls
-  console.log('GL Dashboard mounted');
+  fetchDashboardData();
 });
 </script>
 

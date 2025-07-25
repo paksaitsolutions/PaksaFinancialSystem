@@ -611,9 +611,12 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import ExportDialog from '@/components/common/ExportDialog.vue'
+import { vendorsApi } from '@/services/api'
+import { useLoadingState } from '@/composables/useStateManagement'
 
 // Data
 const router = useRouter()
+const { setLoading, setError } = useLoadingState()
 const snackbar = ref(false)
 const snackbarText = ref('')
 const snackbarColor = ref('success')
@@ -625,6 +628,7 @@ const showSnackbar = (text: string, color = 'success') => {
 }
 
 // Reactive data
+const vendors = ref([])
 const showCreateModal = ref(false)
 const showExportDialog = ref(false)
 const isExporting = ref(false)
@@ -657,12 +661,31 @@ const exportColumns = [
 const exportData = computed(() => {
   return vendors.value.map(vendor => ({
     ...vendor,
-    outstanding: formatCurrency(vendor.outstanding),
-    totalSpend: formatCurrency(vendor.totalSpend),
+    outstanding: formatCurrency(vendor.outstanding || 0),
+    totalSpend: formatCurrency(vendor.totalSpend || 0),
     lastOrderDate: vendor.lastOrderDate ? new Date(vendor.lastOrderDate).toLocaleDateString() : 'N/A',
     createdAt: vendor.createdAt ? new Date(vendor.createdAt).toLocaleDateString() : 'N/A',
     riskLevel: vendor.riskLevel?.charAt(0).toUpperCase() + vendor.riskLevel?.slice(1) || 'Medium'
   }))
+})
+
+// Fetch vendors from API
+const fetchVendors = async () => {
+  try {
+    setLoading(true)
+    const response = await vendorsApi.getAll()
+    vendors.value = response.items || []
+  } catch (error) {
+    console.error('Error fetching vendors:', error)
+    setError('Failed to load vendors')
+  } finally {
+    setLoading(false)
+  }
+}
+
+// Load vendors on mount
+onMounted(() => {
+  fetchVendors()
 })
 
 const handleExport = async (format: string, options: any = {}) => {
