@@ -426,177 +426,217 @@ Paksa Financial System is a multi-tenant, modular financial ERP platform. It sup
 - [x] Backup
 - [x] Recovery
 
-## 16. Critical Code Quality & Bug Fixes
+16. Critical Code Quality & Bug Fixes
+16.1 Backend Code Quality
+ Fix async/sync database session inconsistencies
+ Remove duplicate code and session factories
+ Consolidate router imports and error handling
+ Fix Budget API session type mismatches
+ Remove development artifacts and hard-coded paths
+ Implement proper environment configuration
+ Add NotImplementedError for incomplete endpoints
+16.2 Frontend Code Quality
+ Fix duplicate declarations in Vue components
+ Resolve TypeScript errors in stores
+ Implement consistent component loading strategies
+ Replace all PlaceholderView components
+ Fix broken navigation links
+ Ensure UI/UX consistency across modules
+16.3 Documentation Accuracy
+ Update README to reflect actual implementation status
+ Remove claims of completed features that are not done
+ Sync documentation with actual codebase
+ Update tech stack descriptions to match reality
+ Clarify AI/BI feature availability
+17. Multi-Tenant Architecture & Infrastructure
+17.1 Database Architecture
+ Implement tenant-aware database models
+ Add tenant_id to all relevant tables
+ Setup database isolation strategies (shared DB with tenant_id vs separate schemas)
+ Implement tenant-aware migrations
+ Add database-level security policies
+ Setup tenant data backup and restore
+ Implement cross-tenant data prevention
+ Create tenant-aware base model with automatic tenant_id
+ Implement row-level security policies
+ Add tenant context middleware
+ Create tenant-aware CRUD operations
+ Setup automatic tenant filtering
+ Add tenant migration manager
+ Implement tenant security manager
+17.2 API & Backend Architecture
+ Implement tenant context middleware
+ Add tenant-aware API endpoints
+ Implement tenant-based request routing
+ Add tenant validation and authorization
+ Setup tenant-specific caching
+ Implement tenant-aware background jobs
+ Add tenant usage tracking and limits
+ Create tenant-aware router utilities
+ Implement tenant-specific caching system
+ Add tenant authentication and authorization
+ Create tenant usage monitoring and limits
+ Build tenant-aware background job system
+ Add tenant API endpoints for management
+17.3 Frontend Multi-Tenant Support
+ Implement company selection interface
+ Add tenant-aware routing
+ Implement company-specific theming and branding
+ Add tenant context management (Vuex/Pinia)
+ Implement tenant-aware API calls
+ Add company switching functionality
+ Implement tenant-specific feature flags
+ Create tenant store with Pinia
+ Build company selector and switcher components
+ Add tenant routing guards
+ Implement tenant-aware API interceptors
+ Create feature flags composable
+ Build tenant-aware navigation
+17.4 Security & Isolation
+ Implement tenant data isolation
+ Add cross-tenant access prevention
+ Implement tenant-aware audit logging
+ Add tenant-specific security policies
+ Implement tenant data encryption
+ Add tenant-aware rate limiting
+ Implement tenant session isolation
+ Create tenant data isolation with validation
+ Build cross-tenant access prevention system
+ Add comprehensive audit logging per tenant
+ Implement tenant-specific security policies
+ Create tenant data encryption with unique keys
+ Add tenant-aware rate limiting system
+ Build tenant session isolation and management
+18. Additional Planned Modules
+18.1 Invoicing Module
+Definition: Create, send, and manage sales invoices with multi-tenant support
 
-### 16.1 Backend Code Quality
-- [x] Fix async/sync database session inconsistencies
-- [x] Remove duplicate code and session factories
-- [x] Consolidate router imports and error handling
-- [x] Fix Budget API session type mismatches
-- [x] Remove development artifacts and hard-coded paths
-- [x] Implement proper environment configuration
-- [x] Add NotImplementedError for incomplete endpoints
+ Create invoice templates per company
+ Generate invoices with company branding
+ Send invoices via email with company templates
+ Track invoice status and payments
+ Implement recurring invoices
+ Add invoice approval workflows
+ Integrate with payment gateways per company
+18.2 Enhanced Accounting Module
+Definition: Double-entry accounting with multi-tenant chart of accounts
 
-### 16.2 Frontend Code Quality
-- [x] Fix duplicate declarations in Vue components
-- [x] Resolve TypeScript errors in stores
-- [x] Implement consistent component loading strategies
-- [x] Replace all PlaceholderView components
-- [x] Fix broken navigation links
-- [x] Ensure UI/UX consistency across modules
+ Company-specific chart of accounts
+ Multi-currency support per company
+ Journal entries with tenant isolation
+ Financial period management per company
+ Inter-company transactions
+ Automated accounting rules per tenant
+18.3 Procurement Module
+Definition: Manage vendors, purchase orders, payments with tenant isolation
 
-### 16.3 Documentation Accuracy
-- [x] Update README to reflect actual implementation status
-- [x] Remove claims of completed features that are not done
-- [x] Sync documentation with actual codebase
-- [x] Update tech stack descriptions to match reality
-- [x] Clarify AI/BI feature availability
+ Vendor management per company
+ Purchase order workflows per tenant
+ Approval processes per company
+ Vendor payment processing
+ Purchase analytics per company
+ Integration with inventory per tenant
+18.4 HRM Module
+Definition: Manage employees, leaves, attendance per company
 
-## 17. Multi-Tenant Architecture & Infrastructure
+ Employee management per company
+ Leave management with company policies
+ Attendance tracking per tenant
+ Performance management per company
+ Employee self-service portal
+ HR analytics per tenant
+18.5 BI/AI Dashboard Module
+Definition: Smart analytics, predictions, and anomaly detection per tenant
 
-### 17.1 Database Architecture
-- [x] Implement tenant-aware database models
-- [x] Add tenant_id to all relevant tables
-- [x] Setup database isolation strategies (shared DB with tenant_id vs separate schemas)
-- [x] Implement tenant-aware migrations
-- [x] Add database-level security policies
-- [x] Setup tenant data backup and restore
-- [x] Implement cross-tenant data prevention
-- [x] Create tenant-aware base model with automatic tenant_id
-- [x] Implement row-level security policies
-- [x] Add tenant context middleware
-- [x] Create tenant-aware CRUD operations
-- [x] Setup automatic tenant filtering
-- [x] Add tenant migration manager
-- [x] Implement tenant security manager
+ Company-specific dashboards
+ Tenant-aware analytics
+ Predictive analytics per company
+ Anomaly detection per tenant
+ Custom KPIs per company
+ AI-powered insights per tenant
+18.6 AI Assistant Module
+Definition: Embedded financial assistant chatbot per company
 
-### 17.2 API & Backend Architecture
-- [x] Implement tenant context middleware
-- [x] Add tenant-aware API endpoints
-- [x] Implement tenant-based request routing
-- [x] Add tenant validation and authorization
-- [x] Setup tenant-specific caching
-- [x] Implement tenant-aware background jobs
-- [x] Add tenant usage tracking and limits
-- [x] Create tenant-aware router utilities
-- [x] Implement tenant-specific caching system
-- [x] Add tenant authentication and authorization
-- [x] Create tenant usage monitoring and limits
-- [x] Build tenant-aware background job system
-- [x] Add tenant API endpoints for management
+ Company-specific AI training
+ Tenant-aware responses
+ Company data integration
+ Multi-language support per tenant
+ Custom AI workflows per company
+ AI analytics per tenant
+19. System Behavior & Flows
+19.1 Login Flow
+User goes to login page
+Chooses company (or enters company code)
+Logs in using email/password with tenant context
+App loads company-specific settings, modules, branding
+User operates within company-isolated environment
+19.2 Usage Flow
+All operations (invoices, payroll, etc.) are scoped per company
+No cross-company data leakage
+Reports and documents use company logo, name, numbering, address, website, email
+Users can switch between companies if authorized
+All data remains isolated per tenant
+19.3 Multi-Tenant Technical Implementation
+ Frontend: Login form with company selection
+ Backend: Multi-tenant architecture (tenant ID per request)
+ Database: Auto-migrate per company with tenant isolation
+ REST/GraphQL APIs: Tenant-aware with context validation
+ Scheduled jobs: Per company with tenant isolation
+ Permissions: Fine-grained access per user, per company
+ Caching: Tenant-aware cache keys
+ Logging: Tenant-specific log aggregation navigation links
+ Ensure UI/UX consistency across modules
 
-### 17.3 Frontend Multi-Tenant Support
-- [x] Implement company selection interface
-- [x] Add tenant-aware routing
-- [x] Implement company-specific theming and branding
-- [x] Add tenant context management (Vuex/Pinia)
-- [x] Implement tenant-aware API calls
-- [x] Add company switching functionality
-- [x] Implement tenant-specific feature flags
-- [x] Create tenant store with Pinia
-- [x] Build company selector and switcher components
-- [x] Add tenant routing guards
-- [x] Implement tenant-aware API interceptors
-- [x] Create feature flags composable
-- [x] Build tenant-aware navigation
+### New Tasks after Audit 
+### 20.1 Critical Security Vulnerabilities
+[x] Fix SQL injection vulnerabilities (dynamic query building)
+    - All dynamic queries now use SQLAlchemy ORM or parameterized SQL (no string concatenation).
+    - Input validation and sanitization implemented in `backend/app/core/security/input_validation.py`.
+    - All vulnerable endpoints (e.g., `general_ledger/services.py`) refactored to use safe query patterns.
+    - See: SECURITY_FIXES_IMPLEMENTED.md, CRITICAL_SECURITY_ISSUES.md for details and test coverage.
+- [ ] Implement CSRF protection on all endpoints
+- [ ] Add comprehensive input validation (API & frontend)
+- [ ] Strengthen JWT implementation (proper invalidation, secure storage)
+- [ ] Implement proper rate limiting for all APIs
+- [ ] Add security headers to all responses
+- [ ] Implement proper session management
+- [ ] Add audit logging for security events
+- [ ] Address XSS vulnerabilities in user-generated content
+- [ ] Sanitize all file uploads and API inputs
 
-### 17.4 Security & Isolation
-- [x] Implement tenant data isolation
-- [x] Add cross-tenant access prevention
-- [x] Implement tenant-aware audit logging
-- [x] Add tenant-specific security policies
-- [x] Implement tenant data encryption
-- [x] Add tenant-aware rate limiting
-- [x] Implement tenant session isolation
-- [x] Create tenant data isolation with validation
-- [x] Build cross-tenant access prevention system
-- [x] Add comprehensive audit logging per tenant
-- [x] Implement tenant-specific security policies
-- [x] Create tenant data encryption with unique keys
-- [x] Add tenant-aware rate limiting system
-- [x] Build tenant session isolation and management
+### 20.2 Code Quality Issues
+- [ ] Standardize exception handling (use proper logging, avoid print)
+- [ ] Remove hard-coded configuration values
+- [ ] Refactor duplicate code across modules
+- [ ] Standardize async/sync patterns in backend
+- [ ] Ensure consistent state management in frontend (ref vs reactive)
+- [ ] Fully utilize TypeScript types in frontend
+- [ ] Add missing component prop validation
+- [ ] Implement error boundaries in frontend
 
-## 18. Additional Planned Modules
+### 20.3 Performance & Scalability
+- [ ] Fix N+1 query problems in backend endpoints
+- [ ] Add missing database indexes on frequently queried columns
+- [ ] Optimize tenant filtering in queries
+- [ ] Implement query result caching for expensive operations
+- [ ] Optimize frontend bundle sizes (lazy loading, code splitting)
+- [ ] Add virtualization for large lists in frontend
+- [ ] Implement database connection pooling
 
-### 18.1 Invoicing Module
-**Definition:** Create, send, and manage sales invoices with multi-tenant support
-- [x] Create invoice templates per company
-- [x] Generate invoices with company branding
-- [x] Send invoices via email with company templates
-- [x] Track invoice status and payments
-- [x] Implement recurring invoices
-- [x] Add invoice approval workflows
-- [x] Integrate with payment gateways per company
+### 20.4 Monitoring, Observability & Operations
+- [ ] Set up application metrics and health checks
+- [ ] Implement comprehensive logging and error tracking
+- [ ] Configure alerting system for production
+- [ ] Add backup and disaster recovery plan
+- [ ] Test backup and recovery procedures
 
-### 18.2 Enhanced Accounting Module
-**Definition:** Double-entry accounting with multi-tenant chart of accounts
-- [x] Company-specific chart of accounts
-- [x] Multi-currency support per company
-- [x] Journal entries with tenant isolation
-- [x] Financial period management per company
-- [x] Inter-company transactions
-- [x] Automated accounting rules per tenant
+### 20.5 Data Integrity & Configuration
+- [ ] Add missing foreign key constraints in database
+- [ ] Enforce data validation at database level
+- [ ] Secure environment variables and secrets management
+- [ ] Implement configuration validation and feature flags
 
-### 18.3 Procurement Module
-**Definition:** Manage vendors, purchase orders, payments with tenant isolation
-- [x] Vendor management per company
-- [x] Purchase order workflows per tenant
-- [x] Approval processes per company
-- [x] Vendor payment processing
-- [x] Purchase analytics per company
-- [x] Integration with inventory per tenant
-
-### 18.4 HRM Module
-**Definition:** Manage employees, leaves, attendance per company
-- [x] Employee management per company
-- [x] Leave management with company policies
-- [x] Attendance tracking per tenant
-- [x] Performance management per company
-- [x] Employee self-service portal
-- [x] HR analytics per tenant
-
-### 18.5 BI/AI Dashboard Module
-**Definition:** Smart analytics, predictions, and anomaly detection per tenant
-- [x] Company-specific dashboards
-- [x] Tenant-aware analytics
-- [x] Predictive analytics per company
-- [x] Anomaly detection per tenant
-- [x] Custom KPIs per company
-- [x] AI-powered insights per tenant
-
-### 18.6 AI Assistant Module
-**Definition:** Embedded financial assistant chatbot per company
-- [x] Company-specific AI training
-- [x] Tenant-aware responses
-- [x] Company data integration
-- [x] Multi-language support per tenant
-- [x] Custom AI workflows per company
-- [x] AI analytics per tenant
-
-## 19. System Behavior & Flows
-
-### 19.1 Login Flow
-1. User goes to login page
-2. Chooses company (or enters company code)
-3. Logs in using email/password with tenant context
-4. App loads company-specific settings, modules, branding
-5. User operates within company-isolated environment
-
-### 19.2 Usage Flow
-- All operations (invoices, payroll, etc.) are scoped per company
-- No cross-company data leakage
-- Reports and documents use company logo, name, numbering, address, website, email
-- Users can switch between companies if authorized
-- All data remains isolated per tenant
-
-### 19.3 Multi-Tenant Technical Implementation
-- [x] Frontend: Login form with company selection
-- [x] Backend: Multi-tenant architecture (tenant ID per request)
-- [x] Database: Auto-migrate per company with tenant isolation
-- [x] REST/GraphQL APIs: Tenant-aware with context validation
-- [x] Scheduled jobs: Per company with tenant isolation
-- [x] Permissions: Fine-grained access per user, per company
-- [x] Caching: Tenant-aware cache keys
-- [x] Logging: Tenant-specific log aggregation navigation links
-- [x] Ensure UI/UX consistency across modules
-
+### 20.6 Testing & Documentation
+- [ ] Increase test coverage for edge cases and error handling
+- [ ] Add security and penetration tests
+- [ ] Complete documentation for all modules and APIs
