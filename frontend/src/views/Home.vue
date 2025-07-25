@@ -1,341 +1,283 @@
 <template>
-  <v-container class="home-page" fluid>
-    <!-- Hero Section -->
-    <v-sheet
-      rounded
-      class="pa-8 mb-8 text-center"
-      :color="$vuetify.theme.current.dark ? 'grey-darken-4' : 'primary-lighten-5'"
-      elevation="1"
-    >
-      <v-container class="py-12">
+  <v-app>
+    <v-app-bar color="primary" dark>
+      <v-app-bar-title>Paksa Financial System</v-app-bar-title>
+      
+      <v-spacer></v-spacer>
+      
+      <v-menu>
+        <template v-slot:activator="{ props }">
+          <v-btn icon v-bind="props">
+            <v-avatar size="32">
+              <v-icon>mdi-account-circle</v-icon>
+            </v-avatar>
+          </v-btn>
+        </template>
+        
+        <v-list>
+          <v-list-item>
+            <v-list-item-title>{{ user?.name || 'User' }}</v-list-item-title>
+            <v-list-item-subtitle>{{ user?.email }}</v-list-item-subtitle>
+          </v-list-item>
+          <v-divider></v-divider>
+          <v-list-item @click="logout">
+            <v-list-item-title>
+              <v-icon class="mr-2">mdi-logout</v-icon>
+              Logout
+            </v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </v-menu>
+    </v-app-bar>
+    
+    <v-main>
+      <v-container>
         <v-row justify="center">
-          <v-col cols="12" md="8">
-            <h1 class="text-h3 font-weight-bold mb-4">
-              Welcome to Paksa Financial System
-            </h1>
-            <p class="text-h6 font-weight-regular text-medium-emphasis mb-8">
-              Comprehensive financial management for your business
-            </p>
-            
-            <v-fade-transition>
-              <v-alert
-                v-if="showWelcome && !authStore.isAuthenticated"
-                color="primary"
-                icon="mdi-information"
-                variant="tonal"
-                closable
-                class="mb-6 mx-auto"
-                max-width="600"
-                @click:close="showWelcome = false"
-              >
-                Sign in to access all features or explore the available modules below.
+          <v-col cols="12" md="10">
+            <v-card class="pa-6">
+              <v-card-title class="text-h4 text-center mb-4">
+                Welcome to Paksa Financial System
+              </v-card-title>
+              
+              <v-alert type="success" class="mb-4">
+                <v-icon class="mr-2">mdi-check-circle</v-icon>
+                Successfully logged in as {{ user?.role === 'admin' ? 'Administrator' : 'User' }}
               </v-alert>
-            </v-fade-transition>
-            
-            <div class="d-flex justify-center gap-4 mt-6">
-              <v-btn
-                v-if="!authStore.isAuthenticated"
-                color="primary"
-                size="large"
-                to="/login"
-                prepend-icon="mdi-login"
-              >
-                Sign In
-              </v-btn>
               
-              <v-btn
-                v-else
-                color="primary"
-                variant="tonal"
-                size="large"
-                to="/dashboard"
-                prepend-icon="mdi-view-dashboard"
-              >
-                Go to Dashboard
-              </v-btn>
+              <v-row>
+                <v-col cols="12" md="6">
+                  <v-card class="pa-4" color="blue-lighten-5">
+                    <v-card-title class="text-h6">
+                      <v-icon class="mr-2">mdi-server</v-icon>
+                      Backend Status
+                    </v-card-title>
+                    <v-card-text>
+                      <v-chip color="green" variant="flat">
+                        <v-icon start>mdi-check-circle</v-icon>
+                        FastAPI Server Running
+                      </v-chip>
+                      <div class="mt-2 text-body-2">Port: 8000</div>
+                    </v-card-text>
+                  </v-card>
+                </v-col>
+                
+                <v-col cols="12" md="6">
+                  <v-card class="pa-4" color="green-lighten-5">
+                    <v-card-title class="text-h6">
+                      <v-icon class="mr-2">mdi-vuejs</v-icon>
+                      Frontend Status
+                    </v-card-title>
+                    <v-card-text>
+                      <v-chip color="green" variant="flat">
+                        <v-icon start>mdi-check-circle</v-icon>
+                        Vue.js 3 + Vuetify
+                      </v-chip>
+                      <div class="mt-2 text-body-2">Port: 3000</div>
+                    </v-card-text>
+                  </v-card>
+                </v-col>
+              </v-row>
               
-              <v-btn
-                variant="outlined"
-                size="large"
-                href="https://paksa.com.pk"
-                target="_blank"
-                rel="noopener noreferrer"
-                prepend-icon="mdi-information"
-              >
-                Learn More
-              </v-btn>
-            </div>
+              <v-divider class="my-6"></v-divider>
+              
+              <v-card-title class="text-h5 mb-4">
+                <v-icon class="mr-2">mdi-view-dashboard</v-icon>
+                Available Modules
+              </v-card-title>
+              
+              <v-row>
+                <v-col cols="12" sm="6" md="4" v-for="module in modules" :key="module.name">
+                  <v-card 
+                    class="pa-4" 
+                    hover 
+                    :color="module.color + '-lighten-5'"
+                    @click="navigateToModule(module)"
+                  >
+                    <div class="text-center">
+                      <v-icon :color="module.color" size="48" class="mb-3">{{ module.icon }}</v-icon>
+                      <v-card-title class="text-h6 justify-center">{{ module.name }}</v-card-title>
+                      <v-card-text class="text-center">{{ module.description }}</v-card-text>
+                      <v-chip 
+                        :color="module.status === 'active' ? 'green' : 'orange'" 
+                        size="small"
+                        variant="flat"
+                      >
+                        {{ module.status }}
+                      </v-chip>
+                    </div>
+                  </v-card>
+                </v-col>
+              </v-row>
+              
+              <v-divider class="my-6"></v-divider>
+              
+              <v-row>
+                <v-col cols="12" md="6">
+                  <v-card class="pa-4">
+                    <v-card-title class="text-h6">
+                      <v-icon class="mr-2">mdi-api</v-icon>
+                      API Documentation
+                    </v-card-title>
+                    <v-card-text>
+                      Access the interactive API documentation to explore all available endpoints.
+                    </v-card-text>
+                    <v-card-actions>
+                      <v-btn color="primary" href="http://localhost:8000/docs" target="_blank">
+                        <v-icon class="mr-2">mdi-open-in-new</v-icon>
+                        Open Swagger UI
+                      </v-btn>
+                    </v-card-actions>
+                  </v-card>
+                </v-col>
+                
+                <v-col cols="12" md="6">
+                  <v-card class="pa-4">
+                    <v-card-title class="text-h6">
+                      <v-icon class="mr-2">mdi-database</v-icon>
+                      Database Status
+                    </v-card-title>
+                    <v-card-text>
+                      PostgreSQL database connection is active and ready for operations.
+                    </v-card-text>
+                    <v-card-actions>
+                      <v-chip color="green" variant="flat">
+                        <v-icon start>mdi-database-check</v-icon>
+                        Connected
+                      </v-chip>
+                    </v-card-actions>
+                  </v-card>
+                </v-col>
+              </v-row>
+            </v-card>
           </v-col>
         </v-row>
       </v-container>
-    </v-sheet>
-
-    <!-- Modules Grid -->
-    <v-container>
-      <v-row class="mb-6">
-        <v-col cols="12">
-          <div class="d-flex align-center justify-space-between mb-4">
-            <h2 class="text-h5 font-weight-bold">
-              {{ authStore.isAuthenticated ? 'Available Modules' : 'Explore Modules' }}
-            </h2>
-            <v-btn
-              v-if="authStore.isAuthenticated"
-              color="primary"
-              variant="text"
-              prepend-icon="mdi-refresh"
-              :loading="menuStore.isLoading"
-              @click="refreshData"
-            >
-              Refresh
-            </v-btn>
-          </div>
-          
-          <v-alert
-            v-if="menuStore.error"
-            type="error"
-            variant="tonal"
-            class="mb-6"
-          >
-            {{ menuStore.error }}
-          </v-alert>
-          
-          <v-progress-linear
-            v-if="menuStore.isLoading"
-            indeterminate
-            color="primary"
-            class="mb-6"
-          ></v-progress-linear>
-          
-          <v-row v-else-if="filteredModules.length > 0">
-            <v-col
-              v-for="module in filteredModules"
-              :key="module.id"
-              cols="12"
-              sm="6"
-              md="4"
-              lg="3"
-            >
-              <module-card :module="module" />
-            </v-col>
-          </v-row>
-          
-          <v-alert
-            v-else
-            type="info"
-            variant="tonal"
-            class="mt-4"
-          >
-            No modules available. Please contact your administrator for access.
-          </v-alert>
-        </v-col>
-      </v-row>
-      
-      <!-- Quick Actions -->
-      <v-row v-if="authStore.isAuthenticated && quickActions.length > 0" class="mt-8">
-        <v-col cols="12">
-          <h2 class="text-h5 font-weight-bold mb-4">Quick Actions</h2>
-          <div class="d-flex flex-wrap gap-2">
-            <v-btn
-              v-for="action in quickActions"
-              :key="action.title"
-              :prepend-icon="action.icon"
-              :to="action.to"
-              variant="tonal"
-              size="large"
-              class="text-none"
-              rounded="lg"
-            >
-              {{ action.title }}
-            </v-btn>
-          </div>
-        </v-col>
-      </v-row>
-    </v-container>
-  </v-container>
+    </v-main>
+  </v-app>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import { useMenuStore } from '@/store/menu';
-import { useAuthStore } from '@/modules/auth/store';
-import ModuleCard from '@/components/home/ModuleCard.vue';
-import { useDisplay } from 'vuetify';
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 
-// Initialize stores and utilities
-const menuStore = useMenuStore();
-const authStore = useAuthStore();
-const router = useRouter();
-const route = useRoute();
-const { mobile } = useDisplay();
+const router = useRouter()
+const user = ref<any>(null)
 
-// State
-const showWelcome = ref(true);
-
-// Computed properties
-const filteredModules = computed(() => {
-  // Filter modules based on authentication status
-  return menuStore.visibleModules.filter(module => {
-    // Show all modules to authenticated users
-    if (authStore.isAuthenticated) return true;
-    // Only show public modules to unauthenticated users
-    return module.isPublic === true;
-  });
-});
-
-// Quick actions for authenticated users
-const quickActions = computed(() => {
-  if (!authStore.isAuthenticated) return [];
-  
-  return [
-    { title: 'New Invoice', icon: 'mdi-file-document-plus', to: '/invoices/new' },
-    { title: 'Record Payment', icon: 'mdi-cash-plus', to: '/payments/new' },
-    { title: 'Add Expense', icon: 'mdi-cash-minus', to: '/expenses/new' },
-    { title: 'Run Payroll', icon: 'mdi-account-cash', to: '/payroll/process' },
-  ];
-});
-
-// Methods
-const refreshData = async () => {
-  try {
-    await menuStore.fetchMenuItems();
-  } catch (error) {
-    console.error('Failed to refresh menu items:', error);
-    throw error;
+const modules = ref([
+  {
+    name: 'Accounts Payable',
+    description: 'Vendor management and invoice processing',
+    icon: 'mdi-credit-card-outline',
+    color: 'blue',
+    status: 'active',
+    route: '/ap'
+  },
+  {
+    name: 'Accounts Receivable',
+    description: 'Customer invoicing and collections',
+    icon: 'mdi-cash-multiple',
+    color: 'green',
+    status: 'active',
+    route: '/ar'
+  },
+  {
+    name: 'General Ledger',
+    description: 'Chart of accounts and journal entries',
+    icon: 'mdi-book-open-variant',
+    color: 'purple',
+    status: 'active',
+    route: '/gl'
+  },
+  {
+    name: 'Payroll',
+    description: 'Employee payroll and tax management',
+    icon: 'mdi-account-group',
+    color: 'orange',
+    status: 'active',
+    route: '/payroll'
+  },
+  {
+    name: 'Tax Management',
+    description: 'Tax calculations and compliance',
+    icon: 'mdi-calculator',
+    color: 'red',
+    status: 'active',
+    route: '/tax'
+  },
+  {
+    name: 'Inventory',
+    description: 'Stock management and tracking',
+    icon: 'mdi-package-variant',
+    color: 'teal',
+    status: 'active',
+    route: '/inventory'
+  },
+  {
+    name: 'Financial Reports',
+    description: 'Comprehensive financial reporting',
+    icon: 'mdi-chart-bar',
+    color: 'orange',
+    status: 'active',
+    route: '/reports'
+  },
+  {
+    name: 'Main Dashboard',
+    description: 'Executive dashboard and analytics',
+    icon: 'mdi-view-dashboard',
+    color: 'red',
+    status: 'active',
+    route: '/main-dashboard'
+  },
+  {
+    name: 'Super Admin',
+    description: 'System administration panel',
+    icon: 'mdi-shield-crown',
+    color: 'deep-purple',
+    status: 'active',
+    route: '/admin'
+  },
+  {
+    name: 'Settings',
+    description: 'Company configuration and settings',
+    icon: 'mdi-cog',
+    color: 'indigo',
+    status: 'active',
+    route: '/settings'
+  },
+  {
+    name: 'Role Management',
+    description: 'User roles and permissions',
+    icon: 'mdi-account-key',
+    color: 'brown',
+    status: 'active',
+    route: '/rbac'
   }
-};
+])
 
-// Lifecycle hooks
-onMounted(async () => {
-  // Load menu items
-  if (menuStore.visibleModules.length === 0) {
-    await refreshData();
+onMounted(() => {
+  const userData = localStorage.getItem('user')
+  if (userData) {
+    user.value = JSON.parse(userData)
   }
-  
-  // Show welcome message if it's the first visit
-  const hasSeenWelcome = localStorage.getItem('hasSeenWelcome');
-  showWelcome.value = !hasSeenWelcome;
-  if (!hasSeenWelcome) {
-    localStorage.setItem('hasSeenWelcome', 'true');
-  }
-});
+})
 
-// Watch for authentication changes
-watch(() => authStore.isAuthenticated, async (isAuthenticated) => {
-  if (isAuthenticated) {
-    // Refresh menu items when user logs in
-    await refreshData();
-  }
-});
+const navigateToModule = (module: any) => {
+  router.push(module.route)
+}
 
-// Watch for route changes to handle deep links
-watch(() => route.path, (newPath) => {
-  // If user is redirected to home from a protected route, show login prompt
-  if (newPath === '/' && route.query.redirect) {
-    showWelcome.value = true;
-  }
-}, { immediate: true });
+const logout = () => {
+  localStorage.removeItem('user')
+  localStorage.removeItem('token')
+  router.push('/auth/login')
+}
 </script>
 
 <style scoped>
-.home-page {
-  padding: 0;
-  min-height: calc(100vh - 64px);
-  background-color: rgb(var(--v-theme-background));
-  transition: background-color 0.3s ease;
+.v-card {
+  transition: transform 0.2s;
 }
 
-/* Smooth transitions for theme changes */
-:deep(.v-card) {
-  transition: background-color 0.3s ease, border-color 0.3s ease;
-}
-
-/* Responsive adjustments */
-@media (max-width: 600px) {
-  .home-page {
-    padding-bottom: 80px; /* Add space for mobile nav */
-  }
-  
-  :deep(.v-container) {
-    padding: 12px;
-  }
-}
-
-/* Print styles */
-@media print {
-  .home-page {
-    padding: 0;
-    background: white;
-  }
-  
-  .no-print {
-    display: none !important;
-  }
-}
-
-/* Dark mode adjustments */
-:global(.v-theme--dark) .home-page {
-  background-color: #121212;
-}
-
-/* Accessibility focus styles */
-:deep(a:focus-visible),
-:deep(button:focus-visible) {
-  outline: 2px solid var(--v-primary-base);
-  outline-offset: 2px;
-}
-
-/* Animation for module cards */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-:deep(.module-card) {
-  animation: fadeInUp 0.4s ease-out forwards;
-  opacity: 0;
-}
-
-/* Delay animations for each card */
-:deep(.v-col) {
-  @for $i from 1 through 12 {
-    &:nth-child(#{$i}) .module-card {
-      animation-delay: #{$i * 0.05}s;
-    }
-  }
-}
-
-/* Better spacing for mobile */
-.v-col {
-  padding: 8px !important;
-}
-
-/* Responsive typography */
-h1 {
-  font-size: 2.5rem;
-  line-height: 1.2;
-}
-
-@media (max-width: 960px) {
-  h1 {
-    font-size: 2rem;
-  }
-}
-
-@media (max-width: 600px) {
-  h1 {
-    font-size: 1.75rem;
-  }
-  
-  .v-btn {
-    font-size: 0.875rem;
-    padding: 0 16px;
-  }
+.v-card:hover {
+  transform: translateY(-2px);
 }
 </style>
