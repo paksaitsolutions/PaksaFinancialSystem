@@ -337,10 +337,10 @@ Paksa Financial System is a multi-tenant, modular financial ERP platform. It sup
 
 ### 8.1 Technical Documentation
 - [x] API documentation
-- [ ] Database schema
-- [ ] Architecture diagrams
-- [ ] Deployment guides
-- [ ] Troubleshooting guides
+- [x] Database schema
+- [x] Architecture diagrams
+- [x] Deployment guides
+- [x] Troubleshooting guides
 
 ### 8.2 User Documentation
 - [x] User manuals
