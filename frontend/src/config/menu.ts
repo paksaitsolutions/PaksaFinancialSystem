@@ -20,7 +20,7 @@ export const menuItems: SidebarMenuItem[] = [
   {
     id: 'dashboard',
     label: 'Dashboard',
-    icon: 'pi pi-home',
+    icon: 'mdi-view-dashboard',
     route: { name: 'Dashboard' },
     visible: true,
     permission: 'view_dashboard'
@@ -30,42 +30,35 @@ export const menuItems: SidebarMenuItem[] = [
   {
     id: 'gl',
     label: 'General Ledger',
-    icon: 'pi pi-book',
+    icon: 'mdi-book-open-variant',
     permission: 'view_gl',
     visible: true,
     items: [
       { 
-        id: 'gl-dashboard',
-        label: 'Dashboard', 
-        icon: 'pi pi-chart-bar', 
-        route: { name: 'GLDashboard' }, 
-        visible: true 
-      },
-      { 
         id: 'gl-accounts',
         label: 'Chart of Accounts', 
-        icon: 'pi pi-sitemap', 
+        icon: 'mdi-file-tree', 
         route: { name: 'ChartOfAccounts' }, 
         visible: true 
       },
       { 
         id: 'gl-journal-entries',
         label: 'Journal Entries', 
-        icon: 'pi pi-book', 
+        icon: 'mdi-book-edit', 
         route: { name: 'JournalEntries' }, 
         visible: true 
       },
       { 
         id: 'gl-trial-balance',
         label: 'Trial Balance', 
-        icon: 'pi pi-balance-scale', 
+        icon: 'mdi-scale-balance', 
         route: { name: 'TrialBalance' }, 
         visible: true 
       },
       { 
         id: 'gl-financial-statements',
         label: 'Financial Statements', 
-        icon: 'pi pi-file-pdf', 
+        icon: 'mdi-file-document', 
         route: { name: 'FinancialStatements' }, 
         visible: true 
       },

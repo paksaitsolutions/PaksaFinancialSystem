@@ -47,13 +47,11 @@ export default defineConfig({
     },
   },
   server: {
-    port: 3003,
+    port: 3000,
     host: '0.0.0.0',
-    strictPort: true,
-    open: true,
+    strictPort: false,
     hmr: {
-      port: 3003,
-      host: 'localhost'
+      overlay: false
     },
     proxy: {
       '/api': {
