@@ -3,45 +3,6 @@
     <NavigationDrawer v-if="isAuthenticated" />
     
     <AppHeader v-if="isAuthenticated" />
-      
-      <v-spacer></v-spacer>
-      
-      <v-btn icon class="mr-2">
-        <v-badge color="error" content="3" dot>
-          <v-icon>mdi-bell-outline</v-icon>
-        </v-badge>
-      </v-btn>
-      
-      <v-menu>
-        <template v-slot:activator="{ props }">
-          <v-btn
-            variant="text"
-            v-bind="props"
-            class="text-none"
-          >
-            <v-avatar size="32" class="mr-2">
-              <v-img
-                src="https://randomuser.me/api/portraits/men/32.jpg"
-                alt="User"
-              ></v-img>
-            </v-avatar>
-            <span class="d-none d-sm-flex">Admin User</span>
-            <v-icon end>mdi-chevron-down</v-icon>
-          </v-btn>
-        </template>
-        
-        <v-list>
-          <v-list-item
-            v-for="(item, index) in userMenu"
-            :key="index"
-            :prepend-icon="item.icon"
-            :title="item.title"
-            :to="item.to"
-            @click="handleUserMenuClick(item.action)"
-          ></v-list-item>
-        </v-list>
-      </v-menu>
-    </v-app-bar>
     
     <v-main :class="{ 'ml-0': !isAuthenticated, 'ml-0': !isAuthenticated && $vuetify.display.mobile }">
       <v-container fluid class="fill-height pa-0" :class="{ 'px-4 py-2': isAuthenticated }">
