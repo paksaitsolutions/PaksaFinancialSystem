@@ -1,0 +1,69 @@
+// Mobile-first responsive styles
+$mobile: 600px;
+$tablet: 960px;
+$desktop: 1264px;
+
+.mobile-container {
+  padding: 8px;
+  
+  @media (min-width: $tablet) {
+    padding: 16px;
+  }
+}
+
+.mobile-btn {
+  min-height: 44px !important;
+  min-width: 44px !important;
+}
+
+.mobile-table {
+  @media (max-width: $mobile) {
+    .v-data-table thead {
+      display: none;
+    }
+    
+    .v-data-table tbody tr {
+      display: block;
+      border: 1px solid #ddd;
+      margin-bottom: 8px;
+      border-radius: 4px;
+    }
+    
+    .v-data-table tbody td {
+      display: block;
+      text-align: right;
+      border: none;
+      padding: 8px 16px;
+      
+      &:before {
+        content: attr(data-label) ": ";
+        float: left;
+        font-weight: bold;
+      }
+    }
+  }
+}
+
+.mobile-form {
+  .v-btn {
+    @media (max-width: $mobile) {
+      width: 100%;
+      margin-bottom: 8px;
+    }
+  }
+}
+
+.touch-enabled {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.swipe-container {
+  position: relative;
+  overflow: hidden;
+  
+  .swipe-content {
+    transition: transform 0.3s ease;
+  }
+}

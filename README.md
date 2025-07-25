@@ -56,65 +56,70 @@ The **Paksa Financial System** is a comprehensive, AI-accelerated financial mana
 
 ### Core Financial Modules
 
-- **General Ledger (GL)**
+- **Enhanced Accounting Module**
   - Chart of Accounts Management
   - Multi-currency Transactions
-  - Budgeting & Forecasting
-  - Financial Reporting & Analytics
-  - AI-powered Anomaly Detection
+  - Journal Entries with Double-Entry
+  - Financial Period Management
+  - Multi-tenant Isolation
 
-- **Accounts Payable (AP)**
+- **Invoicing Module**
+  - Customer Invoice Creation
+  - Payment Gateway Integration
+  - Recurring Invoice Support
+  - Invoice Approval Workflows
+  - Multi-tenant Templates
+
+- **Procurement Module**
   - Vendor Management
-  - Invoice Processing
-  - Three-Way Matching
-  - Automated Payment Processing
-  - 1099 Reporting
-
-- **Accounts Receivable (AR)**
-  - Customer Invoicing
+  - Purchase Order Workflows
+  - Approval Processes
   - Payment Processing
-  - Automated Dunning
-  - Dispute Management
-  - Collections
+  - Analytics per Company
 
-- **Cash Management**
-  - Real-time Cash Positioning
-  - AI-enhanced Cash Flow Forecasting
-  - Bank Reconciliation
-  - Liquidity Planning
+- **HRM Module**
+  - Employee Management
+  - Leave Management
+  - Attendance Tracking
+  - Performance Reviews
+  - Self-Service Portal
 
-- **Fixed Assets**
-  - Asset Lifecycle Management
-  - Depreciation Calculation
-  - Maintenance Scheduling
-  - Disposal Management
-
-- **Payroll**
-  - Employee Compensation
-  - Tax Calculations & Filings
-  - Benefits Administration
-  - Compliance Management
+- **Inventory Management**
+  - Stock Tracking (FIFO, LIFO, Average)
+  - Reorder Point Management
+  - Multi-location Support
+  - Barcode Integration
+  - Cycle Counting
 
 ### Advanced Features
 
-- **Business Intelligence & AI**
-  - Interactive Dashboards
-  - Advanced Financial Forecasting
+- **BI/AI Dashboard Module**
+  - Company-Specific Dashboards
   - Predictive Analytics
-  - Fraud Detection
+  - Anomaly Detection
+  - Custom KPIs
+  - AI-Powered Insights
 
-- **Security & Compliance**
-  - End-to-End Encryption
-  - Role-Based Access Control (RBAC)
-  - Row-Level Security (RLS)
-  - Comprehensive Audit Trails
-  - SOX & PCI DSS Compliance
+- **AI Assistant Module**
+  - Embedded Financial Chatbot
+  - Natural Language Processing
+  - Company Data Integration
+  - Multi-Language Support
+  - Custom AI Workflows
 
-- **Integration Capabilities**
-  - Banking APIs
-  - Payment Gateways
-  - E-commerce Platforms
-  - Third-party Services
+- **Multi-Tenant Architecture**
+  - Complete Data Isolation
+  - Company-Specific Branding
+  - Tenant-Aware Security
+  - Cross-Tenant Prevention
+  - Scalable Infrastructure
+
+- **Integration Platform**
+  - Banking API Integration (Plaid)
+  - Payment Gateways (Stripe, PayPal)
+  - Tax Services (Avalara, TaxJar)
+  - E-commerce (Shopify, WooCommerce)
+  - HRIS Systems (BambooHR)
 
 ## 🚀 Getting Started
 
@@ -177,29 +182,69 @@ The **Paksa Financial System** is a comprehensive, AI-accelerated financial mana
 ## 🛠️ Tech Stack
 
 ### Backend
-- **Framework:** FastAPI
-- **Database:** PostgreSQL
-- **ORM:** SQLAlchemy Core & Django ORM
-- **Authentication:** JWT
-- **Caching:** Redis
-- **Message Queue:** RabbitMQ/Kafka
-- **Containerization:** Docker
-- **Orchestration:** Kubernetes
+- **Framework:** FastAPI with async/await
+- **Database:** PostgreSQL 15+ with streaming replication
+- **ORM:** SQLAlchemy with async support
+- **Authentication:** JWT with RBAC
+- **Caching:** Redis with tenant isolation
+- **Background Jobs:** Custom job queue system
+- **Containerization:** Docker & Docker Compose
+- **Orchestration:** Kubernetes with HPA
 
 ### Frontend
-- **Framework:** Vue.js 3
-- **UI Library:** Vuetify 3
+- **Framework:** Vue.js 3 with Composition API
+- **UI Library:** Vuetify 3 (Material Design)
 - **State Management:** Pinia
-- **HTTP Client:** Axios
-- **Form Validation:** Vuelidate
-- **Internationalization:** Vue I18n
+- **HTTP Client:** Axios with interceptors
+- **Build Tool:** Vite
+- **Mobile Support:** Responsive PWA-ready
+
+### Infrastructure
+- **Load Balancing:** Nginx with SSL termination
+- **Monitoring:** Prometheus + Grafana
+- **CI/CD:** GitHub Actions
+- **CDN:** AWS CloudFront integration
+- **Database Sharding:** Multi-shard support
+
+## 🤖 AI/BI Feature Clarification
+
+### Current AI/BI Implementation
+The Paksa Financial System includes functional AI and BI features:
+
+**BI Dashboard Module:**
+- Real-time analytics with data aggregation
+- Custom KPI creation and tracking
+- Interactive charts and visualizations
+- Anomaly detection with scoring algorithms
+- Predictive analytics using statistical models
+
+**AI Assistant Module:**
+- Natural language processing for financial queries
+- Context-aware responses based on company data
+- Automated workflow suggestions
+- Multi-language support
+- Conversation history and learning
+
+**Implementation Notes:**
+- AI features use rule-based systems and statistical analysis
+- Machine learning models are simulated for demonstration
+- Real ML integration requires additional ML infrastructure
+- Anomaly detection uses statistical thresholds
+- Predictive analytics uses time series analysis
+
+### Production AI/ML Requirements
+For full AI/ML capabilities in production:
+- ML model training infrastructure
+- Data science team for model development
+- Additional compute resources for ML workloads
+- Integration with ML platforms (TensorFlow, PyTorch)
 
 ## 📚 Documentation
 
 For detailed documentation, please refer to:
-- [API Documentation](https://api.paksafinancial.com/docs)
-- [User Guide](https://docs.paksafinancial.com/user-guide)
-- [Developer Documentation](https://docs.paksafinancial.com/developer-guide)
+- [API Documentation](docs/technical/)
+- [User Guide](docs/user/user-manual.md)
+- [Implementation Status](docs/IMPLEMENTATION_STATUS.md)
 
 ## 🤝 Contributing
 
@@ -219,6 +264,19 @@ This project is proprietary software. All rights reserved by Paksa IT Solutions.
 - **Email:** [info@paksa.com.pk](mailto:info@paksa.com.pk)
 - **Support:** [support@paksa.com.pk](mailto:support@paksa.com.pk)
 - **Sales:** [sales@paksa.com.pk](mailto:sales@paksa.com.pk)
+
+## ⚠️ Important Notes
+
+### Current Status
+- **Production Ready**: Core financial modules fully implemented
+- **Multi-Tenant**: Complete tenant isolation and security
+- **Scalable**: Kubernetes-ready with horizontal scaling
+- **Mobile Optimized**: Responsive design with offline support
+
+### Known Limitations
+- Video tutorials and training materials not yet available
+- Advanced ML models require additional infrastructure
+- Native mobile apps planned for future release
 
 ## 🌐 Connect With Us
 
