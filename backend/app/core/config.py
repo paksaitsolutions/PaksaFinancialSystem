@@ -25,14 +25,26 @@ class Settings(BaseSettings):
     DATABASE_POOL_SIZE: int = Field(default=10, env="DATABASE_POOL_SIZE")
     DATABASE_MAX_OVERFLOW: int = Field(default=20, env="DATABASE_MAX_OVERFLOW")
     
-    # Security
+    # Security - Enhanced
     SECRET_KEY: str = Field(
         default="dev-secret-key-change-in-production",
         env="SECRET_KEY"
     )
     ALGORITHM: str = Field(default="HS256", env="JWT_ALGORITHM")
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=30, env="ACCESS_TOKEN_EXPIRE_MINUTES")
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=15, env="ACCESS_TOKEN_EXPIRE_MINUTES")  # Reduced for security
     REFRESH_TOKEN_EXPIRE_DAYS: int = Field(default=7, env="REFRESH_TOKEN_EXPIRE_DAYS")
+    
+    # Enhanced Security Settings
+    ENCRYPTION_KEY: str = Field(
+        default="dev-encryption-key-change-in-production",
+        env="ENCRYPTION_KEY"
+    )
+    CSRF_SECRET_KEY: str = Field(
+        default="dev-csrf-key-change-in-production",
+        env="CSRF_SECRET_KEY"
+    )
+    SECURITY_HEADERS_ENABLED: bool = Field(default=True, env="SECURITY_HEADERS_ENABLED")
+    RATE_LIMIT_STRICT_MODE: bool = Field(default=False, env="RATE_LIMIT_STRICT_MODE")
     
     # Redis
     REDIS_HOST: str = Field(default="localhost", env="REDIS_HOST")

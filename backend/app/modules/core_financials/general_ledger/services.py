@@ -2,17 +2,25 @@ from typing import List, Optional
 from decimal import Decimal
 from datetime import date
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_
+from sqlalchemy import select, func, and_, text
 from app.crud.base import CRUDBase
 from app.modules.core_financials.general_ledger.models import Account, JournalEntry, JournalEntryLine, AccountType
 from app.modules.core_financials.general_ledger.schemas import AccountCreate, AccountUpdate, JournalEntryCreate, TrialBalanceItem
+from app.core.security.input_validation import AccountCodeValidator, sanitize_sql_input
 
 class AccountService(CRUDBase[Account, AccountCreate, AccountUpdate]):
     def __init__(self):
         super().__init__(Account)
     
     async def get_by_code(self, db: AsyncSession, account_code: str) -> Optional[Account]:
-        result = await db.execute(select(Account).where(Account.account_code == account_code))
+        # Validate and sanitize input to prevent SQL injection
+        validated_code = AccountCodeValidator.validate(account_code)
+        sanitized_code = sanitize_sql_input(validated_code)
+        
+        # Use parameterized query
+        result = await db.execute(
+            select(Account).where(Account.account_code == sanitized_code)
+        )
         return result.scalar_one_or_none()
     
     async def get_chart_of_accounts(self, db: AsyncSession) -> List[Account]:
