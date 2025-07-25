@@ -11,8 +11,8 @@ from sqlalchemy import and_, delete, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload, joinedload
 
-from core.database import get_db
-from core.exceptions import (
+from app.core.database import get_db
+from app.core.exceptions import (
     BadRequestException,
     NotFoundException,
     ValidationException,

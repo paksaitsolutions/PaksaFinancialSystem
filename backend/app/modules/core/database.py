@@ -57,7 +57,7 @@ def create_database_engine() -> AsyncEngine:
     }
     
     # Check if using SQLite by examining the database URL
-    db_uri = str(getattr(settings, 'DATABASE_URI', ''))
+    db_uri = str(getattr(settings, 'DATABASE_URL', ''))
     is_sqlite = 'sqlite' in db_uri.lower()
     
     if is_sqlite:
@@ -78,8 +78,8 @@ def create_database_engine() -> AsyncEngine:
             "pool_use_lifo": True,  # Use LIFO for better connection reuse
         })
     
-    # Convert DATABASE_URI to string if it's a Pydantic object
-    database_uri = str(settings.DATABASE_URI)
+    # Convert DATABASE_URL to string if it's a Pydantic object
+    database_uri = str(settings.DATABASE_URL)
     return create_async_engine(database_uri, **engine_options)
 
 # Create async database engine
@@ -251,7 +251,7 @@ async def init_db() -> None:
     from sqlalchemy import text
     
     # Check if using SQLite by examining the database URL
-    db_url = getattr(settings, 'DATABASE_URI', '').lower()
+    db_url = getattr(settings, 'DATABASE_URL', '').lower()
     is_sqlite = 'sqlite' in db_url
     is_postgresql = 'postgresql' in db_url
     

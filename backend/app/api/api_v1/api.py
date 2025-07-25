@@ -66,4 +66,11 @@ try:
 except ImportError as e:
     print(f"Warning: Could not import localization module: {e}")
 
+# Analytics
+try:
+    from app.api.endpoints import analytics
+    api_router.include_router(analytics.router, prefix="/analytics", tags=["analytics"])
+except ImportError as e:
+    print(f"Warning: Could not import analytics module: {e}")
+
 # Add additional routers below as needed, using the same style.

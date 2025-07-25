@@ -28,7 +28,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from core.database import Base
+from app.core.database import Base
 
 
 class AccountType(str, Enum):
@@ -192,7 +192,7 @@ class Account(Base):
         """Get the current balance of the account."""
         from sqlalchemy import select, func as sa_func
         from sqlalchemy.orm import Session
-        from core.database import SessionLocal
+        from app.core.database import SessionLocal
         
         db = SessionLocal()
         try:
@@ -228,7 +228,7 @@ class Account(Base):
         """Get the balance of the account as of a specific date."""
         from sqlalchemy import select, func as sa_func, and_
         from sqlalchemy.orm import Session
-        from core.database import SessionLocal
+        from app.core.database import SessionLocal
         
         db = SessionLocal()
         try:
@@ -280,7 +280,7 @@ class Account(Base):
         """Get the balance details for a specific period."""
         from sqlalchemy import select, func as sa_func, and_
         from sqlalchemy.orm import Session
-        from core.database import SessionLocal
+        from app.core.database import SessionLocal
         
         db = SessionLocal()
         try:

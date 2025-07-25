@@ -3,198 +3,121 @@
     v-model="drawer"
     :rail="!isExpanded"
     permanent
-    class="left-sidebar"
-    elevation="2"
+    class="modern-sidebar"
+    color="surface"
     width="280"
     rail-width="72"
   >
-    <!-- Header -->
-    <div class="sidebar-header">
-      <div class="d-flex align-center px-4 py-3">
-        <v-avatar size="40" color="primary" class="mr-3 cursor-pointer" @click="goToHome">
-          <v-icon color="white">mdi-currency-usd</v-icon>
-        </v-avatar>
-        <div v-if="isExpanded" class="flex-grow-1 cursor-pointer" @click="goToHome">
-          <div class="text-h6 font-weight-bold text-primary">Paksa Financial</div>
-          <div class="text-caption text-medium-emphasis">Enterprise System</div>
+    <!-- Logo Section -->
+    <div class="logo-section">
+      <div class="d-flex align-center pa-4">
+        <div class="logo-container" @click="goToHome">
+          <v-avatar size="48" class="logo-avatar">
+            <v-img src="/logo.png" alt="Paksa Financial" />
+          </v-avatar>
         </div>
+        <v-fade-transition>
+          <div v-if="isExpanded" class="logo-text ml-3">
+            <h2 class="brand-title">Paksa</h2>
+            <p class="brand-subtitle">Financial System</p>
+          </div>
+        </v-fade-transition>
+        <v-spacer />
         <v-btn
-          :icon="isExpanded ? 'mdi-chevron-left' : 'mdi-chevron-right'"
+          :icon="isExpanded ? 'mdi-menu-open' : 'mdi-menu'"
           variant="text"
           size="small"
+          class="toggle-btn"
           @click="toggleMenu"
         />
       </div>
     </div>
 
-    <v-divider />
-
-    <!-- Navigation Menu -->
-    <div class="sidebar-scroll">
-      <v-list nav class="pa-2">
+    <!-- Unified Navigation -->
+    <div class="navigation-section">
+      <v-list nav class="unified-nav">
         <!-- Dashboard -->
         <v-list-item
-          prepend-icon="mdi-view-dashboard"
+          prepend-icon="mdi-view-dashboard-variant"
           title="Dashboard"
           to="/dashboard"
-          rounded="lg"
-          class="mb-1"
+          class="nav-item"
+          rounded="xl"
+          @click="navigateToDashboard"
         />
 
         <!-- General Ledger -->
-        <v-list-group value="gl">
+        <v-list-group value="gl" class="nav-group">
           <template #activator="{ props }">
             <v-list-item
               v-bind="props"
-              prepend-icon="mdi-book-open-variant"
+              prepend-icon="mdi-calculator-variant"
               title="General Ledger"
-              rounded="lg"
-              class="mb-1"
+              class="nav-item group-activator"
+              rounded="xl"
             />
           </template>
           
           <v-list-item
-            prepend-icon="mdi-file-tree"
+            prepend-icon="mdi-file-tree-outline"
             title="Chart of Accounts"
             to="/gl/chart-of-accounts"
-            rounded="lg"
-            class="ml-4 mb-1"
+            class="nav-subitem"
           />
           <v-list-item
-            prepend-icon="mdi-book-edit"
+            prepend-icon="mdi-book-edit-outline"
             title="Journal Entries"
             to="/gl/journal-entries"
-            rounded="lg"
-            class="ml-4 mb-1"
+            class="nav-subitem"
           />
           <v-list-item
             prepend-icon="mdi-scale-balance"
             title="Trial Balance"
             to="/gl/trial-balance"
-            rounded="lg"
-            class="ml-4 mb-1"
+            class="nav-subitem"
           />
           <v-list-item
             prepend-icon="mdi-file-document"
             title="Financial Statements"
             to="/gl/financial-statements"
-            rounded="lg"
-            class="ml-4 mb-1"
+            class="nav-subitem"
           />
         </v-list-group>
 
         <!-- Accounts Payable -->
-        <v-list-group value="ap">
-          <template #activator="{ props }">
-            <v-list-item
-              v-bind="props"
-              prepend-icon="mdi-credit-card"
-              title="Accounts Payable"
-              rounded="lg"
-              class="mb-1"
-            />
-          </template>
-          
-          <v-list-item
-            prepend-icon="mdi-account-group"
-            title="Vendors"
-            to="/ap/vendors"
-            rounded="lg"
-            class="ml-4 mb-1"
-          />
-          <v-list-item
-            prepend-icon="mdi-file-document-outline"
-            title="Bills"
-            to="/ap/bills"
-            rounded="lg"
-            class="ml-4 mb-1"
-          />
-          <v-list-item
-            prepend-icon="mdi-cash"
-            title="Payments"
-            to="/ap/payments"
-            rounded="lg"
-            class="ml-4 mb-1"
-          />
-        </v-list-group>
+        <v-list-item
+          prepend-icon="mdi-credit-card"
+          title="Accounts Payable"
+          to="/ap"
+          class="nav-item"
+          rounded="xl"
+        />
 
         <!-- Accounts Receivable -->
-        <v-list-group value="ar">
-          <template #activator="{ props }">
-            <v-list-item
-              v-bind="props"
-              prepend-icon="mdi-wallet"
-              title="Accounts Receivable"
-              rounded="lg"
-              class="mb-1"
-            />
-          </template>
-          
-          <v-list-item
-            prepend-icon="mdi-account-multiple"
-            title="Customers"
-            to="/ar/customers"
-            rounded="lg"
-            class="ml-4 mb-1"
-          />
-          <v-list-item
-            prepend-icon="mdi-file-document"
-            title="Invoices"
-            to="/ar/invoices"
-            rounded="lg"
-            class="ml-4 mb-1"
-          />
-          <v-list-item
-            prepend-icon="mdi-cash-register"
-            title="Receipts"
-            to="/ar/receipts"
-            rounded="lg"
-            class="ml-4 mb-1"
-          />
-        </v-list-group>
+        <v-list-item
+          prepend-icon="mdi-wallet"
+          title="Accounts Receivable"
+          to="/ar"
+          class="nav-item"
+          rounded="xl"
+        />
 
         <!-- Cash Management -->
-        <v-list-group value="cash">
-          <template #activator="{ props }">
-            <v-list-item
-              v-bind="props"
-              prepend-icon="mdi-bank"
-              title="Cash Management"
-              rounded="lg"
-              class="mb-1"
-            />
-          </template>
-          
-          <v-list-item
-            prepend-icon="mdi-bank-outline"
-            title="Bank Accounts"
-            to="/cash/accounts"
-            rounded="lg"
-            class="ml-4 mb-1"
-          />
-          <v-list-item
-            prepend-icon="mdi-swap-horizontal"
-            title="Transactions"
-            to="/cash/transactions"
-            rounded="lg"
-            class="ml-4 mb-1"
-          />
-          <v-list-item
-            prepend-icon="mdi-check-circle"
-            title="Reconciliation"
-            to="/cash/reconciliation"
-            rounded="lg"
-            class="ml-4 mb-1"
-          />
-        </v-list-group>
+        <v-list-item
+          prepend-icon="mdi-bank"
+          title="Cash Management"
+          to="/cash"
+          class="nav-item"
+          rounded="xl"
+        />
 
         <!-- Fixed Assets -->
         <v-list-item
           prepend-icon="mdi-office-building"
           title="Fixed Assets"
           to="/assets"
-          rounded="lg"
-          class="mb-1"
+          class="nav-item"
+          rounded="xl"
         />
 
         <!-- Payroll -->
@@ -202,112 +125,84 @@
           prepend-icon="mdi-account-cash"
           title="Payroll"
           to="/payroll"
-          rounded="lg"
-          class="mb-1"
+          class="nav-item"
+          rounded="xl"
+        />
+
+        <!-- HRM -->
+        <v-list-item
+          prepend-icon="mdi-account-group-outline"
+          title="Human Resources"
+          to="/hrm"
+          class="nav-item"
+          rounded="xl"
+        />
+
+        <!-- Budget -->
+        <v-list-item
+          prepend-icon="mdi-chart-pie"
+          title="Budget"
+          to="/budget"
+          class="nav-item"
+          rounded="xl"
         />
 
         <!-- Inventory -->
         <v-list-item
-          prepend-icon="mdi-package-variant"
+          prepend-icon="mdi-package-variant-closed"
           title="Inventory"
           to="/inventory"
-          rounded="lg"
-          class="mb-1"
+          class="nav-item"
+          rounded="xl"
         />
 
         <!-- Reports -->
-        <v-list-group value="reports">
-          <template #activator="{ props }">
-            <v-list-item
-              v-bind="props"
-              prepend-icon="mdi-chart-line"
-              title="Reports"
-              rounded="lg"
-              class="mb-1"
-            />
-          </template>
-          
-          <v-list-item
-            prepend-icon="mdi-finance"
-            title="Financial Reports"
-            to="/reports/financial"
-            rounded="lg"
-            class="ml-4 mb-1"
-          />
-          <v-list-item
-            prepend-icon="mdi-chart-bar"
-            title="Analytics"
-            to="/reports/analytics"
-            rounded="lg"
-            class="ml-4 mb-1"
-          />
-        </v-list-group>
+        <v-list-item
+          prepend-icon="mdi-chart-line"
+          title="Reports"
+          to="/reports"
+          class="nav-item"
+          rounded="xl"
+        />
 
-        <!-- Compliance -->
-        <v-list-group value="compliance">
-          <template #activator="{ props }">
-            <v-list-item
-              v-bind="props"
-              prepend-icon="mdi-shield-check"
-              title="Compliance"
-              rounded="lg"
-              class="mb-1"
-            />
-          </template>
-          
-          <v-list-item
-            prepend-icon="mdi-view-dashboard-outline"
-            title="Dashboard"
-            to="/compliance/dashboard"
-            rounded="lg"
-            class="ml-4 mb-1"
-          />
-          <v-list-item
-            prepend-icon="mdi-security"
-            title="Security Events"
-            to="/compliance/security/events"
-            rounded="lg"
-            class="ml-4 mb-1"
-          />
-          <v-list-item
-            prepend-icon="mdi-file-lock"
-            title="Policies"
-            to="/compliance/security/policies"
-            rounded="lg"
-            class="ml-4 mb-1"
-          />
-        </v-list-group>
+        <!-- Admin -->
+        <v-list-item
+          prepend-icon="mdi-shield-account"
+          title="Admin"
+          to="/admin"
+          class="nav-item"
+          rounded="xl"
+        />
+
+        <!-- RBAC -->
+        <v-list-item
+          prepend-icon="mdi-account-key"
+          title="Role Management"
+          to="/rbac"
+          class="nav-item"
+          rounded="xl"
+        />
+
+        <v-divider class="nav-divider" />
+
+        <!-- Settings -->
+        <v-list-item
+          prepend-icon="mdi-cog-outline"
+          title="Settings"
+          to="/settings"
+          class="nav-item"
+          rounded="xl"
+        />
+        
+        <v-list-item
+          prepend-icon="mdi-logout-variant"
+          title="Logout"
+          @click="logout"
+          class="nav-item logout-item"
+          rounded="xl"
+        />
       </v-list>
     </div>
-
-    <!-- Footer -->
-    <template #append>
-      <v-divider class="mb-2" />
-      <div class="pa-2">
-        <v-list nav density="compact">
-          <v-list-item
-            prepend-icon="mdi-cog"
-            title="Settings"
-            to="/settings"
-            rounded="lg"
-            class="mb-1"
-          />
-          <v-list-item
-            prepend-icon="mdi-help-circle"
-            title="Help"
-            to="/help"
-            rounded="lg"
-            class="mb-1"
-          />
-          <v-list-item
-            prepend-icon="mdi-logout"
-            title="Logout"
-            @click="logout"
-            rounded="lg"
-          />
-        </v-list>
-      </div>
-    </template>
   </v-navigation-drawer>
 </template>
 
@@ -324,7 +219,11 @@ const toggleMenu = () => {
 }
 
 const goToHome = () => {
-  router.push('/')
+  router.push('/dashboard')
+}
+
+const navigateToDashboard = () => {
+  router.push('/dashboard')
 }
 
 const logout = () => {
@@ -335,41 +234,169 @@ const logout = () => {
 </script>
 
 <style scoped>
-.sidebar-header {
-  border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+/* Modern Sidebar Styling */
+.modern-sidebar {
+  background: linear-gradient(180deg, rgb(var(--v-theme-surface)) 0%, rgba(var(--v-theme-surface), 0.98) 100%);
+  backdrop-filter: blur(10px);
+  border-right: 1px solid rgba(var(--v-theme-outline), 0.12);
 }
 
-.left-sidebar {
-  border-right: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+/* Logo Section */
+.logo-section {
+  background: rgba(var(--v-theme-primary), 0.02);
+  border-bottom: 1px solid rgba(var(--v-theme-outline), 0.08);
 }
 
-.sidebar-scroll {
-  height: calc(100vh - 140px);
-  overflow-y: auto;
+.logo-container {
+  cursor: pointer;
+  transition: transform 0.2s ease;
 }
 
-:deep(.v-list-item--active) {
-  background-color: rgba(var(--v-theme-primary), 0.12);
+.logo-container:hover {
+  transform: scale(1.05);
+}
+
+.logo-avatar {
+  background: linear-gradient(135deg, rgb(var(--v-theme-primary)), rgb(var(--v-theme-secondary)));
+  box-shadow: 0 4px 12px rgba(var(--v-theme-primary), 0.3);
+}
+
+.brand-title {
+  font-size: 1.5rem;
+  font-weight: 700;
   color: rgb(var(--v-theme-primary));
+  margin: 0;
+  line-height: 1.2;
+}
+
+.brand-subtitle {
+  font-size: 0.75rem;
+  color: rgba(var(--v-theme-on-surface), 0.6);
+  margin: 0;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.toggle-btn {
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.toggle-btn:hover {
+  opacity: 1;
+}
+
+/* Navigation Section */
+.navigation-section {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 0;
+}
+
+.unified-nav {
+  padding: 0 16px;
+}
+
+.nav-divider {
+  margin: 16px 0;
+  opacity: 0.3;
+}
+
+/* Navigation Items */
+.nav-item {
+  margin-bottom: 4px;
+  transition: all 0.2s ease;
+  border-radius: 12px !important;
+}
+
+.nav-item:hover {
+  background-color: rgba(var(--v-theme-primary), 0.08) !important;
+  transform: translateX(4px);
+}
+
+.nav-subitem {
+  margin-left: 32px;
+  margin-bottom: 2px;
+  border-radius: 8px !important;
+  opacity: 0.9;
+}
+
+.nav-subitem:hover {
+  background-color: rgba(var(--v-theme-primary), 0.06) !important;
+  transform: translateX(2px);
+}
+
+/* Group Styling */
+.nav-group {
+  margin-bottom: 4px;
+}
+
+.group-activator {
+  font-weight: 500;
+}
+
+/* Logout Item Special Styling */
+.logout-item:hover {
+  background-color: rgba(var(--v-theme-error), 0.08) !important;
+  color: rgb(var(--v-theme-error));
+}
+
+.logout-item:hover {
+  background-color: rgba(var(--v-theme-error), 0.08) !important;
+  color: rgb(var(--v-theme-error));
+}
+
+/* Active States */
+:deep(.v-list-item--active) {
+  background: linear-gradient(90deg, rgba(var(--v-theme-primary), 0.15), rgba(var(--v-theme-primary), 0.08)) !important;
+  color: rgb(var(--v-theme-primary));
+  font-weight: 600;
+  border-left: 3px solid rgb(var(--v-theme-primary));
 }
 
 :deep(.v-list-item--active .v-list-item__prepend .v-icon) {
   color: rgb(var(--v-theme-primary));
+  transform: scale(1.1);
 }
 
-:deep(.v-list-item:hover) {
-  background-color: rgba(var(--v-theme-on-surface), 0.04);
+/* Rail Mode */
+:deep(.v-navigation-drawer--rail) {
+  .nav-item {
+    justify-content: center;
+  }
+  
+  .nav-subitem {
+    margin-left: 0;
+  }
 }
 
-:deep(.v-navigation-drawer--rail .v-list-item-title) {
+/* Scrollbar Styling */
+.navigation-section::-webkit-scrollbar {
+  width: 4px;
+}
+
+.navigation-section::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.navigation-section::-webkit-scrollbar-thumb {
+  background: rgba(var(--v-theme-on-surface), 0.2);
+  border-radius: 2px;
+}
+
+.navigation-section::-webkit-scrollbar-thumb:hover {
+  background: rgba(var(--v-theme-on-surface), 0.3);
+}
+
+/* Animations */
+.v-fade-transition-enter-active,
+.v-fade-transition-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.v-fade-transition-enter-from,
+.v-fade-transition-leave-to {
   opacity: 0;
-}
-
-:deep(.v-list-group__items .v-list-item) {
-  padding-inline-start: 16px !important;
-}
-
-.cursor-pointer {
-  cursor: pointer;
 }
 </style>

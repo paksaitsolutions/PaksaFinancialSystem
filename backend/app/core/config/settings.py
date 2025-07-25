@@ -73,6 +73,8 @@ class Settings(BaseSettings):
     DB_POOL_RECYCLE: int = 300
     DB_ECHO: bool = False
     DATABASE_URI: str = ""
+    USE_READ_REPLICA: bool = False
+    DATABASE_READ_REPLICA_URL: Optional[str] = None
     
     # SQLAlchemy
     SQLALCHEMY_POOL_SIZE: int = 5

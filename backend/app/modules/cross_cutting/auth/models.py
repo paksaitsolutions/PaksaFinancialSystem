@@ -10,7 +10,7 @@ from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, T
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from core.database import Base
+from app.core.database import Base
 
 
 # Association table for many-to-many relationship between roles and permissions
