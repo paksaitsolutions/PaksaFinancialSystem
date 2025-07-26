@@ -1,626 +1,579 @@
 <template>
-  <div class="benefits-management">
-    <v-card>
-      <v-card-title class="d-flex align-center">
-        <h2>Benefits Management</h2>
-        <v-spacer></v-spacer>
-        <v-btn color="primary" @click="openCreatePlanDialog">
-          <v-icon left>mdi-plus</v-icon>
-          New Benefit Plan
-        </v-btn>
-      </v-card-title>
-
-      <v-card-text>
-        <v-tabs v-model="activeTab" background-color="primary" dark>
-          <v-tab value="plans">Benefit Plans</v-tab>
-          <v-tab value="enrollments">Employee Enrollments</v-tab>
-          <v-tab value="summary">Summary</v-tab>
-        </v-tabs>
-
-        <v-window v-model="activeTab" class="mt-4">
-          <!-- Benefit Plans Tab -->
-          <v-window-item value="plans">
-            <v-data-table
-              :headers="planHeaders"
-              :items="benefitPlans"
-              :loading="loading"
-              :items-per-page="10"
-            >
-              <template v-slot:item.benefit_type="{ item }">
-                <v-chip small>{{ formatBenefitType(item.benefit_type) }}</v-chip>
-              </template>
-              
-              <template v-slot:item.employee_cost="{ item }">
-                {{ formatCurrency(item.employee_cost) }}
-              </template>
-              
-              <template v-slot:item.employer_cost="{ item }">
-                {{ formatCurrency(item.employer_cost) }}
-              </template>
-              
-              <template v-slot:item.deduction_type="{ item }">
-                <v-chip :color="getDeductionTypeColor(item.deduction_type)" small>
-                  {{ formatDeductionType(item.deduction_type) }}
-                </v-chip>
-              </template>
-              
-              <template v-slot:item.is_active="{ item }">
-                <v-chip :color="item.is_active ? 'success' : 'error'" small>
-                  {{ item.is_active ? 'Active' : 'Inactive' }}
-                </v-chip>
-              </template>
-              
-              <template v-slot:item.actions="{ item }">
-                <v-btn icon small @click="editPlan(item)">
-                  <v-icon small>mdi-pencil</v-icon>
-                </v-btn>
-                <v-btn icon small @click="viewEnrollments(item)">
-                  <v-icon small>mdi-account-group</v-icon>
-                </v-btn>
-                <v-btn icon small @click="deletePlan(item)" :disabled="item.enrolled_count > 0">
-                  <v-icon small>mdi-delete</v-icon>
-                </v-btn>
-              </template>
-            </v-data-table>
-          </v-window-item>
-
-          <!-- Employee Enrollments Tab -->
-          <v-window-item value="enrollments">
-            <v-row class="mb-4">
-              <v-col cols="12" md="4">
-                <v-select
-                  v-model="selectedEmployee"
-                  :items="employees"
-                  item-title="full_name"
-                  item-value="id"
-                  label="Select Employee"
-                  clearable
-                  @update:modelValue="loadEmployeeBenefits"
-                ></v-select>
-              </v-col>
-              <v-col cols="12" md="4">
-                <v-btn color="primary" @click="openEnrollmentDialog" :disabled="!selectedEmployee">
-                  <v-icon left>mdi-plus</v-icon>
-                  Enroll in Benefit
-                </v-btn>
-              </v-col>
-            </v-row>
-
-            <v-data-table
-              :headers="enrollmentHeaders"
-              :items="employeeBenefits"
-              :loading="enrollmentsLoading"
-              :items-per-page="10"
-            >
-              <template v-slot:item.benefit_type="{ item }">
-                <v-chip small>{{ formatBenefitType(item.benefit_type) }}</v-chip>
-              </template>
-              
-              <template v-slot:item.employee_contribution="{ item }">
-                {{ formatCurrency(item.employee_contribution) }}
-              </template>
-              
-              <template v-slot:item.employer_contribution="{ item }">
-                {{ formatCurrency(item.employer_contribution) }}
-              </template>
-              
-              <template v-slot:item.is_active="{ item }">
-                <v-chip :color="item.is_active ? 'success' : 'error'" small>
-                  {{ item.is_active ? 'Active' : 'Terminated' }}
-                </v-chip>
-              </template>
-              
-              <template v-slot:item.actions="{ item }">
-                <v-btn icon small @click="terminateEnrollment(item)" v-if="item.is_active">
-                  <v-icon small>mdi-stop</v-icon>
-                </v-btn>
-              </template>
-            </v-data-table>
-          </v-window-item>
-
-          <!-- Summary Tab -->
-          <v-window-item value="summary">
-            <v-row v-if="summary">
-              <v-col cols="12" md="3">
-                <v-card class="text-center pa-4" color="blue lighten-5">
-                  <h2>{{ summary.total_plans }}</h2>
-                  <p>Total Plans</p>
-                </v-card>
-              </v-col>
-              <v-col cols="12" md="3">
-                <v-card class="text-center pa-4" color="green lighten-5">
-                  <h2>{{ summary.active_plans }}</h2>
-                  <p>Active Plans</p>
-                </v-card>
-              </v-col>
-              <v-col cols="12" md="3">
-                <v-card class="text-center pa-4" color="orange lighten-5">
-                  <h2>{{ summary.total_enrollments }}</h2>
-                  <p>Total Enrollments</p>
-                </v-card>
-              </v-col>
-              <v-col cols="12" md="3">
-                <v-card class="text-center pa-4" color="purple lighten-5">
-                  <h2>{{ formatCurrency(summary.total_employee_cost) }}</h2>
-                  <p>Employee Costs</p>
-                </v-card>
-              </v-col>
-            </v-row>
-
-            <v-row class="mt-4" v-if="summary">
-              <v-col cols="12">
-                <v-card>
-                  <v-card-title>Enrollments by Benefit Type</v-card-title>
-                  <v-card-text>
-                    <v-simple-table>
-                      <template v-slot:default>
-                        <thead>
-                          <tr>
-                            <th>Benefit Type</th>
-                            <th class="text-right">Enrollments</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr v-for="(count, type) in summary.by_type" :key="type">
-                            <td>{{ formatBenefitType(type) }}</td>
-                            <td class="text-right">{{ count }}</td>
-                          </tr>
-                        </tbody>
-                      </template>
-                    </v-simple-table>
-                  </v-card-text>
-                </v-card>
-              </v-col>
-            </v-row>
-          </v-window-item>
-        </v-window>
-      </v-card-text>
-    </v-card>
-
-    <!-- Create/Edit Benefit Plan Dialog -->
-    <v-dialog v-model="planDialog" max-width="600px">
+  <v-card>
+    <v-card-title>
+      <span class="text-h5">Benefits Management</span>
+      <v-spacer></v-spacer>
+      <v-btn color="primary" @click="addBenefitPlan">
+        Add Benefit Plan
+      </v-btn>
+    </v-card-title>
+    
+    <v-card-text>
+      <v-tabs v-model="activeTab">
+        <v-tab value="plans">Benefit Plans</v-tab>
+        <v-tab value="enrollments">Employee Enrollments</v-tab>
+        <v-tab value="costs">Cost Analysis</v-tab>
+        <v-tab value="reports">Reports</v-tab>
+      </v-tabs>
+      
+      <v-tabs-window v-model="activeTab">
+        <!-- Benefit Plans -->
+        <v-tabs-window-item value="plans">
+          <v-data-table
+            :headers="planHeaders"
+            :items="benefitPlans"
+            class="mt-4"
+          >
+            <template v-slot:item.benefit_type="{ item }">
+              <v-chip :color="getBenefitTypeColor(item.benefit_type)" size="small">
+                {{ formatBenefitType(item.benefit_type) }}
+              </v-chip>
+            </template>
+            
+            <template v-slot:item.employee_cost="{ item }">
+              ${{ item.employee_cost?.toLocaleString() || 0 }}
+            </template>
+            
+            <template v-slot:item.employer_contribution="{ item }">
+              <span v-if="item.employer_contribution_type === 'percentage'">
+                {{ (item.employer_contribution_amount * 100).toFixed(1) }}%
+              </span>
+              <span v-else>
+                ${{ item.employer_contribution_amount?.toLocaleString() || 0 }}
+              </span>
+            </template>
+            
+            <template v-slot:item.actions="{ item }">
+              <v-btn icon size="small" @click="editBenefitPlan(item)">
+                <v-icon>mdi-pencil</v-icon>
+              </v-btn>
+              <v-btn icon size="small" @click="deleteBenefitPlan(item)">
+                <v-icon>mdi-delete</v-icon>
+              </v-btn>
+            </template>
+          </v-data-table>
+        </v-tabs-window-item>
+        
+        <!-- Employee Enrollments -->
+        <v-tabs-window-item value="enrollments">
+          <v-row class="mt-4">
+            <v-col cols="12" md="4">
+              <v-select
+                v-model="selectedEmployee"
+                :items="employees"
+                item-title="full_name"
+                item-value="id"
+                label="Select Employee"
+                @update:modelValue="loadEmployeeBenefits"
+              ></v-select>
+            </v-col>
+            
+            <v-col cols="12" md="4">
+              <v-select
+                v-model="filterBenefitType"
+                :items="benefitTypes"
+                label="Filter by Benefit Type"
+                clearable
+              ></v-select>
+            </v-col>
+            
+            <v-col cols="12" md="4">
+              <v-btn color="primary" @click="enrollEmployee" :disabled="!selectedEmployee">
+                Enroll in Benefits
+              </v-btn>
+            </v-col>
+          </v-row>
+          
+          <v-data-table
+            :headers="enrollmentHeaders"
+            :items="filteredEnrollments"
+            class="mt-4"
+          >
+            <template v-slot:item.benefit_type="{ item }">
+              <v-chip :color="getBenefitTypeColor(item.benefit_type)" size="small">
+                {{ formatBenefitType(item.benefit_type) }}
+              </v-chip>
+            </template>
+            
+            <template v-slot:item.employee_deduction="{ item }">
+              ${{ item.employee_deduction?.toLocaleString() || 0 }}
+            </template>
+            
+            <template v-slot:item.employer_contribution="{ item }">
+              ${{ item.employer_contribution?.toLocaleString() || 0 }}
+            </template>
+            
+            <template v-slot:item.is_active="{ item }">
+              <v-chip :color="item.is_active ? 'success' : 'error'" size="small">
+                {{ item.is_active ? 'Active' : 'Inactive' }}
+              </v-chip>
+            </template>
+            
+            <template v-slot:item.actions="{ item }">
+              <v-btn icon size="small" @click="editEnrollment(item)">
+                <v-icon>mdi-pencil</v-icon>
+              </v-btn>
+              <v-btn icon size="small" @click="terminateEnrollment(item)">
+                <v-icon>mdi-stop</v-icon>
+              </v-btn>
+            </template>
+          </v-data-table>
+        </v-tabs-window-item>
+        
+        <!-- Cost Analysis -->
+        <v-tabs-window-item value="costs">
+          <v-row class="mt-4">
+            <v-col cols="12" md="3">
+              <v-card>
+                <v-card-text>
+                  <div class="text-h4 text-primary">
+                    ${{ totalEmployeeCosts.toLocaleString() }}
+                  </div>
+                  <div class="text-subtitle-1">Total Employee Costs</div>
+                </v-card-text>
+              </v-card>
+            </v-col>
+            
+            <v-col cols="12" md="3">
+              <v-card>
+                <v-card-text>
+                  <div class="text-h4 text-success">
+                    ${{ totalEmployerCosts.toLocaleString() }}
+                  </div>
+                  <div class="text-subtitle-1">Total Employer Costs</div>
+                </v-card-text>
+              </v-card>
+            </v-col>
+            
+            <v-col cols="12" md="3">
+              <v-card>
+                <v-card-text>
+                  <div class="text-h4 text-info">
+                    {{ enrollmentRate.toFixed(1) }}%
+                  </div>
+                  <div class="text-subtitle-1">Overall Enrollment Rate</div>
+                </v-card-text>
+              </v-card>
+            </v-col>
+            
+            <v-col cols="12" md="3">
+              <v-card>
+                <v-card-text>
+                  <div class="text-h4 text-warning">
+                    ${{ averageCostPerEmployee.toLocaleString() }}
+                  </div>
+                  <div class="text-subtitle-1">Avg Cost Per Employee</div>
+                </v-card-text>
+              </v-card>
+            </v-col>
+          </v-row>
+          
+          <v-row class="mt-4">
+            <v-col cols="12" md="6">
+              <v-card>
+                <v-card-title>Cost by Benefit Type</v-card-title>
+                <v-card-text>
+                  <!-- Chart would go here -->
+                  <div class="text-center pa-4">
+                    <v-icon size="64" color="grey">mdi-chart-pie</v-icon>
+                    <div class="text-subtitle-1 mt-2">Cost Distribution Chart</div>
+                  </div>
+                </v-card-text>
+              </v-card>
+            </v-col>
+            
+            <v-col cols="12" md="6">
+              <v-card>
+                <v-card-title>Enrollment Trends</v-card-title>
+                <v-card-text>
+                  <!-- Chart would go here -->
+                  <div class="text-center pa-4">
+                    <v-icon size="64" color="grey">mdi-chart-line</v-icon>
+                    <div class="text-subtitle-1 mt-2">Enrollment Trend Chart</div>
+                  </div>
+                </v-card-text>
+              </v-card>
+            </v-col>
+          </v-row>
+        </v-tabs-window-item>
+        
+        <!-- Reports -->
+        <v-tabs-window-item value="reports">
+          <v-row class="mt-4">
+            <v-col cols="12" md="4">
+              <v-card>
+                <v-card-title>Enrollment Summary</v-card-title>
+                <v-card-text>
+                  <v-btn block color="primary" @click="generateEnrollmentReport">
+                    Generate Report
+                  </v-btn>
+                </v-card-text>
+              </v-card>
+            </v-col>
+            
+            <v-col cols="12" md="4">
+              <v-card>
+                <v-card-title>Cost Analysis</v-card-title>
+                <v-card-text>
+                  <v-btn block color="primary" @click="generateCostReport">
+                    Generate Report
+                  </v-btn>
+                </v-card-text>
+              </v-card>
+            </v-col>
+            
+            <v-col cols="12" md="4">
+              <v-card>
+                <v-card-title>Compliance Report</v-card-title>
+                <v-card-text>
+                  <v-btn block color="primary" @click="generateComplianceReport">
+                    Generate Report
+                  </v-btn>
+                </v-card-text>
+              </v-card>
+            </v-col>
+          </v-row>
+        </v-tabs-window-item>
+      </v-tabs-window>
+    </v-card-text>
+    
+    <!-- Benefit Plan Dialog -->
+    <v-dialog v-model="planDialog" max-width="800px">
       <v-card>
-        <v-card-title>{{ planFormTitle }}</v-card-title>
+        <v-card-title>
+          {{ editingPlan.id ? 'Edit' : 'Add' }} Benefit Plan
+        </v-card-title>
+        
         <v-card-text>
-          <v-form ref="planForm" v-model="planFormValid">
+          <v-form ref="planForm">
             <v-row>
               <v-col cols="12" md="6">
                 <v-text-field
-                  v-model="editedPlan.name"
-                  label="Plan Name*"
-                  :rules="[v => !!v || 'Plan name is required']"
+                  v-model="editingPlan.name"
+                  label="Plan Name"
+                  required
                 ></v-text-field>
               </v-col>
+              
               <v-col cols="12" md="6">
                 <v-select
-                  v-model="editedPlan.benefit_type"
+                  v-model="editingPlan.benefit_type"
                   :items="benefitTypes"
-                  label="Benefit Type*"
-                  :rules="[v => !!v || 'Benefit type is required']"
+                  label="Benefit Type"
+                  required
                 ></v-select>
               </v-col>
-            </v-row>
-            
-            <v-row>
+              
               <v-col cols="12">
                 <v-textarea
-                  v-model="editedPlan.description"
+                  v-model="editingPlan.description"
                   label="Description"
                   rows="3"
                 ></v-textarea>
               </v-col>
-            </v-row>
-            
-            <v-row>
+              
               <v-col cols="12" md="6">
                 <v-text-field
-                  v-model="editedPlan.provider"
-                  label="Provider"
-                ></v-text-field>
-              </v-col>
-              <v-col cols="12" md="6">
-                <v-select
-                  v-model="editedPlan.deduction_type"
-                  :items="deductionTypes"
-                  label="Deduction Type*"
-                  :rules="[v => !!v || 'Deduction type is required']"
-                ></v-select>
-              </v-col>
-            </v-row>
-            
-            <v-row>
-              <v-col cols="12" md="6">
-                <v-text-field
-                  v-model="editedPlan.employee_cost"
+                  v-model="editingPlan.employee_cost"
                   label="Employee Cost"
                   type="number"
                   step="0.01"
                   prefix="$"
                 ></v-text-field>
               </v-col>
+              
+              <v-col cols="12" md="6">
+                <v-select
+                  v-model="editingPlan.employer_contribution_type"
+                  :items="contributionTypes"
+                  label="Employer Contribution Type"
+                ></v-select>
+              </v-col>
+              
               <v-col cols="12" md="6">
                 <v-text-field
-                  v-model="editedPlan.employer_cost"
-                  label="Employer Cost"
+                  v-model="editingPlan.employer_contribution_amount"
+                  :label="editingPlan.employer_contribution_type === 'percentage' ? 'Contribution Percentage' : 'Contribution Amount'"
                   type="number"
                   step="0.01"
-                  prefix="$"
+                  :prefix="editingPlan.employer_contribution_type === 'percentage' ? '' : '$'"
+                  :suffix="editingPlan.employer_contribution_type === 'percentage' ? '%' : ''"
                 ></v-text-field>
               </v-col>
-            </v-row>
-            
-            <v-row>
-              <v-col cols="12">
-                <v-checkbox
-                  v-model="editedPlan.is_active"
+              
+              <v-col cols="12" md="6">
+                <v-switch
+                  v-model="editingPlan.is_active"
                   label="Active"
-                ></v-checkbox>
+                ></v-switch>
               </v-col>
             </v-row>
           </v-form>
         </v-card-text>
+        
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn text @click="planDialog = false">Cancel</v-btn>
-          <v-btn color="primary" @click="savePlan" :disabled="!planFormValid">Save</v-btn>
+          <v-btn color="primary" @click="saveBenefitPlan">Save</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
-
-    <!-- Employee Enrollment Dialog -->
-    <v-dialog v-model="enrollmentDialog" max-width="600px">
-      <v-card>
-        <v-card-title>Enroll Employee in Benefit</v-card-title>
-        <v-card-text>
-          <v-form ref="enrollmentForm" v-model="enrollmentFormValid">
-            <v-row>
-              <v-col cols="12">
-                <v-select
-                  v-model="newEnrollment.benefit_plan_id"
-                  :items="availablePlans"
-                  item-title="name"
-                  item-value="id"
-                  label="Benefit Plan*"
-                  :rules="[v => !!v || 'Benefit plan is required']"
-                ></v-select>
-              </v-col>
-            </v-row>
-            
-            <v-row>
-              <v-col cols="12" md="6">
-                <v-text-field
-                  v-model="newEnrollment.enrollment_date"
-                  label="Enrollment Date*"
-                  type="date"
-                  :rules="[v => !!v || 'Enrollment date is required']"
-                ></v-text-field>
-              </v-col>
-              <v-col cols="12" md="6">
-                <v-text-field
-                  v-model="newEnrollment.effective_date"
-                  label="Effective Date*"
-                  type="date"
-                  :rules="[v => !!v || 'Effective date is required']"
-                ></v-text-field>
-              </v-col>
-            </v-row>
-            
-            <v-row>
-              <v-col cols="12" md="6">
-                <v-text-field
-                  v-model="newEnrollment.employee_contribution"
-                  label="Employee Contribution"
-                  type="number"
-                  step="0.01"
-                  prefix="$"
-                ></v-text-field>
-              </v-col>
-              <v-col cols="12" md="6">
-                <v-text-field
-                  v-model="newEnrollment.employer_contribution"
-                  label="Employer Contribution"
-                  type="number"
-                  step="0.01"
-                  prefix="$"
-                ></v-text-field>
-              </v-col>
-            </v-row>
-          </v-form>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn text @click="enrollmentDialog = false">Cancel</v-btn>
-          <v-btn color="primary" @click="saveEnrollment" :disabled="!enrollmentFormValid">Enroll</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-  </div>
+  </v-card>
 </template>
 
 <script>
+import { ref, computed, onMounted } from 'vue'
+
 export default {
   name: 'BenefitsManagement',
-  data: () => ({
-    activeTab: 'plans',
-    loading: false,
-    enrollmentsLoading: false,
-    planDialog: false,
-    enrollmentDialog: false,
-    planFormValid: false,
-    enrollmentFormValid: false,
-    benefitPlans: [],
-    employees: [],
-    employeeBenefits: [],
-    summary: null,
-    selectedEmployee: null,
-    benefitTypes: [],
-    deductionTypes: [],
-    availablePlans: [],
-    editedIndex: -1,
-    editedPlan: {
+  setup() {
+    const activeTab = ref('plans')
+    const planDialog = ref(false)
+    const selectedEmployee = ref(null)
+    const filterBenefitType = ref(null)
+    
+    const benefitPlans = ref([
+      {
+        id: 1,
+        name: 'Health Insurance Premium',
+        benefit_type: 'health_insurance',
+        description: 'Comprehensive health coverage',
+        employee_cost: 200,
+        employer_contribution_type: 'percentage',
+        employer_contribution_amount: 0.8,
+        is_active: true
+      },
+      {
+        id: 2,
+        name: '401(k) Plan',
+        benefit_type: '401k',
+        description: 'Retirement savings plan',
+        employee_cost: 0,
+        employer_contribution_type: 'percentage',
+        employer_contribution_amount: 0.03,
+        is_active: true
+      }
+    ])
+    
+    const employees = ref([
+      { id: 1, full_name: 'John Doe', department: 'Engineering' },
+      { id: 2, full_name: 'Jane Smith', department: 'Marketing' }
+    ])
+    
+    const enrollments = ref([
+      {
+        id: 1,
+        employee_id: 1,
+        employee_name: 'John Doe',
+        benefit_name: 'Health Insurance Premium',
+        benefit_type: 'health_insurance',
+        coverage_level: 'family',
+        employee_deduction: 120,
+        employer_contribution: 480,
+        is_active: true,
+        effective_date: '2024-01-01'
+      }
+    ])
+    
+    const editingPlan = ref({
+      id: null,
       name: '',
       benefit_type: '',
       description: '',
-      provider: '',
       employee_cost: 0,
-      employer_cost: 0,
-      deduction_type: '',
+      employer_contribution_type: 'percentage',
+      employer_contribution_amount: 0,
       is_active: true
-    },
-    defaultPlan: {
-      name: '',
-      benefit_type: '',
-      description: '',
-      provider: '',
-      employee_cost: 0,
-      employer_cost: 0,
-      deduction_type: '',
-      is_active: true
-    },
-    newEnrollment: {
-      employee_id: null,
-      benefit_plan_id: null,
-      enrollment_date: new Date().toISOString().substr(0, 10),
-      effective_date: new Date().toISOString().substr(0, 10),
-      employee_contribution: 0,
-      employer_contribution: 0,
-      is_active: true
-    },
-    planHeaders: [
-      { title: 'Name', key: 'name' },
-      { title: 'Type', key: 'benefit_type' },
-      { title: 'Provider', key: 'provider' },
+    })
+    
+    const benefitTypes = [
+      { title: 'Health Insurance', value: 'health_insurance' },
+      { title: 'Dental Insurance', value: 'dental_insurance' },
+      { title: 'Vision Insurance', value: 'vision_insurance' },
+      { title: '401(k)', value: '401k' },
+      { title: 'Life Insurance', value: 'life_insurance' },
+      { title: 'Disability Insurance', value: 'disability_insurance' },
+      { title: 'HSA', value: 'hsa' },
+      { title: 'FSA', value: 'fsa' }
+    ]
+    
+    const contributionTypes = [
+      { title: 'Percentage', value: 'percentage' },
+      { title: 'Fixed Amount', value: 'fixed' }
+    ]
+    
+    const planHeaders = [
+      { title: 'Plan Name', key: 'name' },
+      { title: 'Benefit Type', key: 'benefit_type' },
       { title: 'Employee Cost', key: 'employee_cost' },
-      { title: 'Employer Cost', key: 'employer_cost' },
-      { title: 'Deduction Type', key: 'deduction_type' },
-      { title: 'Enrolled', key: 'enrolled_count' },
-      { title: 'Status', key: 'is_active' },
+      { title: 'Employer Contribution', key: 'employer_contribution' },
+      { title: 'Active', key: 'is_active' },
       { title: 'Actions', key: 'actions', sortable: false }
-    ],
-    enrollmentHeaders: [
+    ]
+    
+    const enrollmentHeaders = [
       { title: 'Employee', key: 'employee_name' },
-      { title: 'Plan', key: 'benefit_plan_name' },
+      { title: 'Benefit', key: 'benefit_name' },
       { title: 'Type', key: 'benefit_type' },
-      { title: 'Effective Date', key: 'effective_date' },
-      { title: 'Employee Cost', key: 'employee_contribution' },
+      { title: 'Coverage', key: 'coverage_level' },
+      { title: 'Employee Cost', key: 'employee_deduction' },
       { title: 'Employer Cost', key: 'employer_contribution' },
       { title: 'Status', key: 'is_active' },
       { title: 'Actions', key: 'actions', sortable: false }
     ]
-  }),
-
-  computed: {
-    planFormTitle() {
-      return this.editedIndex === -1 ? 'New Benefit Plan' : 'Edit Benefit Plan'
-    }
-  },
-
-  mounted() {
-    this.fetchBenefitPlans()
-    this.fetchEmployees()
-    this.fetchBenefitTypes()
-    this.fetchDeductionTypes()
-    this.fetchSummary()
-  },
-
-  methods: {
-    async fetchBenefitPlans() {
-      this.loading = true
-      try {
-        const response = await fetch('/api/payroll/benefits/plans')
-        const data = await response.json()
-        this.benefitPlans = data.items
-      } catch (error) {
-        console.error('Error fetching benefit plans:', error)
-      } finally {
-        this.loading = false
+    
+    const filteredEnrollments = computed(() => {
+      let filtered = enrollments.value
+      
+      if (selectedEmployee.value) {
+        filtered = filtered.filter(e => e.employee_id === selectedEmployee.value)
       }
-    },
-
-    async fetchEmployees() {
-      try {
-        const response = await fetch('/api/payroll/employees?is_active=true')
-        const data = await response.json()
-        this.employees = data.items
-      } catch (error) {
-        console.error('Error fetching employees:', error)
+      
+      if (filterBenefitType.value) {
+        filtered = filtered.filter(e => e.benefit_type === filterBenefitType.value)
       }
-    },
-
-    async fetchBenefitTypes() {
-      try {
-        const response = await fetch('/api/payroll/benefits/types')
-        this.benefitTypes = await response.json()
-      } catch (error) {
-        console.error('Error fetching benefit types:', error)
-      }
-    },
-
-    async fetchDeductionTypes() {
-      try {
-        const response = await fetch('/api/payroll/benefits/deduction-types')
-        this.deductionTypes = await response.json()
-      } catch (error) {
-        console.error('Error fetching deduction types:', error)
-      }
-    },
-
-    async fetchSummary() {
-      try {
-        const response = await fetch('/api/payroll/benefits/summary')
-        this.summary = await response.json()
-      } catch (error) {
-        console.error('Error fetching summary:', error)
-      }
-    },
-
-    async loadEmployeeBenefits() {
-      if (!this.selectedEmployee) {
-        this.employeeBenefits = []
-        return
-      }
-
-      this.enrollmentsLoading = true
-      try {
-        const response = await fetch(`/api/payroll/benefits/employees/${this.selectedEmployee}/benefits`)
-        this.employeeBenefits = await response.json()
-      } catch (error) {
-        console.error('Error loading employee benefits:', error)
-      } finally {
-        this.enrollmentsLoading = false
-      }
-    },
-
-    openCreatePlanDialog() {
-      this.editedIndex = -1
-      this.editedPlan = Object.assign({}, this.defaultPlan)
-      this.planDialog = true
-    },
-
-    editPlan(plan) {
-      this.editedIndex = this.benefitPlans.indexOf(plan)
-      this.editedPlan = Object.assign({}, plan)
-      this.planDialog = true
-    },
-
-    async savePlan() {
-      if (this.$refs.planForm.validate()) {
-        try {
-          const url = this.editedIndex === -1 
-            ? '/api/payroll/benefits/plans'
-            : `/api/payroll/benefits/plans/${this.editedPlan.id}`
-          
-          const method = this.editedIndex === -1 ? 'POST' : 'PUT'
-          
-          const response = await fetch(url, {
-            method,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(this.editedPlan)
-          })
-          
-          if (response.ok) {
-            this.planDialog = false
-            this.fetchBenefitPlans()
-            this.fetchSummary()
-          }
-        } catch (error) {
-          console.error('Error saving benefit plan:', error)
-        }
-      }
-    },
-
-    async deletePlan(plan) {
-      if (confirm('Are you sure you want to delete this benefit plan?')) {
-        try {
-          const response = await fetch(`/api/payroll/benefits/plans/${plan.id}`, {
-            method: 'DELETE'
-          })
-          
-          if (response.ok) {
-            this.fetchBenefitPlans()
-            this.fetchSummary()
-          }
-        } catch (error) {
-          console.error('Error deleting benefit plan:', error)
-        }
-      }
-    },
-
-    openEnrollmentDialog() {
-      this.newEnrollment.employee_id = this.selectedEmployee
-      this.availablePlans = this.benefitPlans.filter(plan => plan.is_active)
-      this.enrollmentDialog = true
-    },
-
-    async saveEnrollment() {
-      if (this.$refs.enrollmentForm.validate()) {
-        try {
-          const response = await fetch('/api/payroll/benefits/enrollments', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(this.newEnrollment)
-          })
-          
-          if (response.ok) {
-            this.enrollmentDialog = false
-            this.loadEmployeeBenefits()
-            this.fetchSummary()
-          }
-        } catch (error) {
-          console.error('Error saving enrollment:', error)
-        }
-      }
-    },
-
-    async terminateEnrollment(enrollment) {
-      const endDate = prompt('Enter termination date (YYYY-MM-DD):')
-      if (endDate) {
-        try {
-          const response = await fetch(`/api/payroll/benefits/enrollments/${enrollment.id}/terminate`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ end_date: endDate })
-          })
-          
-          if (response.ok) {
-            this.loadEmployeeBenefits()
-            this.fetchSummary()
-          }
-        } catch (error) {
-          console.error('Error terminating enrollment:', error)
-        }
-      }
-    },
-
-    formatBenefitType(type) {
-      return type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
-    },
-
-    formatDeductionType(type) {
-      return type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
-    },
-
-    getDeductionTypeColor(type) {
+      
+      return filtered
+    })
+    
+    const totalEmployeeCosts = computed(() => {
+      return enrollments.value.reduce((sum, e) => sum + (e.employee_deduction || 0), 0)
+    })
+    
+    const totalEmployerCosts = computed(() => {
+      return enrollments.value.reduce((sum, e) => sum + (e.employer_contribution || 0), 0)
+    })
+    
+    const enrollmentRate = computed(() => {
+      if (employees.value.length === 0) return 0
+      const enrolledEmployees = new Set(enrollments.value.map(e => e.employee_id)).size
+      return (enrolledEmployees / employees.value.length) * 100
+    })
+    
+    const averageCostPerEmployee = computed(() => {
+      if (employees.value.length === 0) return 0
+      return (totalEmployeeCosts.value + totalEmployerCosts.value) / employees.value.length
+    })
+    
+    const getBenefitTypeColor = (type) => {
       const colors = {
-        'PRE_TAX': 'green',
-        'POST_TAX': 'orange',
-        'EMPLOYER_PAID': 'blue'
+        'health_insurance': 'blue',
+        'dental_insurance': 'green',
+        'vision_insurance': 'purple',
+        '401k': 'orange',
+        'life_insurance': 'red',
+        'disability_insurance': 'teal',
+        'hsa': 'indigo',
+        'fsa': 'pink'
       }
       return colors[type] || 'grey'
-    },
-
-    formatCurrency(amount) {
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD'
-      }).format(amount)
+    }
+    
+    const formatBenefitType = (type) => {
+      return benefitTypes.find(bt => bt.value === type)?.title || type
+    }
+    
+    const addBenefitPlan = () => {
+      editingPlan.value = {
+        id: null,
+        name: '',
+        benefit_type: '',
+        description: '',
+        employee_cost: 0,
+        employer_contribution_type: 'percentage',
+        employer_contribution_amount: 0,
+        is_active: true
+      }
+      planDialog.value = true
+    }
+    
+    const editBenefitPlan = (plan) => {
+      editingPlan.value = { ...plan }
+      planDialog.value = true
+    }
+    
+    const saveBenefitPlan = () => {
+      if (editingPlan.value.id) {
+        // Update existing plan
+        const index = benefitPlans.value.findIndex(p => p.id === editingPlan.value.id)
+        if (index >= 0) {
+          benefitPlans.value[index] = { ...editingPlan.value }
+        }
+      } else {
+        // Add new plan
+        editingPlan.value.id = Date.now()
+        benefitPlans.value.push({ ...editingPlan.value })
+      }
+      planDialog.value = false
+    }
+    
+    const deleteBenefitPlan = (plan) => {
+      const index = benefitPlans.value.findIndex(p => p.id === plan.id)
+      if (index >= 0) {
+        benefitPlans.value.splice(index, 1)
+      }
+    }
+    
+    const loadEmployeeBenefits = () => {
+      // Load benefits for selected employee
+    }
+    
+    const enrollEmployee = () => {
+      // Open enrollment dialog
+    }
+    
+    const editEnrollment = (enrollment) => {
+      // Edit enrollment
+    }
+    
+    const terminateEnrollment = (enrollment) => {
+      // Terminate enrollment
+    }
+    
+    const generateEnrollmentReport = () => {
+      // Generate enrollment report
+    }
+    
+    const generateCostReport = () => {
+      // Generate cost report
+    }
+    
+    const generateComplianceReport = () => {
+      // Generate compliance report
+    }
+    
+    return {
+      activeTab,
+      planDialog,
+      selectedEmployee,
+      filterBenefitType,
+      benefitPlans,
+      employees,
+      enrollments,
+      editingPlan,
+      benefitTypes,
+      contributionTypes,
+      planHeaders,
+      enrollmentHeaders,
+      filteredEnrollments,
+      totalEmployeeCosts,
+      totalEmployerCosts,
+      enrollmentRate,
+      averageCostPerEmployee,
+      getBenefitTypeColor,
+      formatBenefitType,
+      addBenefitPlan,
+      editBenefitPlan,
+      saveBenefitPlan,
+      deleteBenefitPlan,
+      loadEmployeeBenefits,
+      enrollEmployee,
+      editEnrollment,
+      terminateEnrollment,
+      generateEnrollmentReport,
+      generateCostReport,
+      generateComplianceReport
     }
   }
 }
 </script>
-
-<style scoped>
-.benefits-management {
-  padding: 16px;
-}
-</style>
