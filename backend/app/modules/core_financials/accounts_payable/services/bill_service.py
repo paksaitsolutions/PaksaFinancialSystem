@@ -1,180 +1,276 @@
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, func, and_, or_
+from sqlalchemy.orm import selectinload
 from typing import List, Optional, Dict
-from datetime import datetime, timedelta
+from datetime import datetime, date
+from decimal import Decimal
+from ..models import Invoice, InvoiceLineItem, Vendor, Payment, PaymentInvoice
 
 class BillService:
-    """Service for bill processing operations"""
+    """Service for bill/invoice processing operations"""
     
-    async def create_bill(self, db: AsyncSession, bill_data: dict):
-        """Create a new bill"""
-        bill = {
-            "id": 1,
-            "bill_number": f"BILL-{datetime.now().strftime('%Y%m%d')}-001",
-            "vendor_id": bill_data.get("vendor_id"),
-            "amount": bill_data.get("amount"),
-            "due_date": bill_data.get("due_date"),
-            "status": "draft",
-            "created_at": datetime.now().isoformat()
-        }
-        return bill
-    
-    async def get_bills(self, db: AsyncSession, skip: int = 0, limit: int = 100,
-                       status: Optional[str] = None, vendor_id: Optional[int] = None):
-        """Get bills with filtering"""
-        bills = [
-            {
-                "id": 1,
-                "bill_number": "BILL-20240101-001",
-                "vendor_id": 1,
-                "vendor_name": "ABC Supplies Inc",
-                "amount": 1500.00,
-                "due_date": "2024-02-01",
-                "status": "pending_approval"
-            },
-            {
-                "id": 2,
-                "bill_number": "BILL-20240101-002",
-                "vendor_id": 2,
-                "vendor_name": "XYZ Services LLC",
-                "amount": 2500.00,
-                "due_date": "2024-02-15",
-                "status": "approved"
-            }
-        ]
+    async def create_bill(self, db: AsyncSession, bill_data: dict, user_id: int):
+        """Create a new bill/invoice with real database persistence"""
+        # Generate unique invoice number
+        invoice_count = await db.scalar(select(func.count(Invoice.id)))
+        invoice_number = f"INV-{datetime.now().strftime('%Y%m%d')}-{invoice_count + 1:04d}"
         
+        # Create invoice
+        invoice = Invoice(
+            invoice_number=invoice_number,
+            vendor_id=bill_data["vendor_id"],
+            invoice_date=datetime.strptime(bill_data["invoice_date"], "%Y-%m-%d").date(),
+            due_date=datetime.strptime(bill_data["due_date"], "%Y-%m-%d").date(),
+            reference_number=bill_data.get("reference_number"),
+            subtotal=Decimal(str(bill_data.get("subtotal", 0))),
+            tax_amount=Decimal(str(bill_data.get("tax_amount", 0))),
+            total_amount=Decimal(str(bill_data.get("total_amount", 0))),
+            balance_due=Decimal(str(bill_data.get("total_amount", 0))),
+            status="draft",
+            approval_status="pending",
+            notes=bill_data.get("notes"),
+            created_by=user_id,
+            updated_by=user_id
+        )
+        
+        db.add(invoice)
+        await db.flush()  # Get the invoice ID
+        
+        # Create line items
+        if bill_data.get("line_items"):
+            for i, line_data in enumerate(bill_data["line_items"]):
+                line_item = InvoiceLineItem(
+                    invoice_id=invoice.id,
+                    line_number=i + 1,
+                    item_code=line_data.get("item_code"),
+                    description=line_data["description"],
+                    quantity=Decimal(str(line_data.get("quantity", 1))),
+                    unit_price=Decimal(str(line_data["unit_price"])),
+                    amount=Decimal(str(line_data["amount"])),
+                    line_total=Decimal(str(line_data["line_total"])),
+                    gl_account_id=line_data.get("gl_account_id")
+                )
+                db.add(line_item)
+        
+        await db.commit()
+        await db.refresh(invoice)
+        return await self.get_bill(db, invoice.id)
+    
+    async def get_bills(self, db: AsyncSession, skip: int = 0, limit: int = 100, 
+                       status: Optional[str] = None, vendor_id: Optional[int] = None):
+        """Get bills with real database filtering"""
+        query = select(Invoice).options(
+            selectinload(Invoice.vendor),
+            selectinload(Invoice.line_items)
+        )
+        
+        # Apply filters
         if status:
-            bills = [b for b in bills if b["status"] == status]
+            query = query.where(Invoice.status == status)
         if vendor_id:
-            bills = [b for b in bills if b["vendor_id"] == vendor_id]
+            query = query.where(Invoice.vendor_id == vendor_id)
             
-        return bills[skip:skip+limit]
+        # Apply pagination and ordering
+        query = query.offset(skip).limit(limit).order_by(Invoice.invoice_date.desc())
+        
+        result = await db.execute(query)
+        invoices = result.scalars().all()
+        
+        return [
+            {
+                "id": inv.id,
+                "invoice_number": inv.invoice_number,
+                "vendor_name": inv.vendor.name,
+                "invoice_date": inv.invoice_date.isoformat(),
+                "due_date": inv.due_date.isoformat(),
+                "total_amount": float(inv.total_amount),
+                "balance_due": float(inv.balance_due),
+                "status": inv.status,
+                "approval_status": inv.approval_status
+            }
+            for inv in invoices
+        ]
     
     async def get_bill(self, db: AsyncSession, bill_id: int):
-        """Get bill by ID"""
+        """Get bill by ID with complete details"""
+        query = select(Invoice).options(
+            selectinload(Invoice.vendor),
+            selectinload(Invoice.line_items),
+            selectinload(Invoice.payments)
+        ).where(Invoice.id == bill_id)
+        
+        result = await db.execute(query)
+        invoice = result.scalar_one_or_none()
+        
+        if not invoice:
+            return None
+            
         return {
-            "id": bill_id,
-            "bill_number": f"BILL-20240101-{bill_id:03d}",
-            "vendor_id": 1,
-            "vendor_name": "ABC Supplies Inc",
-            "amount": 1500.00,
-            "tax_amount": 120.00,
-            "total_amount": 1620.00,
-            "due_date": "2024-02-01",
-            "status": "pending_approval",
-            "description": "Office supplies and equipment",
+            "id": invoice.id,
+            "invoice_number": invoice.invoice_number,
+            "reference_number": invoice.reference_number,
+            "vendor_id": invoice.vendor_id,
+            "vendor_name": invoice.vendor.name,
+            "invoice_date": invoice.invoice_date.isoformat(),
+            "due_date": invoice.due_date.isoformat(),
+            "subtotal": float(invoice.subtotal),
+            "tax_amount": float(invoice.tax_amount),
+            "total_amount": float(invoice.total_amount),
+            "paid_amount": float(invoice.paid_amount),
+            "balance_due": float(invoice.balance_due),
+            "status": invoice.status,
+            "approval_status": invoice.approval_status,
+            "notes": invoice.notes,
             "line_items": [
                 {
-                    "description": "Office chairs",
-                    "quantity": 5,
-                    "unit_price": 200.00,
-                    "amount": 1000.00
-                },
-                {
-                    "description": "Desk supplies",
-                    "quantity": 1,
-                    "unit_price": 500.00,
-                    "amount": 500.00
+                    "id": line.id,
+                    "line_number": line.line_number,
+                    "description": line.description,
+                    "quantity": float(line.quantity),
+                    "unit_price": float(line.unit_price),
+                    "amount": float(line.amount),
+                    "line_total": float(line.line_total)
                 }
-            ]
+                for line in invoice.line_items
+            ],
+            "created_at": invoice.created_at.isoformat() if invoice.created_at else None
         }
     
-    async def approve_bill(self, db: AsyncSession, bill_id: int, approval_data: dict):
-        """Approve bill"""
-        return {
-            "bill_id": bill_id,
-            "status": "approved",
-            "approved_by": approval_data.get("approved_by"),
-            "approved_at": datetime.now().isoformat(),
-            "approval_notes": approval_data.get("notes")
-        }
+    async def approve_bill(self, db: AsyncSession, bill_id: int, approval_data: dict, user_id: int):
+        """Approve bill with real database update"""
+        query = select(Invoice).where(Invoice.id == bill_id)
+        result = await db.execute(query)
+        invoice = result.scalar_one_or_none()
+        
+        if not invoice:
+            return None
+            
+        invoice.approval_status = "approved"
+        invoice.status = "approved"
+        invoice.updated_by = user_id
+        invoice.updated_at = datetime.utcnow()
+        
+        # Add approval notes
+        if approval_data.get("notes"):
+            approval_note = f"Approved on {datetime.now().strftime('%Y-%m-%d')}: {approval_data['notes']}"
+            if invoice.notes:
+                invoice.notes += f"\n{approval_note}"
+            else:
+                invoice.notes = approval_note
+        
+        await db.commit()
+        return {"bill_id": bill_id, "status": "approved", "approved_by": user_id}
     
-    async def reject_bill(self, db: AsyncSession, bill_id: int, rejection_data: dict):
-        """Reject bill"""
-        return {
-            "bill_id": bill_id,
-            "status": "rejected",
-            "rejected_by": rejection_data.get("rejected_by"),
-            "rejected_at": datetime.now().isoformat(),
-            "rejection_reason": rejection_data.get("reason")
-        }
+    async def reject_bill(self, db: AsyncSession, bill_id: int, rejection_data: dict, user_id: int):
+        """Reject bill with real database update"""
+        query = select(Invoice).where(Invoice.id == bill_id)
+        result = await db.execute(query)
+        invoice = result.scalar_one_or_none()
+        
+        if not invoice:
+            return None
+            
+        invoice.approval_status = "rejected"
+        invoice.status = "rejected"
+        invoice.updated_by = user_id
+        invoice.updated_at = datetime.utcnow()
+        
+        # Add rejection reason
+        if rejection_data.get("reason"):
+            rejection_note = f"Rejected on {datetime.now().strftime('%Y-%m-%d')}: {rejection_data['reason']}"
+            if invoice.notes:
+                invoice.notes += f"\n{rejection_note}"
+            else:
+                invoice.notes = rejection_note
+        
+        await db.commit()
+        return {"bill_id": bill_id, "status": "rejected", "rejected_by": user_id}
     
-    async def three_way_match(self, db: AsyncSession, bill_id: int, match_data: dict):
-        """Perform three-way matching"""
-        # Simulate matching logic
+    async def perform_three_way_match(self, db: AsyncSession, bill_id: int, match_data: dict):
+        """Perform three-way matching (PO, Receipt, Invoice)"""
+        query = select(Invoice).options(
+            selectinload(Invoice.line_items)
+        ).where(Invoice.id == bill_id)
+        
+        result = await db.execute(query)
+        invoice = result.scalar_one_or_none()
+        
+        if not invoice:
+            return None
+        
+        # Mock three-way matching logic
         po_number = match_data.get("po_number")
         receipt_number = match_data.get("receipt_number")
         
-        # Mock matching results
-        match_result = {
+        # In real implementation, this would:
+        # 1. Validate PO exists and is approved
+        # 2. Validate receipt exists and matches PO
+        # 3. Compare invoice line items with PO and receipt
+        # 4. Flag discrepancies for review
+        
+        match_results = {
             "bill_id": bill_id,
             "po_number": po_number,
             "receipt_number": receipt_number,
             "match_status": "matched",
-            "po_matched": True,
-            "receipt_matched": True,
-            "variances": [],
-            "matched_amount": 1500.00,
-            "variance_amount": 0.00,
-            "match_date": datetime.now().isoformat()
+            "discrepancies": [],
+            "total_variance": 0.00,
+            "line_matches": []
         }
         
-        # Check for variances (simulated)
-        if match_data.get("check_variances", True):
-            # Simulate price variance
-            if match_data.get("po_amount", 1500.00) != match_data.get("bill_amount", 1500.00):
-                match_result["variances"].append({
-                    "type": "price_variance",
-                    "description": "Price difference between PO and bill",
-                    "amount": abs(match_data.get("po_amount", 1500.00) - match_data.get("bill_amount", 1500.00))
-                })
-                match_result["match_status"] = "variance_detected"
+        # Simulate line-by-line matching
+        for line in invoice.line_items:
+            line_match = {
+                "line_number": line.line_number,
+                "description": line.description,
+                "invoice_qty": float(line.quantity),
+                "po_qty": float(line.quantity),  # Mock - would come from PO
+                "receipt_qty": float(line.quantity),  # Mock - would come from receipt
+                "invoice_price": float(line.unit_price),
+                "po_price": float(line.unit_price),  # Mock
+                "variance": 0.00,
+                "match_status": "matched"
+            }
+            match_results["line_matches"].append(line_match)
         
-        return match_result
+        # Update invoice status if matched
+        if match_results["match_status"] == "matched":
+            invoice.status = "matched"
+            await db.commit()
+        
+        return match_results
     
-    async def schedule_payment(self, db: AsyncSession, bill_id: int, schedule_data: dict):
+    async def schedule_payment(self, db: AsyncSession, bill_id: int, schedule_data: dict, user_id: int):
         """Schedule payment for bill"""
-        payment_date = schedule_data.get("payment_date")
-        if isinstance(payment_date, str):
-            payment_date = datetime.fromisoformat(payment_date.replace('Z', '+00:00'))
+        query = select(Invoice).where(Invoice.id == bill_id)
+        result = await db.execute(query)
+        invoice = result.scalar_one_or_none()
+        
+        if not invoice:
+            return None
+        
+        # Update payment due date
+        payment_date = datetime.strptime(schedule_data["payment_date"], "%Y-%m-%d").date()
+        invoice.payment_due_date = payment_date
+        invoice.updated_by = user_id
+        invoice.updated_at = datetime.utcnow()
+        
+        # Add scheduling note
+        schedule_note = f"Payment scheduled for {payment_date.strftime('%Y-%m-%d')}"
+        if schedule_data.get("notes"):
+            schedule_note += f": {schedule_data['notes']}"
+            
+        if invoice.notes:
+            invoice.notes += f"\n{schedule_note}"
+        else:
+            invoice.notes = schedule_note
+        
+        await db.commit()
         
         return {
             "bill_id": bill_id,
-            "payment_date": payment_date.isoformat() if payment_date else None,
-            "amount": schedule_data.get("amount"),
-            "payment_method": schedule_data.get("payment_method", "check"),
+            "payment_date": payment_date.isoformat(),
+            "amount": float(invoice.balance_due),
             "status": "scheduled",
-            "scheduled_at": datetime.now().isoformat(),
-            "scheduled_by": schedule_data.get("scheduled_by")
+            "scheduled_by": user_id
         }
-    
-    async def get_bills_for_payment(self, db: AsyncSession, due_date: Optional[str] = None):
-        """Get bills ready for payment"""
-        # Simulate getting bills ready for payment
-        bills = [
-            {
-                "bill_id": 1,
-                "bill_number": "BILL-20240101-001",
-                "vendor_id": 1,
-                "vendor_name": "ABC Supplies Inc",
-                "amount": 1500.00,
-                "due_date": "2024-02-01",
-                "status": "approved",
-                "payment_terms": "NET30"
-            },
-            {
-                "bill_id": 2,
-                "bill_number": "BILL-20240101-002",
-                "vendor_id": 2,
-                "vendor_name": "XYZ Services LLC",
-                "amount": 2500.00,
-                "due_date": "2024-02-15",
-                "status": "approved",
-                "payment_terms": "NET15"
-            }
-        ]
-        
-        if due_date:
-            # Filter by due date
-            bills = [b for b in bills if b["due_date"] <= due_date]
-        
-        return bills

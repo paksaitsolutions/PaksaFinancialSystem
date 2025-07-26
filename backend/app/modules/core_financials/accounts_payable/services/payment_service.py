@@ -1,212 +1,261 @@
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, func, and_, or_
+from sqlalchemy.orm import selectinload
 from typing import List, Optional, Dict
-from datetime import datetime
-import uuid
+from datetime import datetime, date
+from decimal import Decimal
+from ..models import Payment, PaymentInvoice, Invoice, Vendor
 
 class PaymentService:
     """Service for payment processing operations"""
     
-    async def create_payment(self, db: AsyncSession, payment_data: dict):
-        """Create a new payment"""
-        payment = {
-            "id": 1,
-            "payment_number": f"PAY-{datetime.now().strftime('%Y%m%d')}-001",
-            "vendor_id": payment_data.get("vendor_id"),
-            "amount": payment_data.get("amount"),
-            "payment_method": payment_data.get("payment_method", "check"),
-            "payment_date": payment_data.get("payment_date"),
-            "status": "draft",
-            "created_at": datetime.now().isoformat()
-        }
-        return payment
+    async def create_payment(self, db: AsyncSession, payment_data: dict, user_id: int):
+        """Create a new payment with real database persistence"""
+        # Generate unique payment number
+        payment_count = await db.scalar(select(func.count(Payment.id)))
+        payment_number = f"PAY-{datetime.now().strftime('%Y%m%d')}-{payment_count + 1:04d}"
+        
+        # Create payment
+        payment = Payment(
+            payment_number=payment_number,
+            vendor_id=payment_data["vendor_id"],
+            payment_date=datetime.strptime(payment_data["payment_date"], "%Y-%m-%d").date(),
+            payment_method=payment_data.get("payment_method", "check"),
+            reference_number=payment_data.get("reference_number"),
+            memo=payment_data.get("memo"),
+            amount=Decimal(str(payment_data["amount"])),
+            currency_code=payment_data.get("currency_code", "USD"),
+            status="draft",
+            bank_account_id=payment_data.get("bank_account_id"),
+            created_by=user_id,
+            updated_by=user_id
+        )
+        
+        db.add(payment)
+        await db.flush()  # Get the payment ID
+        
+        # Apply payment to invoices if specified
+        if payment_data.get("invoice_applications"):
+            for application in payment_data["invoice_applications"]:
+                payment_invoice = PaymentInvoice(
+                    payment_id=payment.id,
+                    invoice_id=application["invoice_id"],
+                    amount_applied=Decimal(str(application["amount_applied"])),
+                    discount_taken=Decimal(str(application.get("discount_taken", 0)))
+                )
+                db.add(payment_invoice)
+                
+                # Update invoice paid amount and balance
+                invoice_query = select(Invoice).where(Invoice.id == application["invoice_id"])
+                invoice_result = await db.execute(invoice_query)
+                invoice = invoice_result.scalar_one()
+                
+                invoice.paid_amount += Decimal(str(application["amount_applied"]))
+                invoice.balance_due = invoice.total_amount - invoice.paid_amount
+                
+                # Update invoice status based on balance
+                if invoice.balance_due <= 0:
+                    invoice.status = "paid"
+                elif invoice.paid_amount > 0:
+                    invoice.status = "partially_paid"
+        
+        await db.commit()
+        await db.refresh(payment)
+        return await self.get_payment(db, payment.id)
     
     async def get_payments(self, db: AsyncSession, skip: int = 0, limit: int = 100,
-                          status: Optional[str] = None, vendor_id: Optional[int] = None):
-        """Get payments with filtering"""
-        payments = [
-            {
-                "id": 1,
-                "payment_number": "PAY-20240101-001",
-                "vendor_id": 1,
-                "vendor_name": "ABC Supplies Inc",
-                "amount": 1500.00,
-                "payment_method": "check",
-                "payment_date": "2024-02-01",
-                "status": "pending"
-            },
-            {
-                "id": 2,
-                "payment_number": "PAY-20240101-002",
-                "vendor_id": 2,
-                "vendor_name": "XYZ Services LLC",
-                "amount": 2500.00,
-                "payment_method": "ach",
-                "payment_date": "2024-02-15",
-                "status": "approved"
-            }
-        ]
+                          vendor_id: Optional[int] = None, status: Optional[str] = None):
+        """Get payments with real database filtering"""
+        query = select(Payment).options(
+            selectinload(Payment.vendor),
+            selectinload(Payment.invoice_applications)
+        )
         
-        if status:
-            payments = [p for p in payments if p["status"] == status]
+        # Apply filters
         if vendor_id:
-            payments = [p for p in payments if p["vendor_id"] == vendor_id]
+            query = query.where(Payment.vendor_id == vendor_id)
+        if status:
+            query = query.where(Payment.status == status)
             
-        return payments[skip:skip+limit]
-    
-    async def create_payment_batch(self, db: AsyncSession, batch_data: dict):
-        """Create payment batch"""
-        batch_id = str(uuid.uuid4())[:8]
-        payments = batch_data.get("payments", [])
-        total_amount = sum(p.get("amount", 0) for p in payments)
+        # Apply pagination and ordering
+        query = query.offset(skip).limit(limit).order_by(Payment.payment_date.desc())
         
-        batch = {
-            "batch_id": batch_id,
-            "batch_number": f"BATCH-{datetime.now().strftime('%Y%m%d')}-001",
-            "total_amount": total_amount,
-            "payment_count": len(payments),
-            "payment_method": batch_data.get("payment_method", "check"),
-            "payment_date": batch_data.get("payment_date"),
-            "status": "created",
-            "created_at": datetime.now().isoformat(),
-            "payments": payments
-        }
-        return batch
+        result = await db.execute(query)
+        payments = result.scalars().all()
+        
+        return [
+            {
+                "id": payment.id,
+                "payment_number": payment.payment_number,
+                "vendor_name": payment.vendor.name,
+                "payment_date": payment.payment_date.isoformat(),
+                "amount": float(payment.amount),
+                "payment_method": payment.payment_method,
+                "status": payment.status,
+                "reference_number": payment.reference_number
+            }
+            for payment in payments
+        ]
     
-    async def get_payment_batch(self, db: AsyncSession, batch_id: str):
-        """Get payment batch details"""
+    async def get_payment(self, db: AsyncSession, payment_id: int):
+        """Get payment by ID with complete details"""
+        query = select(Payment).options(
+            selectinload(Payment.vendor),
+            selectinload(Payment.invoice_applications).selectinload(PaymentInvoice.invoice)
+        ).where(Payment.id == payment_id)
+        
+        result = await db.execute(query)
+        payment = result.scalar_one_or_none()
+        
+        if not payment:
+            return None
+            
         return {
-            "batch_id": batch_id,
-            "batch_number": f"BATCH-20240101-001",
-            "total_amount": 15000.00,
-            "payment_count": 10,
-            "payment_method": "ach",
-            "payment_date": "2024-02-01",
-            "status": "approved",
-            "created_at": "2024-01-15T10:00:00",
-            "approved_at": "2024-01-15T14:30:00",
-            "payments": [
+            "id": payment.id,
+            "payment_number": payment.payment_number,
+            "vendor_id": payment.vendor_id,
+            "vendor_name": payment.vendor.name,
+            "payment_date": payment.payment_date.isoformat(),
+            "payment_method": payment.payment_method,
+            "reference_number": payment.reference_number,
+            "memo": payment.memo,
+            "amount": float(payment.amount),
+            "currency_code": payment.currency_code,
+            "status": payment.status,
+            "invoice_applications": [
                 {
-                    "payment_id": 1,
-                    "vendor_name": "ABC Supplies Inc",
-                    "amount": 1500.00,
-                    "status": "included"
-                },
-                {
-                    "payment_id": 2,
-                    "vendor_name": "XYZ Services LLC",
-                    "amount": 2500.00,
-                    "status": "included"
+                    "invoice_id": app.invoice_id,
+                    "invoice_number": app.invoice.invoice_number,
+                    "amount_applied": float(app.amount_applied),
+                    "discount_taken": float(app.discount_taken)
                 }
-            ]
+                for app in payment.invoice_applications
+            ],
+            "created_at": payment.created_at.isoformat() if payment.created_at else None
         }
     
-    async def approve_payment_batch(self, db: AsyncSession, batch_id: str, approval_data: dict):
-        """Approve payment batch"""
-        return {
-            "batch_id": batch_id,
-            "status": "approved",
-            "approved_by": approval_data.get("approved_by"),
-            "approved_at": datetime.now().isoformat(),
-            "approval_notes": approval_data.get("notes")
-        }
-    
-    async def process_payment_batch(self, db: AsyncSession, batch_id: str):
-        """Process payment batch"""
-        # Simulate batch processing
-        return {
-            "batch_id": batch_id,
-            "status": "processing",
-            "started_at": datetime.now().isoformat(),
+    async def process_payment_batch(self, db: AsyncSession, batch_data: dict, user_id: int):
+        """Process multiple payments in a batch"""
+        batch_results = {
+            "batch_id": f"BATCH-{datetime.now().strftime('%Y%m%d%H%M%S')}",
             "processed_count": 0,
             "failed_count": 0,
-            "total_count": 10,
-            "estimated_completion": (datetime.now().timestamp() + 300)  # 5 minutes
+            "total_amount": 0.0,
+            "payments": [],
+            "errors": []
         }
+        
+        for payment_data in batch_data.get("payments", []):
+            try:
+                payment = await self.create_payment(db, payment_data, user_id)
+                batch_results["payments"].append(payment)
+                batch_results["processed_count"] += 1
+                batch_results["total_amount"] += float(payment["amount"])
+            except Exception as e:
+                batch_results["failed_count"] += 1
+                batch_results["errors"].append({
+                    "payment_data": payment_data,
+                    "error": str(e)
+                })
+        
+        return batch_results
+    
+    async def approve_payment(self, db: AsyncSession, payment_id: int, approval_data: dict, user_id: int):
+        """Approve payment with real database update"""
+        query = select(Payment).where(Payment.id == payment_id)
+        result = await db.execute(query)
+        payment = result.scalar_one_or_none()
+        
+        if not payment:
+            return None
+            
+        payment.status = "approved"
+        payment.updated_by = user_id
+        payment.updated_at = datetime.utcnow()
+        
+        # Add approval memo
+        if approval_data.get("notes"):
+            approval_note = f"Approved on {datetime.now().strftime('%Y-%m-%d')}: {approval_data['notes']}"
+            if payment.memo:
+                payment.memo += f"\n{approval_note}"
+            else:
+                payment.memo = approval_note
+        
+        await db.commit()
+        return {"payment_id": payment_id, "status": "approved", "approved_by": user_id}
+    
+    async def void_payment(self, db: AsyncSession, payment_id: int, void_data: dict, user_id: int):
+        """Void payment and reverse invoice applications"""
+        query = select(Payment).options(
+            selectinload(Payment.invoice_applications).selectinload(PaymentInvoice.invoice)
+        ).where(Payment.id == payment_id)
+        
+        result = await db.execute(query)
+        payment = result.scalar_one_or_none()
+        
+        if not payment:
+            return None
+            
+        # Reverse invoice applications
+        for application in payment.invoice_applications:
+            invoice = application.invoice
+            invoice.paid_amount -= application.amount_applied
+            invoice.balance_due = invoice.total_amount - invoice.paid_amount
+            
+            # Update invoice status
+            if invoice.paid_amount <= 0:
+                invoice.status = "approved"
+            elif invoice.balance_due > 0:
+                invoice.status = "partially_paid"
+        
+        # Update payment status
+        payment.status = "void"
+        payment.updated_by = user_id
+        payment.updated_at = datetime.utcnow()
+        
+        # Add void reason
+        if void_data.get("reason"):
+            void_note = f"Voided on {datetime.now().strftime('%Y-%m-%d')}: {void_data['reason']}"
+            if payment.memo:
+                payment.memo += f"\n{void_note}"
+            else:
+                payment.memo = void_note
+        
+        await db.commit()
+        return {"payment_id": payment_id, "status": "void", "voided_by": user_id}
     
     async def get_payment_methods(self, db: AsyncSession):
         """Get available payment methods"""
         return [
-            {
-                "id": 1,
-                "name": "Check",
-                "code": "CHECK",
-                "description": "Paper check payment",
-                "is_active": True,
-                "processing_days": 3
-            },
-            {
-                "id": 2,
-                "name": "ACH Transfer",
-                "code": "ACH",
-                "description": "Electronic bank transfer",
-                "is_active": True,
-                "processing_days": 1
-            },
-            {
-                "id": 3,
-                "name": "Wire Transfer",
-                "code": "WIRE",
-                "description": "Same-day wire transfer",
-                "is_active": True,
-                "processing_days": 0
-            },
-            {
-                "id": 4,
-                "name": "Credit Card",
-                "code": "CARD",
-                "description": "Credit card payment",
-                "is_active": False,
-                "processing_days": 0
-            }
+            {"code": "check", "name": "Check", "description": "Paper check payment"},
+            {"code": "ach", "name": "ACH Transfer", "description": "Electronic bank transfer"},
+            {"code": "wire", "name": "Wire Transfer", "description": "Wire transfer payment"},
+            {"code": "credit_card", "name": "Credit Card", "description": "Credit card payment"},
+            {"code": "cash", "name": "Cash", "description": "Cash payment"},
+            {"code": "other", "name": "Other", "description": "Other payment method"}
         ]
     
-    async def create_payment_method(self, db: AsyncSession, method_data: dict):
-        """Create payment method"""
-        method = {
-            "id": 5,
-            "name": method_data.get("name"),
-            "code": method_data.get("code"),
-            "description": method_data.get("description"),
-            "is_active": method_data.get("is_active", True),
-            "processing_days": method_data.get("processing_days", 1),
-            "created_at": datetime.now().isoformat()
-        }
-        return method
-    
-    async def approve_payment(self, db: AsyncSession, payment_id: int, approval_data: dict):
-        """Approve individual payment"""
-        return {
-            "payment_id": payment_id,
-            "status": "approved",
-            "approved_by": approval_data.get("approved_by"),
-            "approved_at": datetime.now().isoformat(),
-            "approval_notes": approval_data.get("notes")
-        }
-    
-    async def get_payment_status(self, db: AsyncSession, payment_id: int):
-        """Get payment status and tracking info"""
-        return {
-            "payment_id": payment_id,
-            "status": "processed",
-            "payment_date": "2024-02-01",
-            "processed_at": "2024-02-01T09:00:00",
-            "tracking_number": "TRK123456789",
-            "bank_reference": "REF987654321",
-            "status_history": [
-                {
-                    "status": "created",
-                    "timestamp": "2024-01-15T10:00:00",
-                    "user": "system"
-                },
-                {
-                    "status": "approved",
-                    "timestamp": "2024-01-15T14:30:00",
-                    "user": "manager@company.com"
-                },
-                {
-                    "status": "processed",
-                    "timestamp": "2024-02-01T09:00:00",
-                    "user": "system"
-                }
-            ]
-        }
+    async def get_payment_history(self, db: AsyncSession, vendor_id: int, limit: int = 50):
+        """Get payment history for a vendor"""
+        query = select(Payment).options(
+            selectinload(Payment.invoice_applications).selectinload(PaymentInvoice.invoice)
+        ).where(
+            Payment.vendor_id == vendor_id,
+            Payment.status.in_(["approved", "paid"])
+        ).order_by(Payment.payment_date.desc()).limit(limit)
+        
+        result = await db.execute(query)
+        payments = result.scalars().all()
+        
+        return [
+            {
+                "payment_id": payment.id,
+                "payment_number": payment.payment_number,
+                "payment_date": payment.payment_date.isoformat(),
+                "amount": float(payment.amount),
+                "payment_method": payment.payment_method,
+                "invoices_paid": len(payment.invoice_applications),
+                "reference_number": payment.reference_number
+            }
+            for payment in payments
+        ]
