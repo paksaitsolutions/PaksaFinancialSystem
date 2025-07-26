@@ -139,3 +139,27 @@ class AssetReport(BaseModel):
     total_book_value: Decimal
     assets_by_category: List[dict]
     assets_by_status: List[dict]
+
+class AssetDisposalResult(BaseModel):
+    asset_id: int
+    book_value: Optional[Decimal] = None
+    disposal_amount: Optional[Decimal] = None
+    gain_loss: Optional[Decimal] = None
+    disposal_date: Optional[date] = None
+    status: str
+    error: Optional[str] = None
+
+class BulkAssetUpdate(BaseModel):
+    category: Optional[str] = None
+    location: Optional[str] = None
+    status: Optional[AssetStatusEnum] = None
+
+class BulkDepreciationRequest(BaseModel):
+    period_date: date
+    category: Optional[str] = None
+
+class AssetTransferRequest(BaseModel):
+    asset_ids: List[int]
+    new_location: str
+    transfer_date: date
+    notes: Optional[str] = None

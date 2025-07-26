@@ -4,10 +4,14 @@ from typing import List
 from datetime import date
 from app.core.db import get_db
 from .services import FixedAssetService, MaintenanceService, AssetCategoryService
+from .disposal_service import AssetDisposalService
+from .bulk_operations import BulkOperationsService
+from .advanced_depreciation import AdvancedDepreciationService
 from .schemas import (
     FixedAsset, FixedAssetCreate, FixedAssetUpdate,
     DepreciationEntry, MaintenanceRecord, MaintenanceRecordCreate, MaintenanceRecordUpdate,
-    AssetCategory, AssetCategoryCreate, AssetDisposalRequest, AssetReport
+    AssetCategory, AssetCategoryCreate, AssetDisposalRequest, AssetReport,
+    AssetDisposalResult, BulkAssetUpdate, BulkDepreciationRequest, AssetTransferRequest
 )
 
 router = APIRouter()
@@ -16,6 +20,9 @@ router = APIRouter()
 asset_service = FixedAssetService()
 maintenance_service = MaintenanceService()
 category_service = AssetCategoryService()
+disposal_service = AssetDisposalService()
+bulk_service = BulkOperationsService()
+depreciation_service = AdvancedDepreciationService()
 
 # Fixed Asset endpoints
 @router.post("/assets/", response_model=FixedAsset, status_code=status.HTTP_201_CREATED)
@@ -143,6 +150,67 @@ async def create_category(category: AssetCategoryCreate, db: AsyncSession = Depe
 @router.get("/categories/", response_model=List[AssetCategory])
 async def get_categories(db: AsyncSession = Depends(get_db)):
     return await category_service.get_multi(db)
+
+# Advanced disposal endpoints
+@router.post("/assets/{asset_id}/dispose-advanced", response_model=AssetDisposalResult)
+async def dispose_asset_advanced(
+    asset_id: int,
+    disposal_request: AssetDisposalRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    return await disposal_service.initiate_disposal(db, asset_id, disposal_request, 1)
+
+@router.post("/assets/bulk-dispose", response_model=List[AssetDisposalResult])
+async def bulk_dispose_assets(
+    asset_ids: List[int],
+    disposal_request: AssetDisposalRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    return await disposal_service.bulk_dispose_assets(db, asset_ids, disposal_request, 1)
+
+# Bulk operations endpoints
+@router.put("/assets/bulk-update")
+async def bulk_update_assets(
+    asset_ids: List[int],
+    update_data: BulkAssetUpdate,
+    db: AsyncSession = Depends(get_db)
+):
+    return await bulk_service.bulk_update_assets(db, asset_ids, update_data)
+
+@router.post("/depreciation/bulk-calculate")
+async def bulk_calculate_depreciation(
+    request: BulkDepreciationRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    return await bulk_service.bulk_calculate_depreciation(db, request)
+
+@router.post("/assets/bulk-transfer")
+async def bulk_transfer_assets(
+    transfer_request: AssetTransferRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    return await bulk_service.bulk_transfer_assets(
+        db, transfer_request.asset_ids, transfer_request.new_location, 
+        transfer_request.transfer_date, 1
+    )
+
+# Advanced depreciation endpoints
+@router.get("/assets/{asset_id}/depreciation-schedule")
+async def get_depreciation_schedule(
+    asset_id: int,
+    method: str = None,
+    db: AsyncSession = Depends(get_db)
+):
+    asset = await asset_service.get(db, asset_id)
+    if not asset:
+        raise HTTPException(status_code=404, detail="Asset not found")
+    
+    from .models import DepreciationMethod
+    depreciation_method = None
+    if method:
+        depreciation_method = DepreciationMethod(method)
+    
+    return depreciation_service.get_depreciation_schedule(asset, depreciation_method)
 
 # Reports
 @router.get("/reports/summary", response_model=AssetReport)
