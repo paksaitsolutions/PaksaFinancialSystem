@@ -2,6 +2,7 @@
 from fastapi import APIRouter
 from app.api.endpoints.accounts_payable import vendor, invoice, payment, credit_memo, form_1099
 from app.modules.core_financials.accounts_payable.api import vendor_api, bill_api, payment_api
+from app.modules.core_financials.accounts_receivable.api import customer_api, invoice_api, collections_api
 from app.api.endpoints.inventory import item as inventory_item, adjustment as inventory_adjustment, category as inventory_category, purchase_order as inventory_purchase_order, reports as inventory_reports, barcode as inventory_barcode, cycle_count as inventory_cycle_count, forecast as inventory_forecast, location as inventory_location, transaction as inventory_transaction
 from app.api.endpoints.accounts_receivable import collections_ai as ar_collections_ai
 from app.api.endpoints.tax import tax_endpoints as tax_management
@@ -29,6 +30,11 @@ api_router.include_router(form_1099.router, prefix="/accounts-payable/1099", tag
 api_router.include_router(vendor_api.router, prefix="/ap/vendors", tags=["ap-vendors"])
 api_router.include_router(bill_api.router, prefix="/ap/bills", tags=["ap-bills"])
 api_router.include_router(payment_api.router, prefix="/ap/payments", tags=["ap-payments"])
+
+# Enhanced AR APIs
+api_router.include_router(customer_api.router, prefix="/ar/customers", tags=["ar-customers"])
+api_router.include_router(invoice_api.router, prefix="/ar/invoices", tags=["ar-invoices"])
+api_router.include_router(collections_api.router, prefix="/ar/collections", tags=["ar-collections"])
 
 # Inventory
 api_router.include_router(inventory_item.router, prefix="/inventory/items", tags=["inventory", "items"])
