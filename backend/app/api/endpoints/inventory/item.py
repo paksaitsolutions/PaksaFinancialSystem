@@ -17,8 +17,16 @@ from app.schemas.inventory.item import (
     InventoryItemUpdate,
     InventoryItemResponse,
 )
+from app.services.inventory.transfer_service import TransferService
+from app.services.inventory.cycle_count_service import CycleCountService
+from app.services.inventory.barcode_service import BarcodeService
 
 router = APIRouter()
+
+# Initialize services
+transfer_service = TransferService()
+cycle_service = CycleCountService()
+barcode_service = BarcodeService()
 
 @router.post("/", response_model=InventoryItemResponse, status_code=status.HTTP_201_CREATED)
 async def create_inventory_item(
@@ -166,4 +174,203 @@ async def delete_inventory_item(
     await inventory_item_crud.delete(db, id=item_id)
     return success_response(
         message="Inventory item deleted successfully",
+    )
+
+# Multi-location transfer endpoints
+@router.post("/transfers")
+async def create_transfer(
+    *,
+    db: AsyncSession = Depends(get_db),
+    transfer_data: dict,
+    _: bool = Depends(require_permission(Permission.INVENTORY_WRITE)),
+) -> Any:
+    """Create location transfer."""
+    transfer_service = TransferService()
+    transfer = await transfer_service.create_transfer(
+        db, tenant_id=UUID("12345678-1234-5678-9012-123456789012"), transfer_data=transfer_data
+    )
+    return success_response(
+        data=transfer,
+        message="Transfer created successfully",
+        status_code=status.HTTP_201_CREATED
+    )
+
+@router.post("/transfers/{transfer_id}/approve")
+async def approve_transfer(
+    *,
+    db: AsyncSession = Depends(get_db),
+    transfer_id: UUID,
+    _: bool = Depends(require_permission(Permission.INVENTORY_WRITE)),
+) -> Any:
+    """Approve transfer."""
+    transfer_service = TransferService()
+    transfer = await transfer_service.approve_transfer(
+        db, transfer_id=transfer_id, approved_by=UUID("12345678-1234-5678-9012-123456789012")
+    )
+    return success_response(
+        data=transfer,
+        message="Transfer approved successfully"
+    )
+
+@router.post("/transfers/{transfer_id}/ship")
+async def ship_transfer(
+    *,
+    db: AsyncSession = Depends(get_db),
+    transfer_id: UUID,
+    shipping_data: dict,
+    _: bool = Depends(require_permission(Permission.INVENTORY_WRITE)),
+) -> Any:
+    """Ship transfer."""
+    transfer_service = TransferService()
+    transfer = await transfer_service.ship_transfer(
+        db, transfer_id=transfer_id, shipping_data=shipping_data
+    )
+    return success_response(
+        data=transfer,
+        message="Transfer shipped successfully"
+    )
+
+@router.get("/transfers/{transfer_id}/status")
+async def get_transfer_status(
+    *,
+    db: AsyncSession = Depends(db_router.get_read_session),
+    transfer_id: UUID,
+    _: bool = Depends(require_permission(Permission.INVENTORY_READ)),
+) -> Any:
+    """Get transfer status."""
+    transfer_service = TransferService()
+    status_data = await transfer_service.get_transfer_status(db, transfer_id=transfer_id)
+    return success_response(data=status_data)
+
+# Cycle counting endpoints
+@router.post("/cycle-counts")
+async def create_cycle_count(
+    *,
+    db: AsyncSession = Depends(get_db),
+    count_data: dict,
+    _: bool = Depends(require_permission(Permission.INVENTORY_WRITE)),
+) -> Any:
+    """Create cycle count."""
+    cycle_service = CycleCountService()
+    cycle_count = await cycle_service.create_cycle_count(
+        db, tenant_id=UUID("12345678-1234-5678-9012-123456789012"), count_data=count_data
+    )
+    return success_response(
+        data=cycle_count,
+        message="Cycle count created successfully",
+        status_code=status.HTTP_201_CREATED
+    )
+
+@router.post("/cycle-counts/{count_id}/record")
+async def record_count(
+    *,
+    db: AsyncSession = Depends(get_db),
+    count_id: UUID,
+    item_id: UUID = Query(...),
+    counted_quantity: float = Query(...),
+    _: bool = Depends(require_permission(Permission.INVENTORY_WRITE)),
+) -> Any:
+    """Record counted quantity."""
+    cycle_service = CycleCountService()
+    count_item = await cycle_service.record_count(
+        db, cycle_count_id=count_id, item_id=item_id, counted_quantity=counted_quantity
+    )
+    return success_response(
+        data=count_item,
+        message="Count recorded successfully"
+    )
+
+@router.post("/cycle-counts/{count_id}/complete")
+async def complete_cycle_count(
+    *,
+    db: AsyncSession = Depends(get_db),
+    count_id: UUID,
+    _: bool = Depends(require_permission(Permission.INVENTORY_WRITE)),
+) -> Any:
+    """Complete cycle count."""
+    cycle_service = CycleCountService()
+    cycle_count = await cycle_service.complete_cycle_count(
+        db, cycle_count_id=count_id, completed_by=UUID("12345678-1234-5678-9012-123456789012")
+    )
+    return success_response(
+        data=cycle_count,
+        message="Cycle count completed successfully"
+    )
+
+@router.get("/cycle-counts/{count_id}/report")
+async def get_cycle_count_report(
+    *,
+    db: AsyncSession = Depends(db_router.get_read_session),
+    count_id: UUID,
+    _: bool = Depends(require_permission(Permission.INVENTORY_READ)),
+) -> Any:
+    """Get cycle count report."""
+    cycle_service = CycleCountService()
+    report = await cycle_service.get_cycle_count_report(db, cycle_count_id=count_id)
+    return success_response(data=report)
+
+# Barcode scanning endpoints
+@router.post("/barcodes/scan")
+async def scan_barcode(
+    *,
+    db: AsyncSession = Depends(db_router.get_read_session),
+    barcode: str = Query(...),
+    _: bool = Depends(require_permission(Permission.INVENTORY_READ)),
+) -> Any:
+    """Scan barcode and get item info."""
+    barcode_service = BarcodeService()
+    result = await barcode_service.scan_barcode(
+        db, tenant_id=UUID("12345678-1234-5678-9012-123456789012"), barcode=barcode
+    )
+    return success_response(data=result)
+
+@router.post("/barcodes/mapping")
+async def create_barcode_mapping(
+    *,
+    db: AsyncSession = Depends(get_db),
+    item_id: UUID = Query(...),
+    barcode: str = Query(...),
+    barcode_type: str = Query("UPC"),
+    is_primary: bool = Query(False),
+    _: bool = Depends(require_permission(Permission.INVENTORY_WRITE)),
+) -> Any:
+    """Create barcode mapping."""
+    barcode_service = BarcodeService()
+    mapping = await barcode_service.create_barcode_mapping(
+        db, 
+        tenant_id=UUID("12345678-1234-5678-9012-123456789012"),
+        item_id=item_id,
+        barcode=barcode,
+        barcode_type=barcode_type,
+        is_primary=is_primary
+    )
+    return success_response(
+        data=mapping,
+        message="Barcode mapping created successfully",
+        status_code=status.HTTP_201_CREATED
+    )
+
+@router.post("/barcodes/update-quantity")
+async def update_quantity_by_barcode(
+    *,
+    db: AsyncSession = Depends(get_db),
+    barcode: str = Query(...),
+    quantity_change: float = Query(...),
+    transaction_type: str = Query("adjustment"),
+    notes: Optional[str] = Query(None),
+    _: bool = Depends(require_permission(Permission.INVENTORY_WRITE)),
+) -> Any:
+    """Update item quantity by barcode."""
+    barcode_service = BarcodeService()
+    result = await barcode_service.update_item_quantity_by_barcode(
+        db,
+        tenant_id=UUID("12345678-1234-5678-9012-123456789012"),
+        barcode=barcode,
+        quantity_change=quantity_change,
+        transaction_type=transaction_type,
+        notes=notes
+    )
+    return success_response(
+        data=result,
+        message="Quantity updated successfully"
     )

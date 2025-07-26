@@ -19,12 +19,18 @@ from app.schemas.hrm.hrm_schemas import (
     PerformanceReviewCreate, PerformanceReviewResponse,
     HRAnalytics
 )
+from app.services.hrm.performance_service import PerformanceService
+from app.services.hrm.succession_service import SuccessionService
 
 router = APIRouter()
 
 # Mock tenant and user IDs
 MOCK_TENANT_ID = UUID("12345678-1234-5678-9012-123456789012")
 MOCK_USER_ID = UUID("12345678-1234-5678-9012-123456789012")
+
+# Initialize services
+performance_service = PerformanceService()
+succession_service = SuccessionService()
 
 # Employee endpoints
 @router.post("/employees", response_model=EmployeeResponse, status_code=status.HTTP_201_CREATED)
@@ -192,3 +198,178 @@ async def get_hr_analytics(
         db, tenant_id=MOCK_TENANT_ID
     )
     return success_response(data=analytics)
+
+# Advanced Performance Management endpoints
+@router.post("/performance-reviews/{review_id}/complete")
+async def complete_performance_review(
+    *,
+    db: AsyncSession = Depends(get_db),
+    review_id: UUID,
+    completion_data: dict,
+    _: bool = Depends(require_permission(Permission.WRITE)),
+) -> Any:
+    """Complete performance review."""
+    performance_service = PerformanceService()
+    try:
+        review = await performance_service.complete_performance_review(
+            db, review_id=review_id, completion_data=completion_data
+        )
+        return success_response(
+            data=review,
+            message="Performance review completed successfully"
+        )
+    except ValueError as e:
+        return error_response(
+            message=str(e),
+            status_code=status.HTTP_400_BAD_REQUEST
+        )
+
+@router.post("/employees/{employee_id}/goals")
+async def create_employee_goal(
+    *,
+    db: AsyncSession = Depends(get_db),
+    employee_id: UUID,
+    goal_data: dict,
+    _: bool = Depends(require_permission(Permission.WRITE)),
+) -> Any:
+    """Create employee goal."""
+    performance_service = PerformanceService()
+    goal = await performance_service.create_employee_goal(
+        db, employee_id=employee_id, goal_data=goal_data
+    )
+    return success_response(
+        data=goal,
+        message="Goal created successfully",
+        status_code=status.HTTP_201_CREATED
+    )
+
+@router.get("/employees/{employee_id}/performance-summary")
+async def get_employee_performance_summary(
+    *,
+    db: AsyncSession = Depends(db_router.get_read_session),
+    employee_id: UUID,
+    year: Optional[int] = Query(None),
+    _: bool = Depends(require_permission(Permission.READ)),
+) -> Any:
+    """Get employee performance summary."""
+    performance_service = PerformanceService()
+    summary = await performance_service.get_employee_performance_summary(
+        db, employee_id=employee_id, year=year
+    )
+    return success_response(data=summary)
+
+@router.get("/performance/team-analytics")
+async def get_team_performance_analytics(
+    *,
+    db: AsyncSession = Depends(db_router.get_read_session),
+    department: Optional[str] = Query(None),
+    year: Optional[int] = Query(None),
+    _: bool = Depends(require_permission(Permission.READ)),
+) -> Any:
+    """Get team performance analytics."""
+    performance_service = PerformanceService()
+    analytics = await performance_service.get_team_performance_analytics(
+        db, tenant_id=MOCK_TENANT_ID, department=department, year=year
+    )
+    return success_response(data=analytics)
+
+# Succession Planning endpoints
+@router.post("/succession-plans")
+async def create_succession_plan(
+    *,
+    db: AsyncSession = Depends(get_db),
+    plan_data: dict,
+    _: bool = Depends(require_permission(Permission.WRITE)),
+) -> Any:
+    """Create succession plan."""
+    succession_service = SuccessionService()
+    plan = await succession_service.create_succession_plan(
+        db, tenant_id=MOCK_TENANT_ID, plan_data=plan_data
+    )
+    return success_response(
+        data=plan,
+        message="Succession plan created successfully",
+        status_code=status.HTTP_201_CREATED
+    )
+
+@router.get("/succession-plans")
+async def get_succession_plans(
+    *,
+    db: AsyncSession = Depends(db_router.get_read_session),
+    department: Optional[str] = Query(None),
+    risk_level: Optional[str] = Query(None),
+    _: bool = Depends(require_permission(Permission.READ)),
+) -> Any:
+    """Get succession plans."""
+    succession_service = SuccessionService()
+    plans = await succession_service.get_succession_plans(
+        db, tenant_id=MOCK_TENANT_ID, department=department, risk_level=risk_level
+    )
+    return success_response(data=plans)
+
+@router.post("/succession-plans/{plan_id}/candidates")
+async def add_succession_candidate(
+    *,
+    db: AsyncSession = Depends(get_db),
+    plan_id: UUID,
+    employee_id: UUID = Query(...),
+    candidate_data: dict,
+    _: bool = Depends(require_permission(Permission.WRITE)),
+) -> Any:
+    """Add succession candidate."""
+    succession_service = SuccessionService()
+    candidate = await succession_service.add_succession_candidate(
+        db, succession_plan_id=plan_id, employee_id=employee_id, candidate_data=candidate_data
+    )
+    return success_response(
+        data=candidate,
+        message="Succession candidate added successfully",
+        status_code=status.HTTP_201_CREATED
+    )
+
+@router.get("/succession/readiness-report")
+async def get_succession_readiness_report(
+    *,
+    db: AsyncSession = Depends(db_router.get_read_session),
+    _: bool = Depends(require_permission(Permission.READ)),
+) -> Any:
+    """Get succession readiness report."""
+    succession_service = SuccessionService()
+    report = await succession_service.get_succession_readiness_report(
+        db, tenant_id=MOCK_TENANT_ID
+    )
+    return success_response(data=report)
+
+# Development Planning endpoints
+@router.post("/employees/{employee_id}/development-plans")
+async def create_development_plan(
+    *,
+    db: AsyncSession = Depends(get_db),
+    employee_id: UUID,
+    plan_data: dict,
+    _: bool = Depends(require_permission(Permission.WRITE)),
+) -> Any:
+    """Create employee development plan."""
+    succession_service = SuccessionService()
+    plan = await succession_service.create_development_plan(
+        db, employee_id=employee_id, plan_data=plan_data
+    )
+    return success_response(
+        data=plan,
+        message="Development plan created successfully",
+        status_code=status.HTTP_201_CREATED
+    )
+
+@router.get("/employees/{employee_id}/development-dashboard")
+async def get_employee_development_dashboard(
+    *,
+    db: AsyncSession = Depends(db_router.get_read_session),
+    employee_id: UUID,
+    _: bool = Depends(require_permission(Permission.READ)),
+) -> Any:
+    """Get employee development dashboard."""
+    succession_service = SuccessionService()
+    dashboard = await succession_service.get_employee_development_dashboard(
+        db, employee_id=employee_id
+    )
+    return success_response(data=dashboard)
