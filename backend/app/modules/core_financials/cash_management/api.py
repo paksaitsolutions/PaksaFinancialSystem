@@ -86,4 +86,56 @@ def create_reconciliation(reconciliation: schemas.BankReconciliationCreate, user
 def get_reconciliation(reconciliation_id: UUID, service: ReconciliationService = Depends(get_reconciliation_service)):
     return service.get_reconciliation(reconciliation_id)
 
-# Add more endpoints as needed for update/delete/list reconciliations, cash flow, etc.
+@router.get('/cash-flow/forecast')
+def get_cash_flow_forecast(
+    start_date: date = Query(...),
+    end_date: date = Query(...),
+    account_id: Optional[UUID] = None,
+    service: TransactionService = Depends(get_transaction_service)
+):
+    return service.get_cash_flow_forecast(start_date, end_date, account_id)
+
+@router.get('/cash-flow/position')
+def get_cash_position(
+    as_of_date: Optional[date] = Query(None),
+    service: TransactionService = Depends(get_transaction_service)
+):
+    return service.get_cash_position(as_of_date)
+
+@router.post('/reconciliations/{reconciliation_id}/auto-match')
+def auto_reconcile(
+    reconciliation_id: UUID,
+    service: ReconciliationService = Depends(get_reconciliation_service)
+):
+    return service.auto_reconcile(reconciliation_id)
+
+@router.post('/bank-statements/import')
+def import_bank_statement(
+    account_id: UUID,
+    statement_data: dict,
+    service: BankAccountService = Depends(get_bank_account_service)
+):
+    return service.import_bank_statement(account_id, statement_data)
+
+@router.post('/payments/process')
+def process_payment(
+    payment_data: dict,
+    service: TransactionService = Depends(get_transaction_service)
+):
+    return service.process_payment(payment_data)
+
+@router.get('/banking-fees')
+def get_banking_fees(
+    account_id: Optional[UUID] = None,
+    start_date: Optional[date] = Query(None),
+    end_date: Optional[date] = Query(None),
+    service: BankAccountService = Depends(get_bank_account_service)
+):
+    return service.get_banking_fees(account_id, start_date, end_date)
+
+@router.post('/banking-fees')
+def create_banking_fee(
+    fee_data: dict,
+    service: BankAccountService = Depends(get_bank_account_service)
+):
+    return service.create_banking_fee(fee_data)
