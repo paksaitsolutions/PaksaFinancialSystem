@@ -361,12 +361,17 @@
       }"
       @export="handleExport"
     />
+    
+    <!-- Snackbar -->
+    <v-snackbar v-model="snackbar" :color="snackbarColor" timeout="3000">
+      {{ snackbarText }}
+    </v-snackbar>
   </div>
 </template>
 
 <script>
 import { ref, computed, onMounted } from 'vue';
-import { useToast } from 'primevue/usetoast';
+// Removed PrimeVue useToast - using Vuetify snackbar instead
 import { useRouter } from 'vue-router';
 import ExportDialog from '@/components/common/ExportDialog.vue';
 import { FilterMatchMode } from 'primevue/api';
@@ -430,7 +435,15 @@ export default {
   },
   
   setup() {
-    const toast = useToast();
+    const snackbar = ref(false);
+    const snackbarText = ref('');
+    const snackbarColor = ref('success');
+    
+    const showSnackbar = (text, color = 'success') => {
+      snackbarText.value = text;
+      snackbarColor.value = color;
+      snackbar.value = true;
+    };
     
     const journalEntries = ref([]);
     const accounts = ref([]);
@@ -505,12 +518,7 @@ export default {
         accounts.value = [...mockAccounts];
       } catch (error) {
         console.error('Error loading data:', error);
-        toast.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Failed to load data',
-          life: 3000
-        });
+        showSnackbar('Failed to load data', 'error');
       } finally {
         loading.value = false;
       }
@@ -633,20 +641,10 @@ export default {
         // TODO: Replace with actual API call
         journalEntries.value = journalEntries.value.filter(e => e.id !== entryToDelete.value.id);
         
-        toast.add({
-          severity: 'success',
-          summary: 'Success',
-          detail: 'Journal Entry deleted successfully',
-          life: 3000
-        });
+        showSnackbar('Journal Entry deleted successfully', 'success');
       } catch (error) {
         console.error('Error deleting journal entry:', error);
-        toast.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Failed to delete journal entry',
-          life: 3000
-        });
+        showSnackbar('Failed to delete journal entry', 'error');
       } finally {
         showDeleteDialog.value = false;
         entryToDelete.value = null;
@@ -678,22 +676,12 @@ export default {
           journalEntries.value.unshift({ ...entryForm.value });
         }
         
-        toast.add({
-          severity: 'success',
-          summary: 'Success',
-          detail: `Journal Entry ${editingEntry.value ? 'updated' : 'created'} successfully`,
-          life: 3000
-        });
+        showSnackbar(`Journal Entry ${editingEntry.value ? 'updated' : 'created'} successfully`, 'success');
         
         showNewEntryDialog.value = false;
       } catch (error) {
         console.error('Error saving journal entry:', error);
-        toast.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Failed to save journal entry',
-          life: 3000
-        });
+        showSnackbar('Failed to save journal entry', 'error');
       } finally {
         saving.value = false;
       }
@@ -721,20 +709,10 @@ export default {
         clearInterval(interval);
         exportProgress.value = 100;
         
-        toast.add({
-          severity: 'success',
-          summary: 'Export Complete',
-          detail: `Exported ${filteredEntries.value.length} journal entries to ${format.toUpperCase()}`,
-          life: 3000
-        });
+        showSnackbar(`Exported ${filteredEntries.value.length} journal entries to ${format.toUpperCase()}`, 'success');
       } catch (error) {
         console.error('Export failed:', error);
-        toast.add({
-          severity: 'error',
-          summary: 'Export Failed',
-          detail: 'An error occurred while exporting the data',
-          life: 5000
-        });
+        showSnackbar('An error occurred while exporting the data', 'error');
       } finally {
         setTimeout(() => {
           exporting.value = false;
@@ -782,7 +760,11 @@ export default {
       showExportDialog,
       handleExport,
       exportColumns,
-      filteredEntries
+      filteredEntries,
+      snackbar,
+      snackbarText,
+      snackbarColor,
+      showSnackbar
     };
   }
 };

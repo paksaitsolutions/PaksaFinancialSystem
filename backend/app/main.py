@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -8,6 +9,23 @@ app = FastAPI(
 )
 
 # Add CORS middleware
+=======
+"""
+Main FastAPI application.
+"""
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.api.api_v1.api import api_router
+
+app = FastAPI(
+    title="Paksa Financial System API",
+    description="A comprehensive multi-tenant financial management system",
+    version="1.0.0"
+)
+
+# CORS middleware
+>>>>>>> 1f165d554f9014f0b749be3a8fe06df77942d7c1
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
@@ -16,6 +34,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+<<<<<<< HEAD
 @app.get("/")
 async def root():
     return {
@@ -55,3 +74,15 @@ async def get_available_companies():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
+=======
+# Include API router
+app.include_router(api_router, prefix="/api/v1")
+
+@app.get("/")
+async def root():
+    return {"message": "Paksa Financial System API", "version": "1.0.0"}
+
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy", "service": "paksa-financial-api"}
+>>>>>>> 1f165d554f9014f0b749be3a8fe06df77942d7c1

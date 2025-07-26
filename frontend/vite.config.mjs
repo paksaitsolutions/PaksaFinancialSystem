@@ -47,10 +47,19 @@ export default defineConfig({
     },
   },
   server: {
-    port: 3003,
+    port: 3000,
     host: '0.0.0.0',
-    strictPort: true,
-    open: true,
+    strictPort: false,
+    hmr: {
+      overlay: false
+    },
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false
+      }
+    }
   },
   build: {
     target: 'esnext',

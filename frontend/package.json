@@ -1,46 +1,27 @@
 {
-  "name": "paksa-financial-system-frontend",
-  "version": "0.1.0",
-  "private": true,
+  "name": "paksa-financial-frontend",
+  "version": "1.0.0",
+  "type": "module",
   "scripts": {
-    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
-    "dev:frontend": "vite",
-    "dev:backend": "cd ../backend && npm run dev",
-    "build": "vite build",
-    "preview": "vite preview",
-    "type-check": "echo 'Type checking temporarily disabled'",
-    "lint": "eslint . --ext .js,.jsx,.ts,.tsx,.vue --ignore-path .gitignore --fix",
-    "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx,.vue --fix",
-    "lint:format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json,vue}\""
+    "dev": "vite --host 0.0.0.0 --port 3000",
+    "build": "vue-tsc && vite build",
+    "preview": "vite preview"
   },
   "dependencies": {
-    "@mdi/font": "^7.4.47",
-    "@mdi/js": "^7.4.47",
-    "@vuelidate/core": "^2.0.1",
-    "@vuelidate/validators": "^2.0.4",
-    "axios": "^1.10.0",
-    "express": "^5.1.0",
-    "pinia": "^2.1.7",
-    "sass": "^1.89.2",
-    "vue": "^3.3.8",
-    "vue-router": "^4.2.5",
-    "vuetify": "^3.9.2",
-    "webfontloader": "^1.6.28",
-    "express-rate-limit": "^8.0.1"
+    "@mdi/font": "^7.4.0",
+    "axios": "^1.6.0",
+    "chart.js": "^4.5.0",
+    "pinia": "^2.1.0",
+    "vite-plugin-vuetify": "^2.1.1",
+    "vue": "^3.4.0",
+    "vue-router": "^4.2.0",
+    "vuetify": "^3.4.0"
   },
   "devDependencies": {
-    "@types/node": "^20.11.0",
-    "@vitejs/plugin-vue": "^6.0.0",
-    "@vue/tsconfig": "^0.7.0",
-    "autoprefixer": "^10.4.21",
-    "concurrently": "^9.2.0",
-    "postcss": "^8.5.6",
-    "postcss-preset-env": "^10.2.4",
-    "typescript": "^5.8.3",
-    "vite": "^7.0.5",
-    "vite-plugin-html": "^3.2.2",
-    "vite-plugin-pwa": "^1.0.1",
-    "vite-plugin-vuetify": "^2.1.1",
-    "vue-tsc": "^3.0.3"
+    "@vitejs/plugin-vue": "^4.5.0",
+    "sass": "^1.69.0",
+    "typescript": "^5.2.0",
+    "vite": "^5.0.0",
+    "vue-tsc": "^1.8.0"
   }
 }

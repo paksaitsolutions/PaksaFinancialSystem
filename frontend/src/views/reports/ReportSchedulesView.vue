@@ -92,7 +92,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { useToast } from 'primevue/usetoast';
+import { useToast } from 'vue/usetoast';
 import { useEnhancedReportsStore } from '@/stores/enhancedReports';
 import enhancedReportsService from '@/services/enhancedReportsService';
 

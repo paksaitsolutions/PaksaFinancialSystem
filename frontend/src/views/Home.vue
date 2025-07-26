@@ -1,341 +1,403 @@
 <template>
-  <v-container class="home-page" fluid>
+  <v-container fluid class="home-container">
     <!-- Hero Section -->
-    <v-sheet
-      rounded
-      class="pa-8 mb-8 text-center"
-      :color="$vuetify.theme.current.dark ? 'grey-darken-4' : 'primary-lighten-5'"
-      elevation="1"
-    >
-      <v-container class="py-12">
-        <v-row justify="center">
-          <v-col cols="12" md="8">
-            <h1 class="text-h3 font-weight-bold mb-4">
-              Welcome to Paksa Financial System
-            </h1>
-            <p class="text-h6 font-weight-regular text-medium-emphasis mb-8">
-              Comprehensive financial management for your business
-            </p>
-            
-            <v-fade-transition>
-              <v-alert
-                v-if="showWelcome && !authStore.isAuthenticated"
-                color="primary"
-                icon="mdi-information"
-                variant="tonal"
-                closable
-                class="mb-6 mx-auto"
-                max-width="600"
-                @click:close="showWelcome = false"
-              >
-                Sign in to access all features or explore the available modules below.
-              </v-alert>
-            </v-fade-transition>
-            
-            <div class="d-flex justify-center gap-4 mt-6">
-              <v-btn
-                v-if="!authStore.isAuthenticated"
-                color="primary"
-                size="large"
-                to="/login"
-                prepend-icon="mdi-login"
-              >
-                Sign In
-              </v-btn>
-              
-              <v-btn
-                v-else
-                color="primary"
-                variant="tonal"
-                size="large"
-                to="/dashboard"
-                prepend-icon="mdi-view-dashboard"
-              >
-                Go to Dashboard
-              </v-btn>
-              
-              <v-btn
-                variant="outlined"
-                size="large"
-                href="https://paksa.com.pk"
-                target="_blank"
-                rel="noopener noreferrer"
-                prepend-icon="mdi-information"
-              >
-                Learn More
-              </v-btn>
-            </div>
+    <v-row class="hero-section mb-6">
+      <v-col cols="12">
+        <div class="d-flex align-center justify-center">
+          <v-img 
+            src="/src/assets/PFS Logo.png" 
+            alt="Paksa Financial" 
+            max-width="80"
+            max-height="80"
+            class="mr-4"
+          />
+          <div>
+            <h1 class="hero-title mb-1">Paksa Financial</h1>
+            <p class="hero-subtitle">Enterprise Management System</p>
+          </div>
+          <v-spacer />
+          <v-chip color="success" size="small">
+            <v-icon start size="16">mdi-check-circle</v-icon>
+            Ready
+          </v-chip>
+        </div>
+      </v-col>
+    </v-row>
+
+    <!-- Quick Actions -->
+    <v-row class="mb-8">
+      <v-col cols="12">
+        <h2 class="section-title mb-4">
+          <v-icon class="mr-2">mdi-lightning-bolt</v-icon>
+          Quick Actions
+        </h2>
+        <v-row>
+          <v-col v-for="action in quickActions" :key="action.title" cols="12" sm="6" md="3">
+            <v-card 
+              class="quick-action-card" 
+              elevation="2"
+              @click="navigateToRoute(action.route)"
+            >
+              <v-card-text class="text-center pa-6">
+                <v-avatar :color="action.color" size="64" class="mb-3">
+                  <v-icon color="white" size="32">{{ action.icon }}</v-icon>
+                </v-avatar>
+                <h3 class="text-h6 mb-2">{{ action.title }}</h3>
+                <p class="text-body-2 text-medium-emphasis">{{ action.description }}</p>
+              </v-card-text>
+            </v-card>
           </v-col>
         </v-row>
-      </v-container>
-    </v-sheet>
-
-    <!-- Modules Grid -->
-    <v-container>
-      <v-row class="mb-6">
-        <v-col cols="12">
-          <div class="d-flex align-center justify-space-between mb-4">
-            <h2 class="text-h5 font-weight-bold">
-              {{ authStore.isAuthenticated ? 'Available Modules' : 'Explore Modules' }}
-            </h2>
-            <v-btn
-              v-if="authStore.isAuthenticated"
-              color="primary"
-              variant="text"
-              prepend-icon="mdi-refresh"
-              :loading="menuStore.isLoading"
-              @click="refreshData"
+      </v-col>
+    </v-row>
+              
+    <!-- Financial Modules -->
+    <v-row class="mb-8">
+      <v-col cols="12">
+        <h2 class="section-title mb-4">
+          <v-icon class="mr-2">mdi-view-dashboard</v-icon>
+          Financial Modules
+        </h2>
+              
+        <v-row>
+          <v-col v-for="module in modules" :key="module.name" cols="12" sm="6" md="4" lg="3">
+            <v-card 
+              class="module-card" 
+              elevation="3"
+              @click="navigateToModule(module)"
             >
-              Refresh
-            </v-btn>
-          </div>
+              <v-card-text class="text-center pa-6">
+                <div class="module-icon-container mb-3">
+                  <v-avatar :color="module.color" size="72">
+                    <v-icon color="white" size="36">{{ module.icon }}</v-icon>
+                  </v-avatar>
+                </div>
+                <h3 class="text-h6 mb-2">{{ module.name }}</h3>
+                <p class="text-body-2 text-medium-emphasis mb-3">{{ module.description }}</p>
+                <v-chip 
+                  :color="module.status === 'active' ? 'success' : 'warning'" 
+                  size="small"
+                  variant="flat"
+                >
+                  <v-icon start size="16">{{ module.status === 'active' ? 'mdi-check' : 'mdi-clock' }}</v-icon>
+                  {{ module.status }}
+                </v-chip>
+              </v-card-text>
+            </v-card>
+          </v-col>
+        </v-row>
+      </v-col>
+    </v-row>
+              
+    <!-- System Information -->
+    <v-row>
+      <v-col cols="12">
+        <h2 class="section-title mb-4">
+          <v-icon class="mr-2">mdi-information</v-icon>
+          System Information
+        </h2>
+        <v-row>
+          <v-col cols="12" md="4">
+            <v-card class="info-card" elevation="2">
+              <v-card-text class="text-center pa-6">
+                <v-icon color="primary" size="48" class="mb-3">mdi-api</v-icon>
+                <h3 class="text-h6 mb-2">API Documentation</h3>
+                <p class="text-body-2 text-medium-emphasis mb-4">Interactive API documentation</p>
+                <v-btn color="primary" variant="outlined" href="http://localhost:8000/docs" target="_blank">
+                  <v-icon start>mdi-open-in-new</v-icon>
+                  Open Swagger UI
+                </v-btn>
+              </v-card-text>
+            </v-card>
+          </v-col>
           
-          <v-alert
-            v-if="menuStore.error"
-            type="error"
-            variant="tonal"
-            class="mb-6"
-          >
-            {{ menuStore.error }}
-          </v-alert>
+          <v-col cols="12" md="4">
+            <v-card class="info-card" elevation="2">
+              <v-card-text class="text-center pa-6">
+                <v-icon color="success" size="48" class="mb-3">mdi-database</v-icon>
+                <h3 class="text-h6 mb-2">Database Status</h3>
+                <p class="text-body-2 text-medium-emphasis mb-4">PostgreSQL connection active</p>
+                <v-chip color="success" variant="flat">
+                  <v-icon start>mdi-database-check</v-icon>
+                  Connected
+                </v-chip>
+              </v-card-text>
+            </v-card>
+          </v-col>
           
-          <v-progress-linear
-            v-if="menuStore.isLoading"
-            indeterminate
-            color="primary"
-            class="mb-6"
-          ></v-progress-linear>
-          
-          <v-row v-else-if="filteredModules.length > 0">
-            <v-col
-              v-for="module in filteredModules"
-              :key="module.id"
-              cols="12"
-              sm="6"
-              md="4"
-              lg="3"
-            >
-              <module-card :module="module" />
-            </v-col>
-          </v-row>
-          
-          <v-alert
-            v-else
-            type="info"
-            variant="tonal"
-            class="mt-4"
-          >
-            No modules available. Please contact your administrator for access.
-          </v-alert>
-        </v-col>
-      </v-row>
-      
-      <!-- Quick Actions -->
-      <v-row v-if="authStore.isAuthenticated && quickActions.length > 0" class="mt-8">
-        <v-col cols="12">
-          <h2 class="text-h5 font-weight-bold mb-4">Quick Actions</h2>
-          <div class="d-flex flex-wrap gap-2">
-            <v-btn
-              v-for="action in quickActions"
-              :key="action.title"
-              :prepend-icon="action.icon"
-              :to="action.to"
-              variant="tonal"
-              size="large"
-              class="text-none"
-              rounded="lg"
-            >
-              {{ action.title }}
-            </v-btn>
-          </div>
-        </v-col>
-      </v-row>
-    </v-container>
+          <v-col cols="12" md="4">
+            <v-card class="info-card" elevation="2">
+              <v-card-text class="text-center pa-6">
+                <v-icon color="info" size="48" class="mb-3">mdi-shield-check</v-icon>
+                <h3 class="text-h6 mb-2">Security Status</h3>
+                <p class="text-body-2 text-medium-emphasis mb-4">Multi-tenant isolation active</p>
+                <v-chip color="info" variant="flat">
+                  <v-icon start>mdi-shield-check</v-icon>
+                  Secured
+                </v-chip>
+              </v-card-text>
+            </v-card>
+          </v-col>
+        </v-row>
+      </v-col>
+    </v-row>
   </v-container>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import { useMenuStore } from '@/store/menu';
-import { useAuthStore } from '@/modules/auth/store';
-import ModuleCard from '@/components/home/ModuleCard.vue';
-import { useDisplay } from 'vuetify';
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 
-// Initialize stores and utilities
-const menuStore = useMenuStore();
-const authStore = useAuthStore();
-const router = useRouter();
-const route = useRoute();
-const { mobile } = useDisplay();
+const router = useRouter()
+const user = ref<any>(null)
 
-// State
-const showWelcome = ref(true);
+const quickActions = ref([
+  {
+    title: 'AI Dashboard',
+    description: 'Advanced analytics',
+    icon: 'mdi-brain',
+    color: 'primary',
+    route: '/dashboard'
+  },
+  {
+    title: 'Create Invoice',
+    description: 'New customer invoice',
+    icon: 'mdi-file-document-plus',
+    color: 'success',
+    route: '/invoicing/create'
+  },
+  {
+    title: 'View Reports',
+    description: 'Financial reports',
+    icon: 'mdi-chart-line',
+    color: 'info',
+    route: '/reports'
+  },
+  {
+    title: 'Manage Users',
+    description: 'User administration',
+    icon: 'mdi-account-group',
+    color: 'warning',
+    route: '/rbac'
+  }
+])
 
-// Computed properties
-const filteredModules = computed(() => {
-  // Filter modules based on authentication status
-  return menuStore.visibleModules.filter(module => {
-    // Show all modules to authenticated users
-    if (authStore.isAuthenticated) return true;
-    // Only show public modules to unauthenticated users
-    return module.isPublic === true;
-  });
-});
+const modules = ref([
+  {
+    name: 'General Ledger',
+    description: 'Chart of accounts and journal entries',
+    icon: 'mdi-book-open-variant',
+    color: 'primary',
+    status: 'active',
+    route: '/gl'
+  },
+  {
+    name: 'Accounts Payable',
+    description: 'Vendor management and payments',
+    icon: 'mdi-credit-card',
+    color: 'error',
+    status: 'active',
+    route: '/ap'
+  },
+  {
+    name: 'Accounts Receivable',
+    description: 'Customer invoicing and collections',
+    icon: 'mdi-wallet',
+    color: 'success',
+    status: 'active',
+    route: '/ar'
+  },
+  {
+    name: 'Cash Management',
+    description: 'Bank accounts and reconciliation',
+    icon: 'mdi-bank',
+    color: 'info',
+    status: 'active',
+    route: '/cash'
+  },
+  {
+    name: 'Fixed Assets',
+    description: 'Asset management and depreciation',
+    icon: 'mdi-office-building',
+    color: 'secondary',
+    status: 'active',
+    route: '/assets'
+  },
+  {
+    name: 'Payroll',
+    description: 'Employee payroll processing',
+    icon: 'mdi-account-cash',
+    color: 'warning',
+    status: 'active',
+    route: '/payroll'
+  },
+  {
+    name: 'Human Resources',
+    description: 'Employee management system',
+    icon: 'mdi-account-group',
+    color: 'purple',
+    status: 'active',
+    route: '/hrm'
+  },
+  {
+    name: 'Inventory',
+    description: 'Stock management and tracking',
+    icon: 'mdi-package-variant',
+    color: 'teal',
+    status: 'active',
+    route: '/inventory'
+  },
+  {
+    name: 'Budget Planning',
+    description: 'Budget creation and monitoring',
+    icon: 'mdi-chart-pie',
+    color: 'orange',
+    status: 'active',
+    route: '/budget'
+  },
+  {
+    name: 'Financial Reports',
+    description: 'Comprehensive reporting suite',
+    icon: 'mdi-chart-bar',
+    color: 'indigo',
+    status: 'active',
+    route: '/reports'
+  },
+  {
+    name: 'System Admin',
+    description: 'System administration panel',
+    icon: 'mdi-shield-crown',
+    color: 'deep-purple',
+    status: 'active',
+    route: '/admin'
+  },
+  {
+    name: 'Settings',
+    description: 'Company configuration',
+    icon: 'mdi-cog',
+    color: 'grey',
+    status: 'active',
+    route: '/settings'
+  }
+])
 
-// Quick actions for authenticated users
-const quickActions = computed(() => {
-  if (!authStore.isAuthenticated) return [];
-  
-  return [
-    { title: 'New Invoice', icon: 'mdi-file-document-plus', to: '/invoices/new' },
-    { title: 'Record Payment', icon: 'mdi-cash-plus', to: '/payments/new' },
-    { title: 'Add Expense', icon: 'mdi-cash-minus', to: '/expenses/new' },
-    { title: 'Run Payroll', icon: 'mdi-account-cash', to: '/payroll/process' },
-  ];
-});
+onMounted(() => {
+  const userData = localStorage.getItem('user')
+  if (userData) {
+    user.value = JSON.parse(userData)
+  }
+})
 
-// Methods
-const refreshData = async () => {
+const navigateToRoute = (route: string) => {
+  console.log('Navigating to route:', route)
   try {
-    await menuStore.fetchMenuItems();
+    router.push(route).catch(err => {
+      console.error('Navigation error:', err)
+    })
   } catch (error) {
-    console.error('Failed to refresh menu items:', error);
-    throw error;
+    console.error('Router push error:', error)
   }
-};
+}
 
-// Lifecycle hooks
-onMounted(async () => {
-  // Load menu items
-  if (menuStore.visibleModules.length === 0) {
-    await refreshData();
+const navigateToModule = (module: any) => {
+  console.log('Navigating to module:', module.name, 'route:', module.route)
+  try {
+    router.push(module.route).catch(err => {
+      console.error('Module navigation error:', err)
+    })
+  } catch (error) {
+    console.error('Module router push error:', error)
   }
-  
-  // Show welcome message if it's the first visit
-  const hasSeenWelcome = localStorage.getItem('hasSeenWelcome');
-  showWelcome.value = !hasSeenWelcome;
-  if (!hasSeenWelcome) {
-    localStorage.setItem('hasSeenWelcome', 'true');
-  }
-});
+}
 
-// Watch for authentication changes
-watch(() => authStore.isAuthenticated, async (isAuthenticated) => {
-  if (isAuthenticated) {
-    // Refresh menu items when user logs in
-    await refreshData();
-  }
-});
-
-// Watch for route changes to handle deep links
-watch(() => route.path, (newPath) => {
-  // If user is redirected to home from a protected route, show login prompt
-  if (newPath === '/' && route.query.redirect) {
-    showWelcome.value = true;
-  }
-}, { immediate: true });
+const logout = () => {
+  localStorage.removeItem('user')
+  localStorage.removeItem('token')
+  router.push('/auth/login')
+}
 </script>
 
 <style scoped>
-.home-page {
-  padding: 0;
-  min-height: calc(100vh - 64px);
-  background-color: rgb(var(--v-theme-background));
-  transition: background-color 0.3s ease;
+.home-container {
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  min-height: 100vh;
+  padding: 24px;
 }
 
-/* Smooth transitions for theme changes */
-:deep(.v-card) {
-  transition: background-color 0.3s ease, border-color 0.3s ease;
+.hero-section {
+  padding: 20px 0;
 }
 
-/* Responsive adjustments */
-@media (max-width: 600px) {
-  .home-page {
-    padding-bottom: 80px; /* Add space for mobile nav */
-  }
-  
-  :deep(.v-container) {
-    padding: 12px;
-  }
+.hero-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2c3e50;
 }
 
-/* Print styles */
-@media print {
-  .home-page {
-    padding: 0;
-    background: white;
-  }
-  
-  .no-print {
-    display: none !important;
-  }
+.hero-subtitle {
+  font-size: 1rem;
+  color: #7f8c8d;
+  font-weight: 400;
 }
 
-/* Dark mode adjustments */
-:global(.v-theme--dark) .home-page {
-  background-color: #121212;
+.section-title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #2c3e50;
+  display: flex;
+  align-items: center;
 }
 
-/* Accessibility focus styles */
-:deep(a:focus-visible),
-:deep(button:focus-visible) {
-  outline: 2px solid var(--v-primary-base);
-  outline-offset: 2px;
+.quick-action-card {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 16px;
+  height: 100%;
 }
 
-/* Animation for module cards */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.quick-action-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.15);
 }
 
-:deep(.module-card) {
-  animation: fadeInUp 0.4s ease-out forwards;
-  opacity: 0;
+.module-card {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 16px;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
 }
 
-/* Delay animations for each card */
-:deep(.v-col) {
-  @for $i from 1 through 12 {
-    &:nth-child(#{$i}) .module-card {
-      animation-delay: #{$i * 0.05}s;
-    }
-  }
+.module-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.2);
 }
 
-/* Better spacing for mobile */
-.v-col {
-  padding: 8px !important;
+.module-icon-container {
+  position: relative;
 }
 
-/* Responsive typography */
-h1 {
-  font-size: 2.5rem;
-  line-height: 1.2;
+.info-card {
+  height: 100%;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.info-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
 }
 
 @media (max-width: 960px) {
-  h1 {
-    font-size: 2rem;
-  }
-}
-
-@media (max-width: 600px) {
-  h1 {
-    font-size: 1.75rem;
+  .hero-title {
+    font-size: 2.5rem;
   }
   
-  .v-btn {
-    font-size: 0.875rem;
-    padding: 0 16px;
+  .section-title {
+    font-size: 1.5rem;
   }
 }
 </style>

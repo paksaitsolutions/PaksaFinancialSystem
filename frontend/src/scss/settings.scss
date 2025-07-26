@@ -3,7 +3,7 @@ $body-font-family: 'Roboto', sans-serif;
 $border-radius-root: 4px;
 
 // Import Vuetify styles
-@import 'vuetify/settings';
+@import 'vuetify/settings' as *;
 
 // Custom variables
 :root {

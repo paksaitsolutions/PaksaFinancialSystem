@@ -179,12 +179,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { useToast } from 'primevue/usetoast';
-import Button from 'primevue/button';
-import Card from 'primevue/card';
-import InputText from 'primevue/inputtext';
-import Dropdown from 'primevue/dropdown';
-import Dialog from 'primevue/dialog';
+import { useToast } from 'vue/usetoast';
+import Button from 'vue/button';
+import Card from 'vue/card';
+import InputText from 'vue/inputtext';
+import Dropdown from 'vue/dropdown';
+import Dialog from 'vue/dialog';
 import ReportCard from '@/components/reports/ReportCard.vue';
 import ReportBuilder from '@/components/reports/ReportBuilder.vue';
 

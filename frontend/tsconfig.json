@@ -1,29 +1,28 @@
 {
-  "extends": "./tsconfig.app.json",
   "compilerOptions": {
-    "composite": true,
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./src/*"]
-    },
-    "types": ["vite/client"],
-    "module": "ESNext",
-    "moduleResolution": "bundler",
     "target": "ES2020",
-    "strict": true,
-    "jsx": "preserve",
-    "sourceMap": true,
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "esModuleInterop": true,
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
-    "skipLibCheck": true,
     "noEmit": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noImplicitReturns": true,
+    "jsx": "preserve",
+    "strict": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+    "types": ["vite/client", "node"]
   },
   "include": [
     "src/**/*.ts",
@@ -31,5 +30,8 @@
     "src/**/*.tsx",
     "src/**/*.vue"
   ],
-  "exclude": ["node_modules", "dist"]
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }

@@ -32,7 +32,7 @@ class ReconciliationService:
     def _get_db(self) -> Session:
         """Get a database session."""
         if not self.db:
-            from core.database import SessionLocal
+            from app.core.database import SessionLocal
             return SessionLocal()
         return self.db
     

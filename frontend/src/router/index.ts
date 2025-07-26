@@ -1,115 +1,309 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
-import { authRoutes, glRoutes, apRoutes, arRoutes, payrollRoutes, cashRoutes, assetsRoutes, taxRoutes, rootRoute, dashboardRoutes } from './modules/allRoutes';
-import { useAuthStore } from '@/modules/auth/store';
+import { defineComponent } from 'vue';
 
-// Function to load route component with error handling
-const loadView = (view: string) => {
-  return () => {
-    return import(/* webpackChunkName: "view-[request]" */ `@/views/${view}.vue`)
-      .catch(() => import('@/views/UnderConstruction.vue'));
-  };
-};
-
-// Base routes that don't require authentication
-const publicRoutes: RouteRecordRaw[] = [
-  // Root route
-  rootRoute,
-  
-  // Dashboard route
-  dashboardRoutes,
-  
-  // Module routes
-  glRoutes,
-  apRoutes,
-  arRoutes,
-  payrollRoutes,
-  cashRoutes,
-  assetsRoutes,
-  taxRoutes,
-  
-  // Auth routes
-  authRoutes,
-  
-  // 404 page for routes that don't match
+const routes: RouteRecordRaw[] = [
+  {
+    path: '/',
+    name: 'Home',
+    component: () => import('@/layouts/MainLayout.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: '',
+        component: () => import('@/views/Home.vue')
+      }
+    ]
+  },
+  {
+    path: '/dashboard',
+    name: 'Dashboard',
+    component: () => import('@/layouts/MainLayout.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: '',
+        component: () => import('@/views/AdvancedDashboard.vue')
+      }
+    ]
+  },
+  {
+    path: '/auth/login',
+    name: 'Login',
+    component: () => import('@/views/auth/Login.vue')
+  },
+  {
+    path: '/auth/register',
+    name: 'Register',
+    component: () => import('@/views/auth/Register.vue')
+  },
+  {
+    path: '/auth/forgot-password',
+    name: 'ForgotPassword',
+    component: () => import('@/views/auth/ForgotPassword.vue')
+  },
+  {
+    path: '/gl',
+    component: () => import('@/layouts/MainLayout.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: '',
+        name: 'GeneralLedger',
+        component: () => import(/* webpackChunkName: "general-ledger" */ '@/modules/general-ledger/views/Dashboard.vue')
+      },
+      {
+        path: 'accounts',
+        name: 'GLAccounts',
+        component: () => import('@/modules/general-ledger/views/accounts/GLAccountsView.vue')
+      },
+      {
+        path: 'journal-entries',
+        name: 'GLJournalEntries',
+        component: () => import('@/modules/general-ledger/views/journal-entries/JournalEntriesView.vue')
+      },
+      {
+        path: 'trial-balance',
+        name: 'GLTrialBalance',
+        component: () => import('@/modules/general-ledger/views/reports/TrialBalanceView.vue')
+      },
+      {
+        path: 'financial-statements',
+        name: 'GLFinancialStatements',
+        component: () => import('@/modules/general-ledger/components/FinancialReportsView.vue')
+      }
+    ]
+  },
+  {
+    path: '/ap',
+    component: () => import('@/layouts/MainLayout.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: '',
+        name: 'AccountsPayable',
+        component: () => import('@/modules/accounts-payable/views/VendorsAdvancedView.vue')
+      },
+      {
+        path: 'vendors',
+        name: 'APVendors',
+        component: () => import('@/modules/accounts-payable/views/VendorsAdvancedView.vue')
+      },
+      {
+        path: 'bills',
+        name: 'APBills',
+        component: () => import('@/views/ModuleView.vue')
+      },
+      {
+        path: 'payments',
+        name: 'APPayments',
+        component: () => import('@/views/ModuleView.vue')
+      }
+    ]
+  },
+  {
+    path: '/ar',
+    component: () => import('@/layouts/MainLayout.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: '',
+        name: 'AccountsReceivable',
+        component: () => import('@/views/accounts-receivable/CustomersView.vue')
+      },
+      {
+        path: 'customers',
+        name: 'ARCustomers',
+        component: () => import('@/views/accounts-receivable/CustomersView.vue')
+      },
+      {
+        path: 'invoices',
+        name: 'ARInvoices',
+        component: () => import('@/modules/accounts-receivable/views/ARInvoicesAdvanced.vue')
+      },
+      {
+        path: 'payments',
+        name: 'ARPayments',
+        component: () => import('@/views/ModuleView.vue')
+      }
+    ]
+  },
+  {
+    path: '/reports',
+    component: () => import('@/layouts/MainLayout.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: '',
+        name: 'Reports',
+        component: () => import(/* webpackChunkName: "reports" */ '@/views/reports/ReportsView.vue')
+      }
+    ]
+  },
+  {
+    path: '/admin',
+    component: () => import('@/layouts/MainLayout.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: '',
+        name: 'SuperAdmin',
+        component: () => import('@/views/admin/SuperAdminView.vue')
+      }
+    ]
+  },
+  {
+    path: '/settings',
+    component: () => import('@/layouts/MainLayout.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: '',
+        name: 'Settings',
+        component: () => import('@/views/settings/CompanySettingsView.vue')
+      }
+    ]
+  },
+  {
+    path: '/settings/currency',
+    name: 'CurrencySettings',
+    component: () => import('@/views/settings/CurrencyManagementView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/invoicing/create',
+    name: 'CreateInvoice',
+    component: () => import('@/layouts/MainLayout.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: '',
+        component: () => import('@/views/invoicing/CreateInvoice.vue')
+      }
+    ]
+  },
+  {
+    path: '/rbac',
+    component: () => import('@/layouts/MainLayout.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: '',
+        name: 'RoleManagement',
+        component: () => import('@/views/rbac/RoleManagementView.vue')
+      }
+    ]
+  },
+  {
+    path: '/cash',
+    component: () => import('@/layouts/MainLayout.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: '',
+        name: 'CashManagement',
+        component: () => import('@/views/cash/CashManagementView.vue')
+      }
+    ]
+  },
+  {
+    path: '/assets',
+    component: () => import('@/layouts/MainLayout.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: '',
+        name: 'FixedAssets',
+        component: () => import('@/views/assets/FixedAssetsView.vue')
+      }
+    ]
+  },
+  {
+    path: '/inventory',
+    component: () => import('@/layouts/MainLayout.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: '',
+        name: 'Inventory',
+        component: () => import('@/views/inventory/InventoryView.vue')
+      }
+    ]
+  },
+  {
+    path: '/budget',
+    component: () => import('@/layouts/MainLayout.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: '',
+        name: 'Budgeting',
+        component: () => import('@/views/budget/BudgetingView.vue')
+      }
+    ]
+  },
+  {
+    path: '/payroll',
+    component: () => import('@/layouts/MainLayout.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: '',
+        name: 'Payroll',
+        component: () => import('@/views/payroll/PayrollView.vue')
+      }
+    ]
+  },
+  {
+    path: '/hrm',
+    component: () => import('@/layouts/MainLayout.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: '',
+        name: 'HRM',
+        component: () => import('@/views/hrm/HRMView.vue')
+      }
+    ]
+  },
+  {
+    path: '/tax',
+    component: () => import('@/layouts/MainLayout.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: '',
+        name: 'TaxManagement',
+        component: () => import('@/views/ModuleView.vue')
+      }
+    ]
+  },
+  {
+    path: '/main-dashboard',
+    component: () => import('@/layouts/MainLayout.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: '',
+        name: 'MainDashboard',
+        component: () => import('@/views/Dashboard.vue')
+      }
+    ]
+  },
   {
     path: '/:pathMatch(.*)*',
-    name: 'not-found',
-    component: () => import('@/views/NotFound.vue'),
-    meta: { title: 'Page Not Found' }
+    name: 'NotFound',
+    component: () => import('@/views/NotFound.vue')
   }
 ];
 
-// Create router instance
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
-  routes: publicRoutes,
-  scrollBehavior(to, from, savedPosition) {
-    // Scroll to top on route change
-    if (savedPosition) {
-      return savedPosition;
-    } else {
-      return { top: 0 };
-    }
-  }
+  history: createWebHistory(),
+  routes
 });
 
-// Global navigation guards
-router.beforeEach(async (to, from, next) => {
-  const authStore = useAuthStore();
-  const isAuthenticated = authStore.isAuthenticated;
-  
-  // Set page title
-  const title = to.meta.title as string || 'Paksa Financial System';
-  document.title = `${title} | PFS`;
-
-  // Handle root path redirect (handled by the root route)
-  if (to.path === '/') {
-    next();
-    return;
-  }
-
-  // Check if route requires authentication
-  if (to.matched.some(record => record.meta.requiresAuth)) {
-    if (!isAuthenticated) {
-      // Store the attempted URL for redirecting after login
-      const redirectPath = to.fullPath === '/' ? undefined : to.fullPath;
-      next({ 
-        name: 'Login',
-        query: { redirect: redirectPath }
-      });
-      return;
-    }
-    
-    // Check for required permissions
-    if (to.meta.permissions) {
-      const requiredPermissions = Array.isArray(to.meta.permissions) 
-        ? to.meta.permissions 
-        : [to.meta.permissions];
-      
-      const hasPermission = authStore.hasAnyPermission?.(requiredPermissions) || false;
-      
-      if (!hasPermission) {
-        // Redirect to dashboard if unauthorized for the requested route
-        next({ name: 'Dashboard' });
-        return;
-      }
-    }
-  }
-
-  // Redirect to dashboard if already authenticated and trying to access auth pages
-  if (to.matched.some(record => record.meta.requiresGuest) && isAuthenticated) {
-    next({ name: 'Dashboard' });
-    return;
-  }
-
-  // Continue with navigation
-  next();
-});
-
-// Handle navigation errors
-router.onError((error) => {
-  console.error('Router error:', error);
-  // You can add error tracking here (e.g., Sentry, LogRocket)
-});
+router.beforeEach((to, from, next) => {
+  console.log('Router navigation:', from.path, '->', to.path)
+  next()
+})
 
 export default router;

@@ -599,20 +599,36 @@
         </form>
       </div>
     </div>
+    
+    <!-- Snackbar -->
+    <v-snackbar v-model="snackbar" :color="snackbarColor" timeout="3000">
+      {{ snackbarText }}
+    </v-snackbar>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useToast } from 'primevue/usetoast'
 import ExportDialog from '@/components/common/ExportDialog.vue'
+import { vendorsApi } from '@/services/api'
+import { useLoadingState } from '@/composables/useStateManagement'
 
 // Data
 const router = useRouter()
-const toast = useToast()
+const { setLoading, setError } = useLoadingState()
+const snackbar = ref(false)
+const snackbarText = ref('')
+const snackbarColor = ref('success')
+
+const showSnackbar = (text: string, color = 'success') => {
+  snackbarText.value = text
+  snackbarColor.value = color
+  snackbar.value = true
+}
 
 // Reactive data
+const vendors = ref([])
 const showCreateModal = ref(false)
 const showExportDialog = ref(false)
 const isExporting = ref(false)
@@ -645,12 +661,31 @@ const exportColumns = [
 const exportData = computed(() => {
   return vendors.value.map(vendor => ({
     ...vendor,
-    outstanding: formatCurrency(vendor.outstanding),
-    totalSpend: formatCurrency(vendor.totalSpend),
+    outstanding: formatCurrency(vendor.outstanding || 0),
+    totalSpend: formatCurrency(vendor.totalSpend || 0),
     lastOrderDate: vendor.lastOrderDate ? new Date(vendor.lastOrderDate).toLocaleDateString() : 'N/A',
     createdAt: vendor.createdAt ? new Date(vendor.createdAt).toLocaleDateString() : 'N/A',
     riskLevel: vendor.riskLevel?.charAt(0).toUpperCase() + vendor.riskLevel?.slice(1) || 'Medium'
   }))
+})
+
+// Fetch vendors from API
+const fetchVendors = async () => {
+  try {
+    setLoading(true)
+    const response = await vendorsApi.getAll()
+    vendors.value = response.items || []
+  } catch (error) {
+    console.error('Error fetching vendors:', error)
+    setError('Failed to load vendors')
+  } finally {
+    setLoading(false)
+  }
+}
+
+// Load vendors on mount
+onMounted(() => {
+  fetchVendors()
 })
 
 const handleExport = async (format: string, options: any = {}) => {
@@ -670,22 +705,12 @@ const handleExport = async (format: string, options: any = {}) => {
     // For now, we'll simulate a delay
     await new Promise(resolve => setTimeout(resolve, 1000))
     
-    toast.add({
-      severity: 'success',
-      summary: 'Export Successful',
-      detail: `Vendors exported successfully as ${format.toUpperCase()}`,
-      life: 3000
-    })
+    showSnackbar(`Vendors exported successfully as ${format.toUpperCase()}`, 'success')
     
     return { success: true, data: dataToExport }
   } catch (error) {
     console.error('Export error:', error)
-    toast.add({
-      severity: 'error',
-      summary: 'Export Failed',
-      detail: 'Failed to export vendors. Please try again.',
-      life: 5000
-    })
+    showSnackbar('Failed to export vendors. Please try again.', 'error')
     return { success: false, error }
   } finally {
     isExporting.value = false

@@ -1,142 +1,128 @@
 <template>
-  <div class="gl-dashboard">
-    <div class="grid">
-      <div class="col-12">
-        <h1>General Ledger Dashboard</h1>
-        <p>Welcome to the General Ledger module. This dashboard provides an overview of your financial data.</p>
-      </div>
+  <v-container>
+    <v-row>
+      <v-col cols="12">
+        <h1 class="text-h4 mb-4">General Ledger Dashboard</h1>
+        <p class="text-subtitle-1 mb-6">Welcome to the General Ledger module. This dashboard provides an overview of your financial data.</p>
+      </v-col>
       
       <!-- Summary Cards -->
-      <div class="col-12 md:col-6 lg:col-3">
-        <Card>
-          <template #title>Total Assets</template>
-          <template #content>
-            <div class="text-4xl font-bold text-primary">{{ formatCurrency(assetsTotal) }}</div>
-            <div class="mt-2 text-sm text-500">as of {{ formatDate(today) }}</div>
-          </template>
-        </Card>
-      </div>
+      <v-col cols="12" md="6" lg="3">
+        <v-card>
+          <v-card-title>Total Assets</v-card-title>
+          <v-card-text>
+            <div class="text-h4 font-weight-bold text-primary">{{ formatCurrency(assetsTotal) }}</div>
+            <div class="text-caption text-medium-emphasis mt-2">as of {{ formatDate(today) }}</div>
+          </v-card-text>
+        </v-card>
+      </v-col>
       
-      <div class="col-12 md:col-6 lg:col-3">
-        <Card>
-          <template #title>Total Liabilities</template>
-          <template #content>
-            <div class="text-4xl font-bold text-red-500">{{ formatCurrency(liabilitiesTotal) }}</div>
-            <div class="mt-2 text-sm text-500">as of {{ formatDate(today) }}</div>
-          </template>
-        </Card>
-      </div>
+      <v-col cols="12" md="6" lg="3">
+        <v-card>
+          <v-card-title>Total Liabilities</v-card-title>
+          <v-card-text>
+            <div class="text-h4 font-weight-bold text-error">{{ formatCurrency(liabilitiesTotal) }}</div>
+            <div class="text-caption text-medium-emphasis mt-2">as of {{ formatDate(today) }}</div>
+          </v-card-text>
+        </v-card>
+      </v-col>
       
-      <div class="col-12 md:col-6 lg:3">
-        <Card>
-          <template #title>Equity</template>
-          <template #content>
-            <div class="text-4xl font-bold text-green-500">{{ formatCurrency(equityTotal) }}</div>
-            <div class="mt-2 text-sm text-500">as of {{ formatDate(today) }}</div>
-          </template>
-        </Card>
-      </div>
+      <v-col cols="12" md="6" lg="3">
+        <v-card>
+          <v-card-title>Equity</v-card-title>
+          <v-card-text>
+            <div class="text-h4 font-weight-bold text-success">{{ formatCurrency(equityTotal) }}</div>
+            <div class="text-caption text-medium-emphasis mt-2">as of {{ formatDate(today) }}</div>
+          </v-card-text>
+        </v-card>
+      </v-col>
       
-      <div class="col-12 md:col-6 lg:3">
-        <Card>
-          <template #title>Net Income (MTD)</template>
-          <template #content>
-            <div class="text-4xl font-bold" :class="netIncomeClass">
+      <v-col cols="12" md="6" lg="3">
+        <v-card>
+          <v-card-title>Net Income (MTD)</v-card-title>
+          <v-card-text>
+            <div class="text-h4 font-weight-bold" :class="netIncomeClass">
               {{ formatCurrency(netIncome) }}
             </div>
-            <div class="mt-2 text-sm text-500">Month to Date</div>
-          </template>
-        </Card>
-      </div>
+            <div class="text-caption text-medium-emphasis mt-2">Month to Date</div>
+          </v-card-text>
+        </v-card>
+      </v-col>
       
       <!-- Recent Journal Entries -->
-      <div class="col-12 lg:8">
-        <Card>
-          <template #title>Recent Journal Entries</template>
-          <template #content>
-            <DataTable :value="recentEntries" :rows="5" :paginator="true" class="p-datatable-sm">
-              <Column field="date" header="Date" style="width: 120px">
-                <template #body="{ data }">
-                  {{ formatDate(data.date) }}
-                </template>
-              </Column>
-              <Column field="reference" header="Reference" style="width: 120px" />
-              <Column field="description" header="Description" />
-              <Column field="total" header="Amount" style="width: 150px">
-                <template #body="{ data }">
-                  {{ formatCurrency(data.total) }}
-                </template>
-              </Column>
-              <Column headerStyle="width: 4rem; text-align: center" bodyStyle="text-align: center; overflow: visible">
-                <template #body>
-                  <Button icon="pi pi-eye" class="p-button-text" @click="viewJournalEntry" />
-                </template>
-              </Column>
-            </DataTable>
-          </template>
-        </Card>
-      </div>
+      <v-col cols="12" lg="8">
+        <v-card>
+          <v-card-title>Recent Journal Entries</v-card-title>
+          <v-card-text>
+            <v-data-table :items="recentEntries" :headers="journalHeaders" items-per-page="5">
+              <template #item.date="{ item }">
+                {{ formatDate(item.date) }}
+              </template>
+              <template #item.total="{ item }">
+                {{ formatCurrency(item.total) }}
+              </template>
+              <template #item.actions="{ item }">
+                <v-btn icon="mdi-eye" variant="text" size="small" @click="viewJournalEntry" />
+              </template>
+            </v-data-table>
+          </v-card-text>
+        </v-card>
+      </v-col>
       
       <!-- Account Balances -->
-      <div class="col-12 lg:4">
-        <Card>
-          <template #title>Account Balances</template>
-          <template #content>
-            <DataTable :value="accountBalances" :scrollable="true" scrollHeight="300px" class="p-datatable-sm">
-              <Column field="name" header="Account" />
-              <Column field="balance" header="Balance" style="width: 120px">
-                <template #body="{ data }">
-                  {{ formatCurrency(data.balance) }}
-                </template>
-              </Column>
-            </DataTable>
-          </template>
-        </Card>
-      </div>
-    </div>
-  </div>
+      <v-col cols="12" lg="4">
+        <v-card>
+          <v-card-title>Account Balances</v-card-title>
+          <v-card-text>
+            <v-data-table :items="accountBalances" :headers="balanceHeaders" height="300" items-per-page="-1">
+              <template #item.balance="{ item }">
+                {{ formatCurrency(item.balance) }}
+              </template>
+            </v-data-table>
+          </v-card-text>
+        </v-card>
+      </v-col>
+    </v-row>
+  </v-container>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import Card from 'primevue/card';
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
-import Button from 'primevue/button';
-import { useFormatting } from '@/composables/useFormatting';
+import { accountsApi, journalEntriesApi } from '@/services/api';
+import { useLoadingState } from '@/composables/useStateManagement';
 
-const { formatCurrency, formatDate } = useFormatting();
+const formatCurrency = (value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US').format(date);
+
 const router = useRouter();
+const { setLoading, setError } = useLoadingState();
 
-// Mock data - replace with actual API calls
+const journalHeaders = [
+  { title: 'Date', key: 'date' },
+  { title: 'Reference', key: 'reference' },
+  { title: 'Description', key: 'description' },
+  { title: 'Amount', key: 'total' },
+  { title: 'Actions', key: 'actions', sortable: false }
+];
+
+const balanceHeaders = [
+  { title: 'Account', key: 'name' },
+  { title: 'Balance', key: 'balance' }
+];
+
+// Real data from API
 const today = new Date();
-const assetsTotal = ref(1250000);
-const liabilitiesTotal = ref(450000);
-const equityTotal = ref(800000);
-const netIncome = ref(125000);
-
-const recentEntries = ref([
-  { id: 1, date: new Date('2025-07-15'), reference: 'JE-2025-001', description: 'Monthly accrual', total: 12500.75 },
-  { id: 2, date: new Date('2025-07-14'), reference: 'JE-2025-002', description: 'Depreciation', total: 3500.25 },
-  { id: 3, date: new Date('2025-07-10'), reference: 'JE-2025-003', description: 'Bank charges', total: 125.50 },
-  { id: 4, date: new Date('2025-07-05'), reference: 'JE-2025-004', description: 'Revenue recognition', total: 45200.00 },
-  { id: 5, date: new Date('2025-07-01'), reference: 'JE-2025-005', description: 'Payroll accrual', total: 32500.00 },
-]);
-
-const accountBalances = ref([
-  { id: 1, name: 'Cash and Cash Equivalents', balance: 450000 },
-  { id: 2, name: 'Accounts Receivable', balance: 325000 },
-  { id: 3, name: 'Inventory', balance: 275000 },
-  { id: 4, name: 'Property, Plant & Equipment', balance: 200000 },
-  { id: 5, name: 'Accounts Payable', balance: -175000 },
-  { id: 6, name: 'Short-term Loans', balance: -125000 },
-  { id: 7, name: 'Long-term Debt', balance: -150000 },
-]);
+const assetsTotal = ref(0);
+const liabilitiesTotal = ref(0);
+const equityTotal = ref(0);
+const netIncome = ref(0);
+const recentEntries = ref([]);
+const accountBalances = ref([]);
 
 const netIncomeClass = computed(() => ({
-  'text-green-500': netIncome.value >= 0,
-  'text-red-500': netIncome.value < 0
+  'text-success': netIncome.value >= 0,
+  'text-error': netIncome.value < 0
 }));
 
 function viewJournalEntry() {
@@ -144,33 +130,71 @@ function viewJournalEntry() {
   router.push('/gl/journal-entries');
 }
 
+// Fetch data from API
+const fetchDashboardData = async () => {
+  try {
+    setLoading(true);
+    
+    // Fetch accounts and calculate totals
+    const accountsResponse = await accountsApi.getAll();
+    const accounts = accountsResponse.items || [];
+    
+    accountBalances.value = accounts.map(account => ({
+      id: account.id,
+      name: account.name,
+      balance: account.balance || 0
+    }));
+    
+    // Calculate totals by account type
+    assetsTotal.value = accounts
+      .filter(acc => acc.account_type === 'asset')
+      .reduce((sum, acc) => sum + (acc.balance || 0), 0);
+    
+    liabilitiesTotal.value = accounts
+      .filter(acc => acc.account_type === 'liability')
+      .reduce((sum, acc) => sum + (acc.balance || 0), 0);
+    
+    equityTotal.value = accounts
+      .filter(acc => acc.account_type === 'equity')
+      .reduce((sum, acc) => sum + (acc.balance || 0), 0);
+    
+    // Fetch recent journal entries
+    const entriesResponse = await journalEntriesApi.getAll({ limit: 5, sort: '-entry_date' });
+    recentEntries.value = (entriesResponse.items || []).map(entry => ({
+      id: entry.id,
+      date: new Date(entry.entry_date),
+      reference: entry.entry_number,
+      description: entry.description,
+      total: entry.total_debit || entry.total_credit || 0
+    }));
+    
+    // Calculate net income (revenue - expenses)
+    const revenue = accounts
+      .filter(acc => acc.account_type === 'revenue')
+      .reduce((sum, acc) => sum + (acc.balance || 0), 0);
+    
+    const expenses = accounts
+      .filter(acc => acc.account_type === 'expense')
+      .reduce((sum, acc) => sum + (acc.balance || 0), 0);
+    
+    netIncome.value = revenue - expenses;
+    
+  } catch (error) {
+    console.error('Error fetching dashboard data:', error);
+    setError('Failed to load dashboard data');
+  } finally {
+    setLoading(false);
+  }
+};
+
 // Fetch data when component mounts
 onMounted(() => {
-  // TODO: Replace with actual API calls
-  console.log('GL Dashboard mounted');
+  fetchDashboardData();
 });
 </script>
 
 <style scoped>
-.gl-dashboard {
-  padding: 1rem;
-}
-
-:deep(.p-card) {
+.v-card {
   height: 100%;
-}
-
-:deep(.p-card .p-card-title) {
-  font-size: 1.15rem;
-  margin-bottom: 0.75rem;
-}
-
-:deep(.p-datatable .p-datatable-thead > tr > th) {
-  padding: 0.5rem 1rem;
-  background: #f8f9fa;
-}
-
-:deep(.p-datatable .p-datatable-tbody > tr > td) {
-  padding: 0.5rem 1rem;
 }
 </style>

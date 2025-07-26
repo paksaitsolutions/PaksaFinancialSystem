@@ -1,76 +1,79 @@
 <template>
   <div v-if="hasError" class="error-boundary">
-    <div class="error-content">
-      <i class="pi pi-exclamation-triangle error-icon"></i>
-      <h3>Something went wrong</h3>
-      <p>{{ errorMessage }}</p>
-      <div class="error-actions">
-        <Button label="Retry" @click="retry" class="p-button-outlined" />
-        <Button label="Go Home" @click="goHome" class="p-button-text" />
-      </div>
-    </div>
+    <v-alert type="error" prominent>
+      <v-row align="center">
+        <v-col class="grow">
+          <div class="text-h6">Something went wrong</div>
+          <div class="text-body-2">{{ errorMessage }}</div>
+        </v-col>
+        <v-col class="shrink">
+          <v-btn @click="retry" color="error" variant="outlined">
+            <v-icon start>mdi-refresh</v-icon>
+            Retry
+          </v-btn>
+        </v-col>
+      </v-row>
+    </v-alert>
+    
+    <v-expansion-panels v-if="showDetails" class="mt-4">
+      <v-expansion-panel>
+        <v-expansion-panel-title>Error Details</v-expansion-panel-title>
+        <v-expansion-panel-text>
+          <pre class="error-stack">{{ errorStack }}</pre>
+        </v-expansion-panel-text>
+      </v-expansion-panel>
+    </v-expansion-panels>
   </div>
+  
   <slot v-else />
 </template>
 
 <script setup lang="ts">
-import { ref, onErrorCaptured } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, onErrorCaptured } from 'vue'
 
-const router = useRouter();
-const hasError = ref(false);
-const errorMessage = ref('An unexpected error occurred.');
+interface Props {
+  showDetails?: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  showDetails: false
+})
+
+const hasError = ref(false)
+const errorMessage = ref('')
+const errorStack = ref('')
 
 onErrorCaptured((error: Error) => {
-  hasError.value = true;
-  errorMessage.value = error.message || 'An unexpected error occurred.';
-  console.error('Error caught by boundary:', error);
-  return false;
-});
+  hasError.value = true
+  errorMessage.value = error.message || 'An unexpected error occurred'
+  errorStack.value = error.stack || ''
+  
+  // Log error for monitoring
+  console.error('Error caught by boundary:', error)
+  
+  return false // Prevent error from propagating
+})
 
 const retry = () => {
-  hasError.value = false;
-  errorMessage.value = 'An unexpected error occurred.';
-};
-
-const goHome = () => {
-  router.push('/');
-};
+  hasError.value = false
+  errorMessage.value = ''
+  errorStack.value = ''
+}
 </script>
 
 <style scoped>
 .error-boundary {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 400px;
-  padding: 2rem;
+  margin: 16px 0;
 }
 
-.error-content {
-  text-align: center;
-  max-width: 400px;
-}
-
-.error-icon {
-  font-size: 3rem;
-  color: var(--red-500);
-  margin-bottom: 1rem;
-}
-
-.error-content h3 {
-  margin: 0 0 1rem 0;
-  color: var(--text-color);
-}
-
-.error-content p {
-  margin: 0 0 2rem 0;
-  color: var(--text-color-secondary);
-}
-
-.error-actions {
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
+.error-stack {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  white-space: pre-wrap;
+  background: #f5f5f5;
+  padding: 12px;
+  border-radius: 4px;
+  max-height: 300px;
+  overflow-y: auto;
 }
 </style>

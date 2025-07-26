@@ -58,11 +58,11 @@
 
 <script setup>
 import { ref } from 'vue';
-import Dialog from 'primevue/dialog';
-import Dropdown from 'primevue/dropdown';
-import SelectButton from 'primevue/selectbutton';
-import InputText from 'primevue/inputtext';
-import Button from 'primevue/button';
+import Dialog from 'evue/dialog';
+import Dropdown from 'pvue/dropdown';
+import SelectButton from 'pvue/selectbutton';
+import InputText from 'pvue/inputtext';
+import Button from 'pvue/button';
 
 const emit = defineEmits(['export']);
 

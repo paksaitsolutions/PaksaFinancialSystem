@@ -1,21 +1,24 @@
 <template>
-  <BaseDataTable
-    title="Vendors"
-    icon="mdi-domain"
-    entity-name="Vendor"
-    :headers="headers"
-    :items="vendors"
-    :loading="loading"
-    :show-create="true"
-    @create="createVendor"
-    @edit="editVendor"
-    @delete="deleteVendor"
-  />
+  <AppLayout title="Accounts Payable - Vendors">
+    <BaseDataTable
+      title="Vendors"
+      icon="mdi-domain"
+      entity-name="Vendor"
+      :headers="headers"
+      :items="vendors"
+      :loading="loading"
+      :show-create="true"
+      @create="createVendor"
+      @edit="editVendor"
+      @delete="deleteVendor"
+    />
+  </AppLayout>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import BaseDataTable from '@/components/common/BaseDataTable.vue'
+import AppLayout from '@/layouts/AppLayout.vue'
 
 const vendors = ref([])
 const loading = ref(false)

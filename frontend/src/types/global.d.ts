@@ -1,207 +1,101 @@
-import 'vue';
-import { Store } from 'pinia';
-
-/**
- * Global type declarations for the Paksa Financial System
- */
-
 declare global {
-  /**
-   * Type for API response structure
-   */
-  interface ApiResponse<T = any> {
-    data: T;
-    message?: string;
-    statusCode: number;
-    success: boolean;
-    timestamp: string;
-    path?: string;
-  }
-
-  /**
-   * Type for paginated API responses
-   */
-  interface PaginatedResponse<T> {
-    items: T[];
-    total: number;
-    page: number;
-    pageSize: number;
-    totalPages: number;
-    hasNext: boolean;
-    hasPrevious: boolean;
-  }
-
-  /**
-   * Type for pagination parameters
-   */
-  interface PaginationParams {
-    page?: number;
-    pageSize?: number;
-    sortBy?: string;
-    sortOrder?: 'asc' | 'desc';
-    [key: string]: any; // For additional query parameters
-  }
-
-  /**
-   * Type for error response from API
-   */
-  interface ApiError {
-    message: string;
-    statusCode: number;
-    error?: string;
-    timestamp?: string;
-    path?: string;
-    details?: Record<string, string[]>;
-  }
-
-  /**
-   * Type for form validation error
-   */
-  interface ValidationError {
-    field: string;
-    message: string;
-  }
-
-  /**
-   * Type for user authentication data
-   */
-  interface AuthUser {
-    id: string | number;
-    email: string;
-    firstName?: string;
-    lastName?: string;
-    fullName: string;
-    roles: string[];
-    permissions: string[];
-    avatar?: string;
-  }
-
-  /**
-   * Type for application settings
-   */
-  interface AppSettings {
-    theme: 'light' | 'dark' | 'system';
-    locale: string;
-    currency: string;
-    timezone: string;
-    dateFormat: string;
-    timeFormat: string;
-    notifications: {
-      email: boolean;
-      push: boolean;
-      sound: boolean;
-    };
-  }
-
-  /**
-   * Type for breadcrumb navigation item
-   */
-  interface BreadcrumbItem {
-    title: string;
-    to?: string | Record<string, any>;
-    disabled?: boolean;
-  }
-
-  /**
-   * Extend Vue's ComponentCustomProperties to include global properties
-   */
-  interface ComponentCustomProperties {
-    $filters: {
-      formatDate: (date: string | Date, format?: string) => string;
-      formatCurrency: (value: number, currency?: string) => string;
-      truncate: (text: string, length: number, suffix?: string) => string;
-    };
+  interface Window {
+    // Add any global window properties here
   }
 }
 
-/**
- * Declare module for environment variables
- */
-declare module '*.env' {
-  export const VITE_API_BASE_URL: string;
-  export const VITE_APP_NAME: string;
-  export const VITE_APP_VERSION: string;
-  export const VITE_APP_ENV: 'development' | 'staging' | 'production';
-  export const VITE_APP_DEBUG: boolean;
-  export const VITE_APP_DEFAULT_LOCALE: string;
-  export const VITE_APP_FALLBACK_LOCALE: string;
-  export const VITE_APP_SUPPORTED_LOCALES: string;
-}
-
-/**
- * Declare module for Vue files
- */
+// Vue component types
 declare module '*.vue' {
-  import type { DefineComponent } from 'vue';
-  const component: DefineComponent<{}, {}, any>;
+  import type { DefineComponent } from 'vue'
+  const component: DefineComponent<{}, {}, any>
+  export default component
+}
+
+// Common types
+export interface ApiResponse<T = any> {
+  data: T;
+  message?: string;
+  success: boolean;
+}
+
+export interface PaginatedResponse<T = any> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface PaginationParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+}
+
+// Module augmentation for missing libraries
+declare module 'primevue/*' {
+  const component: any;
   export default component;
 }
 
-/**
- * Declare module for image files
- */
-declare module '*.png';
-declare module '*.jpg';
-declare module '*.jpeg';
-declare module '*.gif';
-declare module '*.svg';
-declare module '*.webp';
-
-/**
- * Declare module for CSS/SCSS modules
- */
-declare module '*.module.css' {
-  const classes: { readonly [key: string]: string };
-  export default classes;
+declare module 'vue-toastification' {
+  export const useToast: () => any;
+  export const POSITION: any;
 }
 
-declare module '*.module.scss' {
-  const classes: { readonly [key: string]: string };
-  export default classes;
+declare module 'date-fns' {
+  export const format: (date: Date, format: string) => string;
+  export const parseISO: (date: string) => Date;
+  export const startOfDay: (date: Date) => Date;
+  export const endOfDay: (date: Date) => Date;
+  export const subDays: (date: Date, days: number) => Date;
+  export const formatDistanceToNow: (date: Date) => string;
 }
 
-/**
- * Type for Pinia store with state, getters, and actions
- */
-type PiniaStore<Id extends string, S, G, A> = Store<Id, S, G, A>;
+declare module 'chart.js' {
+  export const Chart: any;
+}
 
-/**
- * Type for defining Pinia store with better type inference
- */
-type DefineStoreOptions<Id extends string, S, G, A> = {
-  id: Id;
-  state: () => S;
-  getters: G;
-  actions: A;
-  persist?: boolean | {
-    key?: string;
-    storage?: 'local' | 'session';
-    paths?: string[];
-  };
-};
+declare module 'echarts' {
+  export const init: (element: HTMLElement) => any;
+}
 
-/**
- * Type for defining Pinia store module
- */
-type PiniaStoreModule<Id extends string, S, G, A> = {
-  useStore: () => PiniaStore<Id, S, G, A>;
-  [key: string]: any;
-};
+declare module 'jspdf' {
+  export default class jsPDF {
+    constructor(options?: any);
+    text(text: string, x: number, y: number): void;
+    save(filename: string): void;
+  }
+}
 
-/**
- * Type for API service methods
- */
-type ApiServiceMethods = {
-  [key: string]: (...args: any[]) => Promise<any>;
-};
+declare module 'html2canvas' {
+  export default function html2canvas(element: HTMLElement): Promise<HTMLCanvasElement>;
+}
 
-/**
- * Type for API service with typed methods
- */
-type ApiService<T extends ApiServiceMethods> = T & {
-  baseUrl: string;
-  defaultParams?: Record<string, any>;
-  withAuth?: boolean;
-};
+declare module 'lodash' {
+  export const debounce: (func: Function, wait: number) => Function;
+  export const throttle: (func: Function, wait: number) => Function;
+}
+
+declare module 'lodash-es' {
+  export const debounce: (func: Function, wait: number) => Function;
+  export const throttle: (func: Function, wait: number) => Function;
+}
+
+declare module 'uuid' {
+  export const v4: () => string;
+}
+
+declare module 'vitest' {
+  export const describe: any;
+  export const it: any;
+  export const expect: any;
+  export const vi: any;
+  export const beforeEach: any;
+}
+
+declare module '@vue/test-utils' {
+  export const mount: any;
+  export const shallowMount: any;
+}
 
 export {};

@@ -1,170 +1,193 @@
 <template>
-  <v-app>
-    <v-main>
-      <v-container fluid class="pa-0 fill-height">
-        <v-row no-gutters class="login-wrapper">
-          <!-- Left Panel: Login -->
-          <v-col cols="12" md="6" class="left-panel">
-            <div class="login-box">
-              <div class="logo-wrapper d-flex align-center mb-6">
-                <v-img
-                  src="@/assets/PFS Logo.png"
-                  alt="Paksa Logo"
-                  max-width="48"
-                  max-height="48"
-                  class="mr-2"
-                  cover
-                />
-                <span class="logo-title">Welcome Back</span>
-              </div>
+  <AuthLayout>
+    <template #header>
+      <h1 class="text-h4 font-weight-bold">Welcome Back</h1>
+      <p class="text-body-1 text-medium-emphasis">Sign in to your account</p>
+    </template>
 
-              <h2 class="mb-4">Login to your account</h2>
-              <p class="login-subtitle mb-6">Enter your credentials to continue</p>
+    <v-form ref="form" v-model="valid" @submit.prevent="login" lazy-validation>
+      <v-text-field
+        v-model="email"
+        label="Email"
+        type="email"
+        prepend-inner-icon="mdi-email"
+        :rules="emailRules"
+        required
+        variant="outlined"
+        class="mb-3"
+      ></v-text-field>
 
-              <v-form @submit.prevent="handleLogin" ref="form">
-                <v-text-field
-                  v-model="email"
-                  label="Email"
-                  type="email"
-                  required
-                  class="mb-4"
-                  variant="outlined"
-                />
+      <v-text-field
+        v-model="password"
+        label="Password"
+        :type="showPassword ? 'text' : 'password'"
+        prepend-inner-icon="mdi-lock"
+        :append-inner-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+        @click:append-inner="showPassword = !showPassword"
+        :rules="passwordRules"
+        required
+        variant="outlined"
+        class="mb-3"
+      ></v-text-field>
 
-                <v-text-field
-                  v-model="password"
-                  label="Password"
-                  type="password"
-                  required
-                  class="mb-4"
-                  variant="outlined"
-                />
+      <div class="d-flex justify-space-between align-center mb-4">
+        <v-checkbox
+          v-model="rememberMe"
+          label="Remember me"
+          hide-details
+        ></v-checkbox>
+        
+        <v-btn
+          text
+          color="primary"
+          size="small"
+          @click="$router.push('/auth/forgot-password')"
+        >
+          Forgot Password?
+        </v-btn>
+      </div>
 
-                <div class="d-flex justify-space-between align-center mb-4">
-                  <v-checkbox
-                    v-model="rememberMe"
-                    label="Keep me logged in"
-                    density="compact"
-                    class="ma-0"
-                  />
-                  <a href="#" class="forgot">Forgot password?</a>
-                </div>
+      <v-alert
+        v-if="errorMessage"
+        type="error"
+        class="mb-4"
+        closable
+        @click:close="errorMessage = ''"
+      >
+        {{ errorMessage }}
+      </v-alert>
 
-                <v-btn
-                  type="submit"
-                  block
-                  color="primary"
-                  class="login-btn"
-                  :loading="authStore.isLoading"
-                >
-                  Login
-                </v-btn>
-              </v-form>
+      <v-btn
+        type="submit"
+        color="primary"
+        size="large"
+        block
+        :loading="loading"
+        class="mb-4"
+      >
+        Sign In
+      </v-btn>
 
-              <div class="signup-link mt-4">
-                Don’t have an account?
-                <router-link to="/auth/register">Sign up</router-link>
-              </div>
-            </div>
-          </v-col>
+      <v-divider class="mb-4"></v-divider>
 
-          <!-- Right Panel -->
-          <v-col cols="12" md="6" class="right-panel d-flex align-center justify-center">
-            <div class="slogan text-center">
-              <h1>Welcome to Paksa Financial</h1>
-              <p>Changing the way financial management works</p>
-            </div>
-          </v-col>
-        </v-row>
-      </v-container>
-    </v-main>
-  </v-app>
+      <!-- Demo Credentials -->
+      <div class="text-center mb-4">
+        <p class="text-caption text-medium-emphasis mb-3">Demo Credentials</p>
+        <div class="d-flex gap-2 justify-center flex-wrap">
+          <v-btn
+            size="small"
+            color="primary"
+            variant="outlined"
+            @click="fillDemoCredentials('admin')"
+          >
+            Admin Login
+          </v-btn>
+          <v-btn
+            size="small"
+            color="secondary"
+            variant="outlined"
+            @click="fillDemoCredentials('user')"
+          >
+            User Login
+          </v-btn>
+        </div>
+      </div>
+
+      <div class="text-center">
+        <span class="text-body-2">Don't have an account?</span>
+        <v-btn
+          text
+          color="primary"
+          size="small"
+          @click="$router.push('/auth/register')"
+        >
+          Sign Up
+        </v-btn>
+      </div>
+    </v-form>
+  </AuthLayout>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { useAuthStore } from '@/modules/auth/store/auth.store';
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import AuthLayout from '@/layouts/AuthLayout.vue'
 
-const authStore = useAuthStore();
-const email = ref('');
-const password = ref('');
-const rememberMe = ref(false);
+const router = useRouter()
 
-const handleLogin = async () => {
-  if (!email.value || !password.value) return;
-  await authStore.login(email.value, password.value);
-};
+// Form data
+const email = ref('')
+const password = ref('')
+const rememberMe = ref(false)
+const showPassword = ref(false)
+const valid = ref(true)
+const loading = ref(false)
+const errorMessage = ref('')
+
+// Validation rules
+const emailRules = [
+  (v: string) => !!v || 'Email is required'
+]
+
+const passwordRules = [
+  (v: string) => !!v || 'Password is required'
+]
+
+// Demo credentials
+const fillDemoCredentials = (type: 'admin' | 'user') => {
+  if (type === 'admin') {
+    email.value = 'admin@paksa.com'
+    password.value = 'admin123'
+  } else {
+    email.value = 'user@paksa.com'
+    password.value = 'user123'
+  }
+}
+
+// Login function
+const login = async () => {
+  if (!email.value || !password.value) {
+    errorMessage.value = 'Please enter both email and password'
+    return
+  }
+
+  loading.value = true
+  errorMessage.value = ''
+
+  try {
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    
+    // Mock authentication logic
+    if (email.value === 'admin@paksa.com' && password.value === 'admin123') {
+      localStorage.setItem('user', JSON.stringify({
+        email: email.value,
+        name: 'Admin User',
+        role: 'admin'
+      }))
+      localStorage.setItem('token', 'mock-jwt-token-admin')
+      router.push('/')
+    } else if (email.value === 'user@paksa.com' && password.value === 'user123') {
+      localStorage.setItem('user', JSON.stringify({
+        email: email.value,
+        name: 'Regular User',
+        role: 'user'
+      }))
+      localStorage.setItem('token', 'mock-jwt-token-user')
+      router.push('/')
+    } else {
+      errorMessage.value = 'Invalid credentials. Use demo accounts: admin@paksa.com/admin123 or user@paksa.com/user123'
+    }
+  } catch (error) {
+    errorMessage.value = 'Login failed. Please try again.'
+  } finally {
+    loading.value = false
+  }
+}
 </script>
 
 <style scoped>
-.login-wrapper {
-  height: 100vh;
-  background: #f5f7fa;
-}
-
-.left-panel {
-  padding: 64px 48px;
-  background: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.login-box {
-  width: 100%;
-  max-width: 400px;
-  background: #fff;
-  padding: 32px;
-  border-radius: 12px;
-  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.05);
-}
-
-.logo-wrapper {
-  display: flex;
-  align-items: center;
-}
-
-.logo-title {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: #7c3aed;
-}
-
-.login-subtitle {
-  color: #6b7280;
-  font-size: 0.95rem;
-}
-
-.right-panel {
-  background: linear-gradient(to right, #56a8fa, #1976d2);
-  color: #fff;
-}
-
-.slogan h1 {
-  font-size: 2.5rem;
-  font-weight: bold;
-  margin-bottom: 16px;
-}
-
-.slogan p {
-  font-size: 1.25rem;
-  font-weight: 400;
-  color: #f3e9ff;
-}
-
-.forgot {
-  font-size: 0.9rem;
-  color: #1976d2;
-  text-decoration: none;
-}
-
-.signup-link {
-  font-size: 0.9rem;
-  text-align: center;
-}
-
-.login-btn {
-  font-weight: 600;
-  font-size: 1rem;
+.gap-2 {
+  gap: 0.5rem;
 }
 </style>

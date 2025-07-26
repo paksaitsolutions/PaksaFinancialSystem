@@ -74,12 +74,12 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { useToast } from 'primevue/usetoast';
-import Button from 'primevue/button';
-import Card from 'primevue/card';
-import Chip from 'primevue/chip';
-import Menu from 'primevue/menu';
-import type { MenuItem } from 'primevue/menuitem';
+import { useToast } from 'vue/usetoast';
+import Button from 'vue/button';
+import Card from 'vue/card';
+import Chip from 'vue/chip';
+import Menu from 'vue/menu';
+import type { MenuItem } from 'vue/menuitem';
 
 const props = defineProps<{
   report: {

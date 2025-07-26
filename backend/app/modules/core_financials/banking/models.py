@@ -24,7 +24,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from core.database import Base
+from app.core.database import Base
 
 
 class BankAccountType(str, Enum):

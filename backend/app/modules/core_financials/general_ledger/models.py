@@ -38,8 +38,10 @@ class JournalEntry(BaseModel):
     total_debit = Column(Numeric(15, 2), default=0)
     total_credit = Column(Numeric(15, 2), default=0)
     status = Column(String(20), default='draft')
+    posted_at = Column(DateTime)
+    reversed_at = Column(DateTime)
     
-    lines = relationship("JournalEntryLine", back_populates="journal_entry")
+    lines = relationship("JournalEntryLine", back_populates="journal_entry", cascade="all, delete-orphan")
 
 class JournalEntryLine(BaseModel):
     __tablename__ = 'journal_entry_lines'

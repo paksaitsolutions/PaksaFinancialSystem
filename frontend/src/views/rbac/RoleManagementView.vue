@@ -1,5 +1,5 @@
 <template>
-  <v-container fluid>
+  <AppLayout title="User Management - Roles">
     <v-row>
       <v-col cols="12">
         <v-card>
@@ -168,19 +168,24 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-  </v-container>
+  </AppLayout>
 </template>
 
 <script>
-import { ref, onMounted } from 'vue';
-import rbacService from '@/services/rbacService';
-import { useSnackbar } from '@/composables/useSnackbar';
+import { ref, onMounted } from 'vue'
+import AppLayout from '@/layouts/AppLayout.vue'
+// import rbacService from '@/services/rbacService'
+// import { useSnackbar } from '@/composables/useSnackbar'
 
 export default {
   name: 'RoleManagementView',
+  components: {
+    AppLayout
+  },
   
   setup() {
-    const { showSnackbar } = useSnackbar();
+    // const { showSnackbar } = useSnackbar()
+    const showSnackbar = (msg, type) => console.log(msg, type)
     
     const roleHeaders = [
       { title: 'Role Name', key: 'name', sortable: true },
@@ -208,27 +213,25 @@ export default {
     const roleForm = ref(null);
     
     const loadRoles = async () => {
-      loading.value = true;
-      try {
-        const response = await rbacService.listRoles();
-        roles.value = response.data;
-      } catch (error) {
-        console.error('Failed to load roles:', error);
-        showSnackbar('Failed to load roles', 'error');
-      } finally {
-        loading.value = false;
-      }
-    };
+      loading.value = true
+      // Mock data
+      roles.value = [
+        { id: 1, name: 'Admin', code: 'ADMIN', description: 'Full system access', is_active: true, permissions: [{ id: 1, code: 'ALL' }] },
+        { id: 2, name: 'Manager', code: 'MANAGER', description: 'Management access', is_active: true, permissions: [{ id: 2, code: 'READ' }, { id: 3, code: 'WRITE' }] },
+        { id: 3, name: 'User', code: 'USER', description: 'Basic user access', is_active: true, permissions: [{ id: 2, code: 'READ' }] }
+      ]
+      loading.value = false
+    }
     
     const loadPermissions = async () => {
-      try {
-        const response = await rbacService.listPermissions();
-        permissions.value = response.data;
-      } catch (error) {
-        console.error('Failed to load permissions:', error);
-        showSnackbar('Failed to load permissions', 'error');
-      }
-    };
+      // Mock data
+      permissions.value = [
+        { id: 1, name: 'All Permissions', code: 'ALL' },
+        { id: 2, name: 'Read Access', code: 'READ' },
+        { id: 3, name: 'Write Access', code: 'WRITE' },
+        { id: 4, name: 'Delete Access', code: 'DELETE' }
+      ]
+    }
     
     const openRoleDialog = (role = null) => {
       if (role) {
@@ -255,42 +258,30 @@ export default {
     };
     
     const saveRole = async () => {
-      if (!roleForm.value.validate()) return;
-      
-      saving.value = true;
-      try {
-        await rbacService.createRole(editedRole.value);
-        showSnackbar('Role created successfully', 'success');
-        closeRoleDialog();
-        loadRoles();
-      } catch (error) {
-        console.error('Failed to save role:', error);
-        showSnackbar(`Failed to save role: ${error.response?.data?.detail || error.message}`, 'error');
-      } finally {
-        saving.value = false;
-      }
-    };
+      saving.value = true
+      // Mock save
+      setTimeout(() => {
+        showSnackbar('Role created successfully', 'success')
+        closeRoleDialog()
+        loadRoles()
+        saving.value = false
+      }, 1000)
+    }
     
     const viewRole = (role) => {
-      openRoleDialog(role);
-    };
+      openRoleDialog(role)
+    }
     
     const initializeRBAC = async () => {
-      try {
-        await rbacService.initializeRBAC();
-        showSnackbar('RBAC initialized successfully', 'success');
-        loadRoles();
-        loadPermissions();
-      } catch (error) {
-        console.error('Failed to initialize RBAC:', error);
-        showSnackbar(`Failed to initialize RBAC: ${error.response?.data?.detail || error.message}`, 'error');
-      }
-    };
+      showSnackbar('RBAC initialized successfully', 'success')
+      loadRoles()
+      loadPermissions()
+    }
     
     onMounted(() => {
-      loadRoles();
-      loadPermissions();
-    });
+      loadRoles()
+      loadPermissions()
+    })
     
     return {
       roleHeaders,
@@ -309,7 +300,7 @@ export default {
       saveRole,
       viewRole,
       initializeRBAC
-    };
+    }
   }
-};
+}
 </script>

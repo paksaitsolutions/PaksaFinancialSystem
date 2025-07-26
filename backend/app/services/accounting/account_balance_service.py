@@ -14,7 +14,7 @@ from dateutil.relativedelta import relativedelta
 from sqlalchemy import and_, case, func, or_, select, text
 from sqlalchemy.orm import Session, aliased
 
-from core.database import SessionLocal
+from app.core.database import SessionLocal
 from ..exceptions import (
     AccountNotFoundException,
     InvalidDateRangeException,

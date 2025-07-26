@@ -12,7 +12,7 @@ from sqlalchemy import Column, DateTime, Enum as SQLEnum, ForeignKey, Numeric, S
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, relationship, mapped_column
 
-from core.database import Base
+from app.core.database import Base
 
 
 class ReconciliationStatus(str, Enum):

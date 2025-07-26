@@ -1,15 +1,18 @@
 <template>
-  <v-btn
-    :icon="themeStore.isDark ? 'mdi-weather-sunny' : 'mdi-weather-night'"
-    variant="text"
-    @click="themeStore.toggleTheme()"
-    :title="themeStore.isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
-  >
+  <v-btn icon @click="toggleTheme">
+    <v-icon>{{ isDark ? 'mdi-weather-sunny' : 'mdi-weather-night' }}</v-icon>
   </v-btn>
 </template>
 
 <script setup>
-import { useThemeStore } from '@/stores/theme'
+import { computed } from 'vue'
+import { useTheme } from 'vuetify'
 
-const themeStore = useThemeStore()
+const theme = useTheme()
+
+const isDark = computed(() => theme.global.name.value === 'dark')
+
+const toggleTheme = () => {
+  theme.global.name.value = isDark.value ? 'light' : 'dark'
+}
 </script>
