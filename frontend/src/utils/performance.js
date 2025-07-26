@@ -1,33 +1,13 @@
-// Performance optimization utilities for mobile
+// Frontend performance optimization utilities
+
 export class PerformanceOptimizer {
   constructor() {
-    this.imageCache = new Map()
-    this.componentCache = new Map()
-    this.observers = new Map()
+    this.cache = new Map()
+    this.cacheTimeout = 5 * 60 * 1000 // 5 minutes
+    this.performanceMetrics = []
   }
-  
-  // Lazy load images
-  lazyLoadImage(img, src) {
-    if (this.imageCache.has(src)) {
-      img.src = this.imageCache.get(src)
-      return
-    }
-    
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const image = entry.target
-          image.src = src
-          this.imageCache.set(src, src)
-          observer.unobserve(image)
-        }
-      })
-    })
-    
-    observer.observe(img)
-  }
-  
-  // Debounce function calls
+
+  // Debounce function for search inputs
   debounce(func, wait) {
     let timeout
     return function executedFunction(...args) {
@@ -39,8 +19,8 @@ export class PerformanceOptimizer {
       timeout = setTimeout(later, wait)
     }
   }
-  
-  // Throttle function calls
+
+  // Throttle function for scroll events
   throttle(func, limit) {
     let inThrottle
     return function() {
@@ -53,148 +33,151 @@ export class PerformanceOptimizer {
       }
     }
   }
-  
-  // Virtual scrolling for large lists
-  createVirtualScroller(container, itemHeight, items, renderItem) {
-    const containerHeight = container.clientHeight
-    const visibleCount = Math.ceil(containerHeight / itemHeight) + 2
-    let startIndex = 0
-    
-    const render = () => {
-      const fragment = document.createDocumentFragment()
-      const endIndex = Math.min(startIndex + visibleCount, items.length)
-      
-      container.innerHTML = ''
-      container.style.height = `${items.length * itemHeight}px`
-      container.style.paddingTop = `${startIndex * itemHeight}px`
-      
-      for (let i = startIndex; i < endIndex; i++) {
-        const element = renderItem(items[i], i)
-        fragment.appendChild(element)
-      }
-      
-      container.appendChild(fragment)
+
+  // Cache API responses
+  cacheResponse(key, data) {
+    this.cache.set(key, {
+      data,
+      timestamp: Date.now()
+    })
+  }
+
+  getCachedResponse(key) {
+    const cached = this.cache.get(key)
+    if (cached && (Date.now() - cached.timestamp) < this.cacheTimeout) {
+      return cached.data
     }
-    
-    const onScroll = this.throttle(() => {
-      const scrollTop = container.scrollTop
-      const newStartIndex = Math.floor(scrollTop / itemHeight)
-      
-      if (newStartIndex !== startIndex) {
-        startIndex = newStartIndex
-        render()
-      }
-    }, 16)
-    
-    container.addEventListener('scroll', onScroll)
-    render()
+    this.cache.delete(key)
+    return null
+  }
+
+  // Lazy loading for components
+  lazyLoad(importFunc) {
+    return () => ({
+      component: importFunc(),
+      loading: () => import('@/components/common/LoadingSpinner.vue'),
+      error: () => import('@/components/common/ErrorComponent.vue'),
+      delay: 200,
+      timeout: 10000
+    })
+  }
+
+  // Virtual scrolling for large lists
+  calculateVisibleItems(containerHeight, itemHeight, scrollTop, totalItems) {
+    const visibleCount = Math.ceil(containerHeight / itemHeight)
+    const startIndex = Math.floor(scrollTop / itemHeight)
+    const endIndex = Math.min(startIndex + visibleCount + 5, totalItems) // 5 item buffer
     
     return {
-      destroy: () => container.removeEventListener('scroll', onScroll)
+      startIndex: Math.max(0, startIndex - 5), // 5 item buffer
+      endIndex,
+      visibleCount
     }
   }
-  
-  // Preload critical resources
-  preloadResource(url, type = 'fetch') {
-    return new Promise((resolve, reject) => {
-      if (type === 'image') {
-        const img = new Image()
-        img.onload = () => resolve(img)
-        img.onerror = reject
-        img.src = url
-      } else {
-        fetch(url)
-          .then(response => response.json())
-          .then(resolve)
-          .catch(reject)
-      }
-    })
-  }
-  
-  // Memory management
-  cleanupUnusedResources() {
-    // Clear old cache entries
-    const now = Date.now()
-    const maxAge = 30 * 60 * 1000 // 30 minutes
+
+  // Performance monitoring
+  measurePerformance(name, fn) {
+    const start = performance.now()
+    const result = fn()
+    const end = performance.now()
     
-    this.imageCache.forEach((value, key) => {
-      if (now - value.timestamp > maxAge) {
-        this.imageCache.delete(key)
-      }
+    this.performanceMetrics.push({
+      name,
+      duration: end - start,
+      timestamp: Date.now()
     })
     
-    // Cleanup observers
-    this.observers.forEach((observer, key) => {
-      if (!document.querySelector(key)) {
-        observer.disconnect()
-        this.observers.delete(key)
-      }
-    })
+    return result
   }
-  
-  // Touch optimization
-  optimizeTouch(element) {
-    element.style.touchAction = 'manipulation'
-    element.style.webkitTouchCallout = 'none'
-    element.style.webkitUserSelect = 'none'
-    element.style.userSelect = 'none'
+
+  // Image optimization
+  optimizeImage(src, width, height) {
+    return `${src}?w=${width}&h=${height}&q=80&f=webp`
   }
-  
-  // Reduce animations on low-end devices
-  reduceMotion() {
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
-    return mediaQuery.matches || this.isLowEndDevice()
-  }
-  
-  // Detect low-end devices
-  isLowEndDevice() {
-    const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection
-    const memory = navigator.deviceMemory
-    const cores = navigator.hardwareConcurrency
-    
-    return (
-      (connection && connection.effectiveType === 'slow-2g') ||
-      (memory && memory < 4) ||
-      (cores && cores < 4)
+
+  // Bundle splitting helper
+  loadChunk(chunkName) {
+    return import(
+      /* webpackChunkName: "[request]" */
+      `@/modules/${chunkName}`
     )
+  }
+
+  // Memory cleanup
+  cleanup() {
+    this.cache.clear()
+    this.performanceMetrics = this.performanceMetrics.slice(-100) // Keep last 100 metrics
+  }
+
+  // Get performance report
+  getPerformanceReport() {
+    const metrics = this.performanceMetrics.slice(-50) // Last 50 operations
+    const avgDuration = metrics.reduce((sum, m) => sum + m.duration, 0) / metrics.length
+    
+    return {
+      cacheSize: this.cache.size,
+      averageOperationTime: avgDuration || 0,
+      totalOperations: this.performanceMetrics.length,
+      recentMetrics: metrics
+    }
   }
 }
 
+// Singleton instance
 export const performanceOptimizer = new PerformanceOptimizer()
 
-// Vue composable for performance optimization
-export function usePerformance() {
-  const { debounce, throttle, preloadResource, cleanupUnusedResources } = performanceOptimizer
-  
-  const optimizeForMobile = () => {
-    // Disable hover effects on touch devices
-    if ('ontouchstart' in window) {
-      document.body.classList.add('touch-device')
-    }
+// Vue directive for lazy loading images
+export const lazyImageDirective = {
+  mounted(el, binding) {
+    const imageObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const img = entry.target
+          img.src = binding.value
+          img.classList.remove('lazy')
+          imageObserver.unobserve(img)
+        }
+      })
+    })
     
-    // Optimize scrolling
-    document.addEventListener('touchstart', () => {}, { passive: true })
-    document.addEventListener('touchmove', () => {}, { passive: true })
+    el.classList.add('lazy')
+    imageObserver.observe(el)
   }
-  
-  const measurePerformance = (name, fn) => {
-    return async (...args) => {
-      const start = performance.now()
-      const result = await fn(...args)
-      const end = performance.now()
-      console.log(`${name} took ${end - start} milliseconds`)
-      return result
+}
+
+// Mixin for component performance optimization
+export const performanceMixin = {
+  data() {
+    return {
+      isVisible: true,
+      intersectionObserver: null
     }
-  }
+  },
   
-  return {
-    debounce,
-    throttle,
-    preloadResource,
-    cleanupUnusedResources,
-    optimizeForMobile,
-    measurePerformance,
-    isLowEndDevice: performanceOptimizer.isLowEndDevice,
-    reduceMotion: performanceOptimizer.reduceMotion
+  mounted() {
+    // Implement intersection observer for component visibility
+    this.intersectionObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        this.isVisible = entry.isIntersecting
+      })
+    })
+    
+    if (this.$el) {
+      this.intersectionObserver.observe(this.$el)
+    }
+  },
+  
+  beforeUnmount() {
+    if (this.intersectionObserver) {
+      this.intersectionObserver.disconnect()
+    }
+  },
+  
+  methods: {
+    optimizedUpdate: performanceOptimizer.debounce(function(updateFn) {
+      if (this.isVisible) {
+        updateFn()
+      }
+    }, 100)
   }
 }
