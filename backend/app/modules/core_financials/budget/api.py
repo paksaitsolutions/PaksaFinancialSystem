@@ -103,3 +103,67 @@ async def get_budget_vs_actual(
 ):
     budget_service = BudgetService(db)
     return await budget_service.get_budget_vs_actual(budget_id, period, company_id=current_user.company_id)
+
+@router.post("/{budget_id}/version")
+async def create_budget_version(
+    budget_id: int,
+    version_data: dict,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    budget_service = BudgetService(db)
+    return await budget_service.create_version(budget_id, version_data, current_user.id)
+
+@router.get("/{budget_id}/versions")
+async def get_budget_versions(
+    budget_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    budget_service = BudgetService(db)
+    return await budget_service.get_versions(budget_id)
+
+@router.post("/consolidate")
+async def consolidate_budgets(
+    budget_ids: List[int],
+    consolidation_data: dict,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    budget_service = BudgetService(db)
+    return await budget_service.consolidate_budgets(budget_ids, consolidation_data, current_user.id)
+
+@router.get("/monitoring/realtime")
+async def get_realtime_monitoring(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    budget_service = BudgetService(db)
+    return await budget_service.get_realtime_monitoring(current_user.company_id)
+
+@router.get("/alerts")
+async def get_budget_alerts(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    budget_service = BudgetService(db)
+    return await budget_service.get_budget_alerts(current_user.company_id)
+
+@router.post("/alerts")
+async def create_budget_alert(
+    alert_data: dict,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    budget_service = BudgetService(db)
+    return await budget_service.create_alert(alert_data, current_user.id)
+
+@router.get("/variance-analysis/{budget_id}")
+async def get_variance_analysis(
+    budget_id: int,
+    period: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    budget_service = BudgetService(db)
+    return await budget_service.get_variance_analysis(budget_id, period, current_user.company_id)

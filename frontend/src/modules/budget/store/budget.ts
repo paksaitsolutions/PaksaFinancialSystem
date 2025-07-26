@@ -151,6 +151,83 @@ export const useBudgetStore = defineStore('budget', {
       } finally {
         this.loading = false
       }
+    },
+
+    async submitBudget(id: string) {
+      try {
+        this.loading = true
+        const submittedBudget = await budgetApiService.submitBudget(id)
+        const index = this.budgets.findIndex(budget => budget.id === id)
+        if (index !== -1) {
+          this.budgets[index] = submittedBudget
+        }
+        return submittedBudget
+      } catch (error) {
+        this.error = 'Failed to submit budget'
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async createBudgetVersion(id: string, versionData: any) {
+      try {
+        this.loading = true
+        return await budgetApiService.createBudgetVersion(id, versionData)
+      } catch (error) {
+        this.error = 'Failed to create budget version'
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async consolidateBudgets(budgetIds: string[], consolidationData: any) {
+      try {
+        this.loading = true
+        return await budgetApiService.consolidateBudgets(budgetIds, consolidationData)
+      } catch (error) {
+        this.error = 'Failed to consolidate budgets'
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async getRealtimeMonitoring() {
+      try {
+        this.loading = true
+        return await budgetApiService.getRealtimeMonitoring()
+      } catch (error) {
+        this.error = 'Failed to get realtime monitoring'
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async createBudgetAlert(alertData: any) {
+      try {
+        this.loading = true
+        return await budgetApiService.createBudgetAlert(alertData)
+      } catch (error) {
+        this.error = 'Failed to create budget alert'
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async getVarianceAnalysis(budgetId: string, period: string) {
+      try {
+        this.loading = true
+        return await budgetApiService.getVarianceAnalysis(budgetId, period)
+      } catch (error) {
+        this.error = 'Failed to get variance analysis'
+        throw error
+      } finally {
+        this.loading = false
+      }
     }
   }
 })

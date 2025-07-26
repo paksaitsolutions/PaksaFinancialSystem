@@ -64,6 +64,40 @@ class BudgetApiService {
     const response = await axios.post(`${API_BASE}/${id}/submit`)
     return response.data
   }
+
+  async submitBudget(id: string): Promise<Budget> {
+    return this.submitForApproval(id)
+  }
+
+  async createBudgetVersion(id: string, versionData: any): Promise<any> {
+    const response = await axios.post(`${API_BASE}/${id}/version`, versionData)
+    return response.data
+  }
+
+  async consolidateBudgets(budgetIds: string[], consolidationData: any): Promise<any> {
+    const response = await axios.post(`${API_BASE}/consolidate`, {
+      budget_ids: budgetIds,
+      ...consolidationData
+    })
+    return response.data
+  }
+
+  async getRealtimeMonitoring(): Promise<any> {
+    const response = await axios.get(`${API_BASE}/monitoring/realtime`)
+    return response.data
+  }
+
+  async createBudgetAlert(alertData: any): Promise<any> {
+    const response = await axios.post(`${API_BASE}/alerts`, alertData)
+    return response.data
+  }
+
+  async getVarianceAnalysis(budgetId: string, period: string): Promise<any> {
+    const response = await axios.get(`${API_BASE}/variance-analysis/${budgetId}`, {
+      params: { period }
+    })
+    return response.data
+  }
 }
 
 export const budgetApiService = new BudgetApiService()
