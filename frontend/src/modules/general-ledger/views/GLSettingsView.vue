@@ -1,17 +1,14 @@
 <template>
   <v-container fluid>
-<<<<<<< HEAD
     <v-row>
       <v-col cols="12">
         <h1 class="text-h4 mb-4">General Ledger Settings</h1>
-        
         <v-tabs v-model="activeTab">
           <v-tab value="general">General Settings</v-tab>
           <v-tab value="periods">Accounting Periods</v-tab>
           <v-tab value="closing">Period Closing</v-tab>
           <v-tab value="audit">Audit Settings</v-tab>
         </v-tabs>
-        
         <v-window v-model="activeTab" class="mt-4">
           <v-window-item value="general">
             <v-card>
@@ -55,7 +52,6 @@
               </v-card-text>
             </v-card>
           </v-window-item>
-          
           <v-window-item value="periods">
             <v-card>
               <v-card-title>Accounting Periods</v-card-title>
@@ -92,62 +88,20 @@
               </v-card-text>
             </v-card>
           </v-window-item>
-          
           <v-window-item value="closing">
             <period-closing-settings @save="savePeriodClosingSettings" />
           </v-window-item>
-          
           <v-window-item value="audit">
             <audit-settings @save="saveAuditSettings" />
           </v-window-item>
         </v-window>
       </v-col>
     </v-row>
-=======
-    <v-card>
-      <v-card-title>General Ledger Settings</v-card-title>
-      <v-card-text>
-        <v-form @submit.prevent="saveSettings">
-          <v-row>
-            <v-col cols="12" md="6">
-              <v-switch
-                v-model="settings.allow_future_posting"
-                label="Allow Future Date Posting"
-                color="primary"
-              />
-            </v-col>
-            <v-col cols="12" md="6">
-              <v-switch
-                v-model="settings.require_balanced_entries"
-                label="Require Balanced Entries"
-                color="primary"
-              />
-            </v-col>
-            <v-col cols="12" md="6">
-              <v-select
-                v-model="settings.base_currency"
-                :items="['USD', 'EUR', 'GBP']"
-                label="Base Currency"
-              />
-            </v-col>
-            <v-col cols="12" md="6">
-              <v-select
-                v-model="settings.fiscal_year_start_month"
-                :items="months"
-                label="Fiscal Year Start Month"
-              />
-            </v-col>
-          </v-row>
-          <v-btn type="submit" color="primary" :loading="saving">Save Settings</v-btn>
-        </v-form>
-      </v-card-text>
-    </v-card>
->>>>>>> 1f165d554f9014f0b749be3a8fe06df77942d7c1
   </v-container>
 </template>
 
+
 <script setup>
-<<<<<<< HEAD
 import { ref, onMounted } from 'vue'
 import PeriodClosingSettings from '../components/PeriodClosingSettings.vue'
 import AuditSettings from '../components/AuditSettings.vue'
@@ -233,26 +187,5 @@ onMounted(async () => {
   }
   await loadAccountingPeriods()
 })
-=======
-import { ref } from 'vue'
 
-const saving = ref(false)
-const settings = ref({
-  allow_future_posting: false,
-  require_balanced_entries: true,
-  base_currency: 'USD',
-  fiscal_year_start_month: 1
-})
-
-const months = Array.from({length: 12}, (_, i) => ({
-  title: new Date(0, i).toLocaleString('default', {month: 'long'}),
-  value: i + 1
-}))
-
-const saveSettings = async () => {
-  saving.value = true
-  // API call would go here
-  setTimeout(() => { saving.value = false }, 1000)
-}
->>>>>>> 1f165d554f9014f0b749be3a8fe06df77942d7c1
 </script>

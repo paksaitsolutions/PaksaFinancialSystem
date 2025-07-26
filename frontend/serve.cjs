@@ -4,6 +4,8 @@ const fs = require('fs');
 const rateLimit = require('express-rate-limit');
 
 const app = express();
+// Trust proxy headers for correct rate limiting behind reverse proxy/Docker
+app.set('trust proxy', 1);
 const PORT = 3000;
 
 // Serve static files from the dist directory if it exists, otherwise from the current directory
@@ -18,9 +20,11 @@ const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // limit each IP to 100 requests per windowMs
 });
+// Apply rate limiter globally before any routes
+app.use(limiter);
 
 // Handle SPA routing - serve index.html for all routes
-app.get('*', limiter, (req, res) => {
+app.get('*', (req, res) => {
   // Try to serve index.html from dist first, then fallback to root
   const indexPath = fs.existsSync(path.join(staticPath, 'index.html'))
     ? path.join(staticPath, 'index.html')

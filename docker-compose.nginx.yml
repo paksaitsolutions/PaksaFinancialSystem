@@ -1,0 +1,83 @@
+version: '3.8'
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.local
+    container_name: paksafinancialsystem-frontend
+    restart: unless-stopped
+    expose:
+      - 3000
+    environment:
+      - NODE_ENV=production
+    networks:
+      - app-network
+
+  backend:
+    build: ./backend
+    container_name: paksafinancialsystem-backend
+    restart: unless-stopped
+    expose:
+      - 8000
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://user:password@db/paksa_financial
+      - DATABASE_READ_REPLICA_URL=postgresql+asyncpg://user:password@db_replica/paksa_financial
+      - USE_READ_REPLICA=true
+      - REDIS_URL=redis://redis:6379
+      - ENVIRONMENT=development
+      - DEBUG=true
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./backend:/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/docs"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  nginx:
+    image: nginx:alpine
+    container_name: paksafinancialsystem-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./frontend/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./frontend/dist:/usr/share/nginx/html:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - app-network
+
+  db:
+    image: postgres:16-alpine
+    container_name: db
+    environment:
+      POSTGRES_DB: paksa_financial
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_REPLICATION_USER: replicator
+      POSTGRES_REPLICATION_PASSWORD: replicator_password
+    expose:
+      - 5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/postgresql.conf:/etc/postgresql/postgresql.conf
+      - ./postgres/pg_hba.conf:/etc/postgresql/pg_hba.conf
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
+
+  redis:
+    image: redis:7-alpine
+    expose:
+      - 6379
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
