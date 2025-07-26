@@ -1,59 +1,69 @@
 /**
- * Common types used across the application
+ * Common TypeScript types for the application
  */
 
-export interface PaginatedResponse<T> {
-  items: T[];
-  total: number;
-  page: number;
-  page_size: number;
-  total_pages: number;
+// Base entity interface
+export interface BaseEntity {
+  id: string
+  createdAt: string
+  updatedAt: string
+  tenantId?: string
 }
 
-export interface ApiError {
-  message: string;
-  code?: string;
-  details?: Record<string, any>;
-}
-
-export interface SortOption {
-  field: string;
-  direction: 'asc' | 'desc';
-}
-
-export interface FilterOption {
-  field: string;
-  operator: 'eq' | 'neq' | 'gt' | 'gte' | 'lt' | 'lte' | 'like' | 'in' | 'is_null';
-  value: any;
-}
-
-export interface ListQueryParams {
-  page?: number;
-  page_size?: number;
-  sort_by?: string;
-  sort_direction?: 'asc' | 'desc';
-  filters?: FilterOption[];
-  search?: string;
-}
-
+// API response wrapper
 export interface ApiResponse<T> {
-  data: T;
-  message?: string;
-  success: boolean;
-  errors?: Record<string, string[]>;
+  data: T
+  message?: string
+  success: boolean
 }
 
-export interface SelectOption<T = string> {
-  value: T;
-  label: string;
-  disabled?: boolean;
-  [key: string]: any;
+// Pagination interface
+export interface PaginatedResponse<T> {
+  items: T[]
+  total: number
+  page: number
+  limit: number
+  hasNext: boolean
+  hasPrev: boolean
 }
 
-export interface KeyValuePair<T = any> {
-  [key: string]: T;
+// Form validation
+export interface ValidationRule {
+  required?: boolean
+  minLength?: number
+  maxLength?: number
+  pattern?: RegExp
+  custom?: (value: any) => boolean | string
 }
 
-export type UUID = string;
+// Component props with validation
+export interface BaseProps {
+  loading?: boolean
+  disabled?: boolean
+  error?: string
+}
 
-export type Nullable<T> = T | null | undefined;
+// State management types
+export interface LoadingState {
+  isLoading: boolean
+  error: string | null
+}
+
+// User interface
+export interface User extends BaseEntity {
+  email: string
+  firstName: string
+  lastName: string
+  role: string
+  isActive: boolean
+}
+
+// Company/Tenant interface
+export interface Company extends BaseEntity {
+  name: string
+  code: string
+  address: string
+  phone: string
+  email: string
+  isActive: boolean
+}

@@ -7,11 +7,16 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.db import get_db
 from app.modules.core_financials.general_ledger.services import AccountService, JournalEntryService
+from app.modules.core_financials.general_ledger.ai_bi_service import GLAIBIService, GLBIEndpointService
 from app.modules.core_financials.general_ledger.schemas import (
     AccountCreate, AccountUpdate, AccountResponse,
     JournalEntryCreate, JournalEntryResponse,
     TrialBalanceResponse, TrialBalanceItem
 )
+from app.core.exceptions.handlers import handle_exception, ValidationError, NotFoundError
+from app.core.logging.config import get_logger
+
+logger = get_logger("gl_api")
 
 router = APIRouter()
 account_service = AccountService()
@@ -19,18 +24,22 @@ journal_service = JournalEntryService()
 
 # Account endpoints
 @router.post("/accounts/", response_model=AccountResponse, status_code=status.HTTP_201_CREATED)
+@handle_exception
 async def create_account(
     account: AccountCreate,
     db: AsyncSession = Depends(get_db)
 ):
+    logger.info(f"Creating account: {account.account_code}")
+    
     # Check if account code already exists
     existing = await account_service.get_by_code(db, account.account_code)
     if existing:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Account code already exists"
-        )
-    return await account_service.create(db, obj_in=account)
+        logger.warning(f"Account code already exists: {account.account_code}")
+        raise ValidationError("Account code already exists", "account_code")
+    
+    result = await account_service.create(db, obj_in=account)
+    logger.info(f"Account created successfully: {result.id}")
+    return result
 
 @router.get("/accounts/", response_model=List[AccountResponse])
 async def get_accounts(
@@ -85,6 +94,53 @@ async def create_journal_entry(
             detail=str(e)
         )
 
+@router.post("/journal-entries/{entry_id}/post", response_model=JournalEntryResponse)
+@handle_exception
+async def post_journal_entry(
+    entry_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    logger.info(f"Posting journal entry: {entry_id}")
+    
+    try:
+        result = await journal_service.post_entry(db, entry_id)
+        logger.info(f"Journal entry posted successfully: {entry_id}")
+        return result
+    except ValueError as e:
+        logger.error(f"Failed to post journal entry {entry_id}: {str(e)}")
+        raise ValidationError(str(e))
+    except Exception as e:
+        logger.error(f"Unexpected error posting journal entry {entry_id}: {str(e)}")
+        raise
+
+@router.post("/journal-entries/{entry_id}/unpost", response_model=JournalEntryResponse)
+async def unpost_journal_entry(
+    entry_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    try:
+        return await journal_service.unpost_entry(db, entry_id)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
+@router.post("/journal-entries/{entry_id}/reverse", response_model=JournalEntryResponse)
+async def reverse_journal_entry(
+    entry_id: int,
+    reversal_date: date,
+    reason: str,
+    db: AsyncSession = Depends(get_db)
+):
+    try:
+        return await journal_service.reverse_entry(db, entry_id, reversal_date, reason)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
 @router.get("/journal-entries/", response_model=List[JournalEntryResponse])
 async def get_journal_entries(
     skip: int = 0,
@@ -122,3 +178,66 @@ async def get_trial_balance(
         total_debits=total_debits,
         total_credits=total_credits
     )
+
+# AI/BI Integration endpoints
+@router.get("/ai-bi/cash-flow-data")
+async def get_cash_flow_data(
+    months: int = 12,
+    db: AsyncSession = Depends(get_db)
+):
+    """Get cash flow data for predictive analysis"""
+    tenant_id = "test-tenant"  # Replace with actual tenant context
+    return await GLAIBIService.get_cash_flow_data(db, tenant_id, months)
+
+@router.get("/ai-bi/anomalies")
+async def get_journal_anomalies(
+    db: AsyncSession = Depends(get_db)
+):
+    """Detect anomalies in journal entries"""
+    tenant_id = "test-tenant"  # Replace with actual tenant context
+    return await GLAIBIService.detect_journal_anomalies(db, tenant_id)
+
+@router.get("/ai-bi/kpis")
+async def get_real_time_kpis(
+    db: AsyncSession = Depends(get_db)
+):
+    """Get real-time KPIs for dashboards"""
+    tenant_id = "test-tenant"  # Replace with actual tenant context
+    return await GLAIBIService.get_real_time_kpis(db, tenant_id)
+
+@router.get("/ai-bi/trends")
+async def get_financial_trends(
+    periods: int = 12,
+    db: AsyncSession = Depends(get_db)
+):
+    """Get financial trends for analysis"""
+    tenant_id = "test-tenant"  # Replace with actual tenant context
+    return await GLAIBIService.get_financial_trends(db, tenant_id, periods)
+
+# BI Tool Integration endpoints
+@router.get("/bi/tableau/{data_type}")
+async def tableau_integration(
+    data_type: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """Tableau integration endpoint"""
+    tenant_id = "test-tenant"  # Replace with actual tenant context
+    return await GLBIEndpointService.get_tableau_data(db, tenant_id, data_type)
+
+@router.get("/bi/powerbi/{report_type}")
+async def powerbi_integration(
+    report_type: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """PowerBI integration endpoint"""
+    tenant_id = "test-tenant"  # Replace with actual tenant context
+    return await GLBIEndpointService.get_powerbi_data(db, tenant_id, report_type)
+
+@router.get("/bi/metabase/{query_type}")
+async def metabase_integration(
+    query_type: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """Metabase integration endpoint"""
+    tenant_id = "test-tenant"  # Replace with actual tenant context
+    return await GLBIEndpointService.get_metabase_data(db, tenant_id, query_type)

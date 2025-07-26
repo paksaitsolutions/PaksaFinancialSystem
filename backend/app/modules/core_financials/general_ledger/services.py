@@ -7,6 +7,9 @@ from app.crud.base import CRUDBase
 from app.modules.core_financials.general_ledger.models import Account, JournalEntry, JournalEntryLine, AccountType
 from app.modules.core_financials.general_ledger.schemas import AccountCreate, AccountUpdate, JournalEntryCreate, TrialBalanceItem
 from app.core.security.input_validation import AccountCodeValidator, sanitize_sql_input
+from app.core.logging.config import get_logger
+
+logger = get_logger("gl_services")
 
 class AccountService(CRUDBase[Account, AccountCreate, AccountUpdate]):
     def __init__(self):
@@ -111,6 +114,98 @@ class JournalEntryService(CRUDBase[JournalEntry, JournalEntryCreate, None]):
             ))
         
         return trial_balance_items
+    
+    async def post_entry(self, db: AsyncSession, entry_id: int) -> JournalEntry:
+        logger.info(f"Attempting to post journal entry: {entry_id}")
+        
+        entry = await self.get(db, entry_id)
+        if not entry:
+            logger.error(f"Journal entry not found for posting: {entry_id}")
+            raise ValueError("Journal entry not found")
+        if entry.status != 'draft':
+            logger.warning(f"Cannot post entry {entry_id} - status is {entry.status}, expected 'draft'")
+            raise ValueError("Only draft entries can be posted")
+        
+        try:
+            entry.status = 'posted'
+            entry.posted_at = func.now()
+            await db.commit()
+            await db.refresh(entry)
+            logger.info(f"Journal entry posted successfully: {entry_id}")
+            return entry
+        except Exception as e:
+            logger.error(f"Failed to post journal entry {entry_id}: {str(e)}")
+            await db.rollback()
+            raise
+    
+    async def unpost_entry(self, db: AsyncSession, entry_id: int) -> JournalEntry:
+        entry = await self.get(db, entry_id)
+        if not entry:
+            raise ValueError("Journal entry not found")
+        if entry.status != 'posted':
+            raise ValueError("Only posted entries can be unposted")
+        
+        entry.status = 'draft'
+        entry.posted_at = None
+        await db.commit()
+        await db.refresh(entry)
+        return entry
+    
+    async def reverse_entry(self, db: AsyncSession, entry_id: int, reversal_date: date, reason: str) -> JournalEntry:
+        logger.info(f"Attempting to reverse journal entry: {entry_id}, reason: {reason}")
+        
+        original_entry = await self.get(db, entry_id)
+        if not original_entry:
+            logger.error(f"Journal entry not found for reversal: {entry_id}")
+            raise ValueError("Journal entry not found")
+        if original_entry.status != 'posted':
+            logger.warning(f"Cannot reverse entry {entry_id} - status is {original_entry.status}, expected 'posted'")
+            raise ValueError("Only posted entries can be reversed")
+        
+        # Create reversal entry
+        reversal_number = await self._generate_entry_number(db)
+        reversal_entry = JournalEntry(
+            entry_number=reversal_number,
+            entry_date=reversal_date,
+            description=f"Reversal of {original_entry.entry_number}: {reason}",
+            reference=original_entry.reference,
+            total_debit=original_entry.total_credit,
+            total_credit=original_entry.total_debit,
+            status='posted'
+        )
+        
+        db.add(reversal_entry)
+        await db.flush()
+        
+        # Create reversed line items
+        result = await db.execute(
+            select(JournalEntryLine).where(JournalEntryLine.journal_entry_id == entry_id)
+        )
+        original_lines = result.scalars().all()
+        
+        for line in original_lines:
+            reversed_line = JournalEntryLine(
+                journal_entry_id=reversal_entry.id,
+                account_id=line.account_id,
+                description=f"Reversal: {line.description}",
+                debit_amount=line.credit_amount,
+                credit_amount=line.debit_amount
+            )
+            db.add(reversed_line)
+        
+        # Update original entry
+        original_entry.status = 'reversed'
+        original_entry.reversed_at = func.now()
+        
+        try:
+            await db.commit()
+            await db.refresh(reversal_entry)
+            logger.info(f"Journal entry reversed successfully: {entry_id} -> {reversal_entry.id}")
+            return reversal_entry
+        except Exception as e:
+            logger.error(f"Failed to reverse journal entry {entry_id}: {str(e)}")
+            await db.rollback()
+            raise
     
     async def _generate_entry_number(self, db: AsyncSession) -> str:
         result = await db.execute(

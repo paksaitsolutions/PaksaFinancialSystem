@@ -26,9 +26,12 @@
           <div class="flex justify-content-between align-items-center">
             <span class="p-input-icon-left">
               <i class="pi pi-search" />
-              <InputText 
-                v-model="filters['global'].value" 
-                placeholder="Search accounts..." 
+              <v-text-field
+                v-model="searchTerm"
+                placeholder="Search accounts..."
+                prepend-inner-icon="mdi-magnify"
+                variant="outlined"
+                density="compact"
               />
             </span>
             <div>
@@ -255,7 +258,7 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 // Removed PrimeVue useToast - using Vuetify snackbar instead
-import { FilterMatchMode } from 'primevue/api';
+// Removed PrimeVue FilterMatchMode - using Vuetify components
 import { useGlAccountsStore, type GlAccount } from '@/modules/general-ledger/store/gl-accounts';
 import ExportDialog from '@/components/common/ExportDialog.vue';
 
@@ -302,8 +305,9 @@ export default {
     const accountToDelete = ref<GlAccount | null>(null);
     
     // Filtering
+    const searchTerm = ref('');
     const filters = ref({
-      'global': { value: null, matchMode: FilterMatchMode.CONTAINS },
+      'global': { value: null },
     });
     
     // Export configuration
@@ -328,6 +332,24 @@ export default {
 
     const activeAccountsCount = computed(() => {
       return accounts.value.filter(acc => acc.isActive).length;
+    });
+
+    const tableHeaders = [
+      { title: 'Code', key: 'code', sortable: true },
+      { title: 'Account Name', key: 'name', sortable: true },
+      { title: 'Type', key: 'type', sortable: true },
+      { title: 'Balance', key: 'balance', sortable: true },
+      { title: 'Status', key: 'status', sortable: true },
+      { title: 'Actions', key: 'actions', sortable: false }
+    ];
+
+    const filteredAccountsForTable = computed(() => {
+      return accounts.value.map(account => ({
+        ...account,
+        code: account.accountNumber,
+        type: account.accountType,
+        status: account.isActive ? 'Active' : 'Inactive'
+      }));
     });
 
     // Form state
@@ -600,7 +622,9 @@ export default {
       snackbar,
       snackbarText,
       snackbarColor,
-      showSnackbar
+      showSnackbar,
+      tableHeaders,
+      filteredAccountsForTable
     };
   }
 };

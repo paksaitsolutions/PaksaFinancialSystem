@@ -1,81 +1,74 @@
-from fastapi import Request, HTTPException, status
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
-from slowapi.errors import RateLimitExceeded
+"""Rate limiting implementation"""
 import redis
-from app.core.config import settings
+import time
+from fastapi import Request, HTTPException
+from typing import Optional
 
-# Create rate limiter with Redis backend
-limiter = Limiter(
-    key_func=get_remote_address,
-    storage_uri=settings.REDIS_URL,
-    default_limits=["1000/hour", "100/minute"]
-)
-
-# Enhanced rate limiter with tenant awareness
-class TenantAwareRateLimiter:
-    def __init__(self):
-        self.redis_client = redis.Redis.from_url(settings.REDIS_URL)
-        self.limits = {
-            "login": {"requests": 5, "window": 300},  # 5 requests per 5 minutes
-            "api": {"requests": 100, "window": 60},   # 100 requests per minute
-            "upload": {"requests": 10, "window": 3600} # 10 uploads per hour
-        }
+class RateLimiter:
+    def __init__(self, redis_client: redis.Redis):
+        self.redis = redis_client
     
-    def check_rate_limit(self, key: str, limit_type: str = "api") -> bool:
-        """Check if request is within rate limits"""
-        limit_config = self.limits.get(limit_type, self.limits["api"])
+    def is_allowed(self, key: str, limit: int, window: int) -> bool:
+        """Check if request is within rate limit"""
+        current_time = int(time.time())
+        window_start = current_time - window
         
-        current_count = self.redis_client.get(key)
-        if current_count is None:
-            # First request
-            self.redis_client.setex(key, limit_config["window"], 1)
-            return True
+        # Remove old entries
+        self.redis.zremrangebyscore(key, 0, window_start)
         
-        current_count = int(current_count)
-        if current_count >= limit_config["requests"]:
+        # Count current requests
+        current_requests = self.redis.zcard(key)
+        
+        if current_requests >= limit:
             return False
         
-        # Increment counter
-        self.redis_client.incr(key)
+        # Add current request
+        self.redis.zadd(key, {str(current_time): current_time})
+        self.redis.expire(key, window)
+        
         return True
     
-    def get_tenant_key(self, request: Request, tenant_id: str, limit_type: str) -> str:
-        """Generate tenant-specific rate limit key"""
-        ip = get_remote_address(request)
-        return f"rate_limit:{tenant_id}:{ip}:{limit_type}"
-
-tenant_rate_limiter = TenantAwareRateLimiter()
-
-def rate_limit_check(limit_type: str = "api"):
-    """Decorator for rate limiting endpoints"""
-    def decorator(func):
-        async def wrapper(request: Request, *args, **kwargs):
-            from app.core.db.tenant_middleware import get_current_tenant
-            
-            try:
-                tenant_id = get_current_tenant()
-                key = tenant_rate_limiter.get_tenant_key(request, tenant_id, limit_type)
-                
-                if not tenant_rate_limiter.check_rate_limit(key, limit_type):
-                    raise HTTPException(
-                        status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                        detail=f"Rate limit exceeded for {limit_type}"
-                    )
-                
-                return await func(request, *args, **kwargs)
-            except Exception as e:
-                if isinstance(e, HTTPException):
-                    raise
-                # If tenant context fails, use IP-based limiting
-                ip = get_remote_address(request)
-                key = f"rate_limit:unknown:{ip}:{limit_type}"
-                if not tenant_rate_limiter.check_rate_limit(key, limit_type):
-                    raise HTTPException(
-                        status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                        detail="Rate limit exceeded"
-                    )
-                return await func(request, *args, **kwargs)
+    def get_remaining(self, key: str, limit: int, window: int) -> int:
+        """Get remaining requests in current window"""
+        current_time = int(time.time())
+        window_start = current_time - window
         
-        return wrapper
-    return decorator
+        self.redis.zremrangebyscore(key, 0, window_start)
+        current_requests = self.redis.zcard(key)
+        
+        return max(0, limit - current_requests)
+
+rate_limiter = RateLimiter(redis.Redis(host='localhost', port=6379, db=1))
+
+async def rate_limit_middleware(request: Request, call_next):
+    """Rate limiting middleware"""
+    client_ip = request.client.host
+    user_id = getattr(request.state, 'user_id', None)
+    
+    # Different limits for different endpoints
+    if request.url.path.startswith('/api/auth'):
+        limit, window = 5, 60  # 5 requests per minute for auth
+        key = f"rate_limit:auth:{client_ip}"
+    elif user_id:
+        limit, window = 1000, 3600  # 1000 requests per hour for authenticated users
+        key = f"rate_limit:user:{user_id}"
+    else:
+        limit, window = 100, 3600  # 100 requests per hour for anonymous
+        key = f"rate_limit:ip:{client_ip}"
+    
+    if not rate_limiter.is_allowed(key, limit, window):
+        raise HTTPException(
+            status_code=429,
+            detail="Rate limit exceeded",
+            headers={"Retry-After": str(window)}
+        )
+    
+    response = await call_next(request)
+    
+    # Add rate limit headers
+    remaining = rate_limiter.get_remaining(key, limit, window)
+    response.headers["X-RateLimit-Limit"] = str(limit)
+    response.headers["X-RateLimit-Remaining"] = str(remaining)
+    response.headers["X-RateLimit-Reset"] = str(int(time.time()) + window)
+    
+    return response
