@@ -57,15 +57,8 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile.local
-    environment:
-      VITE_API_BASE_URL: http://localhost:8000/api/v1
-      VITE_APP_TITLE: Paksa Financial System - Local Production
     ports:
       - "3000:3000"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    command: npm run dev -- --host 0.0.0.0
 
 volumes:
   postgres_data:
