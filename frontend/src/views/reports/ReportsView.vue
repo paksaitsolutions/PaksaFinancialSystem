@@ -393,7 +393,7 @@ const saveSchedule = async () => {
     scheduleDialog.value.visible = false;
     
     // Show success message
-    // @ts-ignore - We know this exists from PrimeVue
+    // @ts-ignore - We know this exists from Vue
     useToast().add({
       severity: 'success',
       summary: 'Schedule Saved',
@@ -404,7 +404,7 @@ const saveSchedule = async () => {
     console.error('Error saving schedule:', error);
     
     // Show error message
-    // @ts-ignore - We know this exists from PrimeVue
+    // @ts-ignore - We know this exists from Vue
     useToast().add({
       severity: 'error',
       summary: 'Error',

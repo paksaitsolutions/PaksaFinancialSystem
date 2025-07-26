@@ -2,15 +2,15 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useStore } from 'vuex';
-import { useToast } from 'primevue/usetoast';
+import { useToast } from 'vue/usetoast';
 import enhancedReportsService from '@/services/enhancedReportsService';
 import { formatCurrency, formatPercentage, formatDate } from '@/utils/formatters';
 import ReportHeader from '@/components/reports/ReportHeader.vue';
 import SummaryCard from '@/components/reports/SummaryCard.vue';
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
-import Dropdown from 'primevue/dropdown';
-import Button from 'primevue/button';
+import DataTable from 'vue/datatable';
+import Column from 'vue/column';
+import Dropdown from 'vue/dropdown';
+import Button from 'vue/button';
 
 // Initialize necessary hooks and store
 const router = useRouter();

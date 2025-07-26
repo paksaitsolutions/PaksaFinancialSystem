@@ -348,18 +348,18 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { useToast } from 'primevue/usetoast';
-import Button from 'primevue/button';
-import InputText from 'primevue/inputtext';
-import Textarea from 'primevue/textarea';
-import Dropdown from 'primevue/dropdown';
-import RadioButton from 'primevue/radiobutton';
-import Checkbox from 'primevue/checkbox';
-import InputNumber from 'primevue/inputnumber';
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
-import Divider from 'primevue/divider';
-import Tag from 'primevue/tag';
+import { useToast } from 'vue/usetoast';
+import Button from 'vue/button';
+import InputText from 'vue/inputtext';
+import Textarea from 'vue/textarea';
+import Dropdown from 'vue/dropdown';
+import RadioButton from 'vue/radiobutton';
+import Checkbox from 'vue/checkbox';
+import InputNumber from 'vue/inputnumber';
+import DataTable from 'vue/datatable';
+import Column from 'vue/column';
+import Divider from 'vue/divider';
+import Tag from 'vue/tag';
 
 const emit = defineEmits(['close']);
 const toast = useToast();
