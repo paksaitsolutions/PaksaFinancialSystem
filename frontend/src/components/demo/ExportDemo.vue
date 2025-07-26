@@ -59,12 +59,12 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useToast } from 'primevue/usetoast';
+import { useToast } from 'vue/usetoast';
 import { useReportExport } from '@/composables/useReportExport';
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
-import Button from 'primevue/button';
-import Tag from 'primevue/tag';
+import DataTable from 'vue/datatable';
+import Column from 'vue/column';
+import Button from 'vue/button';
+import Tag from 'vue/tag';
 import ExportDialog from '@/components/common/ExportDialog.vue';
 
 const { t } = useI18n();

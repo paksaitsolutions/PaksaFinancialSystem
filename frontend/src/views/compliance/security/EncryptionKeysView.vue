@@ -268,7 +268,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { useToast } from 'primevue/usetoast';
+import { useToast } from 'vue/usetoast';
 import { format, addMonths, addYears, isBefore, addDays, parseISO } from 'date-fns';
 
 // Components

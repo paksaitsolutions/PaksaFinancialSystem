@@ -220,7 +220,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
-import { useToast } from 'primevue/usetoast';
+import { useToast } from 'vue/usetoast';
 import { format } from 'date-fns';
 
 // Types

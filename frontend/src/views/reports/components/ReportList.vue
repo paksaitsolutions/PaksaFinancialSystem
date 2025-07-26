@@ -268,8 +268,8 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { useConfirm } from 'primevue/useconfirm';
-import { useToast } from 'primevue/usetoast';
+import { useConfirm } from 'vue/useconfirm';
+import { useToast } from 'vue/usetoast';
 import { useRouter } from 'vue-router';
 import { useReportsStore } from '@/stores/reports';
 import ReportCard from './ReportCard.vue';

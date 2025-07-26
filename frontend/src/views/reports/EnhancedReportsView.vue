@@ -112,7 +112,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { useToast } from 'primevue/usetoast';
+import { useToast } from 'vue/usetoast';
 import enhancedReportsService from '@/services/enhancedReportsService';
 
 const toast = useToast();

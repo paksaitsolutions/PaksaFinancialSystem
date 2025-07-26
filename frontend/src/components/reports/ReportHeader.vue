@@ -63,11 +63,11 @@
 <script setup lang="ts">
 import { ref, defineProps, defineEmits, watch } from 'vue';
 import { format } from 'date-fns';
-import Calendar from 'primevue/calendar';
-import Button from 'primevue/button';
-import SplitButton from 'primevue/splitbutton';
-import Divider from 'primevue/divider';
-import { useToast } from 'primevue/usetoast';
+import Calendar from 'vue/calendar';
+import Button from 'vue/button';
+import SplitButton from 'vue/splitbutton';
+import Divider from 'vue/divider';
+import { useToast } from 'vue/usetoast';
 
 const props = defineProps({
   title: {

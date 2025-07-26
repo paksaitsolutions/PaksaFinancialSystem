@@ -33,8 +33,8 @@
 
 <script setup>
 import { ref } from 'vue';
-import Dialog from 'primevue/dialog';
-import Button from 'primevue/button';
+import Dialog from 'vue/dialog';
+import Button from 'vue/button';
 
 const emit = defineEmits(['confirm', 'cancel']);
 

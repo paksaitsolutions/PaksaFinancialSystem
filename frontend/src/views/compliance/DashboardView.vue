@@ -155,7 +155,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { useToast } from 'primevue/usetoast';
+import { useToast } from 'vue/usetoast';
 import { format, subDays } from 'date-fns';
 
 // Router and toast

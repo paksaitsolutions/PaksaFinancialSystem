@@ -83,8 +83,8 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { useConfirm } from 'primevue/useconfirm';
-import type { MenuItem } from 'primevue/menuitem';
+import { useConfirm } from 'vue/useconfirm';
+import type { MenuItem } from 'vue/menuitem';
 import type { Report } from '@/types/reports';
 
 const props = defineProps<{

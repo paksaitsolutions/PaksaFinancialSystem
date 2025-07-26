@@ -57,7 +57,7 @@
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
 import { encryptionService } from '@/services/encryptionService';
-import { useToast } from 'primevue/usetoast';
+import { useToast } from 'vue/usetoast';
 
 export default defineComponent({
   name: 'EncryptionTestView',
