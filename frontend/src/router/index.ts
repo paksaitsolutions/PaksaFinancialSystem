@@ -52,24 +52,24 @@ const routes: RouteRecordRaw[] = [
         component: () => import(/* webpackChunkName: "general-ledger" */ '@/modules/general-ledger/views/Dashboard.vue')
       },
       {
-        path: 'chart-of-accounts',
-        name: 'ChartOfAccounts',
-        component: () => import('@/views/accounting/ChartOfAccountsView.vue')
+        path: 'accounts',
+        name: 'GLAccounts',
+        component: () => import('@/modules/general-ledger/views/accounts/GLAccountsView.vue')
       },
       {
         path: 'journal-entries',
-        name: 'JournalEntries',
-        component: () => import('@/views/accounting/JournalEntryView.vue')
+        name: 'GLJournalEntries',
+        component: () => import('@/modules/general-ledger/views/journal-entries/JournalEntriesView.vue')
       },
       {
         path: 'trial-balance',
-        name: 'TrialBalance',
-        component: () => import('@/views/accounting/TrialBalanceView.vue')
+        name: 'GLTrialBalance',
+        component: () => import('@/modules/general-ledger/views/reports/TrialBalanceView.vue')
       },
       {
         path: 'financial-statements',
-        name: 'FinancialStatements',
-        component: () => import('@/views/accounting/FinancialStatementsView.vue')
+        name: 'GLFinancialStatements',
+        component: () => import('@/modules/general-ledger/components/FinancialReportsView.vue')
       }
     ]
   },
@@ -81,7 +81,22 @@ const routes: RouteRecordRaw[] = [
       {
         path: '',
         name: 'AccountsPayable',
-        component: () => import(/* webpackChunkName: "accounts-payable" */ '@/modules/accounts-payable/views/VendorsAdvancedView.vue')
+        component: () => import('@/modules/accounts-payable/views/VendorsAdvancedView.vue')
+      },
+      {
+        path: 'vendors',
+        name: 'APVendors',
+        component: () => import('@/modules/accounts-payable/views/VendorsAdvancedView.vue')
+      },
+      {
+        path: 'bills',
+        name: 'APBills',
+        component: () => import('@/views/ModuleView.vue')
+      },
+      {
+        path: 'payments',
+        name: 'APPayments',
+        component: () => import('@/views/ModuleView.vue')
       }
     ]
   },
@@ -94,6 +109,21 @@ const routes: RouteRecordRaw[] = [
         path: '',
         name: 'AccountsReceivable',
         component: () => import('@/views/accounts-receivable/CustomersView.vue')
+      },
+      {
+        path: 'customers',
+        name: 'ARCustomers',
+        component: () => import('@/views/accounts-receivable/CustomersView.vue')
+      },
+      {
+        path: 'invoices',
+        name: 'ARInvoices',
+        component: () => import('@/modules/accounts-receivable/views/ARInvoicesAdvanced.vue')
+      },
+      {
+        path: 'payments',
+        name: 'ARPayments',
+        component: () => import('@/views/ModuleView.vue')
       }
     ]
   },

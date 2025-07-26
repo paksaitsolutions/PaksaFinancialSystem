@@ -207,6 +207,35 @@ class JournalEntryService(CRUDBase[JournalEntry, JournalEntryCreate, None]):
             await db.rollback()
             raise
     
+    async def validate_period_close(self, db: AsyncSession, period_end_date: date) -> dict:
+        """Validate period can be closed"""
+        logger.info(f"Validating period close for: {period_end_date}")
+        
+        # Check for unposted entries
+        unposted = await db.execute(
+            select(func.count(JournalEntry.id))
+            .where(and_(
+                JournalEntry.entry_date <= period_end_date,
+                JournalEntry.status == 'draft'
+            ))
+        )
+        unposted_count = unposted.scalar() or 0
+        
+        # Check trial balance
+        accounts = await db.execute(select(Account))
+        total_debits = sum(acc.balance for acc in accounts.scalars().all() if acc.balance > 0)
+        total_credits = sum(abs(acc.balance) for acc in accounts.scalars().all() if acc.balance < 0)
+        
+        is_balanced = abs(total_debits - total_credits) < 0.01
+        
+        return {
+            "can_close": unposted_count == 0 and is_balanced,
+            "unposted_entries": unposted_count,
+            "trial_balance_balanced": is_balanced,
+            "total_debits": total_debits,
+            "total_credits": total_credits
+        }
+    
     async def _generate_entry_number(self, db: AsyncSession) -> str:
         result = await db.execute(
             select(func.count(JournalEntry.id))

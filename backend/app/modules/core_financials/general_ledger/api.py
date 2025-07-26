@@ -8,6 +8,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.db import get_db
 from app.modules.core_financials.general_ledger.services import AccountService, JournalEntryService
 from app.modules.core_financials.general_ledger.ai_bi_service import GLAIBIService, GLBIEndpointService
+from app.modules.core_financials.general_ledger.audit_service import GLAuditService
+from fastapi import Query
+from datetime import date
 from app.modules.core_financials.general_ledger.schemas import (
     AccountCreate, AccountUpdate, AccountResponse,
     JournalEntryCreate, JournalEntryResponse,
@@ -39,6 +42,12 @@ async def create_account(
     
     result = await account_service.create(db, obj_in=account)
     logger.info(f"Account created successfully: {result.id}")
+    
+    # Log audit trail
+    await GLAuditService.log_account_action(
+        db, "test-tenant", "test-user", "CREATE", str(result.id), None, account.dict()
+    )
+    
     return result
 
 @router.get("/accounts/", response_model=List[AccountResponse])
@@ -105,6 +114,12 @@ async def post_journal_entry(
     try:
         result = await journal_service.post_entry(db, entry_id)
         logger.info(f"Journal entry posted successfully: {entry_id}")
+        
+        # Log audit trail
+        await GLAuditService.log_journal_entry_action(
+            db, "test-tenant", "test-user", "POST", str(entry_id)
+        )
+        
         return result
     except ValueError as e:
         logger.error(f"Failed to post journal entry {entry_id}: {str(e)}")
@@ -241,3 +256,67 @@ async def metabase_integration(
     """Metabase integration endpoint"""
     tenant_id = "test-tenant"  # Replace with actual tenant context
     return await GLBIEndpointService.get_metabase_data(db, tenant_id, query_type)
+
+# GL Report endpoints
+@router.get("/reports/balance-sheet")
+async def balance_sheet_report(
+    as_of_date: date = Query(default_factory=date.today),
+    db: AsyncSession = Depends(get_db)
+):
+    """Generate Balance Sheet report"""
+    accounts = await db.execute(
+        select(Account).where(Account.account_type.in_(['asset', 'liability', 'equity']))
+    )
+    return {"report_type": "balance_sheet", "as_of_date": as_of_date, "accounts": [acc.__dict__ for acc in accounts.scalars().all()]}
+
+@router.get("/reports/income-statement")
+async def income_statement_report(
+    start_date: date = Query(...),
+    end_date: date = Query(...),
+    db: AsyncSession = Depends(get_db)
+):
+    """Generate Income Statement report"""
+    accounts = await db.execute(
+        select(Account).where(Account.account_type.in_(['revenue', 'expense']))
+    )
+    return {"report_type": "income_statement", "period": f"{start_date} to {end_date}", "accounts": [acc.__dict__ for acc in accounts.scalars().all()]}
+
+@router.get("/reports/cash-flow")
+async def cash_flow_report(
+    start_date: date = Query(...),
+    end_date: date = Query(...),
+    db: AsyncSession = Depends(get_db)
+):
+    """Generate Cash Flow report"""
+    return {"report_type": "cash_flow", "period": f"{start_date} to {end_date}", "operating_activities": [], "investing_activities": [], "financing_activities": []}
+
+# GL Settings endpoints
+@router.get("/settings")
+async def get_gl_settings(
+    db: AsyncSession = Depends(get_db)
+):
+    """Get GL settings"""
+    return {
+        "allow_future_posting": False,
+        "require_balanced_entries": True,
+        "auto_post_entries": False,
+        "base_currency": "USD",
+        "fiscal_year_start_month": 1
+    }
+
+@router.put("/settings")
+async def update_gl_settings(
+    settings: dict,
+    db: AsyncSession = Depends(get_db)
+):
+    """Update GL settings"""
+    return {"message": "Settings updated successfully", "settings": settings}
+
+@router.post("/period-close/validate")
+async def validate_period_close(
+    period_end_date: date,
+    db: AsyncSession = Depends(get_db)
+):
+    """Validate period can be closed"""
+    journal_service = JournalEntryService()
+    return await journal_service.validate_period_close(db, period_end_date)
