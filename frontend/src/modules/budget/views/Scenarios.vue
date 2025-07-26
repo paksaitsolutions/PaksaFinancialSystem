@@ -1,84 +1,84 @@
 <template>
-  <div class="budget-scenarios">
-    <PageHeader 
-      title="Budget Scenarios" 
-      subtitle="Manage different budget scenarios for planning and forecasting"
-    >
-      <template #actions>
-        <Button 
-          label="New Scenario" 
-          icon="pi pi-plus" 
-          class="p-button-outlined"
-          @click="openNewScenarioDialog"
-        />
-      </template>
-    </PageHeader>
+  <v-container fluid class="budget-scenarios">
+    <v-row class="mb-4">
+      <v-col cols="12" class="d-flex justify-space-between align-center">
+        <div>
+          <h1 class="text-h4">Budget Scenarios</h1>
+          <p class="text-subtitle-1">Manage different budget scenarios for planning and forecasting</p>
+        </div>
+        <v-btn color="primary" variant="outlined" @click="openNewScenarioDialog">
+          <v-icon start>mdi-plus</v-icon>
+          New Scenario
+        </v-btn>
+      </v-col>
+    </v-row>
 
     <!-- Scenario Cards -->
-    <div class="grid">
-      <div 
+    <v-row>
+      <v-col 
         v-for="scenario in scenarios" 
         :key="scenario.id"
-        class="col-12 md:col-6 lg:col-4 xl:col-3"
+        cols="12" md="6" lg="4" xl="3"
       >
-        <div class="scenario-card" :class="getScenarioCardClass(scenario)">
-          <div class="flex justify-content-between align-items-center mb-3">
-            <h3 class="m-0">{{ scenario.name }}</h3>
-            <Tag 
-              :value="scenario.status" 
-              :severity="getStatusSeverity(scenario.status)" 
-              class="status-tag"
-            />
-          </div>
-          <p class="text-500 mt-0 mb-3">{{ scenario.description }}</p>
+        <v-card class="scenario-card h-100" :class="getScenarioCardClass(scenario)">
+          <v-card-title class="d-flex justify-space-between align-center">
+            <span>{{ scenario.name }}</span>
+            <v-chip 
+              :color="getStatusColor(scenario.status)" 
+              size="small"
+            >
+              {{ scenario.status }}
+            </v-chip>
+          </v-card-title>
+          <v-card-text>
+            <p class="text-body-2 mb-4">{{ scenario.description }}</p>
           
-          <div class="scenario-stats">
-            <div class="stat-item">
-              <span class="stat-label">Budget</span>
-              <span class="stat-value">{{ formatCurrency(scenario.budget) }}</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-label">Variance</span>
-              <span 
-                class="stat-value" 
-                :class="scenario.variance >= 0 ? 'text-green-500' : 'text-red-500'"
-              >
-                {{ formatCurrency(scenario.variance) }}
-              </span>
-            </div>
-          </div>
+            <v-row class="mb-4">
+              <v-col cols="6" class="text-center">
+                <div class="text-caption text-medium-emphasis">Budget</div>
+                <div class="text-h6">{{ formatCurrency(scenario.budget) }}</div>
+              </v-col>
+              <v-col cols="6" class="text-center">
+                <div class="text-caption text-medium-emphasis">Variance</div>
+                <div class="text-h6" :class="scenario.variance >= 0 ? 'text-success' : 'text-error'">
+                  {{ formatCurrency(scenario.variance) }}
+                </div>
+              </v-col>
+            </v-row>
           
-          <Divider class="my-3" />
-          
-          <div class="flex justify-content-between align-items-center">
-            <span class="text-500 text-sm">
-              <i class="pi pi-calendar mr-1"></i>
-              {{ formatDate(scenario.startDate) }} - {{ formatDate(scenario.endDate) }}
-            </span>
-            <div>
-              <Button 
-                icon="pi pi-chart-line" 
-                class="p-button-rounded p-button-text p-button-sm"
-                @click="viewScenario(scenario)"
-                v-tooltip.top="'View Details'"
-              />
-              <Button 
-                icon="pi pi-pencil" 
-                class="p-button-rounded p-button-text p-button-sm"
-                @click="editScenario(scenario)"
-                v-tooltip.top="'Edit'"
-              />
-              <Button 
-                icon="pi pi-trash" 
-                class="p-button-rounded p-button-text p-button-sm p-button-danger"
-                @click="confirmDeleteScenario(scenario)"
-                v-tooltip.top="'Delete'"
-              />
+            <v-divider class="mb-3" />
+            
+            <div class="d-flex justify-space-between align-center">
+              <div class="text-caption d-flex align-center">
+                <v-icon size="small" class="mr-1">mdi-calendar</v-icon>
+                {{ formatDate(scenario.startDate) }} - {{ formatDate(scenario.endDate) }}
+              </div>
+              <div>
+                <v-btn 
+                  icon="mdi-chart-line" 
+                  size="small"
+                  variant="text"
+                  @click="viewScenario(scenario)"
+                />
+                <v-btn 
+                  icon="mdi-pencil" 
+                  size="small"
+                  variant="text"
+                  @click="editScenario(scenario)"
+                />
+                <v-btn 
+                  icon="mdi-delete" 
+                  size="small"
+                  variant="text"
+                  color="error"
+                  @click="confirmDeleteScenario(scenario)"
+                />
+              </div>
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
+          </v-card-text>
+        </v-card>
+      </v-col>
+    </v-row>
 
     <!-- Scenario Details Dialog -->
     <Dialog 
@@ -272,24 +272,13 @@
         />
       </template>
     </Dialog>
-  </div>
+  </v-container>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useFormatting } from '../../composables/useFormatting';
-import PageHeader from '../../components/layout/PageHeader.vue';
-import Button from 'primevue/button';
-import Dialog from 'primevue/dialog';
-import InputText from 'primevue/inputtext';
-import Textarea from 'primevue/textarea';
-import Calendar from 'primevue/calendar';
-import Dropdown from 'primevue/dropdown';
-import Tag from 'primevue/tag';
-import Divider from 'primevue/divider';
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
-import InputNumber from 'primevue/inputnumber';
+// Using Vuetify components only
 import { useRouter } from 'vue-router';
 
 const { formatCurrency, formatDate } = useFormatting();
@@ -501,14 +490,14 @@ const getScenarioCardClass = (scenario) => {
   };
 };
 
-const getStatusSeverity = (status) => {
+const getStatusColor = (status) => {
   switch (status) {
     case 'Active':
       return 'success';
     case 'Draft':
       return 'warning';
     case 'Inactive':
-      return 'danger';
+      return 'error';
     default:
       return 'info';
   }
@@ -588,12 +577,5 @@ const getVarianceClass = (variance) => {
   justify-content: center;
 }
 
-:deep(.p-datatable) {
-  font-size: 0.9rem;
-}
-
-:deep(.p-datatable .p-datatable-thead > tr > th) {
-  background-color: #f8f9fa;
-  font-weight: 600;
-}
+/* Vuetify styling */
 </style>

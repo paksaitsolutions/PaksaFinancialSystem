@@ -22,28 +22,28 @@ export const useNavigationStore = defineStore('navigation', {
         title: 'General Ledger',
         icon: 'mdi-book-open-variant',
         children: [
-          { title: 'Chart of Accounts', icon: 'mdi-format-list-numbered', to: '/general-ledger/chart-of-accounts' },
-          { title: 'Journal Entries', icon: 'mdi-book-edit', to: '/general-ledger/journal-entries' },
-          { title: 'Trial Balance', icon: 'mdi-scale-balance', to: '/general-ledger/trial-balance' },
-          { title: 'Financial Statements', icon: 'mdi-file-chart', to: '/general-ledger/financial-statements' }
+          { title: 'Chart of Accounts', icon: 'mdi-format-list-numbered', to: '/gl/accounts' },
+          { title: 'Journal Entries', icon: 'mdi-book-edit', to: '/gl/journal-entries' },
+          { title: 'Trial Balance', icon: 'mdi-scale-balance', to: '/gl/trial-balance' },
+          { title: 'Financial Statements', icon: 'mdi-file-chart', to: '/gl/financial-statements' }
         ]
       },
       {
         title: 'Accounts Payable',
         icon: 'mdi-credit-card-outline',
         children: [
-          { title: 'Vendors', icon: 'mdi-domain', to: '/accounts-payable/vendors' },
-          { title: 'Bills', icon: 'mdi-receipt', to: '/accounts-payable/bills' },
-          { title: 'Payments', icon: 'mdi-cash-multiple', to: '/accounts-payable/payments' }
+          { title: 'Vendors', icon: 'mdi-domain', to: '/ap/vendors' },
+          { title: 'Bills', icon: 'mdi-receipt', to: '/ap/bills' },
+          { title: 'Payments', icon: 'mdi-cash-multiple', to: '/ap/payments' }
         ]
       },
       {
         title: 'Accounts Receivable',
         icon: 'mdi-receipt',
         children: [
-          { title: 'Customers', icon: 'mdi-account-group', to: '/accounts-receivable/customers' },
-          { title: 'Invoices', icon: 'mdi-file-document', to: '/accounts-receivable/invoices' },
-          { title: 'Payments', icon: 'mdi-cash', to: '/accounts-receivable/payments' }
+          { title: 'Customers', icon: 'mdi-account-group', to: '/ar/customers' },
+          { title: 'Invoices', icon: 'mdi-file-document', to: '/ar/invoices' },
+          { title: 'Payments', icon: 'mdi-cash', to: '/ar/payments' }
         ]
       },
       {
