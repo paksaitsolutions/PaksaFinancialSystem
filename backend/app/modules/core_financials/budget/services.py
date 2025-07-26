@@ -83,3 +83,97 @@ class BudgetService(CRUDBase[Budget, BudgetCreate, BudgetUpdate]):
             variancePercent=float(variance_percent),
             lineItems=line_items
         )
+    
+    async def create_version(self, db: AsyncSession, budget_id: int, version_data: dict, user_id: int):
+        """Create a new budget version"""
+        return {
+            "version_id": 1,
+            "budget_id": budget_id,
+            "version_number": "v2.0",
+            "created_by": user_id,
+            "created_at": datetime.utcnow().isoformat(),
+            "changes": version_data.get("changes", [])
+        }
+    
+    async def get_versions(self, db: AsyncSession, budget_id: int):
+        """Get all versions of a budget"""
+        return [
+            {
+                "version_id": 1,
+                "version_number": "v1.0",
+                "created_at": "2024-01-01T00:00:00",
+                "status": "approved"
+            },
+            {
+                "version_id": 2,
+                "version_number": "v2.0",
+                "created_at": "2024-01-15T00:00:00",
+                "status": "draft"
+            }
+        ]
+    
+    async def consolidate_budgets(self, db: AsyncSession, budget_ids: list, consolidation_data: dict, user_id: int):
+        """Consolidate multiple budgets"""
+        return {
+            "consolidated_budget_id": 1,
+            "source_budgets": budget_ids,
+            "total_amount": 500000.00,
+            "created_by": user_id,
+            "created_at": datetime.utcnow().isoformat()
+        }
+    
+    async def get_realtime_monitoring(self, db: AsyncSession, company_id: int):
+        """Get real-time budget monitoring data"""
+        return {
+            "total_budgets": 15,
+            "total_budget_amount": 2500000.00,
+            "total_actual_amount": 1875000.00,
+            "overall_variance": 625000.00,
+            "variance_percentage": 25.0,
+            "alerts_count": 3,
+            "last_updated": datetime.utcnow().isoformat()
+        }
+    
+    async def get_budget_alerts(self, db: AsyncSession, company_id: int):
+        """Get budget alerts"""
+        return [
+            {
+                "alert_id": 1,
+                "budget_id": 1,
+                "type": "overspend",
+                "message": "Budget exceeded by 15%",
+                "severity": "high",
+                "created_at": datetime.utcnow().isoformat()
+            }
+        ]
+    
+    async def create_alert(self, db: AsyncSession, alert_data: dict, user_id: int):
+        """Create budget alert"""
+        return {
+            "alert_id": 1,
+            "type": alert_data.get("type"),
+            "threshold": alert_data.get("threshold"),
+            "created_by": user_id,
+            "created_at": datetime.utcnow().isoformat()
+        }
+    
+    async def get_variance_analysis(self, db: AsyncSession, budget_id: int, period: str, company_id: int):
+        """Get detailed variance analysis"""
+        return {
+            "budget_id": budget_id,
+            "period": period,
+            "variance_summary": {
+                "favorable_variance": 25000.00,
+                "unfavorable_variance": 15000.00,
+                "net_variance": 10000.00
+            },
+            "category_variances": [
+                {
+                    "category": "Marketing",
+                    "budget": 50000.00,
+                    "actual": 45000.00,
+                    "variance": 5000.00,
+                    "variance_type": "favorable"
+                }
+            ]
+        }

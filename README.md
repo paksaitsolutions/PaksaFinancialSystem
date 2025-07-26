@@ -48,9 +48,13 @@ Explore our comprehensive documentation to get started with the Paksa Financial 
 - [**Budget Module**](docs/budget_module.md) - Documentation for the Budget module.
 - [**BI Dashboard**](docs/BI_DASHBOARD_SPECS.md) - Specifications for business intelligence dashboards.
 
+## ⚠️ PROJECT STATUS
+
+**IMPORTANT:** This system is currently in **PROTOTYPE STAGE** (35% complete). While the architecture is production-ready, most modules contain mock data and simulated functionality. See [HONEST_PROJECT_STATUS.md](HONEST_PROJECT_STATUS.md) for detailed status.
+
 ## 🌟 Overview
 
-The **Paksa Financial System** is a comprehensive, AI-accelerated financial management platform designed to streamline financial operations, ensure compliance, and provide actionable insights for organizations of all sizes. Built on a modern, secure, and scalable architecture, it centralizes critical financial functions, offering unparalleled visibility and control over an enterprise's fiscal health.
+The **Paksa Financial System** is a comprehensive financial management platform **under development**. The system features excellent architecture and design but requires significant additional development to achieve production readiness.
 
 ## ✨ Key Features
 
@@ -268,15 +272,17 @@ This project is proprietary software. All rights reserved by Paksa IT Solutions.
 ## ⚠️ Important Notes
 
 ### Current Status
-- **Production Ready**: Core financial modules fully implemented
-- **Multi-Tenant**: Complete tenant isolation and security
-- **Scalable**: Kubernetes-ready with horizontal scaling
-- **Mobile Optimized**: Responsive design with offline support
+- **Development Stage**: Prototype with mock data
+- **Multi-Tenant**: Framework implemented, needs completion
+- **Scalable**: Architecture designed for scale
+- **Mobile Optimized**: Basic responsive design
 
 ### Known Limitations
-- Video tutorials and training materials not yet available
-- Advanced ML models require additional infrastructure
-- Native mobile apps planned for future release
+- Most modules contain mock/hardcoded data
+- Business logic is simulated, not implemented
+- No real database integration in new modules
+- Frontend components are non-functional shells
+- Requires 2-3 months additional development for production
 
 ## 🌐 Connect With Us
 

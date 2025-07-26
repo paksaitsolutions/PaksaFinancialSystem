@@ -3,7 +3,7 @@ import { ref, computed } from 'vue';
 import { useApi } from '@/composables/useApi';
 import type { Payment } from '../types';
 
-export const usePaymentsStore = defineStore('ap/payments', () => {
+export const usePaymentStore = defineStore('ap/payments', () => {
   const api = useApi();
   
   // State
@@ -137,6 +137,85 @@ export const usePaymentsStore = defineStore('ap/payments', () => {
     return updatePayment(id, { status: 'scheduled', paymentDate });
   };
   
+  const createPaymentBatch = async (batchData: any) => {
+    loading.value = true;
+    error.value = null;
+    
+    try {
+      const response = await api.post('/ap/payments/batch', batchData);
+      return response.data;
+    } catch (err: any) {
+      error.value = err.message || 'Failed to create payment batch';
+      throw err;
+    } finally {
+      loading.value = false;
+    }
+  };
+  
+  const approvePaymentBatch = async (batchId: string, approvalData: any) => {
+    loading.value = true;
+    error.value = null;
+    
+    try {
+      const response = await api.post(`/ap/payments/batch/${batchId}/approve`, approvalData);
+      return response.data;
+    } catch (err: any) {
+      error.value = err.message || 'Failed to approve payment batch';
+      throw err;
+    } finally {
+      loading.value = false;
+    }
+  };
+  
+  const getPaymentMethods = async () => {
+    loading.value = true;
+    error.value = null;
+    
+    try {
+      const response = await api.get('/ap/payments/methods');
+      return response.data;
+    } catch (err: any) {
+      error.value = err.message || 'Failed to get payment methods';
+      throw err;
+    } finally {
+      loading.value = false;
+    }
+  };
+  
+  const createPaymentMethod = async (methodData: any) => {
+    loading.value = true;
+    error.value = null;
+    
+    try {
+      const response = await api.post('/ap/payments/methods', methodData);
+      return response.data;
+    } catch (err: any) {
+      error.value = err.message || 'Failed to create payment method';
+      throw err;
+    } finally {
+      loading.value = false;
+    }
+  };
+  
+  const approvePayment = async (paymentId: string | number, approvalData: any) => {
+    loading.value = true;
+    error.value = null;
+    
+    try {
+      const response = await api.post(`/ap/payments/${paymentId}/approve`, approvalData);
+      const index = payments.value.findIndex(p => p.id === paymentId);
+      if (index !== -1) {
+        payments.value[index].status = 'approved';
+      }
+      return response.data;
+    } catch (err: any) {
+      error.value = err.message || 'Failed to approve payment';
+      throw err;
+    } finally {
+      loading.value = false;
+    }
+  };
+  
   // Initialize the store
   const initialize = async () => {
     await fetchPayments();
@@ -164,6 +243,11 @@ export const usePaymentsStore = defineStore('ap/payments', () => {
     deletePayment,
     processPayment,
     schedulePayment,
+    createPaymentBatch,
+    approvePaymentBatch,
+    getPaymentMethods,
+    createPaymentMethod,
+    approvePayment,
     initialize,
     
     // Reset function for Pinia
