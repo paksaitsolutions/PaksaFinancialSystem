@@ -3,7 +3,7 @@ import { ref, computed } from 'vue';
 import { useApi } from '@/composables/useApi';
 import type { Vendor } from '../types';
 
-export const useVendorsStore = defineStore('ap/vendors', () => {
+export const useVendorStore = defineStore('ap/vendors', () => {
   const api = useApi();
   
   // State
@@ -112,6 +112,63 @@ export const useVendorsStore = defineStore('ap/vendors', () => {
     }
   };
   
+  const approveVendor = async (id: string | number, approvalData: any) => {
+    loading.value = true;
+    error.value = null;
+    
+    try {
+      const response = await api.post(`/ap/vendors/${id}/approve`, approvalData);
+      const index = vendors.value.findIndex(v => v.id === id);
+      if (index !== -1) {
+        vendors.value[index].status = 'approved';
+      }
+      return response.data;
+    } catch (err: any) {
+      error.value = err.message || `Failed to approve vendor with ID ${id}`;
+      throw err;
+    } finally {
+      loading.value = false;
+    }
+  };
+  
+  const rejectVendor = async (id: string | number, rejectionData: any) => {
+    loading.value = true;
+    error.value = null;
+    
+    try {
+      const response = await api.post(`/ap/vendors/${id}/reject`, rejectionData);
+      const index = vendors.value.findIndex(v => v.id === id);
+      if (index !== -1) {
+        vendors.value[index].status = 'rejected';
+      }
+      return response.data;
+    } catch (err: any) {
+      error.value = err.message || `Failed to reject vendor with ID ${id}`;
+      throw err;
+    } finally {
+      loading.value = false;
+    }
+  };
+  
+  const getVendorPerformance = async (id: string | number) => {
+    loading.value = true;
+    error.value = null;
+    
+    try {
+      const response = await api.get(`/ap/vendors/${id}/performance`);
+      return response.data;
+    } catch (err: any) {
+      error.value = err.message || `Failed to get vendor performance for ID ${id}`;
+      throw err;
+    } finally {
+      loading.value = false;
+    }
+  };
+  
+  const getVendors = async (filters = {}) => {
+    return await fetchVendors(filters);
+  };
+  
   // Initialize the store
   const initialize = async () => {
     await fetchVendors();
@@ -135,6 +192,10 @@ export const useVendorsStore = defineStore('ap/vendors', () => {
     createVendor,
     updateVendor,
     deleteVendor,
+    approveVendor,
+    rejectVendor,
+    getVendorPerformance,
+    getVendors,
     initialize,
     
     // Reset function for Pinia
