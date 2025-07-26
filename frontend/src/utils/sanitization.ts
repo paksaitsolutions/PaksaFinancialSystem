@@ -11,11 +11,15 @@ export const sanitizeHtml = (input: string): string => {
 
 // Remove script tags and event handlers
 export const stripScripts = (input: string): string => {
+  let previous: string;
+  do {
+    previous = input;
+    input = input.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+  } while (input !== previous);
   return input
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
     .replace(/on\w+="[^"]*"/gi, '')
     .replace(/on\w+='[^']*'/gi, '')
-    .replace(/javascript:/gi, '')
+    .replace(/javascript:/gi, '');
 }
 
 // Sanitize for SQL-like inputs (additional layer)
