@@ -6,11 +6,6 @@ from sqlalchemy.sql import func
 
 from .base import BaseModel, GUID
 
-# Avoid circular imports
-if TYPE_CHECKING:
-    from .role import Role
-    from .permission import UserPermission
-
 class User(BaseModel):
     """User model for authentication and authorization."""
     __tablename__ = "users"
@@ -35,45 +30,15 @@ class User(BaseModel):
     last_login = Column(DateTime(timezone=True), nullable=True)
     date_joined = Column(DateTime(timezone=True), server_default=func.now())
     
-    # Relationships
-    role_id = Column(GUID(), ForeignKey('roles.id'), nullable=True)
-    role = relationship("Role", back_populates="users")
-    
     # User-specific settings
     preferences = Column(Text, nullable=True)  # JSON string for user preferences
     
-    # Relationships for permissions
-    permissions = relationship("UserPermission", back_populates="user")
-    
-    # Audit fields
-    created_by = Column(GUID(), ForeignKey('users.id'), nullable=True)
-    updated_by = Column(GUID(), ForeignKey('users.id'), nullable=True)
-
     # MFA support
     mfa_enabled = Column(Boolean(), default=False)
     mfa_secret = Column(String(32), nullable=True)  # TOTP secret
-
-    # Login history relationship
-    login_history = relationship("UserLoginHistory", back_populates="user")
-    activity_logs = relationship("UserActivityLog", back_populates="user")
     
-    # Cross-company access (for service providers)
-    is_service_provider = Column(Boolean(), default=False)
-    accessible_companies = Column(Text, nullable=True)  # Comma-separated company IDs or JSON list
-    
-    # Self-referential relationship for created_by/updated_by
-    created_users = relationship(
-        "User",
-        foreign_keys=[created_by],
-        remote_side="User.id",
-        backref="created_by_user"
-    )
-    updated_users = relationship(
-        "User",
-        foreign_keys=[updated_by],
-        remote_side="User.id",
-        backref="updated_by_user"
-    )
+    # Multi-tenant support
+    tenant_id = Column(GUID(), nullable=True, index=True)
     
     @property
     def full_name(self) -> str:
@@ -113,76 +78,3 @@ class User(BaseModel):
     
     def __repr__(self) -> str:
         return f"<User(id={self.id}, email={self.email})>"
-
-# Create a separate model for email verification tokens
-class EmailVerificationToken(BaseModel):
-    """Model for email verification tokens."""
-    __tablename__ = "email_verification_tokens"
-    
-    user_id = Column(GUID(), ForeignKey('users.id'), nullable=False, index=True)
-    token = Column(String(255), nullable=False, unique=True, index=True)
-    expires_at = Column(DateTime(timezone=True), nullable=False)
-    used = Column(Boolean, default=False)
-    
-    # Relationship
-    user = relationship("User", foreign_keys=[user_id])
-    
-    @property
-    def is_expired(self) -> bool:
-        """Check if the token is expired."""
-        return datetime.utcnow() > self.expires_at
-    
-    @classmethod
-    async def get_by_token(cls, db, token: str) -> Optional['EmailVerificationToken']:
-        """Get a token by its value."""
-        from sqlalchemy import select
-        result = await db.execute(select(cls).where(cls.token == token))
-        return result.scalars().first()
-
-# Create a separate model for password reset tokens
-class PasswordResetToken(BaseModel):
-    """Model for password reset tokens."""
-    __tablename__ = "password_reset_tokens"
-    
-    user_id = Column(GUID(), ForeignKey('users.id'), nullable=False, index=True)
-    token = Column(String(255), nullable=False, unique=True, index=True)
-    expires_at = Column(DateTime(timezone=True), nullable=False)
-    used = Column(Boolean, default=False)
-    
-    # Relationship
-    user = relationship("User", foreign_keys=[user_id])
-    
-    @property
-    def is_expired(self) -> bool:
-        """Check if the token is expired."""
-        return datetime.utcnow() > self.expires_at
-    
-    @classmethod
-    async def get_by_token(cls, db, token: str) -> Optional['PasswordResetToken']:
-        """Get a token by its value."""
-        from sqlalchemy import select
-        result = await db.execute(select(cls).where(cls.token == token))
-        return result.scalars().first()
-
-# Model for login history
-class UserLoginHistory(BaseModel):
-    __tablename__ = "user_login_history"
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(GUID(), ForeignKey('users.id'), nullable=False, index=True)
-    login_time = Column(DateTime(timezone=True), server_default=func.now())
-    ip_address = Column(String(45), nullable=True)
-    user_agent = Column(String(255), nullable=True)
-    success = Column(Boolean(), default=True)
-    user = relationship("User", back_populates="login_history")
-
-# Model for user activity logs
-class UserActivityLog(BaseModel):
-    __tablename__ = "user_activity_logs"
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(GUID(), ForeignKey('users.id'), nullable=False, index=True)
-    activity_time = Column(DateTime(timezone=True), server_default=func.now())
-    activity_type = Column(String(50), nullable=False)
-    description = Column(Text, nullable=True)
-    ip_address = Column(String(45), nullable=True)
-    user_agent = Column(String(255), nullable=True)
-    user = relationship("User", back_populates="activity_logs")

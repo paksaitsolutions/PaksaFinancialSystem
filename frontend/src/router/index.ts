@@ -135,7 +135,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: '',
         name: 'Reports',
-        component: () => import(/* webpackChunkName: "reports" */ '@/views/reports/ReportsView.vue')
+        component: () => import('@/views/reports/FinancialReportsView.vue')
       }
     ]
   },

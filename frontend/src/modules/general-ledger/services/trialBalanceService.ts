@@ -1,4 +1,4 @@
-import axios from 'axios';
+import api from '@/services/api'
 import { TrialBalance, TrialBalanceParams } from '@/types/gl/trialBalance';
 import { format } from 'date-fns';
 
@@ -10,7 +10,7 @@ export const TrialBalanceService = {
    */
   async getTrialBalance(params: Omit<TrialBalanceParams, 'format'>): Promise<TrialBalance> {
     try {
-      const response = await axios.get(`${API_BASE_URL}/reports/trial-balance`, {
+      const response = await api.get(`${API_BASE_URL}/reports/trial-balance`, {
         params: {
           start_date: format(new Date(params.startDate), 'yyyy-MM-dd'),
           end_date: format(new Date(params.endDate), 'yyyy-MM-dd'),
@@ -30,7 +30,7 @@ export const TrialBalanceService = {
    */
   async exportTrialBalance(params: TrialBalanceParams): Promise<void> {
     try {
-      const response = await axios({
+      const response = await api({
         url: `${API_BASE_URL}/reports/trial-balance`,
         method: 'GET',
         params: {

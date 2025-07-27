@@ -1,478 +1,230 @@
 <template>
-  <div class="reports-dashboard">
-    <!-- Header Section -->
-    <div class="reports-header p-4">
-      <div class="flex justify-content-between align-items-center mb-4">
-        <div>
-          <h1 class="text-3xl font-bold m-0">Financial Reports</h1>
-          <p class="text-color-secondary m-0 mt-2">Access, generate, and analyze all your financial reports in one place</p>
-        </div>
-        <div class="flex gap-2">
-          <Button 
-            icon="pi pi-plus" 
-            label="New Report" 
-            class="p-button-outlined"
-            @click="showReportBuilder = true"
-          />
-          <Button 
-            icon="pi pi-cog" 
-            class="p-button-text" 
-            v-tooltip.top="'Report Settings'"
-          />
-        </div>
-      </div>
+  <v-container fluid class="reports-container">
+    <v-card class="reports-card" elevation="2">
+      <v-card-title class="d-flex align-center">
+        <v-icon class="mr-3" size="28" color="primary">mdi-chart-line</v-icon>
+        <h1 class="text-h4 font-weight-bold">Financial Reports</h1>
+        <v-spacer />
+        <v-btn color="primary" @click="showReportBuilder = true">
+          <v-icon start>mdi-plus</v-icon>
+          New Report
+        </v-btn>
+      </v-card-title>
 
-      <!-- Search and Filters -->
-      <div class="flex justify-content-between align-items-center mb-4 gap-4">
-        <span class="p-input-icon-left w-full">
-          <i class="pi pi-search" />
-          <InputText 
-            v-model="searchQuery" 
-            placeholder="Search reports..." 
-            class="w-full"
-            @keyup.enter="applySearch"
-          />
-        </span>
-        <div class="flex gap-2">
-          <Dropdown 
-            v-model="selectedCategory" 
-            :options="reportCategories.map(c => c.name)" 
-            placeholder="All Categories" 
-            class="w-15rem"
-            @change="filterReports"
-          />
-          <Button 
-            icon="pi pi-filter" 
-            class="p-button-outlined" 
-            label="Filters" 
-            @click="showFilters = !showFilters"
-          />
+      <v-card-text>
+        <!-- Quick Actions -->
+        <div class="mb-6">
+          <h2 class="text-h6 mb-3">Quick Actions</h2>
+          <v-row>
+            <v-col v-for="action in quickActions" :key="action.id" cols="12" sm="6" md="3">
+              <v-card class="action-card" elevation="1" @click="navigateToReport(action)">
+                <v-card-text class="text-center pa-4">
+                  <v-icon :color="action.color" size="32" class="mb-2">{{ action.icon }}</v-icon>
+                  <div class="text-subtitle-2 font-weight-bold">{{ action.name }}</div>
+                  <div class="text-caption text-medium-emphasis">{{ action.description }}</div>
+                </v-card-text>
+              </v-card>
+            </v-col>
+          </v-row>
         </div>
-      </div>
 
-      <!-- Quick Actions -->
-      <div class="quick-actions mb-5">
-        <div class="text-500 font-medium mb-2">QUICK ACTIONS</div>
-        <div class="flex flex-wrap gap-3">
-          <Button 
-            v-for="action in quickActions" 
-            :key="action.label"
-            :label="action.label"
-            :icon="action.icon"
-            class="p-button-outlined p-button-sm"
-            @click="handleQuickAction(action)"
-          />
+        <!-- Report Categories -->
+        <div v-for="category in reportCategories" :key="category.id" class="mb-6">
+          <h2 class="text-h6 mb-3">{{ category.name }}</h2>
+          <v-row>
+            <v-col v-for="report in category.reports" :key="report.id" cols="12" sm="6" md="4">
+              <v-card class="report-card" elevation="1" @click="navigateToReport(report)">
+                <v-card-text class="pa-4">
+                  <div class="d-flex align-center mb-2">
+                    <v-icon :color="report.color || 'primary'" size="24" class="mr-2">{{ report.icon }}</v-icon>
+                    <div class="text-subtitle-2 font-weight-bold">{{ report.name }}</div>
+                  </div>
+                  <div class="text-caption text-medium-emphasis">{{ report.description }}</div>
+                </v-card-text>
+              </v-card>
+            </v-col>
+          </v-row>
         </div>
-      </div>
-    </div>
-
-    <!-- Main Content -->
-    <div class="p-4">
-      <!-- Favorites Section -->
-      <div v-if="favoriteReports.length > 0" class="mb-6">
-        <div class="flex justify-content-between align-items-center mb-3">
-          <h2 class="text-xl font-semibold m-0">
-            <i class="pi pi-star-fill text-yellow-500 mr-2"></i>
-            Favorites
-          </h2>
-          <Button 
-            label="View All" 
-            icon="pi pi-chevron-right" 
-            class="p-button-text p-0"
-            @click="navigateTo('/reports/favorites')"
-          />
-        </div>
-        <div class="grid">
-          <div 
-            v-for="report in favoriteReports" 
-            :key="'fav-' + report.id"
-            class="col-12 md:col-6 lg:col-4 xl:col-3"
-          >
-            <ReportCard 
-              :report="report" 
-              :is-favorite="true" 
-              @favorite="toggleFavorite(report)"
-              @run="navigateToReport(report)"
-            />
-          </div>
-        </div>
-      </div>
-
-      <!-- Recent Reports -->
-      <div v-if="recentReports.length > 0" class="mb-6">
-        <div class="flex justify-content-between align-items-center mb-3">
-          <h2 class="text-xl font-semibold m-0">
-            <i class="pi pi-clock text-blue-500 mr-2"></i>
-            Recently Viewed
-          </h2>
-          <Button 
-            label="View All" 
-            icon="pi pi-chevron-right" 
-            class="p-button-text p-0"
-            @click="navigateTo('/reports/recent')"
-          />
-        </div>
-        <div class="grid">
-          <div 
-            v-for="report in recentReports" 
-            :key="'recent-' + report.id"
-            class="col-12 md:col-6 lg:col-4 xl:col-3"
-          >
-            <ReportCard 
-              :report="report" 
-              :is-favorite="isFavorite(report.id)" 
-              @favorite="toggleFavorite(report)"
-              @run="navigateToReport(report)"
-            />
-          </div>
-        </div>
-      </div>
-
-      <!-- All Reports by Category -->
-      <div v-for="category in filteredCategories" :key="category.id" class="mb-6">
-        <h2 class="text-xl font-semibold mb-3">
-          <i :class="[category.icon, 'mr-2', 'text-primary']"></i>
-          {{ category.name }}
-        </h2>
-        <div class="grid">
-          <div 
-            v-for="report in category.reports" 
-            :key="report.id"
-            class="col-12 md:col-6 lg:col-4 xl:col-3"
-          >
-            <ReportCard 
-              :report="report" 
-              :is-favorite="isFavorite(report.id)" 
-              @favorite="toggleFavorite(report)"
-              @run="navigateToReport(report)"
-            />
-          </div>
-        </div>
-      </div>
-
-      <!-- Empty State -->
-      <div v-if="filteredCategories.length === 0" class="text-center p-5">
-        <i class="pi pi-search text-6xl text-400 mb-3"></i>
-        <h3 class="text-2xl font-medium mb-2">No reports found</h3>
-        <p class="text-600 mb-4">Try adjusting your search or filter criteria</p>
-        <Button 
-          label="Clear Filters" 
-          class="p-button-text" 
-          @click="clearFilters"
-        />
-      </div>
-    </div>
+      </v-card-text>
+    </v-card>
 
     <!-- Report Builder Dialog -->
-    <Dialog 
-      v-model:visible="showReportBuilder" 
-      header="Create New Report" 
-      :modal="true"
-      :style="{ width: '50vw' }"
-      :dismissableMask="true"
-    >
-      <ReportBuilder @close="showReportBuilder = false" />
-    </Dialog>
-  </div>
+    <v-dialog v-model="showReportBuilder" max-width="800px">
+      <v-card>
+        <v-card-title>
+          <span class="text-h5">Report Builder</span>
+        </v-card-title>
+        <v-card-text>
+          <p>Report builder functionality coming soon...</p>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn text @click="showReportBuilder = false">Close</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+  </v-container>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import { useToast } from 'vue/usetoast';
-import Button from 'vue/button';
-import Card from 'vue/card';
-import InputText from 'vue/inputtext';
-import Dropdown from 'vue/dropdown';
-import Dialog from 'vue/dialog';
-import ReportCard from '@/components/reports/ReportCard.vue';
-import ReportBuilder from '@/components/reports/ReportBuilder.vue';
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 
-interface ReportDefinition {
-  id: string;
-  name: string;
-  description: string;
-  route: string;
-  icon: string;
-  category: string;
-  lastRun?: string;
-  favorite?: boolean;
-  tags?: string[];
-}
+const router = useRouter()
+const showReportBuilder = ref(false)
 
-interface ReportCategory {
-  id: string;
-  name: string;
-  icon: string;
-  reports: ReportDefinition[];
-}
-
-const reportCategories = ref<ReportCategory[]>([
+const quickActions = ref([
   {
-    id: 'financial-statements',
+    id: 'trial-balance',
+    name: 'Trial Balance',
+    description: 'Account balances summary',
+    icon: 'mdi-scale-balance',
+    color: 'primary',
+    route: '/gl/trial-balance'
+  },
+  {
+    id: 'income-statement',
+    name: 'Income Statement',
+    description: 'Profit and loss report',
+    icon: 'mdi-chart-line',
+    color: 'success',
+    route: '/reports/income-statement'
+  },
+  {
+    id: 'balance-sheet',
+    name: 'Balance Sheet',
+    description: 'Financial position',
+    icon: 'mdi-file-document',
+    color: 'info',
+    route: '/reports/balance-sheet'
+  },
+  {
+    id: 'cash-flow',
+    name: 'Cash Flow',
+    description: 'Cash movement analysis',
+    icon: 'mdi-cash-flow',
+    color: 'warning',
+    route: '/reports/cash-flow'
+  }
+])
+
+const reportCategories = ref([
+  {
+    id: 'financial',
     name: 'Financial Statements',
-    icon: 'pi pi-file-pdf',
     reports: [
       {
         id: 'balance-sheet',
         name: 'Balance Sheet',
-        description: 'View your company\'s financial position at a specific point in time',
-        route: '/reports/balance-sheet',
-        icon: 'pi pi-file-pdf'
+        description: 'Assets, liabilities, and equity',
+        icon: 'mdi-file-document',
+        color: 'primary',
+        route: '/reports/balance-sheet'
       },
       {
         id: 'income-statement',
         name: 'Income Statement',
-        description: 'View your company\'s revenues and expenses over a period of time',
-        route: '/reports/income-statement',
-        icon: 'pi pi-chart-line'
+        description: 'Revenue and expenses',
+        icon: 'mdi-chart-line',
+        color: 'success',
+        route: '/reports/income-statement'
       },
       {
         id: 'cash-flow',
         name: 'Cash Flow Statement',
-        description: 'Track the flow of cash in and out of your business',
-        route: '/reports/cash-flow',
-        icon: 'pi pi-money-bill'
-      },
-      {
-        id: 'retained-earnings',
-        name: 'Retained Earnings',
-        description: 'View the accumulated profits not distributed to shareholders',
-        route: '/reports/retained-earnings',
-        icon: 'pi pi-chart-pie'
+        description: 'Cash receipts and payments',
+        icon: 'mdi-cash-flow',
+        color: 'info',
+        route: '/reports/cash-flow'
       }
     ]
   },
   {
-    id: 'general-ledger',
-    name: 'General Ledger',
-    icon: 'pi pi-book',
+    id: 'operational',
+    name: 'Operational Reports',
     reports: [
       {
         id: 'trial-balance',
         name: 'Trial Balance',
-        description: 'View all account balances to ensure debits equal credits',
-        route: '/reports/trial-balance',
-        icon: 'pi pi-balance-scale'
+        description: 'Account balances verification',
+        icon: 'mdi-scale-balance',
+        color: 'primary',
+        route: '/gl/trial-balance'
       },
       {
-        id: 'general-ledger-detail',
-        name: 'General Ledger Detail',
-        description: 'View detailed transaction history for all accounts',
-        route: '/reports/general-ledger-detail',
-        icon: 'pi pi-list'
+        id: 'general-ledger',
+        name: 'General Ledger',
+        description: 'Detailed account transactions',
+        icon: 'mdi-book-open',
+        color: 'secondary',
+        route: '/gl/general-ledger'
       },
       {
-        id: 'journal',
-        name: 'Journal Report',
-        description: 'View all journal entries for a specific period',
-        route: '/reports/journal',
-        icon: 'pi pi-bookmark'
+        id: 'journal-entries',
+        name: 'Journal Entries',
+        description: 'Transaction entries log',
+        icon: 'mdi-notebook',
+        color: 'warning',
+        route: '/gl/journal-entries'
       }
     ]
   },
   {
-    id: 'accounts',
-    name: 'Accounts',
-    icon: 'pi pi-wallet',
+    id: 'analysis',
+    name: 'Analysis Reports',
     reports: [
       {
-        id: 'accounts-receivable',
-        name: 'Accounts Receivable Aging',
-        description: 'Track outstanding customer invoices and payments',
-        route: '/reports/ar-aging',
-        icon: 'pi pi-credit-card'
-      },
-      {
-        id: 'accounts-payable',
-        name: 'Accounts Payable Aging',
-        description: 'Track outstanding bills and vendor payments',
-        route: '/reports/ap-aging',
-        icon: 'pi pi-shopping-cart'
-      },
-      {
-        id: 'revenue-by-customer',
-        name: 'Revenue by Customer',
-        description: 'Analyze revenue by customer for a specific period',
-        route: '/reports/revenue-by-customer',
-        icon: 'pi pi-users'
-      },
-      {
-        id: 'expenses-by-vendor',
-        name: 'Expenses by Vendor',
-        description: 'Analyze expenses by vendor for a specific period',
-        route: '/reports/expenses-by-vendor',
-        icon: 'pi pi-truck'
-      }
-    ]
-  },
-  {
-    id: 'tax',
-    name: 'Tax Reports',
-    icon: 'pi pi-percentage',
-    reports: [
-      {
-        id: 'sales-tax',
-        name: 'Sales Tax Report',
-        description: 'View sales tax collected and owed',
-        route: '/reports/sales-tax',
-        icon: 'pi pi-percentage'
-      },
-      {
-        id: 'vat',
-        name: 'VAT Report',
-        description: 'View VAT collected and paid',
-        route: '/reports/vat',
-        icon: 'pi pi-euro'
-      },
-      {
-        id: 'tax-summary',
-        name: 'Tax Summary',
-        description: 'Summary of all tax-related transactions',
-        route: '/reports/tax-summary',
-        icon: 'pi pi-file-export'
-      }
-    ]
-  },
-  {
-    id: 'budget',
-    name: 'Budget Reports',
-    icon: 'pi pi-chart-bar',
-    reports: [
-      {
-        id: 'budget-vs-actual',
+        id: 'budget-analysis',
         name: 'Budget vs Actual',
-        description: 'Compare budgeted amounts to actual results',
-        route: '/reports/budget-vs-actual',
-        icon: 'pi pi-chart-bar'
+        description: 'Budget performance analysis',
+        icon: 'mdi-chart-bar',
+        color: 'purple',
+        route: '/budget/analysis'
       },
       {
-        id: 'budget-overview',
-        name: 'Budget Overview',
-        description: 'View budget allocations and spending by category',
-        route: '/reports/budget-overview',
-        icon: 'pi pi-chart-pie'
-      }
-    ]
-  },
-  {
-    id: 'inventory',
-    name: 'Inventory Reports',
-    icon: 'pi pi-box',
-    reports: [
-      {
-        id: 'inventory-valuation',
-        name: 'Inventory Valuation',
-        description: 'View the value of your current inventory',
-        route: '/reports/inventory-valuation',
-        icon: 'pi pi-tags'
-      },
-      {
-        id: 'inventory-turnover',
-        name: 'Inventory Turnover',
-        description: 'Analyze how quickly inventory is sold',
-        route: '/reports/inventory-turnover',
-        icon: 'pi pi-sync'
+        id: 'variance-analysis',
+        name: 'Variance Analysis',
+        description: 'Budget variance breakdown',
+        icon: 'mdi-chart-pie',
+        color: 'orange',
+        route: '/budget/variance'
       }
     ]
   }
-]);
+])
 
-const navigateToReport = (report: ReportDefinition) => {
-  router.push(report.route);
-};
+const navigateToReport = (report: any) => {
+  console.log('Navigating to report:', report.route)
+  router.push(report.route).catch(err => {
+    console.error('Navigation error:', err)
+    // Fallback to dashboard if route doesn't exist
+    router.push('/dashboard')
+  })
+}
 </script>
 
 <style scoped>
-.financial-reports {
-  padding: 1.5rem;
-  max-width: 1400px;
-  margin: 0 auto;
+.reports-container {
+  background: #fafafa;
+  min-height: 100vh;
+  padding: 16px;
 }
 
-.report-header {
-  margin-bottom: 2rem;
-  text-align: center;
+.reports-card {
+  border-radius: 12px;
 }
 
-.report-header h1 {
-  margin: 0;
-  font-size: 2rem;
-  color: var(--primary-color);
-}
-
-.report-categories {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-  gap: 1.5rem;
-  margin-top: 1.5rem;
-}
-
-.category-card {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.category-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-}
-
-.report-list {
-  padding: 0;
-  margin: 0;
-}
-
-.report-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 0.5rem;
-  border-bottom: 1px solid var(--surface-d);
+.action-card,
+.report-card {
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
+  border-radius: 8px;
+  height: 100%;
 }
 
-.report-item:last-child {
-  border-bottom: none;
-}
-
-.report-item:hover {
-  background-color: var(--surface-100);
-}
-
-.report-info h3 {
-  margin: 0 0 0.25rem 0;
-  font-size: 1rem;
-  color: var(--text-color);
-}
-
-.report-info .description {
-  margin: 0;
-  font-size: 0.875rem;
-  color: var(--text-color-secondary);
-}
-
-.report-item i {
-  color: var(--text-color-secondary);
-}
-
-/* Responsive adjustments */
-@media (max-width: 1200px) {
-  .report-categories {
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  }
-}
-
-@media (max-width: 768px) {
-  .report-categories {
-    grid-template-columns: 1fr;
-  }
-  
-  .financial-reports {
-    padding: 1rem;
-  }
+.action-card:hover,
+.report-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 </style>

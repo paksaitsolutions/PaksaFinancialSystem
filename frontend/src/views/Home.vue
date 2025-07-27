@@ -1,140 +1,131 @@
 <template>
   <v-container fluid class="home-container">
-    <!-- Hero Section -->
-    <v-row class="hero-section mb-6">
+    <!-- Compact Header -->
+    <v-row class="header-section mb-4">
       <v-col cols="12">
-        <div class="d-flex align-center justify-center">
-          <v-img 
-            src="/src/assets/PFS Logo.png" 
-            alt="Paksa Financial" 
-            max-width="80"
-            max-height="80"
-            class="mr-4"
-          />
-          <div>
-            <h1 class="hero-title mb-1">Paksa Financial</h1>
-            <p class="hero-subtitle">Enterprise Management System</p>
-          </div>
-          <v-spacer />
-          <v-chip color="success" size="small">
-            <v-icon start size="16">mdi-check-circle</v-icon>
-            Ready
-          </v-chip>
-        </div>
+        <v-card class="header-card" elevation="0">
+          <v-card-text class="pa-4">
+            <div class="d-flex align-center">
+              <v-avatar size="48" class="header-logo">
+                <v-icon size="24" color="white">mdi-finance</v-icon>
+              </v-avatar>
+              <div class="ml-4">
+                <h1 class="header-title">Financial Dashboard</h1>
+                <p class="header-subtitle">Enterprise Management System</p>
+              </div>
+              <v-spacer />
+              <v-chip color="success" variant="flat" size="small">
+                <v-icon start size="14">mdi-check-circle</v-icon>
+                Online
+              </v-chip>
+            </div>
+          </v-card-text>
+        </v-card>
       </v-col>
     </v-row>
 
-    <!-- Quick Actions -->
-    <v-row class="mb-8">
-      <v-col cols="12">
-        <h2 class="section-title mb-4">
-          <v-icon class="mr-2">mdi-lightning-bolt</v-icon>
-          Quick Actions
-        </h2>
-        <v-row>
-          <v-col v-for="action in quickActions" :key="action.title" cols="12" sm="6" md="3">
-            <v-card 
-              class="quick-action-card" 
-              elevation="2"
-              @click="navigateToRoute(action.route)"
-            >
-              <v-card-text class="text-center pa-6">
-                <v-avatar :color="action.color" size="64" class="mb-3">
-                  <v-icon color="white" size="32">{{ action.icon }}</v-icon>
-                </v-avatar>
-                <h3 class="text-h6 mb-2">{{ action.title }}</h3>
-                <p class="text-body-2 text-medium-emphasis">{{ action.description }}</p>
-              </v-card-text>
-            </v-card>
-          </v-col>
-        </v-row>
+    <!-- Quick Stats -->
+    <v-row class="mb-4">
+      <v-col cols="12" sm="6" md="3" v-for="stat in quickStats" :key="stat.title">
+        <v-card class="stat-card" elevation="1">
+          <v-card-text class="pa-4">
+            <div class="d-flex align-center">
+              <v-avatar :color="stat.color" size="40" class="stat-icon">
+                <v-icon color="white" size="20">{{ stat.icon }}</v-icon>
+              </v-avatar>
+              <div class="ml-3">
+                <div class="text-h6 font-weight-bold">{{ stat.value }}</div>
+                <div class="text-caption text-medium-emphasis">{{ stat.title }}</div>
+              </div>
+            </div>
+          </v-card-text>
+        </v-card>
       </v-col>
     </v-row>
-              
-    <!-- Financial Modules -->
-    <v-row class="mb-8">
+
+    <!-- Modules Grid -->
+    <v-row class="mb-4">
       <v-col cols="12">
-        <h2 class="section-title mb-4">
-          <v-icon class="mr-2">mdi-view-dashboard</v-icon>
-          Financial Modules
-        </h2>
-              
+        <div class="d-flex align-center mb-3">
+          <h2 class="section-title">Modules</h2>
+          <v-spacer />
+          <v-chip size="small" variant="outlined">{{ modules.length }} Available</v-chip>
+        </div>
+        
         <v-row>
-          <v-col v-for="module in modules" :key="module.name" cols="12" sm="6" md="4" lg="3">
+          <v-col 
+            v-for="module in modules" 
+            :key="module.name" 
+            cols="12" 
+            sm="6" 
+            md="4" 
+            lg="3"
+          >
             <v-card 
               class="module-card" 
-              elevation="3"
+              elevation="1"
               @click="navigateToModule(module)"
+              :ripple="true"
             >
-              <v-card-text class="text-center pa-6">
-                <div class="module-icon-container mb-3">
-                  <v-avatar :color="module.color" size="72">
-                    <v-icon color="white" size="36">{{ module.icon }}</v-icon>
+              <v-card-text class="pa-4">
+                <div class="d-flex align-center mb-3">
+                  <v-avatar :color="module.color" size="36" class="module-icon">
+                    <v-icon color="white" size="18">{{ module.icon }}</v-icon>
                   </v-avatar>
+                  <div class="ml-3 flex-grow-1">
+                    <h3 class="module-title">{{ module.name }}</h3>
+                    <v-chip 
+                      :color="module.status === 'active' ? 'success' : 'warning'" 
+                      size="x-small"
+                      variant="flat"
+                    >
+                      {{ module.status }}
+                    </v-chip>
+                  </div>
                 </div>
-                <h3 class="text-h6 mb-2">{{ module.name }}</h3>
-                <p class="text-body-2 text-medium-emphasis mb-3">{{ module.description }}</p>
-                <v-chip 
-                  :color="module.status === 'active' ? 'success' : 'warning'" 
-                  size="small"
-                  variant="flat"
-                >
-                  <v-icon start size="16">{{ module.status === 'active' ? 'mdi-check' : 'mdi-clock' }}</v-icon>
-                  {{ module.status }}
-                </v-chip>
+                <p class="module-description">{{ module.description }}</p>
               </v-card-text>
             </v-card>
           </v-col>
         </v-row>
       </v-col>
     </v-row>
-              
-    <!-- System Information -->
+
+    <!-- System Status -->
     <v-row>
       <v-col cols="12">
-        <h2 class="section-title mb-4">
-          <v-icon class="mr-2">mdi-information</v-icon>
-          System Information
-        </h2>
+        <div class="d-flex align-center mb-3">
+          <h2 class="section-title">System Status</h2>
+        </div>
+        
         <v-row>
-          <v-col cols="12" md="4">
-            <v-card class="info-card" elevation="2">
-              <v-card-text class="text-center pa-6">
-                <v-icon color="primary" size="48" class="mb-3">mdi-api</v-icon>
-                <h3 class="text-h6 mb-2">API Documentation</h3>
-                <p class="text-body-2 text-medium-emphasis mb-4">Interactive API documentation</p>
-                <v-btn color="primary" variant="outlined" href="http://localhost:8000/docs" target="_blank">
-                  <v-icon start>mdi-open-in-new</v-icon>
-                  Open Swagger UI
-                </v-btn>
-              </v-card-text>
-            </v-card>
-          </v-col>
-          
-          <v-col cols="12" md="4">
-            <v-card class="info-card" elevation="2">
-              <v-card-text class="text-center pa-6">
-                <v-icon color="success" size="48" class="mb-3">mdi-database</v-icon>
-                <h3 class="text-h6 mb-2">Database Status</h3>
-                <p class="text-body-2 text-medium-emphasis mb-4">PostgreSQL connection active</p>
-                <v-chip color="success" variant="flat">
-                  <v-icon start>mdi-database-check</v-icon>
-                  Connected
-                </v-chip>
-              </v-card-text>
-            </v-card>
-          </v-col>
-          
-          <v-col cols="12" md="4">
-            <v-card class="info-card" elevation="2">
-              <v-card-text class="text-center pa-6">
-                <v-icon color="info" size="48" class="mb-3">mdi-shield-check</v-icon>
-                <h3 class="text-h6 mb-2">Security Status</h3>
-                <p class="text-body-2 text-medium-emphasis mb-4">Multi-tenant isolation active</p>
-                <v-chip color="info" variant="flat">
-                  <v-icon start>mdi-shield-check</v-icon>
-                  Secured
-                </v-chip>
+          <v-col cols="12" md="4" v-for="status in systemStatus" :key="status.title">
+            <v-card class="status-card" elevation="1">
+              <v-card-text class="pa-4">
+                <div class="d-flex align-center mb-2">
+                  <v-icon :color="status.color" size="20" class="mr-2">{{ status.icon }}</v-icon>
+                  <h3 class="status-title">{{ status.title }}</h3>
+                </div>
+                <p class="status-description mb-3">{{ status.description }}</p>
+                
+                <div class="d-flex align-center justify-space-between">
+                  <v-chip :color="status.color" variant="flat" size="small">
+                    <v-icon start size="12">{{ status.statusIcon }}</v-icon>
+                    {{ status.status }}
+                  </v-chip>
+                  
+                  <v-btn 
+                    v-if="status.action"
+                    :color="status.color" 
+                    variant="text" 
+                    size="small"
+                    :href="status.actionUrl"
+                    target="_blank"
+                  >
+                    {{ status.action }}
+                    <v-icon end size="14">mdi-open-in-new</v-icon>
+                  </v-btn>
+                </div>
               </v-card-text>
             </v-card>
           </v-col>
@@ -149,36 +140,31 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
-const user = ref<any>(null)
 
-const quickActions = ref([
+const quickStats = ref([
   {
-    title: 'AI Dashboard',
-    description: 'Advanced analytics',
-    icon: 'mdi-brain',
-    color: 'primary',
-    route: '/dashboard'
+    title: 'Active Modules',
+    value: '12',
+    icon: 'mdi-apps',
+    color: 'primary'
   },
   {
-    title: 'Create Invoice',
-    description: 'New customer invoice',
-    icon: 'mdi-file-document-plus',
-    color: 'success',
-    route: '/invoicing/create'
+    title: 'Total Accounts',
+    value: '156',
+    icon: 'mdi-account-multiple',
+    color: 'success'
   },
   {
-    title: 'View Reports',
-    description: 'Financial reports',
-    icon: 'mdi-chart-line',
-    color: 'info',
-    route: '/reports'
+    title: 'Monthly Revenue',
+    value: '$125K',
+    icon: 'mdi-trending-up',
+    color: 'info'
   },
   {
-    title: 'Manage Users',
-    description: 'User administration',
-    icon: 'mdi-account-group',
-    color: 'warning',
-    route: '/rbac'
+    title: 'System Health',
+    value: '99.9%',
+    icon: 'mdi-heart-pulse',
+    color: 'warning'
   }
 ])
 
@@ -187,23 +173,23 @@ const modules = ref([
     name: 'General Ledger',
     description: 'Chart of accounts and journal entries',
     icon: 'mdi-book-open-variant',
-    color: 'primary',
+    color: 'blue-darken-2',
     status: 'active',
     route: '/gl'
   },
   {
     name: 'Accounts Payable',
     description: 'Vendor management and payments',
-    icon: 'mdi-credit-card',
-    color: 'error',
+    icon: 'mdi-credit-card-outline',
+    color: 'red-darken-2',
     status: 'active',
     route: '/ap'
   },
   {
     name: 'Accounts Receivable',
     description: 'Customer invoicing and collections',
-    icon: 'mdi-wallet',
-    color: 'success',
+    icon: 'mdi-wallet-outline',
+    color: 'green-darken-2',
     status: 'active',
     route: '/ar'
   },
@@ -211,15 +197,15 @@ const modules = ref([
     name: 'Cash Management',
     description: 'Bank accounts and reconciliation',
     icon: 'mdi-bank',
-    color: 'info',
+    color: 'cyan-darken-2',
     status: 'active',
     route: '/cash'
   },
   {
     name: 'Fixed Assets',
-    description: 'Asset management and depreciation',
+    description: 'Asset tracking and depreciation',
     icon: 'mdi-office-building',
-    color: 'secondary',
+    color: 'purple-darken-2',
     status: 'active',
     route: '/assets'
   },
@@ -227,7 +213,7 @@ const modules = ref([
     name: 'Payroll',
     description: 'Employee payroll processing',
     icon: 'mdi-account-cash',
-    color: 'warning',
+    color: 'orange-darken-2',
     status: 'active',
     route: '/payroll'
   },
@@ -235,7 +221,7 @@ const modules = ref([
     name: 'Human Resources',
     description: 'Employee management system',
     icon: 'mdi-account-group',
-    color: 'purple',
+    color: 'indigo-darken-2',
     status: 'active',
     route: '/hrm'
   },
@@ -243,7 +229,7 @@ const modules = ref([
     name: 'Inventory',
     description: 'Stock management and tracking',
     icon: 'mdi-package-variant',
-    color: 'teal',
+    color: 'teal-darken-2',
     status: 'active',
     route: '/inventory'
   },
@@ -251,15 +237,15 @@ const modules = ref([
     name: 'Budget Planning',
     description: 'Budget creation and monitoring',
     icon: 'mdi-chart-pie',
-    color: 'orange',
+    color: 'deep-orange-darken-2',
     status: 'active',
     route: '/budget'
   },
   {
     name: 'Financial Reports',
     description: 'Comprehensive reporting suite',
-    icon: 'mdi-chart-bar',
-    color: 'indigo',
+    icon: 'mdi-chart-line',
+    color: 'pink-darken-2',
     status: 'active',
     route: '/reports'
   },
@@ -267,7 +253,7 @@ const modules = ref([
     name: 'System Admin',
     description: 'System administration panel',
     icon: 'mdi-shield-crown',
-    color: 'deep-purple',
+    color: 'brown-darken-2',
     status: 'active',
     route: '/admin'
   },
@@ -275,129 +261,201 @@ const modules = ref([
     name: 'Settings',
     description: 'Company configuration',
     icon: 'mdi-cog',
-    color: 'grey',
+    color: 'grey-darken-2',
     status: 'active',
     route: '/settings'
   }
 ])
 
-onMounted(() => {
-  const userData = localStorage.getItem('user')
-  if (userData) {
-    user.value = JSON.parse(userData)
+const systemStatus = ref([
+  {
+    title: 'API Documentation',
+    description: 'Interactive API documentation',
+    icon: 'mdi-api',
+    color: 'primary',
+    status: 'Available',
+    statusIcon: 'mdi-check-circle',
+    action: 'Open Docs',
+    actionUrl: 'http://localhost:8000/docs'
+  },
+  {
+    title: 'Database Status',
+    description: 'Real-time database connection',
+    icon: 'mdi-database',
+    color: 'success',
+    status: 'Connected',
+    statusIcon: 'mdi-database-check'
+  },
+  {
+    title: 'Security Status',
+    description: 'Multi-tenant security monitoring',
+    icon: 'mdi-shield-check',
+    color: 'info',
+    status: 'Secured',
+    statusIcon: 'mdi-shield-check'
   }
-})
-
-const navigateToRoute = (route: string) => {
-  console.log('Navigating to route:', route)
-  try {
-    router.push(route).catch(err => {
-      console.error('Navigation error:', err)
-    })
-  } catch (error) {
-    console.error('Router push error:', error)
-  }
-}
+])
 
 const navigateToModule = (module: any) => {
-  console.log('Navigating to module:', module.name, 'route:', module.route)
-  try {
-    router.push(module.route).catch(err => {
-      console.error('Module navigation error:', err)
-    })
-  } catch (error) {
-    console.error('Module router push error:', error)
-  }
-}
-
-const logout = () => {
-  localStorage.removeItem('user')
-  localStorage.removeItem('token')
-  router.push('/auth/login')
+  console.log('Navigating to:', module.route)
+  router.push(module.route).catch(err => {
+    console.error('Navigation error:', err)
+    // Fallback to dashboard if route doesn't exist
+    router.push('/dashboard')
+  })
 }
 </script>
 
 <style scoped>
 .home-container {
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: #fafafa;
   min-height: 100vh;
-  padding: 24px;
+  padding: 16px;
 }
 
-.hero-section {
-  padding: 20px 0;
+/* Compact Header */
+.header-section {
+  margin-bottom: 1rem;
 }
 
-.hero-title {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #2c3e50;
+.header-card {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
 }
 
-.hero-subtitle {
-  font-size: 1rem;
-  color: #7f8c8d;
-  font-weight: 400;
+.header-logo {
+  background: linear-gradient(135deg, #1976d2, #1565c0);
 }
 
-.section-title {
-  font-size: 1.75rem;
+.header-title {
+  font-size: 1.5rem;
   font-weight: 600;
-  color: #2c3e50;
-  display: flex;
-  align-items: center;
+  color: #212121;
+  margin: 0;
 }
 
-.quick-action-card {
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border-radius: 16px;
-  height: 100%;
+.header-subtitle {
+  font-size: 0.875rem;
+  color: #757575;
+  margin: 0;
 }
 
-.quick-action-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+/* Section Titles */
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #424242;
 }
 
+/* Stats Cards */
+.stat-card {
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  background: white;
+  transition: all 0.2s ease;
+}
+
+.stat-card:hover {
+  border-color: #bdbdbd;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.stat-icon {
+  flex-shrink: 0;
+}
+
+/* Module Cards */
 .module-card {
   cursor: pointer;
-  transition: all 0.3s ease;
-  border-radius: 16px;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  background: white;
+  transition: all 0.2s ease;
   height: 100%;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(10px);
 }
 
 .module-card:hover {
-  transform: translateY(-8px) scale(1.02);
-  box-shadow: 0 16px 48px rgba(0,0,0,0.2);
+  border-color: #1976d2;
+  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.15);
+  transform: translateY(-2px);
 }
 
-.module-icon-container {
-  position: relative;
+.module-icon {
+  flex-shrink: 0;
 }
 
-.info-card {
+.module-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #212121;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.module-description {
+  font-size: 0.8rem;
+  color: #757575;
+  margin: 0;
+  line-height: 1.3;
+}
+
+/* Status Cards */
+.status-card {
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  background: white;
+  transition: all 0.2s ease;
   height: 100%;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  transition: all 0.3s ease;
 }
 
-.info-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+.status-card:hover {
+  border-color: #bdbdbd;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
+.status-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #212121;
+  margin: 0;
+}
+
+.status-description {
+  font-size: 0.875rem;
+  color: #757575;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Responsive Design */
 @media (max-width: 960px) {
-  .hero-title {
-    font-size: 2.5rem;
+  .home-container {
+    padding: 12px;
+  }
+  
+  .header-title {
+    font-size: 1.25rem;
   }
   
   .section-title {
-    font-size: 1.5rem;
+    font-size: 1.125rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .home-container {
+    padding: 8px;
+  }
+  
+  .header-card .pa-4 {
+    padding: 12px !important;
+  }
+  
+  .stat-card .pa-4,
+  .module-card .pa-4,
+  .status-card .pa-4 {
+    padding: 12px !important;
   }
 }
 </style>

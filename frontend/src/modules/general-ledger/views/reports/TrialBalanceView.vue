@@ -1,365 +1,413 @@
 <template>
-  <div class="trial-balance-view">
-    <v-card>
-      <v-card-title class="d-flex align-center">
-        <v-icon left>mdi-scale-balance</v-icon>
-        {{ $t('gl.trialBalance.title') }}
-        <v-spacer></v-spacer>
-        <v-btn
-          color="primary"
-          :loading="exporting"
-          :disabled="!trialBalance"
-          @click="exportReport"
-        >
-          <v-icon left>mdi-download</v-icon>
-          {{ $t('common.export') }}
-        </v-btn>
+  <v-container fluid class="trial-balance-container">
+    <v-card class="trial-balance-card" elevation="4">
+      <!-- Header Section -->
+      <v-card-title class="header-section">
+        <div class="d-flex align-center w-100">
+          <v-avatar color="primary" size="48" class="mr-4">
+            <v-icon color="white" size="24">mdi-scale-balance</v-icon>
+          </v-avatar>
+          <div>
+            <h1 class="text-h4 font-weight-bold">Trial Balance</h1>
+            <p class="text-subtitle-1 text-medium-emphasis">Advanced Financial Reporting</p>
+          </div>
+          <v-spacer />
+          <v-chip :color="isBalanced ? 'success' : 'error'" variant="flat" size="large">
+            <v-icon start>{{ isBalanced ? 'mdi-check-circle' : 'mdi-alert-circle' }}</v-icon>
+            {{ isBalanced ? 'Balanced' : 'Out of Balance' }}
+          </v-chip>
+        </div>
       </v-card-title>
 
-      <v-card-text>
-        <v-form @submit.prevent="generateReport" ref="form">
-          <v-row>
-            <v-col cols="12" md="3">
-              <v-menu
-                v-model="startDateMenu"
-                :close-on-content-click="false"
-                transition="scale-transition"
-                offset-y
-                min-width="auto"
-              >
-                <template v-slot:activator="{ on, attrs }">
-                  <v-text-field
-                    v-model="formData.startDate"
-                    :label="$t('gl.trialBalance.startDate')"
-                    prepend-icon="mdi-calendar"
-                    readonly
-                    v-bind="attrs"
-                    v-on="on"
-                    :rules="[v => !!v || $t('validation.required')]"
-                    outlined
-                    dense
-                  ></v-text-field>
-                </template>
-                <v-date-picker
-                  v-model="formData.startDate"
-                  @input="startDateMenu = false"
-                  :max="formData.endDate || null"
-                ></v-date-picker>
-              </v-menu>
-            </v-col>
-
-            <v-col cols="12" md="3">
-              <v-menu
-                v-model="endDateMenu"
-                :close-on-content-click="false"
-                transition="scale-transition"
-                offset-y
-                min-width="auto"
-              >
-                <template v-slot:activator="{ on, attrs }">
-                  <v-text-field
-                    v-model="formData.endDate"
-                    :label="$t('gl.trialBalance.endDate')"
-                    prepend-icon="mdi-calendar"
-                    readonly
-                    v-bind="attrs"
-                    v-on="on"
-                    :rules="[v => !!v || $t('validation.required')]"
-                    outlined
-                    dense
-                  ></v-text-field>
-                </template>
-                <v-date-picker
-                  v-model="formData.endDate"
-                  @input="endDateMenu = false"
-                  :min="formData.startDate || null"
-                ></v-date-picker>
-              </v-menu>
-            </v-col>
-
-            <v-col cols="12" md="3" class="d-flex align-center">
-              <v-checkbox
-                v-model="formData.includeZeros"
-                :label="$t('gl.trialBalance.includeZeros')"
-                class="mt-0 pt-0"
-                hide-details
-              ></v-checkbox>
-            </v-col>
-
-            <v-col cols="12" md="3" class="d-flex align-center">
-              <v-btn
-                color="primary"
-                type="submit"
-                :loading="loading"
-                block
-              >
-                <v-icon left>mdi-refresh</v-icon>
-                {{ $t('common.generate') }}
-              </v-btn>
-            </v-col>
-          </v-row>
-        </v-form>
-
-        <v-divider class="my-4"></v-divider>
-
-        <!-- Loading State -->
-        <v-row v-if="loading">
-          <v-col cols="12" class="text-center">
-            <v-progress-circular
-              indeterminate
+      <!-- Controls Section -->
+      <v-card-text class="controls-section">
+        <v-row>
+          <v-col cols="12" md="3">
+            <v-text-field
+              v-model="filters.startDate"
+              type="date"
+              label="Start Date"
+              prepend-inner-icon="mdi-calendar"
+              variant="outlined"
+              density="comfortable"
+            />
+          </v-col>
+          <v-col cols="12" md="3">
+            <v-text-field
+              v-model="filters.endDate"
+              type="date"
+              label="End Date"
+              prepend-inner-icon="mdi-calendar"
+              variant="outlined"
+              density="comfortable"
+            />
+          </v-col>
+          <v-col cols="12" md="2">
+            <v-select
+              v-model="filters.accountType"
+              :items="accountTypes"
+              label="Account Type"
+              prepend-inner-icon="mdi-filter"
+              variant="outlined"
+              density="comfortable"
+              clearable
+            />
+          </v-col>
+          <v-col cols="12" md="2">
+            <v-switch
+              v-model="filters.includeZeros"
+              label="Include Zero Balances"
               color="primary"
-            ></v-progress-circular>
-            <div class="mt-2">{{ $t('common.loading') }}</div>
+              inset
+            />
+          </v-col>
+          <v-col cols="12" md="2">
+            <v-btn
+              color="primary"
+              size="large"
+              block
+              :loading="loading"
+              @click="generateReport"
+            >
+              <v-icon start>mdi-refresh</v-icon>
+              Generate
+            </v-btn>
           </v-col>
         </v-row>
 
-        <!-- Error State -->
-        <v-alert
-          v-else-if="error"
-          type="error"
-          class="mb-4"
+        <!-- Action Buttons -->
+        <v-row class="mt-4">
+          <v-col cols="12">
+            <div class="d-flex gap-3">
+              <v-btn
+                color="success"
+                variant="outlined"
+                :disabled="!trialBalance"
+                @click="exportToExcel"
+              >
+                <v-icon start>mdi-microsoft-excel</v-icon>
+                Export Excel
+              </v-btn>
+              <v-btn
+                color="error"
+                variant="outlined"
+                :disabled="!trialBalance"
+                @click="exportToPDF"
+              >
+                <v-icon start>mdi-file-pdf-box</v-icon>
+                Export PDF
+              </v-btn>
+              <v-btn
+                color="info"
+                variant="outlined"
+                :disabled="!trialBalance"
+                @click="printReport"
+              >
+                <v-icon start>mdi-printer</v-icon>
+                Print
+              </v-btn>
+              <v-spacer />
+              <v-text-field
+                v-model="searchQuery"
+                placeholder="Search accounts..."
+                prepend-inner-icon="mdi-magnify"
+                variant="outlined"
+                density="compact"
+                style="max-width: 300px;"
+                clearable
+              />
+            </div>
+          </v-col>
+        </v-row>
+      </v-card-text>
+
+      <!-- Summary Cards -->
+      <v-card-text v-if="trialBalance" class="summary-section">
+        <v-row>
+          <v-col cols="12" sm="6" md="3">
+            <v-card class="summary-card" color="primary" variant="tonal">
+              <v-card-text class="text-center">
+                <v-icon size="32" class="mb-2">mdi-plus-circle</v-icon>
+                <div class="text-h5 font-weight-bold">{{ formatCurrency(totalDebits) }}</div>
+                <div class="text-caption">Total Debits</div>
+              </v-card-text>
+            </v-card>
+          </v-col>
+          <v-col cols="12" sm="6" md="3">
+            <v-card class="summary-card" color="secondary" variant="tonal">
+              <v-card-text class="text-center">
+                <v-icon size="32" class="mb-2">mdi-minus-circle</v-icon>
+                <div class="text-h5 font-weight-bold">{{ formatCurrency(totalCredits) }}</div>
+                <div class="text-caption">Total Credits</div>
+              </v-card-text>
+            </v-card>
+          </v-col>
+          <v-col cols="12" sm="6" md="3">
+            <v-card class="summary-card" :color="isBalanced ? 'success' : 'error'" variant="tonal">
+              <v-card-text class="text-center">
+                <v-icon size="32" class="mb-2">{{ isBalanced ? 'mdi-check-circle' : 'mdi-alert-circle' }}</v-icon>
+                <div class="text-h5 font-weight-bold">{{ formatCurrency(Math.abs(difference)) }}</div>
+                <div class="text-caption">{{ isBalanced ? 'Balanced' : 'Difference' }}</div>
+              </v-card-text>
+            </v-card>
+          </v-col>
+          <v-col cols="12" sm="6" md="3">
+            <v-card class="summary-card" color="info" variant="tonal">
+              <v-card-text class="text-center">
+                <v-icon size="32" class="mb-2">mdi-account-multiple</v-icon>
+                <div class="text-h5 font-weight-bold">{{ filteredEntries.length }}</div>
+                <div class="text-caption">Total Accounts</div>
+              </v-card-text>
+            </v-card>
+          </v-col>
+        </v-row>
+      </v-card-text>
+
+      <!-- Data Table -->
+      <v-card-text class="table-section">
+        <v-data-table
+          v-if="trialBalance"
+          :headers="headers"
+          :items="filteredEntries"
+          :loading="loading"
+          :search="searchQuery"
+          class="advanced-table"
+          density="comfortable"
+          :items-per-page="25"
+          :items-per-page-options="[10, 25, 50, 100, -1]"
         >
-          {{ $t('errors.generic', { message: error }) }}
-        </v-alert>
+          <template #item.accountCode="{ item }">
+            <v-chip size="small" color="primary" variant="outlined">
+              {{ item.accountCode }}
+            </v-chip>
+          </template>
+
+          <template #item.accountType="{ item }">
+            <v-chip 
+              size="small" 
+              :color="getAccountTypeColor(item.accountType)"
+              variant="flat"
+            >
+              {{ item.accountType }}
+            </v-chip>
+          </template>
+
+          <template #item.debitAmount="{ item }">
+            <div class="text-right font-weight-bold" :class="item.debitAmount > 0 ? 'text-success' : ''">
+              {{ item.debitAmount > 0 ? formatCurrency(item.debitAmount) : '-' }}
+            </div>
+          </template>
+
+          <template #item.creditAmount="{ item }">
+            <div class="text-right font-weight-bold" :class="item.creditAmount > 0 ? 'text-error' : ''">
+              {{ item.creditAmount > 0 ? formatCurrency(item.creditAmount) : '-' }}
+            </div>
+          </template>
+
+          <template #item.balance="{ item }">
+            <div class="text-right font-weight-bold" :class="getBalanceClass(item.balance)">
+              {{ formatCurrency(Math.abs(item.balance)) }}
+            </div>
+          </template>
+
+          <template #bottom>
+            <div class="totals-row pa-4">
+              <v-row class="font-weight-bold text-h6">
+                <v-col cols="6" class="text-right">TOTALS:</v-col>
+                <v-col cols="2" class="text-right text-success">{{ formatCurrency(totalDebits) }}</v-col>
+                <v-col cols="2" class="text-right text-error">{{ formatCurrency(totalCredits) }}</v-col>
+                <v-col cols="2" class="text-right" :class="isBalanced ? 'text-success' : 'text-error'">
+                  {{ formatCurrency(Math.abs(difference)) }}
+                </v-col>
+              </v-row>
+            </div>
+          </template>
+        </v-data-table>
+
+        <!-- Loading State -->
+        <div v-else-if="loading" class="text-center pa-8">
+          <v-progress-circular indeterminate color="primary" size="64" />
+          <div class="mt-4 text-h6">Generating Trial Balance...</div>
+        </div>
 
         <!-- Empty State -->
-        <v-alert
-          v-else-if="!trialBalance"
-          type="info"
-          class="mb-4"
-        >
-          {{ $t('gl.trialBalance.noData') }}
-        </v-alert>
-
-        <!-- Trial Balance Table -->
-        <template v-else>
-          <div class="d-flex justify-space-between mb-4">
-            <div>
-              <div class="text-subtitle-1">
-                {{ $t('gl.trialBalance.period') }}: {{ formatDate(formData.startDate) }} - {{ formatDate(formData.endDate) }}
-              </div>
-              <div class="text-caption text--secondary">
-                {{ $t('common.generatedOn') }}: {{ formatDateTime(new Date()) }}
-              </div>
-            </div>
-          </div>
-
-          <v-data-table
-            :headers="headers"
-            :items="trialBalance.entries"
-            :items-per-page="-1"
-            hide-default-footer
-            class="elevation-1"
-            dense
-          >
-            <template v-slot:body.append>
-              <tr class="font-weight-bold">
-                <td colspan="5" class="text-right">
-                  {{ $t('gl.trialBalance.totals') }}:
-                </td>
-                <td class="text-right">
-                  {{ formatCurrency(trialBalance.totalDebit) }}
-                </td>
-                <td class="text-right">
-                  {{ formatCurrency(trialBalance.totalCredit) }}
-                </td>
-              </tr>
-              <tr v-if="Math.abs(trialBalance.difference) > 0.01" class="error--text">
-                <td colspan="7" class="text-right">
-                  {{ $t('gl.trialBalance.outOfBalance') }}: {{ formatCurrency(Math.abs(trialBalance.difference)) }}
-                </td>
-              </tr>
-            </template>
-
-            <template v-slot:item.openingBalance="{ item }">
-              {{ formatCurrency(item.openingBalance) }}
-            </template>
-
-            <template v-slot:item.periodActivity="{ item }">
-              {{ formatCurrency(item.periodActivity) }}
-            </template>
-
-            <template v-slot:item.endingBalance="{ item }">
-              {{ formatCurrency(item.endingBalance) }}
-            </template>
-
-            <template v-slot:item.debitAmount="{ item }">
-              {{ formatCurrency(item.debitAmount) }}
-            </template>
-
-            <template v-slot:item.creditAmount="{ item }">
-              {{ formatCurrency(item.creditAmount) }}
-            </template>
-          </v-data-table>
-        </template>
+        <div v-else class="text-center pa-8">
+          <v-icon size="64" color="grey">mdi-file-document-outline</v-icon>
+          <div class="mt-4 text-h6">No Data Available</div>
+          <div class="text-body-1 text-medium-emphasis">Click Generate to create your trial balance</div>
+        </div>
       </v-card-text>
     </v-card>
-  </div>
+  </v-container>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { format } from 'date-fns';
-import { TrialBalanceService } from '@/services/gl/trialBalanceService';
-import type { TrialBalance, TrialBalanceParams } from '@/types/gl/trialBalance';
-import { formatCurrency, formatDate, formatDateTime } from '@/utils/formatters';
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
+import api from '@/services/api'
 
-interface TrialBalanceData {
-  loading: boolean;
-  exporting: boolean;
-  error: string | null;
-  trialBalance: TrialBalance | null;
-  startDateMenu: boolean;
-  endDateMenu: boolean;
-  formData: {
-    startDate: string;
-    endDate: string;
-    includeZeros: boolean;
-  };
-  headers: Array<{
-    text: string;
-    value: string;
-    align?: string;
-    sortable?: boolean;
-  }>;
+const loading = ref(false)
+const trialBalance = ref<any>(null)
+const searchQuery = ref('')
+
+const filters = ref({
+  startDate: new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0],
+  endDate: new Date().toISOString().split('T')[0],
+  accountType: null,
+  includeZeros: false
+})
+
+const accountTypes = ['Asset', 'Liability', 'Equity', 'Revenue', 'Expense']
+
+const headers = [
+  { title: 'Account Code', key: 'accountCode', width: '120px' },
+  { title: 'Account Name', key: 'accountName', width: '300px' },
+  { title: 'Type', key: 'accountType', width: '120px' },
+  { title: 'Debit Amount', key: 'debitAmount', align: 'end', width: '150px' },
+  { title: 'Credit Amount', key: 'creditAmount', align: 'end', width: '150px' },
+  { title: 'Balance', key: 'balance', align: 'end', width: '150px' }
+]
+
+const filteredEntries = computed(() => {
+  if (!trialBalance.value?.entries) return []
+  
+  let entries = trialBalance.value.entries
+  
+  if (filters.value.accountType) {
+    entries = entries.filter((entry: any) => entry.accountType === filters.value.accountType)
+  }
+  
+  if (!filters.value.includeZeros) {
+    entries = entries.filter((entry: any) => entry.debitAmount !== 0 || entry.creditAmount !== 0)
+  }
+  
+  return entries
+})
+
+const totalDebits = computed(() => {
+  return filteredEntries.value.reduce((sum: number, entry: any) => sum + entry.debitAmount, 0)
+})
+
+const totalCredits = computed(() => {
+  return filteredEntries.value.reduce((sum: number, entry: any) => sum + entry.creditAmount, 0)
+})
+
+const difference = computed(() => totalDebits.value - totalCredits.value)
+const isBalanced = computed(() => Math.abs(difference.value) < 0.01)
+
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD'
+  }).format(amount)
 }
 
-export default defineComponent({
-  name: 'TrialBalanceView',
-  setup() {
-    const { t } = useI18n();
-    const loading = ref(false);
-    const exporting = ref(false);
-    const error = ref<string | null>(null);
-    const trialBalance = ref<TrialBalance | null>(null);
-    const startDateMenu = ref(false);
-    const endDateMenu = ref(false);
-    
-    const formData = ref({
-      startDate: format(new Date(new Date().getFullYear(), 0, 1), 'yyyy-MM-dd'),
-      endDate: format(new Date(), 'yyyy-MM-dd'),
-      includeZeros: false,
-    });
-    
-    const headers = [
-      { text: t('gl.trialBalance.accountCode'), value: 'accountCode' },
-      { text: t('gl.trialBalance.accountName'), value: 'accountName' },
-      { text: t('gl.trialBalance.accountType'), value: 'accountType' },
-      { 
-        text: t('gl.trialBalance.openingBalance'), 
-        value: 'openingBalance',
-        align: 'right',
-        sortable: false,
-      },
-      { 
-        text: t('gl.trialBalance.periodActivity'), 
-        value: 'periodActivity',
-        align: 'right',
-        sortable: false,
-      },
-      { 
-        text: t('gl.trialBalance.debitAmount'), 
-        value: 'debitAmount',
-        align: 'right',
-        sortable: false,
-      },
-      { 
-        text: t('gl.trialBalance.creditAmount'), 
-        value: 'creditAmount',
-        align: 'right',
-        sortable: false,
-      },
-    ];
-    
-    return {
-      t,
-      loading,
-      exporting,
-      error,
-      trialBalance,
-      startDateMenu,
-      endDateMenu,
-      formData,
-      headers,
-      formatCurrency,
-      formatDate,
-      formatDateTime,
-    };
-  },
-  mounted() {
-    this.generateReport();
-  },
-  methods: {
-      async generateReport() {
-        const form = this.$refs.form as { validate: () => boolean } | null;
-        if (form && !form.validate()) {
-          return;
-        }
-
-        this.loading = true;
-        this.error = null;
-
-        try {
-          const params: Omit<TrialBalanceParams, 'format'> = {
-            startDate: this.formData.startDate,
-            endDate: this.formData.endDate,
-            includeZeros: this.formData.includeZeros,
-          };
-
-          this.trialBalance = await TrialBalanceService.getTrialBalance(params);
-        } catch (err: any) {
-          console.error('Error generating trial balance:', err);
-          this.error = err.message || this.t('errors.genericMessage');
-        } finally {
-          this.loading = false;
-        }
-      },
-      
-      async exportReport() {
-        if (!this.trialBalance) return;
-
-        this.exporting = true;
-
-        try {
-          const params: TrialBalanceParams = {
-            startDate: this.formData.startDate,
-            endDate: this.formData.endDate,
-            includeZeros: this.formData.includeZeros,
-            format: 'excel',
-          };
-
-          await TrialBalanceService.exportTrialBalance(params);
-        } catch (err: any) {
-          console.error('Error exporting trial balance:', err);
-          this.error = err.message || this.t('errors.exportFailed');
-        } finally {
-          this.exporting = false;
-        }
-      }
+const getAccountTypeColor = (type: string) => {
+  const colors: Record<string, string> = {
+    'Asset': 'success',
+    'Liability': 'error',
+    'Equity': 'info',
+    'Revenue': 'primary',
+    'Expense': 'warning'
   }
-});
+  return colors[type] || 'grey'
+}
+
+const getBalanceClass = (balance: number) => {
+  return balance > 0 ? 'text-success' : balance < 0 ? 'text-error' : 'text-grey'
+}
+
+const generateReport = async () => {
+  loading.value = true
+  try {
+    const response = await api.get('/api/v1/gl/reports/trial-balance', {
+      params: {
+        start_date: filters.value.startDate,
+        end_date: filters.value.endDate,
+        include_zeros: filters.value.includeZeros
+      }
+    })
+    trialBalance.value = response.data
+  } catch (error) {
+    console.error('Error generating trial balance:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+const exportToExcel = () => {
+  console.log('Exporting to Excel...')
+}
+
+const exportToPDF = () => {
+  console.log('Exporting to PDF...')
+}
+
+const printReport = () => {
+  window.print()
+}
+
+onMounted(() => {
+  generateReport()
+})
 </script>
 
 <style scoped>
-.trial-balance-view {
-  height: 100%;
+.trial-balance-container {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  min-height: 100vh;
+  padding: 24px;
 }
 
-.v-data-table {
-  font-size: 0.875rem;
+.trial-balance-card {
+  border-radius: 20px;
+  overflow: hidden;
 }
 
-.v-data-table /deep/ th {
+.header-section {
+  background: linear-gradient(135deg, rgb(var(--v-theme-primary)) 0%, rgb(var(--v-theme-secondary)) 100%);
+  color: white;
+  padding: 32px;
+}
+
+.controls-section {
+  background: rgba(var(--v-theme-surface), 0.8);
+  backdrop-filter: blur(10px);
+}
+
+.summary-section {
+  background: rgba(var(--v-theme-primary), 0.02);
+}
+
+.summary-card {
+  border-radius: 16px;
+  transition: all 0.3s ease;
+}
+
+.summary-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+}
+
+.advanced-table {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.totals-row {
+  background: rgba(var(--v-theme-primary), 0.05);
+  border-top: 2px solid rgb(var(--v-theme-primary));
+}
+
+:deep(.v-data-table__wrapper) {
+  border-radius: 12px;
+}
+
+:deep(.v-data-table-header) {
+  background: rgba(var(--v-theme-primary), 0.1);
+}
+
+:deep(.v-data-table-header th) {
   font-weight: 600;
-  white-space: nowrap;
-}
-
-.v-data-table /deep/ td {
-  white-space: nowrap;
-}
-
-.text-right {
-  text-align: right;
+  color: rgb(var(--v-theme-primary));
 }
 </style>

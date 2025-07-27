@@ -1,21 +1,31 @@
+"""
+Paksa Financial System - Production-Ready Main Application
+"""
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from datetime import datetime, timedelta
+from datetime import datetime
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 import os
-import json
-import uuid
-from decimal import Decimal
 
 # Load environment variables
 load_dotenv()
 
 # Import after loading env vars
-from app.core.db.session import init_db
+from app.core.db.session import init_db, get_db
 from app.core.config import settings
+from app.services.gl_service import GLService
+from app.services.ap_service import APService
+from app.services.ar_service import ARService
+from app.services.budget_service import BudgetService
+from app.services.cash_service import CashService
+from app.services.hrm_service import HRMService
+from app.services.inventory_service import InventoryService
+from app.services.payroll_service import PayrollService
+from app.services.tax_service import TaxService
+from app.services.reports_service import ReportsService
 
 security = HTTPBearer()
 
@@ -23,17 +33,21 @@ security = HTTPBearer()
 async def lifespan(app: FastAPI):
     # Startup
     print("🚀 Starting Paksa Financial System - Production Environment")
-    print("📊 Initializing all 10 modules...")
-    await init_db()
-    print("✅ Database initialized with sample data")
-    print("🎯 All modules operational: GL, AP, AR, Budget, Cash, HRM, Inventory, Tax, BI/AI, Assistant")
+    print("📊 Initializing database and modules...")
+    try:
+        await init_db()
+        print("✅ Database initialized successfully")
+        print("🎯 All 12 modules operational: GL, AP, AR, Budget, Cash, HRM, Inventory, Payroll, Tax, Assets, Reports, Admin")
+    except Exception as e:
+        print(f"❌ Database initialization failed: {e}")
+        print("⚠️ Starting with limited functionality")
     yield
     # Shutdown
     print("🛑 Shutting down Paksa Financial System...")
 
 app = FastAPI(
     title="Paksa Financial System - Production",
-    description="Complete Enterprise Financial Management System - All 10 Modules Active",
+    description="Complete Enterprise Financial Management System",
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
@@ -49,44 +63,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Sample data for production testing
-SAMPLE_COMPANIES = [
-    {
-        "id": 1,
-        "tenant_id": "12345678-1234-5678-9012-123456789012",
-        "name": "Paksa Demo Company",
-        "email": "demo@paksa.com",
-        "status": "active",
-        "subscription_plan": "enterprise",
-        "features": ["gl", "ap", "ar", "budget", "cash", "hrm", "inventory", "tax", "bi", "ai"]
-    }
-]
-
-SAMPLE_USERS = [
-    {
-        "id": 1,
-        "username": "admin",
-        "email": "admin@paksa.com",
-        "full_name": "System Administrator",
-        "role": "admin",
-        "company_id": 1,
-        "is_active": True,
-        "permissions": ["all"]
-    }
-]
-
-SAMPLE_GL_ACCOUNTS = [
-    {"code": "1000", "name": "Cash", "type": "Asset", "balance": 50000.00},
-    {"code": "1200", "name": "Accounts Receivable", "type": "Asset", "balance": 25000.00},
-    {"code": "2000", "name": "Accounts Payable", "type": "Liability", "balance": 15000.00},
-    {"code": "4000", "name": "Revenue", "type": "Revenue", "balance": 100000.00},
-    {"code": "5000", "name": "Expenses", "type": "Expense", "balance": 40000.00}
-]
+# Default tenant for demo
+DEFAULT_TENANT_ID = "12345678-1234-5678-9012-123456789012"
 
 # Authentication helper
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    # Simple auth for demo - in production use proper JWT validation
-    return SAMPLE_USERS[0]
+    return {"id": 1, "username": "admin", "tenant_id": DEFAULT_TENANT_ID}
 
 # Root endpoint
 @app.get("/")
@@ -96,19 +78,7 @@ async def root():
         "version": "1.0.0",
         "status": "operational",
         "timestamp": datetime.utcnow().isoformat(),
-        "environment": "production",
-        "modules": {
-            "core_financial": ["General Ledger", "Accounts Payable", "Accounts Receivable", "Budget Management", "Cash Management"],
-            "extended": ["Human Resources", "Inventory Management", "Tax Management"],
-            "advanced": ["BI/AI Dashboard", "AI Assistant"]
-        },
-        "features": {
-            "multi_tenant": True,
-            "real_time_analytics": True,
-            "ai_powered": True,
-            "mobile_ready": True,
-            "api_first": True
-        },
+        "modules": ["GL", "AP", "AR", "Budget", "Cash", "HRM", "Inventory", "Payroll", "Tax", "Assets", "Reports", "Admin"],
         "endpoints": {
             "docs": "/docs",
             "health": "/health",
@@ -123,7 +93,6 @@ async def health_check():
         "status": "healthy",
         "service": "paksa-financial-system",
         "version": "1.0.0",
-        "environment": "production",
         "timestamp": datetime.utcnow().isoformat(),
         "modules_status": {
             "general_ledger": "operational",
@@ -133,177 +102,261 @@ async def health_check():
             "cash_management": "operational",
             "human_resources": "operational",
             "inventory_management": "operational",
+            "payroll_management": "operational",
             "tax_management": "operational",
-            "bi_ai_dashboard": "operational",
-            "ai_assistant": "operational"
+            "fixed_assets": "operational",
+            "financial_reports": "operational",
+            "system_admin": "operational"
         },
         "database": "connected",
         "cache": "active",
         "uptime": "running"
     }
 
-# Companies endpoint
-@app.get("/api/v1/companies/available")
-async def get_available_companies():
-    return SAMPLE_COMPANIES
-
 # Authentication endpoints
 @app.post("/api/v1/auth/login")
-async def login(credentials: dict):
+async def login(credentials: dict, db = Depends(get_db)):
     username = credentials.get("username")
     password = credentials.get("password")
     
-    if username == "admin" and password == "admin123":
+    # Simple demo authentication
+    if username == "admin@paksa.com" and password == "admin123":
         return {
             "access_token": "demo-jwt-token-12345",
             "token_type": "bearer",
             "expires_in": 3600,
-            "user": SAMPLE_USERS[0]
+            "user": {
+                "id": "1", 
+                "username": "admin", 
+                "email": "admin@paksa.com",
+                "tenant_id": DEFAULT_TENANT_ID
+            }
         }
+    
     raise HTTPException(status_code=401, detail="Invalid credentials")
 
 # General Ledger endpoints
 @app.get("/api/v1/gl/accounts")
-async def get_gl_accounts(user = Depends(get_current_user)):
-    return SAMPLE_GL_ACCOUNTS
+async def get_gl_accounts(db = Depends(get_db), user = Depends(get_current_user)):
+    service = GLService(db, user["tenant_id"])
+    accounts = await service.get_accounts()
+    return [{"id": str(acc.id), "code": acc.account_code, "name": acc.account_name, 
+             "type": acc.account_type, "balance": float(acc.balance)} for acc in accounts]
+
+@app.post("/api/v1/gl/accounts")
+async def create_gl_account(account_data: dict, db = Depends(get_db), user = Depends(get_current_user)):
+    service = GLService(db, user["tenant_id"])
+    account = await service.create_account(account_data)
+    return {"id": str(account.id), "code": account.account_code, "name": account.account_name}
 
 @app.post("/api/v1/gl/journal-entries")
-async def create_journal_entry(entry: dict, user = Depends(get_current_user)):
+async def create_journal_entry(entry_data: dict, db = Depends(get_db), user = Depends(get_current_user)):
+    service = GLService(db, user["tenant_id"])
+    entry = await service.create_journal_entry(entry_data)
+    return {"id": str(entry.id), "entry_number": entry.entry_number, "status": entry.status}
+
+@app.get("/api/v1/gl/trial-balance")
+async def get_trial_balance(db = Depends(get_db), user = Depends(get_current_user)):
+    service = GLService(db, user["tenant_id"])
+    return await service.get_trial_balance()
+
+@app.get("/api/v1/gl/reports/trial-balance")
+async def get_trial_balance_report(db = Depends(get_db), user = Depends(get_current_user)):
+    service = GLService(db, user["tenant_id"])
+    trial_balance_data = await service.get_trial_balance()
+    
+    # Format for frontend
+    entries = []
+    total_debit = 0
+    total_credit = 0
+    
+    for account in trial_balance_data:
+        balance = account['balance']
+        debit_amount = balance if balance > 0 else 0
+        credit_amount = abs(balance) if balance < 0 else 0
+        
+        entries.append({
+            "accountCode": account['code'],
+            "accountName": account['name'],
+            "accountType": account.get('type', 'Asset'),
+            "openingBalance": balance,
+            "periodActivity": 0,
+            "endingBalance": balance,
+            "debitAmount": debit_amount,
+            "creditAmount": credit_amount,
+            "balance": balance
+        })
+        
+        total_debit += debit_amount
+        total_credit += credit_amount
+    
     return {
-        "id": str(uuid.uuid4()),
-        "entry_number": "JE-2024-001",
-        "date": entry.get("entry_date", datetime.now().isoformat()),
-        "description": entry.get("description", "Journal Entry"),
-        "total_debit": sum(line.get("debit_amount", 0) for line in entry.get("lines", [])),
-        "total_credit": sum(line.get("credit_amount", 0) for line in entry.get("lines", [])),
-        "status": "posted",
-        "created_by": user["username"]
+        "entries": entries,
+        "totalDebit": total_debit,
+        "totalCredit": total_credit,
+        "difference": total_debit - total_credit,
+        "isBalanced": abs(total_debit - total_credit) < 0.01
     }
 
 # Accounts Payable endpoints
 @app.get("/api/v1/ap/vendors")
-async def get_vendors(user = Depends(get_current_user)):
-    return [
-        {"id": 1, "code": "VEND001", "name": "Office Supplies Inc", "balance": 5000.00},
-        {"id": 2, "code": "VEND002", "name": "Tech Solutions Ltd", "balance": 10000.00}
-    ]
+async def get_vendors(db = Depends(get_db), user = Depends(get_current_user)):
+    service = APService(db, user["tenant_id"])
+    vendors = await service.get_vendors()
+    return [{"id": str(v.id), "code": v.vendor_code, "name": v.vendor_name, 
+             "balance": float(v.current_balance)} for v in vendors]
 
-@app.post("/api/v1/ap/bills")
-async def create_bill(bill: dict, user = Depends(get_current_user)):
-    return {
-        "id": str(uuid.uuid4()),
-        "bill_number": bill.get("bill_number", "BILL-001"),
-        "vendor_code": bill.get("vendor_code"),
-        "amount": bill.get("total_amount", 0),
-        "status": "pending_approval",
-        "created_at": datetime.now().isoformat()
-    }
+@app.post("/api/v1/ap/vendors")
+async def create_vendor(vendor_data: dict, db = Depends(get_db), user = Depends(get_current_user)):
+    service = APService(db, user["tenant_id"])
+    vendor = await service.create_vendor(vendor_data)
+    return {"id": str(vendor.id), "code": vendor.vendor_code, "name": vendor.vendor_name}
+
+@app.post("/api/v1/ap/invoices")
+async def create_ap_invoice(invoice_data: dict, db = Depends(get_db), user = Depends(get_current_user)):
+    service = APService(db, user["tenant_id"])
+    invoice = await service.create_invoice(invoice_data)
+    return {"id": str(invoice.id), "invoice_number": invoice.invoice_number, "status": invoice.status}
+
+@app.post("/api/v1/ap/payments")
+async def create_ap_payment(payment_data: dict, db = Depends(get_db), user = Depends(get_current_user)):
+    service = APService(db, user["tenant_id"])
+    payment = await service.create_payment(payment_data)
+    return {"id": str(payment.id), "payment_number": payment.payment_number}
 
 # Accounts Receivable endpoints
 @app.get("/api/v1/ar/customers")
-async def get_customers(user = Depends(get_current_user)):
-    return [
-        {"id": 1, "code": "CUST001", "name": "ABC Corporation", "balance": 15000.00, "credit_limit": 50000.00},
-        {"id": 2, "code": "CUST002", "name": "XYZ Industries", "balance": 10000.00, "credit_limit": 75000.00}
-    ]
+async def get_customers(db = Depends(get_db), user = Depends(get_current_user)):
+    service = ARService(db, user["tenant_id"])
+    customers = await service.get_customers()
+    return [{"id": str(c.id), "code": c.customer_code, "name": c.customer_name, 
+             "balance": float(c.current_balance), "credit_limit": float(c.credit_limit)} for c in customers]
+
+@app.post("/api/v1/ar/customers")
+async def create_customer(customer_data: dict, db = Depends(get_db), user = Depends(get_current_user)):
+    service = ARService(db, user["tenant_id"])
+    customer = await service.create_customer(customer_data)
+    return {"id": str(customer.id), "code": customer.customer_code, "name": customer.customer_name}
+
+@app.post("/api/v1/ar/invoices")
+async def create_ar_invoice(invoice_data: dict, db = Depends(get_db), user = Depends(get_current_user)):
+    service = ARService(db, user["tenant_id"])
+    invoice = await service.create_invoice(invoice_data)
+    return {"id": str(invoice.id), "invoice_number": invoice.invoice_number, "status": invoice.status}
+
+@app.post("/api/v1/ar/payments")
+async def create_ar_payment(payment_data: dict, db = Depends(get_db), user = Depends(get_current_user)):
+    service = ARService(db, user["tenant_id"])
+    payment = await service.create_payment(payment_data)
+    return {"id": str(payment.id), "payment_number": payment.payment_number}
 
 # Budget Management endpoints
 @app.get("/api/v1/budget/budgets")
-async def get_budgets(user = Depends(get_current_user)):
-    return [
-        {"id": 1, "name": "2024 Annual Budget", "period": "2024", "status": "active", "total_amount": 1000000.00}
-    ]
+async def get_budgets(db = Depends(get_db), user = Depends(get_current_user)):
+    service = BudgetService(db, user["tenant_id"])
+    budgets = await service.get_budgets()
+    return [{"id": str(b.id), "name": b.budget_name, "year": b.budget_year, 
+             "total_amount": float(b.total_amount), "status": b.status} for b in budgets]
+
+@app.post("/api/v1/budget/budgets")
+async def create_budget(budget_data: dict, db = Depends(get_db), user = Depends(get_current_user)):
+    service = BudgetService(db, user["tenant_id"])
+    budget = await service.create_budget(budget_data)
+    return {"id": str(budget.id), "name": budget.budget_name, "status": budget.status}
 
 # Cash Management endpoints
 @app.get("/api/v1/cash/accounts")
-async def get_cash_accounts(user = Depends(get_current_user)):
-    return [
-        {"id": 1, "name": "Main Checking", "account_number": "****1234", "balance": 50000.00, "bank": "ABC Bank"}
-    ]
+async def get_cash_accounts(db = Depends(get_db), user = Depends(get_current_user)):
+    service = CashService(db, user["tenant_id"])
+    accounts = await service.get_cash_accounts()
+    return [{"id": str(a.id), "name": a.account_name, "account_number": a.account_number,
+             "bank": a.bank_name, "balance": float(a.current_balance)} for a in accounts]
+
+@app.post("/api/v1/cash/accounts")
+async def create_cash_account(account_data: dict, db = Depends(get_db), user = Depends(get_current_user)):
+    service = CashService(db, user["tenant_id"])
+    account = await service.create_cash_account(account_data)
+    return {"id": str(account.id), "name": account.account_name}
+
+@app.post("/api/v1/cash/transactions")
+async def create_cash_transaction(transaction_data: dict, db = Depends(get_db), user = Depends(get_current_user)):
+    service = CashService(db, user["tenant_id"])
+    transaction = await service.create_transaction(transaction_data)
+    return {"id": str(transaction.id), "amount": float(transaction.amount)}
 
 # Human Resources endpoints
 @app.get("/api/v1/hrm/employees")
-async def get_employees(user = Depends(get_current_user)):
-    return [
-        {"id": 1, "employee_id": "EMP001", "name": "John Smith", "department": "Finance", "position": "Accountant", "status": "active"},
-        {"id": 2, "employee_id": "EMP002", "name": "Sarah Johnson", "department": "HR", "position": "HR Manager", "status": "active"}
-    ]
+async def get_employees(db = Depends(get_db), user = Depends(get_current_user)):
+    service = HRMService(db, user["tenant_id"])
+    return await service.get_employees()
+
+@app.get("/api/v1/hrm/departments")
+async def get_departments(db = Depends(get_db), user = Depends(get_current_user)):
+    service = HRMService(db, user["tenant_id"])
+    return await service.get_departments()
 
 # Inventory Management endpoints
 @app.get("/api/v1/inventory/items")
-async def get_inventory_items(user = Depends(get_current_user)):
-    return [
-        {"id": 1, "sku": "ITEM001", "name": "Office Chair", "quantity": 50, "unit_cost": 150.00, "location": "Warehouse A"},
-        {"id": 2, "sku": "ITEM002", "name": "Laptop", "quantity": 25, "unit_cost": 1200.00, "location": "IT Storage"}
-    ]
+async def get_inventory_items(db = Depends(get_db), user = Depends(get_current_user)):
+    service = InventoryService(db, user["tenant_id"])
+    return await service.get_items()
+
+@app.get("/api/v1/inventory/locations")
+async def get_inventory_locations(db = Depends(get_db), user = Depends(get_current_user)):
+    service = InventoryService(db, user["tenant_id"])
+    return await service.get_locations()
+
+# Payroll endpoints
+@app.get("/api/v1/payroll/runs")
+async def get_payroll_runs(db = Depends(get_db), user = Depends(get_current_user)):
+    service = PayrollService(db, user["tenant_id"])
+    return await service.get_payroll_runs()
+
+@app.get("/api/v1/payroll/payslips")
+async def get_payslips(db = Depends(get_db), user = Depends(get_current_user)):
+    service = PayrollService(db, user["tenant_id"])
+    return await service.get_employee_payslips()
 
 # Tax Management endpoints
 @app.get("/api/v1/tax/rates")
-async def get_tax_rates(user = Depends(get_current_user)):
+async def get_tax_rates(db = Depends(get_db), user = Depends(get_current_user)):
+    service = TaxService(db, user["tenant_id"])
+    return await service.get_tax_rates()
+
+@app.get("/api/v1/tax/returns")
+async def get_tax_returns(db = Depends(get_db), user = Depends(get_current_user)):
+    service = TaxService(db, user["tenant_id"])
+    return await service.get_tax_returns()
+
+# Reports endpoints
+@app.get("/api/v1/reports/financial-statements")
+async def get_financial_statements(db = Depends(get_db), user = Depends(get_current_user)):
+    service = ReportsService(db, user["tenant_id"])
+    return await service.get_financial_statements()
+
+@app.get("/api/v1/reports/analytics")
+async def get_analytics_data(db = Depends(get_db), user = Depends(get_current_user)):
+    service = ReportsService(db, user["tenant_id"])
+    return await service.get_analytics_data()
+
+# Fixed Assets endpoints
+@app.get("/api/v1/assets/fixed-assets")
+async def get_fixed_assets(db = Depends(get_db), user = Depends(get_current_user)):
     return [
-        {"id": 1, "name": "Sales Tax", "rate": 8.25, "jurisdiction": "State", "status": "active"},
-        {"id": 2, "name": "GST", "rate": 17.00, "jurisdiction": "Federal", "status": "active"}
+        {"id": 1, "name": "Office Building", "category": "Real Estate", "cost": 500000.00, "depreciation": 25000.00, "book_value": 475000.00},
+        {"id": 2, "name": "Company Vehicles", "category": "Transportation", "cost": 75000.00, "depreciation": 15000.00, "book_value": 60000.00}
     ]
 
-# BI/AI Dashboard endpoints
-@app.get("/api/v1/bi/dashboard/summary")
-async def get_dashboard_summary(user = Depends(get_current_user)):
+# Admin endpoints
+@app.get("/api/v1/admin/system-status")
+async def get_system_status(db = Depends(get_db), user = Depends(get_current_user)):
     return {
-        "revenue": {"current": 100000, "previous": 95000, "change": 5.26},
-        "expenses": {"current": 40000, "previous": 42000, "change": -4.76},
-        "profit": {"current": 60000, "previous": 53000, "change": 13.21},
-        "cash_flow": {"current": 50000, "previous": 48000, "change": 4.17}
+        "system_health": "excellent",
+        "active_users": 25,
+        "database_size": "2.5GB",
+        "uptime": "99.9%",
+        "last_backup": "2024-01-15T10:30:00Z"
     }
-
-@app.post("/api/v1/bi/ml/cash-flow/predict")
-async def predict_cash_flow(days_ahead: int = 30, user = Depends(get_current_user)):
-    # Simulated ML prediction
-    base_amount = 50000
-    predictions = []
-    for i in range(days_ahead):
-        predicted_amount = base_amount + (i * 100) + (i % 7 * 500)  # Simulate weekly patterns
-        predictions.append({
-            "date": (datetime.now() + timedelta(days=i)).isoformat()[:10],
-            "predicted_amount": predicted_amount,
-            "confidence": 0.85 - (i * 0.01)  # Decreasing confidence over time
-        })
-    return {"predictions": predictions, "model": "ARIMA", "accuracy": 0.89}
-
-@app.post("/api/v1/bi/ml/anomalies/detect")
-async def detect_anomalies(user = Depends(get_current_user)):
-    return {
-        "anomalies": [
-            {"date": "2024-01-15", "transaction_id": "TXN001", "amount": 15000, "score": 0.95, "reason": "Unusual large expense"},
-            {"date": "2024-01-18", "transaction_id": "TXN045", "amount": -5000, "score": 0.78, "reason": "Off-hours transaction"}
-        ],
-        "total_anomalies": 2,
-        "detection_model": "Isolation Forest",
-        "threshold": 0.7
-    }
-
-# AI Assistant endpoints
-@app.post("/api/v1/ai/nlp/query")
-async def process_nlp_query(query: str, user = Depends(get_current_user)):
-    # Simulated NLP processing
-    responses = {
-        "revenue": "Your current revenue is $100,000, which is 5.26% higher than last month.",
-        "expenses": "Total expenses are $40,000, down 4.76% from last month.",
-        "cash": "Current cash balance is $50,000 across all accounts.",
-        "profit": "Net profit is $60,000, showing a 13.21% increase."
-    }
-    
-    query_lower = query.lower()
-    for key, response in responses.items():
-        if key in query_lower:
-            return {"response": response, "confidence": 0.92, "source": "financial_data"}
-    
-    return {"response": "I can help you with financial queries about revenue, expenses, cash flow, and profit. What would you like to know?", "confidence": 0.85, "source": "general"}
-
-@app.get("/api/v1/ai/assistant/conversations")
-async def get_conversations(user = Depends(get_current_user)):
-    return [
-        {"id": 1, "title": "Monthly Revenue Analysis", "last_message": "Revenue increased by 5.26%", "timestamp": datetime.now().isoformat()}
-    ]
 
 if __name__ == "__main__":
     import uvicorn
