@@ -3,7 +3,8 @@ Application configuration management.
 """
 import os
 from typing import Optional, List
-from pydantic import BaseSettings, validator, Field
+from pydantic_settings import BaseSettings
+from pydantic import validator, Field
 from pathlib import Path
 
 class Settings(BaseSettings):
