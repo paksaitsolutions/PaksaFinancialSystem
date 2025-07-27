@@ -18,7 +18,7 @@ class BaseModel(Base):
     __abstract__ = True
 
 # Use environment-based configuration
-DB_URI = os.getenv("DATABASE_URL", settings.SQLALCHEMY_DATABASE_URI)
+DB_URI = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./paksa_finance.db")
 
 # Handle SQLite path creation if using SQLite
 if "sqlite" in DB_URI:
