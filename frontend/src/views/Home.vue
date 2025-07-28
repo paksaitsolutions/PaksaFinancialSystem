@@ -1,39 +1,29 @@
 <template>
-  <v-container fluid class="home-container">
-    <!-- Compact Header -->
-    <v-row class="header-section mb-4">
+  <v-container fluid class="pa-6">
+    <!-- Welcome Header -->
+    <v-row class="mb-6">
       <v-col cols="12">
-        <v-card class="header-card" elevation="0">
-          <v-card-text class="pa-4">
-            <div class="d-flex align-center">
-              <v-avatar size="48" class="header-logo">
-                <v-icon size="24" color="white">mdi-finance</v-icon>
-              </v-avatar>
-              <div class="ml-4">
-                <h1 class="header-title">Financial Dashboard</h1>
-                <p class="header-subtitle">Enterprise Management System</p>
-              </div>
-              <v-spacer />
-              <v-chip color="success" variant="flat" size="small">
-                <v-icon start size="14">mdi-check-circle</v-icon>
-                Online
-              </v-chip>
-            </div>
-          </v-card-text>
-        </v-card>
+        <div class="text-center">
+          <h1 class="text-h4 font-weight-medium text-grey-darken-3 mb-2">
+            Welcome to Financial Dashboard
+          </h1>
+          <p class="text-subtitle-1 text-grey-darken-1">
+            Enterprise Management System
+          </p>
+        </div>
       </v-col>
     </v-row>
 
-    <!-- Quick Stats -->
-    <v-row class="mb-4">
+    <!-- Quick Actions - Single Row -->
+    <v-row class="mb-6">
       <v-col cols="12" sm="6" md="3" v-for="stat in quickStats" :key="stat.title">
-        <v-card class="stat-card" elevation="1">
+        <v-card elevation="2" class="h-100">
           <v-card-text class="pa-4">
             <div class="d-flex align-center">
-              <v-avatar :color="stat.color" size="40" class="stat-icon">
+              <v-avatar :color="stat.color" size="40" class="mr-3">
                 <v-icon color="white" size="20">{{ stat.icon }}</v-icon>
               </v-avatar>
-              <div class="ml-3">
+              <div>
                 <div class="text-h6 font-weight-bold">{{ stat.value }}</div>
                 <div class="text-caption text-medium-emphasis">{{ stat.title }}</div>
               </div>
@@ -43,100 +33,119 @@
       </v-col>
     </v-row>
 
-    <!-- Modules Grid -->
+    <!-- Modules Section -->
     <v-row class="mb-4">
       <v-col cols="12">
-        <div class="d-flex align-center mb-3">
-          <h2 class="section-title">Modules</h2>
+        <div class="d-flex align-center">
+          <v-icon color="primary" size="24" class="mr-2">mdi-view-dashboard</v-icon>
+          <h2 class="text-h5 font-weight-medium text-grey-darken-3">Available Modules</h2>
           <v-spacer />
-          <v-chip size="small" variant="outlined">{{ modules.length }} Available</v-chip>
+          <v-chip variant="outlined" size="small">
+            {{ modules.length }} Modules
+          </v-chip>
         </div>
-        
-        <v-row>
-          <v-col 
-            v-for="module in modules" 
-            :key="module.name" 
-            cols="12" 
-            sm="6" 
-            md="4" 
-            lg="3"
-          >
-            <v-card 
-              class="module-card" 
-              elevation="1"
-              @click="navigateToModule(module)"
-              :ripple="true"
+      </v-col>
+    </v-row>
+    
+    <!-- Module Cards Grid - 4 per row -->
+    <v-row>
+      <v-col 
+        cols="12" 
+        sm="6" 
+        md="4" 
+        lg="3" 
+        v-for="module in modules" 
+        :key="module.name"
+      >
+        <v-card 
+          elevation="2"
+          class="module-card h-100"
+          @click="navigateToModule(module)"
+        >
+          <v-card-text class="pa-4 text-center">
+            <v-avatar 
+              :color="module.color" 
+              size="48" 
+              class="mb-3"
             >
-              <v-card-text class="pa-4">
-                <div class="d-flex align-center mb-3">
-                  <v-avatar :color="module.color" size="36" class="module-icon">
-                    <v-icon color="white" size="18">{{ module.icon }}</v-icon>
-                  </v-avatar>
-                  <div class="ml-3 flex-grow-1">
-                    <h3 class="module-title">{{ module.name }}</h3>
-                    <v-chip 
-                      :color="module.status === 'active' ? 'success' : 'warning'" 
-                      size="x-small"
-                      variant="flat"
-                    >
-                      {{ module.status }}
-                    </v-chip>
-                  </div>
-                </div>
-                <p class="module-description">{{ module.description }}</p>
-              </v-card-text>
-            </v-card>
-          </v-col>
-        </v-row>
+              <v-icon color="white" size="24">{{ module.icon }}</v-icon>
+            </v-avatar>
+            
+            <h3 class="module-title text-subtitle-1 font-weight-medium mb-2">
+              {{ module.name }}
+            </h3>
+            
+            <p class="module-description text-caption mb-3">
+              {{ module.description }}
+            </p>
+            
+            <v-chip 
+              :color="module.status === 'active' ? 'success' : 'warning'" 
+              size="small"
+              variant="flat"
+            >
+              {{ module.status }}
+            </v-chip>
+          </v-card-text>
+        </v-card>
       </v-col>
     </v-row>
 
-    <!-- System Status -->
-    <v-row>
-      <v-col cols="12">
-        <div class="d-flex align-center mb-3">
-          <h2 class="section-title">System Status</h2>
-        </div>
-        
-        <v-row>
-          <v-col cols="12" md="4" v-for="status in systemStatus" :key="status.title">
-            <v-card class="status-card" elevation="1">
-              <v-card-text class="pa-4">
-                <div class="d-flex align-center mb-2">
-                  <v-icon :color="status.color" size="20" class="mr-2">{{ status.icon }}</v-icon>
-                  <h3 class="status-title">{{ status.title }}</h3>
-                </div>
-                <p class="status-description mb-3">{{ status.description }}</p>
-                
-                <div class="d-flex align-center justify-space-between">
-                  <v-chip :color="status.color" variant="flat" size="small">
-                    <v-icon start size="12">{{ status.statusIcon }}</v-icon>
-                    {{ status.status }}
-                  </v-chip>
-                  
-                  <v-btn 
-                    v-if="status.action"
-                    :color="status.color" 
-                    variant="text" 
-                    size="small"
-                    :href="status.actionUrl"
-                    target="_blank"
-                  >
-                    {{ status.action }}
-                    <v-icon end size="14">mdi-open-in-new</v-icon>
-                  </v-btn>
-                </div>
-              </v-card-text>
-            </v-card>
-          </v-col>
-        </v-row>
+    <!-- System Info -->
+    <v-row class="mt-6">
+      <v-col cols="12" md="6">
+        <v-card elevation="2">
+          <v-card-text class="pa-4">
+            <div class="d-flex align-center mb-3">
+              <v-avatar color="orange" size="36" class="mr-3">
+                <v-icon color="white" size="18">mdi-api</v-icon>
+              </v-avatar>
+              <div>
+                <h3 class="text-subtitle-1 font-weight-medium">API Documentation</h3>
+                <p class="text-caption text-medium-emphasis mb-0">Interactive Swagger UI</p>
+              </div>
+            </div>
+            
+            <v-btn 
+              color="orange" 
+              variant="flat"
+              size="small"
+              href="http://localhost:8000/docs" 
+              target="_blank"
+              append-icon="mdi-open-in-new"
+            >
+              Open Docs
+            </v-btn>
+          </v-card-text>
+        </v-card>
+      </v-col>
+      
+      <v-col cols="12" md="6">
+        <v-card elevation="2">
+          <v-card-text class="pa-4">
+            <div class="d-flex align-center mb-3">
+              <v-avatar color="success" size="36" class="mr-3">
+                <v-icon color="white" size="18">mdi-database</v-icon>
+              </v-avatar>
+              <div>
+                <h3 class="text-subtitle-1 font-weight-medium">Database Status</h3>
+                <p class="text-caption text-medium-emphasis mb-0">SQLite Connection</p>
+              </div>
+            </div>
+            
+            <v-chip color="success" variant="flat" size="small">
+              <v-icon start size="14">mdi-database-check</v-icon>
+              Connected
+            </v-chip>
+          </v-card-text>
+        </v-card>
       </v-col>
     </v-row>
   </v-container>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -171,128 +180,99 @@ const quickStats = ref([
 const modules = ref([
   {
     name: 'General Ledger',
-    description: 'Chart of accounts and journal entries',
+    description: 'Chart of accounts',
     icon: 'mdi-book-open-variant',
-    color: 'blue-darken-2',
+    color: 'deep-purple',
     status: 'active',
     route: '/gl'
   },
   {
     name: 'Accounts Payable',
-    description: 'Vendor management and payments',
+    description: 'Vendor payments',
     icon: 'mdi-credit-card-outline',
-    color: 'red-darken-2',
+    color: 'blue',
     status: 'active',
     route: '/ap'
   },
   {
     name: 'Accounts Receivable',
-    description: 'Customer invoicing and collections',
-    icon: 'mdi-wallet-outline',
-    color: 'green-darken-2',
+    description: 'Customer invoicing',
+    icon: 'mdi-cash-multiple',
+    color: 'green',
     status: 'active',
     route: '/ar'
   },
   {
     name: 'Cash Management',
-    description: 'Bank accounts and reconciliation',
+    description: 'Bank reconciliation',
     icon: 'mdi-bank',
-    color: 'cyan-darken-2',
+    color: 'cyan',
     status: 'active',
     route: '/cash'
   },
   {
     name: 'Fixed Assets',
-    description: 'Asset tracking and depreciation',
+    description: 'Asset tracking',
     icon: 'mdi-office-building',
-    color: 'purple-darken-2',
+    color: 'brown',
     status: 'active',
     route: '/assets'
   },
   {
     name: 'Payroll',
-    description: 'Employee payroll processing',
+    description: 'Employee payroll',
     icon: 'mdi-account-cash',
-    color: 'orange-darken-2',
+    color: 'orange',
     status: 'active',
     route: '/payroll'
   },
   {
     name: 'Human Resources',
-    description: 'Employee management system',
+    description: 'Employee management',
     icon: 'mdi-account-group',
-    color: 'indigo-darken-2',
+    color: 'indigo',
     status: 'active',
     route: '/hrm'
   },
   {
     name: 'Inventory',
-    description: 'Stock management and tracking',
+    description: 'Stock management',
     icon: 'mdi-package-variant',
-    color: 'teal-darken-2',
+    color: 'teal',
     status: 'active',
     route: '/inventory'
   },
   {
     name: 'Budget Planning',
-    description: 'Budget creation and monitoring',
+    description: 'Budget analysis',
     icon: 'mdi-chart-pie',
-    color: 'deep-orange-darken-2',
+    color: 'pink',
     status: 'active',
     route: '/budget'
   },
   {
     name: 'Financial Reports',
-    description: 'Comprehensive reporting suite',
-    icon: 'mdi-chart-line',
-    color: 'pink-darken-2',
+    description: 'Reporting suite',
+    icon: 'mdi-chart-bar',
+    color: 'red',
     status: 'active',
     route: '/reports'
   },
   {
     name: 'System Admin',
-    description: 'System administration panel',
+    description: 'Administration',
     icon: 'mdi-shield-crown',
-    color: 'brown-darken-2',
+    color: 'deep-orange',
     status: 'active',
     route: '/admin'
   },
   {
     name: 'Settings',
-    description: 'Company configuration',
+    description: 'Configuration',
     icon: 'mdi-cog',
-    color: 'grey-darken-2',
+    color: 'grey',
     status: 'active',
     route: '/settings'
-  }
-])
-
-const systemStatus = ref([
-  {
-    title: 'API Documentation',
-    description: 'Interactive API documentation',
-    icon: 'mdi-api',
-    color: 'primary',
-    status: 'Available',
-    statusIcon: 'mdi-check-circle',
-    action: 'Open Docs',
-    actionUrl: 'http://localhost:8000/docs'
-  },
-  {
-    title: 'Database Status',
-    description: 'Real-time database connection',
-    icon: 'mdi-database',
-    color: 'success',
-    status: 'Connected',
-    statusIcon: 'mdi-database-check'
-  },
-  {
-    title: 'Security Status',
-    description: 'Multi-tenant security monitoring',
-    icon: 'mdi-shield-check',
-    color: 'info',
-    status: 'Secured',
-    statusIcon: 'mdi-shield-check'
   }
 ])
 
@@ -300,162 +280,40 @@ const navigateToModule = (module: any) => {
   console.log('Navigating to:', module.route)
   router.push(module.route).catch(err => {
     console.error('Navigation error:', err)
-    // Fallback to dashboard if route doesn't exist
-    router.push('/dashboard')
   })
 }
 </script>
 
 <style scoped>
-.home-container {
-  background: #fafafa;
-  min-height: 100vh;
-  padding: 16px;
-}
-
-/* Compact Header */
-.header-section {
-  margin-bottom: 1rem;
-}
-
-.header-card {
-  background: white;
-  border-radius: 12px;
-  border: 1px solid #e0e0e0;
-}
-
-.header-logo {
-  background: linear-gradient(135deg, #1976d2, #1565c0);
-}
-
-.header-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #212121;
-  margin: 0;
-}
-
-.header-subtitle {
-  font-size: 0.875rem;
-  color: #757575;
-  margin: 0;
-}
-
-/* Section Titles */
-.section-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #424242;
-}
-
-/* Stats Cards */
-.stat-card {
-  border-radius: 12px;
-  border: 1px solid #e0e0e0;
-  background: white;
-  transition: all 0.2s ease;
-}
-
-.stat-card:hover {
-  border-color: #bdbdbd;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-}
-
-.stat-icon {
-  flex-shrink: 0;
-}
-
-/* Module Cards */
 .module-card {
   cursor: pointer;
-  border-radius: 12px;
-  border: 1px solid #e0e0e0;
-  background: white;
   transition: all 0.2s ease;
-  height: 100%;
 }
 
 .module-card:hover {
-  border-color: #1976d2;
-  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.15);
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
 }
 
-.module-icon {
-  flex-shrink: 0;
+.module-card:hover .module-title {
+  color: rgb(var(--v-theme-primary)) !important;
+}
+
+.module-card:hover .module-description {
+  color: rgb(var(--v-theme-primary)) !important;
 }
 
 .module-title {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #212121;
-  margin: 0;
-  line-height: 1.2;
+  color: rgb(var(--v-theme-on-surface)) !important;
+  transition: color 0.2s ease;
 }
 
 .module-description {
-  font-size: 0.8rem;
-  color: #757575;
-  margin: 0;
-  line-height: 1.3;
+  color: rgba(var(--v-theme-on-surface), 0.6) !important;
+  transition: color 0.2s ease;
 }
 
-/* Status Cards */
-.status-card {
-  border-radius: 12px;
-  border: 1px solid #e0e0e0;
-  background: white;
-  transition: all 0.2s ease;
-  height: 100%;
-}
-
-.status-card:hover {
-  border-color: #bdbdbd;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-}
-
-.status-title {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #212121;
-  margin: 0;
-}
-
-.status-description {
-  font-size: 0.875rem;
-  color: #757575;
-  margin: 0;
-  line-height: 1.4;
-}
-
-/* Responsive Design */
-@media (max-width: 960px) {
-  .home-container {
-    padding: 12px;
-  }
-  
-  .header-title {
-    font-size: 1.25rem;
-  }
-  
-  .section-title {
-    font-size: 1.125rem;
-  }
-}
-
-@media (max-width: 600px) {
-  .home-container {
-    padding: 8px;
-  }
-  
-  .header-card .pa-4 {
-    padding: 12px !important;
-  }
-  
-  .stat-card .pa-4,
-  .module-card .pa-4,
-  .status-card .pa-4 {
-    padding: 12px !important;
-  }
+.v-card {
+  border-radius: 8px !important;
 }
 </style>

@@ -269,20 +269,24 @@ const login = async () => {
   errorMessage.value = ''
 
   try {
+    console.log('Attempting login with:', { username: email.value, password: password.value })
+    
     const response = await api.post('/api/v1/auth/login', {
       username: email.value,
       password: password.value
     })
 
+    console.log('Login response:', response.data)
     const { access_token, user } = response.data
     
     localStorage.setItem('token', access_token)
     localStorage.setItem('user', JSON.stringify(user))
     
-    router.push('/dashboard')
+    router.push('/')
   } catch (error: any) {
     console.error('Login error:', error)
-    errorMessage.value = error.response?.data?.detail || 'Invalid credentials. Please try again.'
+    console.error('Error response:', error.response)
+    errorMessage.value = error.response?.data?.detail || error.message || 'Invalid credentials. Please try again.'
   } finally {
     loading.value = false
   }

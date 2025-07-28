@@ -21,6 +21,13 @@ vuetify({
   server: {
     port: 3000,
     host: true,
+    proxy: {
+      '/api-proxy': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api-proxy/, '')
+      }
+    },
     headers: {
       // Security headers for development
       'X-Frame-Options': 'SAMEORIGIN',

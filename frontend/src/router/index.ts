@@ -54,7 +54,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'accounts',
         name: 'GLAccounts',
-        component: () => import('@/modules/general-ledger/views/accounts/GLAccountsView.vue')
+        component: () => import('@/modules/general-ledger/views/ChartOfAccounts.vue')
       },
       {
         path: 'journal-entries',
@@ -160,6 +160,16 @@ const routes: RouteRecordRaw[] = [
         path: '',
         name: 'Settings',
         component: () => import('@/views/settings/CompanySettingsView.vue')
+      },
+      {
+        path: 'users',
+        name: 'UserManagement',
+        component: () => import('@/views/ModuleView.vue')
+      },
+      {
+        path: 'system',
+        name: 'SystemConfiguration',
+        component: () => import('@/views/ModuleView.vue')
       }
     ]
   },
@@ -202,6 +212,21 @@ const routes: RouteRecordRaw[] = [
         path: '',
         name: 'CashManagement',
         component: () => import('@/views/cash/CashManagementView.vue')
+      },
+      {
+        path: 'accounts',
+        name: 'CashAccounts',
+        component: () => import('@/modules/cash-management/views/BankAccounts.vue')
+      },
+      {
+        path: 'reconciliation',
+        name: 'CashReconciliation',
+        component: () => import('@/modules/cash-management/views/Reconciliation.vue')
+      },
+      {
+        path: 'forecast',
+        name: 'CashForecast',
+        component: () => import('@/modules/cash-management/views/CashFlowForecastingView.vue')
       }
     ]
   },
@@ -214,6 +239,16 @@ const routes: RouteRecordRaw[] = [
         path: '',
         name: 'FixedAssets',
         component: () => import('@/views/assets/FixedAssetsView.vue')
+      },
+      {
+        path: 'depreciation',
+        name: 'AssetDepreciation',
+        component: () => import('@/views/ModuleView.vue')
+      },
+      {
+        path: 'maintenance',
+        name: 'AssetMaintenance',
+        component: () => import('@/views/ModuleView.vue')
       }
     ]
   },
@@ -226,6 +261,26 @@ const routes: RouteRecordRaw[] = [
         path: '',
         name: 'Inventory',
         component: () => import('@/views/inventory/InventoryView.vue')
+      },
+      {
+        path: 'items',
+        name: 'InventoryItems',
+        component: () => import('@/views/ModuleView.vue')
+      },
+      {
+        path: 'locations',
+        name: 'InventoryLocations',
+        component: () => import('@/views/ModuleView.vue')
+      },
+      {
+        path: 'adjustments',
+        name: 'InventoryAdjustments',
+        component: () => import('@/views/ModuleView.vue')
+      },
+      {
+        path: 'reports',
+        name: 'InventoryReports',
+        component: () => import('@/views/ModuleView.vue')
       }
     ]
   },
@@ -238,6 +293,26 @@ const routes: RouteRecordRaw[] = [
         path: '',
         name: 'Budgeting',
         component: () => import('@/views/budget/BudgetingView.vue')
+      },
+      {
+        path: 'planning',
+        name: 'BudgetPlanning',
+        component: () => import('@/modules/budget/views/BudgetPlanningView.vue')
+      },
+      {
+        path: 'monitoring',
+        name: 'BudgetMonitoring',
+        component: () => import('@/modules/budget/views/BudgetMonitoringView.vue')
+      },
+      {
+        path: 'forecasts',
+        name: 'BudgetForecasts',
+        component: () => import('@/modules/budget/views/Forecasts.vue')
+      },
+      {
+        path: 'scenarios',
+        name: 'BudgetScenarios',
+        component: () => import('@/modules/budget/views/Scenarios.vue')
       }
     ]
   },
@@ -250,6 +325,36 @@ const routes: RouteRecordRaw[] = [
         path: '',
         name: 'Payroll',
         component: () => import('@/views/payroll/PayrollView.vue')
+      },
+      {
+        path: 'employees',
+        name: 'PayrollEmployees',
+        component: () => import('@/modules/payroll/views/EmployeePayrollListView.vue')
+      },
+      {
+        path: 'pay-runs',
+        name: 'PayrollRuns',
+        component: () => import('@/modules/payroll/views/PayrollRunView.vue')
+      },
+      {
+        path: 'payslips',
+        name: 'PayrollPayslips',
+        component: () => import('@/modules/payroll/views/PayslipsView.vue')
+      },
+      {
+        path: 'deductions',
+        name: 'PayrollDeductions',
+        component: () => import('@/modules/payroll/views/PayrollDeductionsBenefitsView.vue')
+      },
+      {
+        path: 'tax-config',
+        name: 'PayrollTaxConfig',
+        component: () => import('@/modules/payroll/views/PayrollTaxesView.vue')
+      },
+      {
+        path: 'reports',
+        name: 'PayrollReports',
+        component: () => import('@/modules/payroll/views/PayrollReportsView.vue')
       }
     ]
   },
@@ -262,6 +367,26 @@ const routes: RouteRecordRaw[] = [
         path: '',
         name: 'HRM',
         component: () => import('@/views/hrm/HRMView.vue')
+      },
+      {
+        path: 'employees',
+        name: 'HRMEmployees',
+        component: () => import('@/views/ModuleView.vue')
+      },
+      {
+        path: 'leave',
+        name: 'HRMLeave',
+        component: () => import('@/views/ModuleView.vue')
+      },
+      {
+        path: 'attendance',
+        name: 'HRMAttendance',
+        component: () => import('@/views/ModuleView.vue')
+      },
+      {
+        path: 'performance',
+        name: 'HRMPerformance',
+        component: () => import('@/views/ModuleView.vue')
       }
     ]
   },
@@ -273,7 +398,32 @@ const routes: RouteRecordRaw[] = [
       {
         path: '',
         name: 'TaxManagement',
-        component: () => import('@/views/ModuleView.vue')
+        component: () => import('@/modules/tax/views/TaxManagementView.vue')
+      },
+      {
+        path: 'codes',
+        name: 'TaxCodes',
+        component: () => import('@/modules/tax/views/TaxCodes.vue')
+      },
+      {
+        path: 'rates',
+        name: 'TaxRates',
+        component: () => import('@/modules/tax/views/TaxRates.vue')
+      },
+      {
+        path: 'exemptions',
+        name: 'TaxExemptions',
+        component: () => import('@/modules/tax/views/TaxExemptionsView.vue')
+      },
+      {
+        path: 'returns',
+        name: 'TaxReturns',
+        component: () => import('@/modules/tax/views/TaxReturns.vue')
+      },
+      {
+        path: 'compliance',
+        name: 'TaxCompliance',
+        component: () => import('@/modules/tax/views/TaxCompliance.vue')
       }
     ]
   },
