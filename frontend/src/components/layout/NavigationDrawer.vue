@@ -36,32 +36,41 @@
       </div>
     </template>
 
-    <v-list nav density="compact" class="navigation-list">
+    <v-list nav density="compact" class="navigation-list" color="primary">
       <template v-for="item in navigationStore.items" :key="item.title">
         <!-- Single item -->
         <v-list-item
           v-if="!item.children"
           :to="item.to"
           :prepend-icon="item.icon"
-          :title="item.title"
           :disabled="item.disabled"
           class="nav-item"
           rounded="xl"
+          :lines="item.subtitle ? 'two' : undefined"
         >
-          <template v-if="item.badge" v-slot:append>
+          <template #default>
+            <v-list-item-title>{{ item.title }}</v-list-item-title>
+            <v-list-item-subtitle v-if="item.subtitle">{{ item.subtitle }}</v-list-item-subtitle>
+          </template>
+          <template v-if="item.badge" #append>
             <v-badge :content="item.badge" color="error" />
           </template>
         </v-list-item>
 
         <!-- Group with children -->
         <v-list-group v-else :value="item.title" class="nav-group">
-          <template v-slot:activator="{ props }">
+          <template #activator="{ props }">
             <v-list-item
               v-bind="props"
               :prepend-icon="item.icon"
-              :title="item.title"
               class="nav-item nav-item--parent"
-            />
+              :lines="item.subtitle ? 'two' : undefined"
+            >
+              <template #default>
+                <v-list-item-title>{{ item.title }}</v-list-item-title>
+                <v-list-item-subtitle v-if="item.subtitle">{{ item.subtitle }}</v-list-item-subtitle>
+              </template>
+            </v-list-item>
           </template>
 
           <v-list-item
@@ -69,12 +78,16 @@
             :key="child.title"
             :to="child.to"
             :prepend-icon="child.icon"
-            :title="child.title"
             :disabled="child.disabled"
             class="nav-item nav-item--child"
             rounded="xl"
+            :lines="child.subtitle ? 'two' : undefined"
           >
-            <template v-if="child.badge" v-slot:append>
+            <template #default>
+              <v-list-item-title>{{ child.title }}</v-list-item-title>
+              <v-list-item-subtitle v-if="child.subtitle">{{ child.subtitle }}</v-list-item-subtitle>
+            </template>
+            <template v-if="child.badge" #append>
               <v-badge :content="child.badge" color="error" />
             </template>
           </v-list-item>
@@ -170,24 +183,6 @@ const logout = () => {
 
 .navigation-list {
   padding: 8px 16px;
-}
-
-.nav-item {
-  margin-bottom: 4px;
-  border-radius: 12px !important;
-}
-
-.nav-item--parent {
-  font-weight: 500;
-}
-
-.nav-item--child {
-  margin-left: 16px;
-  font-size: 14px;
-}
-
-.nav-group {
-  margin-bottom: 8px;
 }
 
 .drawer-footer {
