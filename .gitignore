@@ -55,3 +55,5 @@ yarn-error.log
 # OS specific
 .DS_Store
 Thumbs.db
+navigation_system_implementation.patch
+chrome/
