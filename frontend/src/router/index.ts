@@ -69,7 +69,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'financial-statements',
         name: 'GLFinancialStatements',
-        component: () => import('@/modules/general-ledger/components/FinancialReportsView.vue')
+        component: () => import('@/views/reports/FinancialReportsView.vue')
       }
     ]
   },
@@ -91,12 +91,12 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'bills',
         name: 'APBills',
-        component: () => import('@/views/ModuleView.vue')
+        component: () => import('@/modules/accounts-payable/views/BillProcessingView.vue')
       },
       {
         path: 'payments',
         name: 'APPayments',
-        component: () => import('@/views/ModuleView.vue')
+        component: () => import('@/modules/accounts-payable/views/payments/PaymentsView.vue')
       }
     ]
   },
@@ -123,7 +123,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'payments',
         name: 'ARPayments',
-        component: () => import('@/views/ModuleView.vue')
+        component: () => import('@/modules/accounts-receivable/views/ARPaymentsAdvanced.vue')
       }
     ]
   },
@@ -142,7 +142,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/admin',
     component: () => import('@/layouts/MainLayout.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, role: 'admin' },
     children: [
       {
         path: '',
@@ -164,12 +164,12 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'users',
         name: 'UserManagement',
-        component: () => import('@/views/ModuleView.vue')
+        component: () => import('@/modules/user/views/UserManagementView.vue')
       },
       {
         path: 'system',
         name: 'SystemConfiguration',
-        component: () => import('@/views/ModuleView.vue')
+        component: () => import('@/views/settings/SystemConfigurationView.vue')
       }
     ]
   },
@@ -194,7 +194,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/rbac',
     component: () => import('@/layouts/MainLayout.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, role: 'admin' },
     children: [
       {
         path: '',
@@ -243,12 +243,12 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'depreciation',
         name: 'AssetDepreciation',
-        component: () => import('@/views/ModuleView.vue')
+        component: () => import('@/modules/fixed-assets/views/DepreciationView.vue')
       },
       {
         path: 'maintenance',
         name: 'AssetMaintenance',
-        component: () => import('@/views/ModuleView.vue')
+        component: () => import('@/modules/fixed-assets/views/MaintenanceView.vue')
       }
     ]
   },
@@ -265,22 +265,22 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'items',
         name: 'InventoryItems',
-        component: () => import('@/views/ModuleView.vue')
+        component: () => import('@/modules/inventory/views/ItemsView.vue')
       },
       {
         path: 'locations',
         name: 'InventoryLocations',
-        component: () => import('@/views/ModuleView.vue')
+        component: () => import('@/modules/inventory/views/LocationsView.vue')
       },
       {
         path: 'adjustments',
         name: 'InventoryAdjustments',
-        component: () => import('@/views/ModuleView.vue')
+        component: () => import('@/modules/inventory/views/AdjustmentsView.vue')
       },
       {
         path: 'reports',
         name: 'InventoryReports',
-        component: () => import('@/views/ModuleView.vue')
+        component: () => import('@/modules/inventory/views/ReportsView.vue')
       }
     ]
   },
@@ -371,22 +371,22 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'employees',
         name: 'HRMEmployees',
-        component: () => import('@/views/ModuleView.vue')
+        component: () => import('@/modules/hrm/components/EmployeeManagement.vue')
       },
       {
         path: 'leave',
         name: 'HRMLeave',
-        component: () => import('@/views/ModuleView.vue')
+        component: () => import('@/modules/hrm/views/LeaveManagementView.vue')
       },
       {
         path: 'attendance',
         name: 'HRMAttendance',
-        component: () => import('@/views/ModuleView.vue')
+        component: () => import('@/modules/hrm/views/AttendanceView.vue')
       },
       {
         path: 'performance',
         name: 'HRMPerformance',
-        component: () => import('@/views/ModuleView.vue')
+        component: () => import('@/modules/hrm/views/PerformanceView.vue')
       }
     ]
   },
@@ -452,8 +452,16 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
-  console.log('Router navigation:', from.path, '->', to.path)
-  next()
+  const isAuthenticated = localStorage.getItem('token') !== null
+  const userRole = localStorage.getItem('userRole') || 'user'
+  
+  if (to.meta.requiresAuth && !isAuthenticated) {
+    next('/auth/login')
+  } else if (to.meta.role && to.meta.role !== userRole) {
+    next('/')
+  } else {
+    next()
+  }
 })
 
 export default router;

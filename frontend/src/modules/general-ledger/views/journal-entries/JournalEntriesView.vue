@@ -1,130 +1,121 @@
 <template>
   <div class="journal-entries">
-    <div class="flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-space-between align-center mb-4">
       <h2>Journal Entries</h2>
-      <Button 
-        label="New Entry" 
-        icon="pi pi-plus" 
+      <v-btn 
+        color="success" 
+        prepend-icon="mdi-plus" 
         @click="openNewEntry"
-        class="p-button-success"
-      />
+      >
+        New Entry
+      </v-btn>
     </div>
 
-    <div class="card">
-      <DataTable 
-        :value="journalEntries" 
+    <v-card>
+      <v-card-title>
+        <div class="d-flex justify-space-between align-center w-100">
+          <v-text-field
+            v-model="searchQuery"
+            prepend-inner-icon="mdi-magnify"
+            label="Search entries..."
+            variant="outlined"
+            density="compact"
+            hide-details
+            style="max-width: 300px"
+          />
+          <div>
+            <v-btn 
+              icon="mdi-refresh" 
+              variant="text" 
+              @click="loadJournalEntries"
+              :loading="loading"
+            />
+            <v-btn 
+              prepend-icon="mdi-download" 
+              variant="text" 
+              @click="showExportDialog"
+            >
+              Export
+            </v-btn>
+          </div>
+        </div>
+      </v-card-title>
+      
+      <v-data-table
+        :headers="headers"
+        :items="filteredEntries"
         :loading="loading"
-        :paginator="true" 
-        :rows="10"
-        :filters="filters"
-        :globalFilterFields="['entry_number', 'description', 'status']"
-        responsiveLayout="scroll"
+        :items-per-page="10"
       >
-        <template #header>
-          <div class="flex justify-content-between align-items-center">
-            <span class="p-input-icon-left">
-              <i class="pi pi-search" />
-              <InputText 
-                v-model="filters['global'].value" 
-                placeholder="Search entries..." 
-              />
-            </span>
-            <div>
-              <Button 
-                icon="pi pi-refresh" 
-                class="p-button-text" 
-                @click="loadJournalEntries"
-                :loading="loading"
-                v-tooltip="'Refresh data'"
-              />
-              <Button 
-                icon="pi pi-download" 
-                class="p-button-text" 
-                label="Export" 
-                @click="showExportDialog"
-                v-tooltip="'Export data'"
-              />
-            </div>
+        <template v-slot:item.entry_number="{ item }">
+          <router-link 
+            :to="{ name: 'journal-entry-detail', params: { id: item.id } }"
+            class="text-primary text-decoration-none"
+          >
+            {{ item.entry_number }}
+          </router-link>
+        </template>
+        
+        <template v-slot:item.entry_date="{ item }">
+          {{ formatDate(item.entry_date) }}
+        </template>
+        
+        <template v-slot:item.total_debit="{ item }">
+          {{ formatCurrency(item.total_debit) }}
+        </template>
+        
+        <template v-slot:item.total_credit="{ item }">
+          {{ formatCurrency(item.total_credit) }}
+        </template>
+        
+        <template v-slot:item.status="{ item }">
+          <v-chip 
+            :color="getStatusColor(item.status)" 
+            size="small"
+          >
+            {{ item.status }}
+          </v-chip>
+        </template>
+        
+        <template v-slot:item.actions="{ item }">
+          <div class="d-flex ga-1">
+            <v-btn 
+              icon="mdi-eye" 
+              size="small"
+              variant="text"
+              @click="viewEntry(item)"
+            />
+            <v-btn 
+              icon="mdi-pencil" 
+              size="small"
+              variant="text"
+              @click="editEntry(item)"
+              :disabled="item.status === 'Posted'"
+            />
+            <v-btn 
+              icon="mdi-delete" 
+              size="small"
+              variant="text"
+              color="error"
+              @click="confirmDeleteEntry(item)"
+              :disabled="item.status === 'Posted'"
+            />
           </div>
         </template>
-
-        <Column field="entry_number" header="Entry #" :sortable="true" style="min-width:120px">
-          <template #body="{ data }">
-            <router-link 
-              :to="{ name: 'journal-entry-detail', params: { id: data.id } }"
-              class="font-medium text-primary hover:underline"
-            >
-              {{ data.entry_number }}
-            </router-link>
-          </template>
-        </Column>
-        
-        <Column field="entry_date" header="Date" :sortable="true" style="min-width:120px">
-          <template #body="{ data }">
-            {{ formatDate(data.entry_date) }}
-          </template>
-        </Column>
-        
-        <Column field="description" header="Description" :sortable="true" style="min-width:250px" />
-        
-        <Column field="total_debit" header="Debit" :sortable="true" style="min-width:120px">
-          <template #body="{ data }">
-            {{ formatCurrency(data.total_debit) }}
-          </template>
-        </Column>
-        
-        <Column field="total_credit" header="Credit" :sortable="true" style="min-width:120px">
-          <template #body="{ data }">
-            {{ formatCurrency(data.total_credit) }}
-          </template>
-        </Column>
-        
-        <Column field="status" header="Status" :sortable="true" style="min-width:120px">
-          <template #body="{ data }">
-            <Tag 
-              :value="data.status" 
-              :severity="getStatusSeverity(data.status)" 
-            />
-          </template>
-        </Column>
-        
-        <Column style="min-width:150px">
-          <template #body="{ data }">
-            <div class="flex gap-2">
-              <Button 
-                icon="pi pi-eye" 
-                class="p-button-rounded p-button-text p-button-sm"
-                @click="viewEntry(data)"
-                v-tooltip.top="'View Details'"
-              />
-              <Button 
-                icon="pi pi-pencil" 
-                class="p-button-rounded p-button-text p-button-sm"
-                @click="editEntry(data)"
-                :disabled="data.status === 'Posted'"
-                v-tooltip.top="'Edit Entry'"
-              />
-              <Button 
-                icon="pi pi-trash" 
-                class="p-button-rounded p-button-text p-button-sm p-button-danger"
-                @click="confirmDeleteEntry(data)"
-                :disabled="data.status === 'Posted'"
-                v-tooltip.top="'Delete Entry'"
-              />
-            </div>
-          </template>
-        </Column>
-      </DataTable>
-    </div>
+      </v-data-table>
+    </v-card>
 
     <!-- Entry Dialog -->
-    <Dialog 
-      v-model:visible="showEntryDialog" 
-      :header="editingEntry ? 'Edit Journal Entry' : 'New Journal Entry'"
-      :modal="true"
-      :style="{ width: '800px' }"
-      :closable="!saving"
+    <v-dialog 
+      v-model="showEntryDialog" 
+      max-width="800px"
+      persistent
     >
+      <v-card>
+        <v-card-title>
+          {{ editingEntry ? 'Edit Journal Entry' : 'New Journal Entry' }}
+        </v-card-title>
+        <v-card-text>
       <div class="grid">
         <div class="col-12 md:col-6">
           <div class="field">
@@ -374,7 +365,7 @@ import { ref, computed, onMounted } from 'vue';
 // Removed PrimeVue useToast - using Vuetify snackbar instead
 import { useRouter } from 'vue-router';
 import ExportDialog from '@/components/common/ExportDialog.vue';
-import { FilterMatchMode } from 'primevue/api';
+// import { FilterMatchMode } from 'primevue/api';
 
 // Mock data
 const mockAccounts = [
@@ -457,9 +448,17 @@ export default {
     const editingEntry = ref(false);
     const entryToDelete = ref(null);
     
-    const filters = ref({
-      'global': { value: null, matchMode: FilterMatchMode.CONTAINS },
-    });
+    const searchQuery = ref('');
+    
+    const headers = [
+      { title: 'Entry #', key: 'entry_number', sortable: true },
+      { title: 'Date', key: 'entry_date', sortable: true },
+      { title: 'Description', key: 'description', sortable: true },
+      { title: 'Debit', key: 'total_debit', sortable: true },
+      { title: 'Credit', key: 'total_credit', sortable: true },
+      { title: 'Status', key: 'status', sortable: true },
+      { title: 'Actions', key: 'actions', sortable: false }
+    ];
     
     const exportColumns = [
       { field: 'entry_number', header: 'Entry #' },
@@ -471,11 +470,15 @@ export default {
     ];
 
     const filteredEntries = computed(() => {
-      return journalEntries.value.map(entry => ({
-        ...entry,
-        total_debit: formatCurrency(entry.total_debit, true),
-        total_credit: formatCurrency(entry.total_credit, true)
-      }));
+      let entries = journalEntries.value;
+      if (searchQuery.value) {
+        entries = entries.filter(entry => 
+          entry.entry_number.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+          entry.description.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+          entry.status.toLowerCase().includes(searchQuery.value.toLowerCase())
+        );
+      }
+      return entries;
     });
     
     const entryForm = ref({
@@ -540,14 +543,14 @@ export default {
       }).format(value);
     };
     
-    // Get status severity
-    const getStatusSeverity = (status) => {
+    // Get status color
+    const getStatusColor = (status) => {
       switch (status) {
         case 'Posted': return 'success';
         case 'Draft': return 'info';
         case 'Reversed': return 'warning';
-        case 'Void': return 'danger';
-        default: return 'secondary';
+        case 'Void': return 'error';
+        default: return 'grey';
       }
     };
     
@@ -738,7 +741,9 @@ export default {
       showDeleteDialog,
       editingEntry,
       entryToDelete,
-      filters,
+      searchQuery,
+      headers,
+      filteredEntries,
       entryForm,
       totalDebit,
       totalCredit,
@@ -747,7 +752,7 @@ export default {
       loadJournalEntries,
       formatDate,
       formatCurrency,
-      getStatusSeverity,
+      getStatusColor,
       openNewEntry,
       addLineItem,
       removeLineItem,
@@ -760,7 +765,6 @@ export default {
       showExportDialog,
       handleExport,
       exportColumns,
-      filteredEntries,
       snackbar,
       snackbarText,
       snackbarColor,

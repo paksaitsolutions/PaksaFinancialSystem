@@ -7,30 +7,33 @@
     </v-row>
 
     <v-row>
-      <v-col cols="12" md="6">
+      <v-col cols="12" lg="6">
         <v-card>
           <v-card-title>Create Budget</v-card-title>
           <v-card-text>
-            <v-form @submit.prevent="createBudget">
+            <v-form ref="form" @submit.prevent="createBudget">
               <v-text-field
                 v-model="budgetForm.name"
                 label="Budget Name"
-                required
+                :rules="nameRules"
+                density="comfortable"
               />
               <v-text-field
                 v-model="budgetForm.amount"
                 label="Amount"
                 type="number"
                 prefix="$"
-                required
+                :rules="amountRules"
+                density="comfortable"
               />
               <v-select
                 v-model="budgetForm.category"
                 :items="categories"
                 label="Category"
-                required
+                :rules="categoryRules"
+                density="comfortable"
               />
-              <v-btn type="submit" color="primary" :loading="loading">
+              <v-btn type="submit" color="primary" :loading="loading" block>
                 Create Budget
               </v-btn>
             </v-form>
@@ -38,19 +41,30 @@
         </v-card>
       </v-col>
 
-      <v-col cols="12" md="6">
+      <v-col cols="12" lg="6">
         <v-card>
           <v-card-title>Budget Summary</v-card-title>
           <v-card-text>
-            <div class="mb-2">
-              <strong>Total Budget:</strong> {{ formatCurrency(totalBudget) }}
-            </div>
-            <div class="mb-2">
-              <strong>Total Spent:</strong> {{ formatCurrency(totalSpent) }}
-            </div>
-            <div>
-              <strong>Remaining:</strong> {{ formatCurrency(totalBudget - totalSpent) }}
-            </div>
+            <v-row>
+              <v-col cols="12" sm="4">
+                <div class="text-center">
+                  <div class="text-h6">{{ formatCurrency(totalBudget) }}</div>
+                  <div class="text-caption">Total Budget</div>
+                </div>
+              </v-col>
+              <v-col cols="12" sm="4">
+                <div class="text-center">
+                  <div class="text-h6">{{ formatCurrency(totalSpent) }}</div>
+                  <div class="text-caption">Total Spent</div>
+                </div>
+              </v-col>
+              <v-col cols="12" sm="4">
+                <div class="text-center">
+                  <div class="text-h6">{{ formatCurrency(totalBudget - totalSpent) }}</div>
+                  <div class="text-caption">Remaining</div>
+                </div>
+              </v-col>
+            </v-row>
           </v-card-text>
         </v-card>
       </v-col>
@@ -65,6 +79,8 @@
               :items="budgets"
               :headers="headers"
               class="elevation-1"
+              :mobile="null"
+              density="comfortable"
             >
               <template #item.amount="{ item }">
                 {{ formatCurrency(item.amount) }}
@@ -84,12 +100,28 @@
 import { ref, computed } from 'vue'
 
 const loading = ref(false)
+const form = ref(null)
 
 const budgetForm = ref({
   name: '',
   amount: '',
   category: ''
 })
+
+const nameRules = [
+  v => !!v || 'Budget name is required',
+  v => v.length >= 3 || 'Budget name must be at least 3 characters'
+]
+
+const amountRules = [
+  v => !!v || 'Amount is required',
+  v => v > 0 || 'Amount must be greater than 0',
+  v => v <= 10000000 || 'Amount cannot exceed $10,000,000'
+]
+
+const categoryRules = [
+  v => !!v || 'Category is required'
+]
 
 const categories = ['Marketing', 'Operations', 'IT', 'HR', 'Finance']
 
@@ -108,7 +140,11 @@ const headers = [
 const totalBudget = computed(() => budgets.value.reduce((sum, b) => sum + b.amount, 0))
 const totalSpent = computed(() => budgets.value.reduce((sum, b) => sum + b.spent, 0))
 
-const createBudget = () => {
+const createBudget = async () => {
+  const { valid } = await form.value.validate()
+  
+  if (!valid) return
+  
   loading.value = true
   setTimeout(() => {
     budgets.value.push({
@@ -119,6 +155,7 @@ const createBudget = () => {
       spent: 0
     })
     budgetForm.value = { name: '', amount: '', category: '' }
+    form.value.reset()
     loading.value = false
   }, 1000)
 }

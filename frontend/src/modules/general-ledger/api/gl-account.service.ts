@@ -11,26 +11,17 @@ import type {
   GlAccountBalanceHistory,
   GlAccountTree,
   AccountStatus,
-  AccountCategory
+  AccountCategory,
+  GlAccountReconcileDto,
+  GlAccountMoveDto,
+  GlAccountBulkUpdateDto
 } from '../types/gl-account';
 
-export interface GlAccountBulkUpdateDto {
-  ids: string[];
-  data: Partial<UpdateGlAccountDto>;
-}
 
-export interface GlAccountMoveDto {
-  accountId: string;
-  newParentId: string | null;
-  newSortOrder?: number;
-}
 
-export interface GlAccountReconcileDto {
-  accountId: string;
-  statementBalance: number;
-  statementDate: string;
-  notes?: string;
-}
+
+
+
 
 class GlAccountService extends BaseService {
   constructor() {

@@ -18,10 +18,12 @@
             width="32"
             class="logo"
           />
-          <div v-if="!rail || isMobile" class="logo-text">
-            <div class="company-name">Paksa Financial</div>
-            <div class="system-name">System</div>
-          </div>
+          <transition name="fade">
+            <div v-if="!rail || isMobile" class="logo-text">
+              <div class="company-name">Paksa Financial</div>
+              <div class="system-name">Enterprise System</div>
+            </div>
+          </transition>
         </div>
         <v-btn
           v-if="!isMobile"
@@ -36,7 +38,7 @@
       </div>
     </template>
 
-    <v-list nav density="compact" class="navigation-list" color="primary">
+    <v-list nav density="comfortable" class="navigation-list" color="primary" active-color="primary" item-props>
       <template v-for="item in navigationStore.items" :key="item.title">
         <!-- Single item -->
         <v-list-item
@@ -47,7 +49,11 @@
           class="nav-item"
           rounded="xl"
           :lines="item.subtitle ? 'two' : undefined"
+          active-class="active-nav-item"
         >
+          <template #prepend>
+            <v-icon size="22" class="nav-icon">{{ item.icon }}</v-icon>
+          </template>
           <template #default>
             <v-list-item-title>{{ item.title }}</v-list-item-title>
             <v-list-item-subtitle v-if="item.subtitle">{{ item.subtitle }}</v-list-item-subtitle>
@@ -62,10 +68,13 @@
           <template #activator="{ props }">
             <v-list-item
               v-bind="props"
-              :prepend-icon="item.icon"
               class="nav-item nav-item--parent"
               :lines="item.subtitle ? 'two' : undefined"
+              active-class="active-nav-item"
             >
+              <template #prepend>
+                <v-icon size="22" class="nav-icon">{{ item.icon }}</v-icon>
+              </template>
               <template #default>
                 <v-list-item-title>{{ item.title }}</v-list-item-title>
                 <v-list-item-subtitle v-if="item.subtitle">{{ item.subtitle }}</v-list-item-subtitle>
@@ -77,12 +86,15 @@
             v-for="child in item.children"
             :key="child.title"
             :to="child.to"
-            :prepend-icon="child.icon"
             :disabled="child.disabled"
             class="nav-item nav-item--child"
             rounded="xl"
             :lines="child.subtitle ? 'two' : undefined"
+            active-class="active-nav-item"
           >
+            <template #prepend>
+              <v-icon size="20" class="nav-icon">{{ child.icon }}</v-icon>
+            </template>
             <template #default>
               <v-list-item-title>{{ child.title }}</v-list-item-title>
               <v-list-item-subtitle v-if="child.subtitle">{{ child.subtitle }}</v-list-item-subtitle>
@@ -98,17 +110,17 @@
     <template v-slot:append>
       <div class="drawer-footer">
         <v-divider class="mb-2" />
-        <v-list nav density="compact">
+        <v-list nav density="compact" class="footer-list">
           <v-list-item
             prepend-icon="mdi-help-circle"
             title="Help & Support"
-            class="nav-item"
+            class="footer-item"
             rounded="xl"
           />
           <v-list-item
             prepend-icon="mdi-logout"
             title="Logout"
-            class="nav-item"
+            class="footer-item"
             rounded="xl"
             @click="logout"
           />
@@ -182,11 +194,53 @@ const logout = () => {
 }
 
 .navigation-list {
-  padding: 8px 16px;
+  padding: 8px 8px 8px 0;
+}
+
+.nav-item {
+  margin-bottom: 4px;
+  border-radius: 12px !important;
+  min-height: 48px;
+}
+
+.nav-item--parent {
+  font-weight: 500;
+}
+
+.nav-item--child {
+  margin-left: 16px;
+  font-size: 14px;
+}
+
+.nav-group {
+  margin-bottom: 8px;
+}
+
+.nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.active-nav-item {
+  background-color: #1976d2 !important;
+  color: #fff !important;
+}
+.active-nav-item .v-list-item-title,
+.active-nav-item .v-list-item-subtitle,
+.active-nav-item .v-icon {
+  color: #fff !important;
 }
 
 .drawer-footer {
-  padding: 16px;
+  padding: 16px 8px 8px 0;
+}
+.footer-list {
+  padding: 0;
+}
+.footer-item {
+  border-radius: 12px !important;
+  margin-bottom: 4px;
 }
 
 @media (max-width: 960px) {
@@ -194,5 +248,12 @@ const logout = () => {
     position: fixed !important;
     z-index: 1000;
   }
+}
+
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.2s;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
 }
 </style>

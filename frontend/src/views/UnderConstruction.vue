@@ -1,46 +1,16 @@
 <template>
-  <div class="under-construction">
-    <div class="construction-content">
-      <i class="pi pi-cog" style="font-size: 3rem; color: var(--primary-color)"></i>
-      <h2>Feature Under Construction</h2>
-      <p>This feature is currently under development and will be available soon.</p>
-      <Button 
-        label="Back to Dashboard" 
-        icon="pi pi-arrow-left" 
-        @click="$router.push('/')"
-        class="p-button-text"
-      />
-    </div>
-  </div>
+  <v-container class="fill-height">
+    <v-row align="center" justify="center">
+      <v-col cols="12" sm="8" md="6" class="text-center">
+        <v-icon size="120" color="warning" class="mb-4">mdi-construction</v-icon>
+        <h1 class="text-h4 mb-4">Under Construction</h1>
+        <p class="text-body-1 mb-6">This module is currently being developed and will be available soon.</p>
+        <v-btn color="primary" @click="$router.go(-1)">Go Back</v-btn>
+      </v-col>
+    </v-row>
+  </v-container>
 </template>
 
-<script setup lang="ts">
-import Button from 'vue/button';
+<script setup>
+// Under construction page for modules not yet implemented
 </script>
-
-<style scoped>
-.under-construction {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-  min-height: 300px;
-  text-align: center;
-  padding: 2rem;
-}
-
-.construction-content {
-  max-width: 500px;
-  margin: 0 auto;
-}
-
-h2 {
-  margin: 1rem 0 0.5rem;
-  color: var(--text-color);
-}
-
-p {
-  color: var(--text-color-secondary);
-  margin-bottom: 1.5rem;
-}
-</style>

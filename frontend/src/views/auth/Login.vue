@@ -263,7 +263,13 @@ const fillDemoCredentials = (type: 'admin' | 'user') => {
 }
 
 const login = async () => {
-  if (!valid.value) return
+  const form = document.querySelector('form')
+  const isValid = await form?.checkValidity()
+  
+  if (!valid.value || !isValid) {
+    errorMessage.value = 'Please fill in all required fields correctly'
+    return
+  }
 
   loading.value = true
   errorMessage.value = ''
@@ -281,6 +287,7 @@ const login = async () => {
     
     localStorage.setItem('token', access_token)
     localStorage.setItem('user', JSON.stringify(user))
+    localStorage.setItem('userRole', user.role || 'user')
     
     router.push('/')
   } catch (error: any) {

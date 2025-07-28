@@ -16,11 +16,25 @@ export { default as GlAccountListPage } from './pages/GlAccountListPage.vue';
 // Export stores
 export * from './store';
 
-// Export types
-export * from './types';
+// Export types (explicitly re-export to avoid conflicts)
+export type {
+  GlAccount,
+  CreateGlAccountDto,
+  UpdateGlAccountDto,
+  GlAccountFilters,
+  GlAccountImportDto,
+  GlAccountExportDto,
+  GlAccountSummary,
+  GlAccountBalanceHistory,
+  GlAccountTree,
+  AccountStatus,
+  AccountCategory,
+  GlAccountReconcileDto,
+  GlAccountMoveDto,
+  GlAccountBulkUpdateDto
+} from './types';
 
-// Export composables
-export * from './composables';
+
 
 // Export services
 export * from './services';

@@ -16,7 +16,7 @@
 
     <!-- Quick Actions - Single Row -->
     <v-row class="mb-6">
-      <v-col cols="12" sm="6" md="3" v-for="stat in quickStats" :key="stat.title">
+      <v-col cols="6" sm="6" md="3" v-for="stat in quickStats" :key="stat.title">
         <v-card elevation="2" class="h-100">
           <v-card-text class="pa-4">
             <div class="d-flex align-center">
@@ -50,7 +50,7 @@
     <!-- Module Cards Grid - 4 per row -->
     <v-row>
       <v-col 
-        cols="12" 
+        cols="6" 
         sm="6" 
         md="4" 
         lg="3" 
@@ -277,10 +277,7 @@ const modules = ref([
 ])
 
 const navigateToModule = (module: any) => {
-  console.log('Navigating to:', module.route)
-  router.push(module.route).catch(err => {
-    console.error('Navigation error:', err)
-  })
+  router.push(module.route)
 }
 </script>
 

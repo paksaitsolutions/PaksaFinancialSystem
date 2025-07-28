@@ -54,13 +54,14 @@
     <v-navigation-drawer
       v-model="drawer"
       app
+      :temporary="$vuetify.display.mobile"
       width="280"
       color="white"
       elevation="2"
     >
       <!-- Sidebar Header -->
       <div class="pa-4 border-b">
-        <div class="d-flex align-center">
+        <div class="d-flex align-center cursor-pointer" @click="router.push('/')">
           <v-avatar size="32" class="brand-logo mr-3">
             <v-icon color="white" size="16">mdi-finance</v-icon>
           </v-avatar>
@@ -72,10 +73,10 @@
       </div>
 
       <!-- Navigation Menu -->
-      <v-list density="compact" nav class="pa-2">
+      <v-list density="compact" nav color="primary" class="pa-2">
         <template v-for="item in menuItems" :key="item.title">
           <!-- Items with submenus -->
-          <v-list-group v-if="item.children" :value="item.title">
+          <v-list-group v-if="item.children" :value="item.title" :model-value="openGroups.includes(item.title)">
             <template v-slot:activator="{ props }">
               <v-list-item
                 v-bind="props"
@@ -90,12 +91,13 @@
               v-for="child in item.children"
               :key="child.title"
               :to="child.route"
-              :title="child.title"
               :prepend-icon="child.icon"
               class="ml-4 mb-1 rounded-lg"
               color="primary"
               density="compact"
-            />
+            >
+              <v-list-item-title>{{ child.title }}</v-list-item-title>
+            </v-list-item>
           </v-list-group>
           
           <!-- Items without submenus -->
@@ -103,11 +105,12 @@
             v-else
             :to="item.route"
             :prepend-icon="item.icon"
-            :title="item.title"
-            :subtitle="item.subtitle"
             class="mb-1 rounded-lg"
             color="primary"
+            lines="two"
           >
+            <v-list-item-title>{{ item.title }}</v-list-item-title>
+            <v-list-item-subtitle>{{ item.subtitle }}</v-list-item-subtitle>
             <template v-slot:append>
               <v-icon size="16" color="grey-lighten-1">mdi-chevron-right</v-icon>
             </template>
@@ -139,15 +142,40 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted, computed } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 
 const router = useRouter()
+const route = useRoute()
 const drawer = ref(true)
+
+// Close drawer on mobile by default
+if (typeof window !== 'undefined' && window.innerWidth < 960) {
+  drawer.value = false
+}
 const user = ref<any>(null)
 
+// Compute which parent menu should be open based on current route
+const openGroups = computed(() => {
+  const currentPath = route.path
+  const groups = []
+  
+  if (currentPath.startsWith('/gl')) groups.push('General Ledger')
+  if (currentPath.startsWith('/ap')) groups.push('Accounts Payable')
+  if (currentPath.startsWith('/ar')) groups.push('Accounts Receivable')
+  if (currentPath.startsWith('/cash')) groups.push('Cash Management')
+  if (currentPath.startsWith('/assets')) groups.push('Fixed Assets')
+  if (currentPath.startsWith('/inventory')) groups.push('Inventory')
+  if (currentPath.startsWith('/budget')) groups.push('Budget Planning')
+  if (currentPath.startsWith('/payroll')) groups.push('Payroll')
+  if (currentPath.startsWith('/hrm')) groups.push('Human Resources')
+  if (currentPath.startsWith('/tax')) groups.push('Tax Management')
+  if (currentPath.startsWith('/settings')) groups.push('Settings')
+  
+  return groups
+})
+
 const menuItems = ref([
-  { title: 'Dashboard', subtitle: 'Home overview', icon: 'mdi-view-dashboard', route: '/' },
   { 
     title: 'General Ledger', 
     subtitle: 'Chart of accounts', 
@@ -324,19 +352,9 @@ const logout = () => {
   border-radius: 8px;
 }
 
-.v-navigation-drawer .v-list-item--active {
-  background-color: #1976d2 !important;
-  color: white !important;
-}
 
-.v-navigation-drawer .v-list-item--active * {
-  color: white !important;
-}
 
-.v-navigation-drawer .v-list-item--active .v-list-item__content,
-.v-navigation-drawer .v-list-item--active .v-list-item-title,
-.v-navigation-drawer .v-list-item--active .v-list-item-subtitle,
-.v-navigation-drawer .v-list-item--active .v-icon {
-  color: white !important;
+.cursor-pointer {
+  cursor: pointer;
 }
 </style>

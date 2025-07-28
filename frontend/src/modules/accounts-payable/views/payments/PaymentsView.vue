@@ -224,14 +224,14 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { useToast } from 'primevue/usetoast';
-import { useConfirm } from 'primevue/useconfirm';
-import { FilterMatchMode } from 'primevue/api';
-import { useExport } from '@/composables/useExport';
-import { useAuthStore } from '@/stores/auth';
-import { usePaymentStore } from '@/stores/ap/paymentStore';
-import ExportDialog from '@/components/common/ExportDialog.vue';
-import type { Payment, PaymentStatus } from '@/types/ap/payment';
+// import { useToast } from 'primevue/usetoast';
+// import { useConfirm } from 'primevue/useconfirm';
+// import { FilterMatchMode } from 'primevue/api';
+// import { useExport } from '@/composables/useExport';
+// import { useAuthStore } from '@/stores/auth';
+// import { usePaymentStore } from '@/stores/ap/paymentStore';
+// import ExportDialog from '@/components/common/ExportDialog.vue';
+// import type { Payment, PaymentStatus } from '@/types/ap/payment';
 
 // Types
 type SummaryCard = {
@@ -253,10 +253,10 @@ type PaymentFilters = {
 
 // Composables
 const router = useRouter();
-const toast = useToast();
-const confirm = useConfirm();
-const authStore = useAuthStore();
-const paymentStore = usePaymentStore();
+// const toast = useToast();
+// const confirm = useConfirm();
+// const authStore = useAuthStore();
+// const paymentStore = usePaymentStore();
 
 // State
 const loading = ref<boolean>(true);
@@ -399,12 +399,12 @@ const confirmDelete = (id: string): void => {
 const deletePayment = async (id: string): Promise<void> => {
   try {
     await paymentStore.deletePayment(id);
-    toast.add({
-      severity: 'success',
-      summary: 'Success',
-      detail: 'Payment deleted successfully',
-      life: 3000
-    });
+    // toast.add({
+    //   severity: 'success',
+    //   summary: 'Success',
+    //   detail: 'Payment deleted successfully',
+    //   life: 3000
+    // });
   } catch (error) {
     console.error('Error deleting payment:', error);
     toast.add({

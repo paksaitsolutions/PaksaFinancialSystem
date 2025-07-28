@@ -329,6 +329,8 @@ const generateReport = async () => {
     trialBalance.value = response.data
   } catch (error) {
     console.error('Error generating trial balance:', error)
+    // Show user-friendly error message
+    trialBalance.value = null
   } finally {
     loading.value = false
   }

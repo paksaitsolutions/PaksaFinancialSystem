@@ -11,15 +11,15 @@
             <button class="btn btn-outline" @click="showBulkActions = !showBulkActions">
               Bulk Actions
             </button>
-            <Button label="Export" icon="pi pi-download" class="p-button-outlined p-button-secondary" @click="showExportDialog = true" :disabled="vendors.length === 0" />
-            <ExportDialog 
+            <v-btn prepend-icon="mdi-download" variant="outlined" @click="showExportDialog = true" :disabled="vendors.length === 0">Export</v-btn>
+            <!-- <ExportDialog 
               v-model:visible="showExportDialog"
               :data="exportData"
               :columns="exportColumns"
               title="Export Vendors"
               description="Select the format and scope for exporting vendor data"
               @export="handleExport"
-            />
+            /> -->
             <button class="btn btn-primary" @click="showCreateModal = true">
               + Add Vendor
             </button>
@@ -610,13 +610,13 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import ExportDialog from '@/components/common/ExportDialog.vue'
-import { vendorsApi } from '@/services/api'
-import { useLoadingState } from '@/composables/useStateManagement'
+// import ExportDialog from '@/components/common/ExportDialog.vue'
+// import { vendorsApi } from '@/services/api'
+// import { useLoadingState } from '@/composables/useStateManagement'
 
 // Data
 const router = useRouter()
-const { setLoading, setError } = useLoadingState()
+// const { setLoading, setError } = useLoadingState()
 const snackbar = ref(false)
 const snackbarText = ref('')
 const snackbarColor = ref('success')
@@ -638,6 +638,20 @@ const viewMode = ref('table')
 const currentPage = ref(1)
 const itemsPerPage = ref(20)
 const selectedVendors = ref([])
+const aiInsights = ref([])
+const showBulkActions = ref(false)
+const filters = ref({
+  search: '',
+  category: '',
+  status: '',
+  riskLevel: '',
+  paymentTerms: '',
+  country: ''
+})
+const sortBy = ref('name')
+const viewMode = ref('table')
+const allSelected = ref(false)
+const aiRecommendations = ref([])
 
 // Export functionality
 const exportColumns = [
@@ -672,18 +686,159 @@ const exportData = computed(() => {
 // Fetch vendors from API
 const fetchVendors = async () => {
   try {
-    setLoading(true)
-    const response = await vendorsApi.getAll()
-    vendors.value = response.items || []
+    // setLoading(true)
+    // Mock data for now
+    vendors.value = [
+      {
+        id: 1,
+        name: 'ABC Supplies',
+        vendorId: 'V001',
+        category: 'supplier',
+        contactPerson: 'John Doe',
+        email: 'john@abc.com',
+        phone: '123-456-7890',
+        outstanding: 5000,
+        status: 'active',
+        city: 'New York',
+        country: 'US',
+        aiRiskScore: 25,
+        reliabilityScore: 85,
+        paymentBehaviorScore: 90
+      }
+    ]
   } catch (error) {
     console.error('Error fetching vendors:', error)
-    setError('Failed to load vendors')
+    // setError('Failed to load vendors')
   } finally {
-    setLoading(false)
+    // setLoading(false)
   }
 }
 
 // Load vendors on mount
+const filteredVendors = computed(() => {
+  return vendors.value.filter(vendor => {
+    if (filters.value.search && !vendor.name.toLowerCase().includes(filters.value.search.toLowerCase())) return false
+    if (filters.value.category && vendor.category !== filters.value.category) return false
+    if (filters.value.status && vendor.status !== filters.value.status) return false
+    return true
+  })
+})
+
+const paginatedVendors = computed(() => {
+  return filteredVendors.value.slice(0, 20)
+})
+
+const totalPages = computed(() => {
+  return Math.ceil(filteredVendors.value.length / 20)
+})
+
+const formatCategory = (category) => {
+  return category.replace('_', ' ').toUpperCase()
+}
+
+const formatStatus = (status) => {
+  return status.replace('_', ' ').toUpperCase()
+}
+
+const formatCurrency = (amount) => {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount)
+}
+
+const getRiskClass = (score) => {
+  if (score < 30) return 'low'
+  if (score < 60) return 'medium'
+  return 'high'
+}
+
+const getPerformanceClass = (score) => {
+  if (score > 80) return 'good'
+  if (score > 60) return 'average'
+  return 'poor'
+}
+
+const toggleSelectAll = () => {
+  // Toggle select all logic
+}
+
+const resetFilters = () => {
+  filters.value = {
+    search: '',
+    category: '',
+    status: '',
+    riskLevel: '',
+    paymentTerms: '',
+    country: ''
+  }
+}
+
+const dismissInsights = () => {
+  aiInsights.value = []
+}
+
+const executeInsightAction = (insight) => {
+  console.log('Execute insight action:', insight)
+}
+
+const viewVendor = (vendor) => {
+  console.log('View vendor:', vendor)
+}
+
+const editVendor = (vendor) => {
+  console.log('Edit vendor:', vendor)
+}
+
+const viewAnalytics = (vendor) => {
+  console.log('View analytics:', vendor)
+}
+
+const viewContracts = (vendor) => {
+  console.log('View contracts:', vendor)
+}
+
+const closeModal = () => {
+  showCreateModal.value = false
+}
+
+const saveVendor = () => {
+  console.log('Save vendor')
+}
+
+const previousPage = () => {
+  if (currentPage.value > 1) currentPage.value--
+}
+
+const nextPage = () => {
+  if (currentPage.value < totalPages.value) currentPage.value++
+}
+
+const bulkUpdateStatus = () => {
+  console.log('Bulk update status')
+}
+
+const bulkUpdateRisk = () => {
+  console.log('Bulk update risk')
+}
+
+const bulkExport = () => {
+  console.log('Bulk export')
+}
+
+const bulkDelete = () => {
+  console.log('Bulk delete')
+}
+
+const runAIAnalysis = () => {
+  console.log('Run AI analysis')
+}
+
+const removeTag = (tag) => {
+  console.log('Remove tag:', tag)
+}
+
+const addTag = (event) => {
+  console.log('Add tag:', event.target.value)
+}
+
 onMounted(() => {
   fetchVendors()
 })

@@ -83,11 +83,6 @@ export const useBaseStore = defineStore('base', {
       this.$reset();
     },
   },
-  
-  // Persist specific state properties
-  persist: {
-    paths: ['_isInitialized'],
-  },
 });
 
 /**
@@ -97,9 +92,8 @@ export function createNamespacedStore<Id extends string, S, G, A>(
   id: Id,
   options: {
     state: () => S;
-    getters?: G & ThisType<S & { [K in keyof G]: ReturnType<G[K]> }>;
-    actions: A & ThisType<A & S & { _isInitialized: boolean }>;
-    persist?: boolean | string[];
+    getters?: G;
+    actions: A;
   }
 ) {
   return defineStore(id, {
@@ -154,13 +148,6 @@ export function createNamespacedStore<Id extends string, S, G, A>(
         this.$reset();
       },
     },
-    
-    // Enable persistence if specified
-    persist: Array.isArray(options.persist)
-      ? { paths: options.persist }
-      : options.persist === true
-      ? {}
-      : false,
   });
 }
 
