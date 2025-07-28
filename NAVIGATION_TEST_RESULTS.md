@@ -75,17 +75,7 @@
 
 | Route | Menu Path | Status | Issue | Page Result |
 |-------|-----------|--------|-------|-------------|
-| `/ar/payments` | Accounts Receivable > Payments | ⚠️ | Module Under Development | Generic placeholder |
-| `/assets/depreciation` | Fixed Assets > Depreciation | ⚠️ | Module Under Development | Generic placeholder |
-| `/assets/maintenance` | Fixed Assets > Maintenance | ⚠️ | Module Under Development | Generic placeholder |
-| `/inventory/items` | Inventory > Items | ⚠️ | Module Under Development | Generic placeholder |
-| `/inventory/locations` | Inventory > Locations | ⚠️ | Module Under Development | Generic placeholder |
-| `/inventory/adjustments` | Inventory > Adjustments | ⚠️ | Module Under Development | Generic placeholder |
-| `/inventory/reports` | Inventory > Reports | ⚠️ | Module Under Development | Generic placeholder |
-| `/hrm/leave` | Human Resources > Leave Management | ⚠️ | Module Under Development | Generic placeholder |
-| `/hrm/attendance` | Human Resources > Attendance | ⚠️ | Module Under Development | Generic placeholder |
-| `/hrm/performance` | Human Resources > Performance | ⚠️ | Module Under Development | Generic placeholder |
-| `/settings/system` | Settings > System Configuration | ⚠️ | Module Under Development | Generic placeholder |
+
 
 
 ## HOME PAGE MODULE CARDS TEST RESULTS
