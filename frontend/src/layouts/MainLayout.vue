@@ -323,4 +323,20 @@ const logout = () => {
 .rounded-lg {
   border-radius: 8px;
 }
+
+.v-navigation-drawer .v-list-item--active {
+  background-color: #1976d2 !important;
+  color: white !important;
+}
+
+.v-navigation-drawer .v-list-item--active * {
+  color: white !important;
+}
+
+.v-navigation-drawer .v-list-item--active .v-list-item__content,
+.v-navigation-drawer .v-list-item--active .v-list-item-title,
+.v-navigation-drawer .v-list-item--active .v-list-item-subtitle,
+.v-navigation-drawer .v-list-item--active .v-icon {
+  color: white !important;
+}
 </style>
