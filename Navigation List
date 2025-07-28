@@ -1,0 +1,204 @@
+## 🏠 Main Dashboard
+```
+/ (Home)
+/dashboard (Advanced Dashboard)
+```
+
+## 🏛️ General Ledger Module
+```
+/gl (General Ledger - AdvancedGL.vue)
+├── /gl/dashboard (GL Dashboard - Dashboard.vue)
+├── /gl/accounts (Chart of Accounts - ChartOfAccounts.vue)
+├── /gl/journal-entries (Journal Entries - JournalEntries.vue)
+├── /gl/trial-balance (Trial Balance - TrialBalance.vue)
+├── /gl/financial-statements (Financial Statements)
+├── /gl/recurring (Recurring Journals)
+├── /gl/period-close (Period Close)
+└── /gl/settings (GL Settings - GLSettingsView.vue)
+```
+
+## 💰 Accounts Payable Module
+```
+/ap (Accounts Payable Dashboard)
+├── /ap/vendors (Vendor Management)
+├── /ap/invoices (AP Invoices)
+├── /ap/payments (AP Payments)
+├── /ap/bills (Bill Processing)
+├── /ap/credit-memos (Credit Memo Management)
+└── /ap/reports (AP Reports)
+```
+
+## 💳 Accounts Receivable Module
+```
+/ar (Accounts Receivable Dashboard)
+├── /ar/customers (Customer Management)
+├── /ar/invoices (AR Invoices)
+├── /ar/payments (AR Payments)
+├── /ar/collections (Collections Management)
+├── /ar/analytics (AR Analytics - ARAnalyticsView.vue)
+└── /ar/reports (AR Reports)
+```
+
+## 💵 Cash Management Module
+```
+/cash (Cash Management Dashboard)
+├── /cash/accounts (Bank Accounts)
+├── /cash/transactions (Cash Transactions)
+├── /cash/reconciliation (Bank Reconciliation)
+├── /cash/forecasting (Cash Flow Forecasting)
+└── /cash/banking-integration (Banking Integration)
+```
+
+## 📊 Budget Module
+```
+/budget (Budget Dashboard)
+├── /budget/plans (Budget Plans)
+├── /budget/forecasts (Budget Forecasts)
+├── /budget/scenarios (Budget Scenarios)
+├── /budget/approval (Budget Approval)
+└── /budget/reports (Budget Reports)
+```
+
+## 🧾 Tax Module
+```
+/tax (Tax Dashboard)
+├── /tax/rates (Tax Rates)
+├── /tax/exemptions (Tax Exemptions)
+├── /tax/compliance (Tax Compliance)
+└── /tax/returns (Tax Returns)
+```
+
+## 👥 Payroll Module
+```
+/payroll (Payroll Dashboard)
+├── /payroll/employees (Payroll Employees)
+├── /payroll/payruns (Pay Runs)
+├── /payroll/payruns/:id (Individual Pay Run View)
+├── /payroll/payslips (Payslips)
+├── /payroll/deductions (Deductions & Benefits)
+├── /payroll/taxes (Payroll Taxes)
+└── /payroll/reports (Payroll Reports)
+```
+
+## 🧑‍💼 Human Resource Management (HRM) Module
+```
+/hrm (HRM Dashboard)
+├── /hrm/employees (Employee Management)
+├── /hrm/leave (Leave Management)
+├── /hrm/attendance (Attendance Tracking)
+└── /hrm/performance (Performance Management)
+```
+
+## 📦 Inventory Module
+```
+/inventory (Inventory Dashboard)
+├── /inventory/items (Inventory Items)
+├── /inventory/locations (Inventory Locations)
+├── /inventory/adjustments (Inventory Adjustments)
+└── /inventory/reports (Inventory Reports)
+```
+
+## 🏢 Fixed Assets Module
+```
+/assets (Fixed Assets Dashboard - FixedAssetsView.vue)
+├── /assets/management (Asset Management)
+├── /assets/depreciation (Asset Depreciation)
+└── /assets/maintenance (Asset Maintenance)
+```
+
+## 📈 Reports Module
+```
+/reports (Reports Dashboard)
+├── /reports/financial (Financial Reports)
+├── /reports/balance-sheet (Balance Sheet)
+├── /reports/income-statement (Income Statement)
+├── /reports/cash-flow (Cash Flow Report)
+├── /reports/ap-aging (AP Aging Report)
+└── /reports/ar-aging (AR Aging Report)
+```
+
+## 🤖 AI/BI Module
+```
+/ai (AI Insights Dashboard)
+└── /ai/assistant (AI Assistant)
+
+/bi (Business Intelligence Dashboard)
+└── /bi/analytics (BI Analytics)
+```
+
+## ⚙️ Settings Module
+```
+/settings (Settings Dashboard)
+├── /settings/company (Company Settings)
+├── /settings/users (User Management)
+├── /settings/currency (Currency Settings)
+├── /settings/system (System Configuration)
+└── /settings/gl (GL Settings - GLSettingsView.vue)
+```
+
+## 🔐 Admin Module
+```
+/admin (Super Admin Dashboard)
+├── /admin/companies (Company Management)
+├── /admin/analytics (Platform Analytics)
+├── /admin/monitoring (System Monitoring)
+├── /admin/configuration (Global Configuration)
+├── /rbac (Role Management)
+├── /compliance (Compliance Dashboard)
+├── /compliance/security (Security Compliance)
+└── /compliance/audit (Audit Logs)
+```
+
+## 🔑 Authentication Routes
+```
+/auth/login (Login)
+/auth/register (Register)
+/auth/forgot-password (Forgot Password)
+```
+
+## 🚫 Error Handling
+```
+/:pathMatch(.*)* (404 Not Found)
+```
+
+---
+
+## 📋 Route Summary
+
+### Total Routes: **68 Routes**
+
+**By Module:**
+- **General Ledger**: 8 routes
+- **Accounts Payable**: 6 routes  
+- **Accounts Receivable**: 6 routes
+- **Cash Management**: 5 routes
+- **Budget**: 5 routes
+- **Tax**: 4 routes
+- **Payroll**: 7 routes
+- **HRM**: 4 routes
+- **Inventory**: 4 routes
+- **Fixed Assets**: 3 routes
+- **Reports**: 6 routes
+- **Settings**: 5 routes
+- **AI/BI**: 4 routes
+- **Admin**: 9 routes
+- **Auth**: 3 routes
+- **Main**: 2 routes
+- **Error**: 1 route
+
+### Key Features:
+✅ **Complete Module Coverage** - All financial modules included  
+✅ **Hierarchical Structure** - Logical parent-child relationships  
+✅ **TypeScript Support** - Full type safety  
+✅ **Role-Based Access** - Admin routes protected  
+✅ **Authentication Guards** - Proper auth flow  
+✅ **Clean URLs** - SEO-friendly routing  
+✅ **Error Handling** - 404 fallback  
+✅ **No Duplicates** - Single source of truth
+
+### Navigation Flow:
+```
+Auth → Dashboard → Module Selection → Sub-module → Functionality
+```
+
+This structure provides a comprehensive navigation system for the entire Paksa Financial System, ensuring all modules and sub-modules are properly accessible and organized.
