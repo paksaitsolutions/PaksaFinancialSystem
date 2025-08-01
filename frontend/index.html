@@ -27,10 +27,11 @@
     <!-- Note: frame-ancestors removed from meta tag as it's ignored in HTML meta elements -->
 
     <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="alternate icon" href="/favicon.ico" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" onerror="this.href='/favicon.ico'" />
     <link rel="manifest" href="/site.webmanifest" crossorigin="use-credentials" />
     <meta name="msapplication-TileColor" content="#1976D2" />
+    <meta name="theme-color" content="#1976D2" />
 
     <!-- Preload Critical Resources -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />

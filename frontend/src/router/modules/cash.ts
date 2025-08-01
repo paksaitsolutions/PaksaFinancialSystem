@@ -1,6 +1,6 @@
 import type { RouteRecordRaw } from 'vue-router';
 import { defineComponent } from 'vue';
-import UnderConstruction from '@/views/UnderConstruction.vue';
+import UnderConstruction from '@/views/common/UnderConstruction.vue';
 
 // Helper function for lazy loading with fallback
 const lazyLoad = (path: string) => {

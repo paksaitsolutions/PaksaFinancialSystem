@@ -1,0 +1,233 @@
+/* ===================================
+   Paksa Financial System - Utilities
+   ===================================
+   Reusable mixins and utility classes.
+*/
+
+@use 'sass:map';
+@use 'theme' as *;
+
+// 1. Mixins
+@mixin screen($breakpoint) {
+  $breakpoints: (
+    'sm': 640px,
+    'md': 768px,
+    'lg': 1024px,
+    'xl': 1280px,
+    '2xl': 1536px,
+  );
+
+  @if map-has-key($breakpoints, $breakpoint) {
+    @media (min-width: map-get($breakpoints, $breakpoint)) {
+      @content;
+    }
+  }
+}
+
+@mixin dark-theme {
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) & { @content; }
+  }
+  [data-theme="dark"] & { @content; }
+}
+
+@mixin card($elevation: 1) {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  transition: all 0.2s ease;
+  
+  @if $elevation == 2 { box-shadow: var(--shadow-md); }
+  @if $elevation == 3 { box-shadow: var(--shadow-lg); }
+  
+  &:hover {
+    transform: translateY(-2px);
+    @if $elevation == 1 { box-shadow: var(--shadow-md); }
+    @if $elevation == 2 { box-shadow: var(--shadow-lg); }
+    @if $elevation == 3 { box-shadow: var(--shadow-xl); }
+  }
+}
+
+// 2. Utility Classes
+// ==================
+
+// Display utilities
+.d-none { display: none !important; }
+.d-inline { display: inline !important; }
+.d-inline-block { display: inline-block !important; }
+.d-block { display: block !important; }
+.d-flex { display: flex !important; }
+.d-inline-flex { display: inline-flex !important; }
+.d-grid { display: grid !important; }
+.d-table { display: table !important; }
+.d-table-row { display: table-row !important; }
+.d-table-cell { display: table-cell !important; }
+
+// Flex utilities
+.flex-row { flex-direction: row !important; }
+.flex-column { flex-direction: column !important; }
+.flex-row-reverse { flex-direction: row-reverse !important; }
+.flex-column-reverse { flex-direction: column-reverse !important; }
+.flex-wrap { flex-wrap: wrap !important; }
+.flex-nowrap { flex-wrap: nowrap !important; }
+.flex-fill { flex: 1 1 auto !important; }
+.flex-grow-0 { flex-grow: 0 !important; }
+.flex-grow-1 { flex-grow: 1 !important; }
+.flex-shrink-0 { flex-shrink: 0 !important; }
+.flex-shrink-1 { flex-shrink: 1 !important; }
+
+// Justify content
+.justify-content-start { justify-content: flex-start !important; }
+.justify-content-end { justify-content: flex-end !important; }
+.justify-content-center { justify-content: center !important; }
+.justify-content-between { justify-content: space-between !important; }
+.justify-content-around { justify-content: space-around !important; }
+.justify-content-evenly { justify-content: space-evenly !important; }
+
+// Align items
+.align-items-start { align-items: flex-start !important; }
+.align-items-end { align-items: flex-end !important; }
+.align-items-center { align-items: center !important; }
+.align-items-baseline { align-items: baseline !important; }
+.align-items-stretch { align-items: stretch !important; }
+
+// Align self
+.align-self-auto { align-self: auto !important; }
+.align-self-start { align-self: flex-start !important; }
+.align-self-end { align-self: flex-end !important; }
+.align-self-center { align-self: center !important; }
+.align-self-baseline { align-self: baseline !important; }
+.align-self-stretch { align-self: stretch !important; }
+
+// Text utilities
+.text-ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// Text alignment
+.text-left { text-align: left !important; }
+.text-center { text-align: center !important; }
+.text-right { text-align: right !important; }
+.text-justify { text-align: justify !important; }
+
+// Text transformation
+.text-lowercase { text-transform: lowercase !important; }
+.text-uppercase { text-transform: uppercase !important; }
+.text-capitalize { text-transform: capitalize !important; }
+
+// Font weight and italics
+.font-weight-light { font-weight: 300 !important; }
+.font-weight-normal { font-weight: 400 !important; }
+.font-weight-medium { font-weight: 500 !important; }
+.font-weight-semibold { font-weight: 600 !important; }
+.font-weight-bold { font-weight: 700 !important; }
+.font-italic { font-style: italic !important; }
+
+// Spacing utilities
+$spacers: (
+  0: 0,
+  1: 0.25rem,
+  2: 0.5rem,
+  3: 1rem,
+  4: 1.5rem,
+  5: 3rem
+);
+
+@each $size, $length in $spacers {
+  // Margin
+  .m-#{$size} { margin: $length !important; }
+  .mt-#{$size}, .my-#{$size} { margin-top: $length !important; }
+  .mr-#{$size}, .mx-#{$size} { margin-right: $length !important; }
+  .mb-#{$size}, .my-#{$size} { margin-bottom: $length !important; }
+  .ml-#{$size}, .mx-#{$size} { margin-left: $length !important; }
+  
+  // Padding
+  .p-#{$size} { padding: $length !important; }
+  .pt-#{$size}, .py-#{$size} { padding-top: $length !important; }
+  .pr-#{$size}, .px-#{$size} { padding-right: $length !important; }
+  .pb-#{$size}, .py-#{$size} { padding-bottom: $length !important; }
+  .pl-#{$size}, .px-#{$size} { padding-left: $length !important; }
+}
+
+// Auto margins
+.mx-auto { margin-left: auto !important; margin-right: auto !important; }
+.ml-auto { margin-left: auto !important; }
+.mr-auto { margin-right: auto !important; }
+.mt-auto { margin-top: auto !important; }
+.mb-auto { margin-bottom: auto !important; }
+
+// Width and height utilities
+.w-25 { width: 25% !important; }
+.w-50 { width: 50% !important; }
+.w-75 { width: 75% !important; }
+.w-100 { width: 100% !important; }
+.w-auto { width: auto !important; }
+
+.h-25 { height: 25% !important; }
+.h-50 { height: 50% !important; }
+.h-75 { height: 75% !important; }
+.h-100 { height: 100% !important; }
+.h-auto { height: auto !important; }
+
+// Position utilities
+.position-relative { position: relative !important; }
+.position-absolute { position: absolute !important; }
+.position-fixed { position: fixed !important; }
+.position-sticky { position: sticky !important; }
+
+// Border utilities
+.border { border: 1px solid var(--border-color) !important; }
+.border-top { border-top: 1px solid var(--border-color) !important; }
+.border-right { border-right: 1px solid var(--border-color) !important; }
+.border-bottom { border-bottom: 1px solid var(--border-color) !important; }
+.border-left { border-left: 1px solid var(--border-color) !important; }
+
+.border-0 { border: 0 !important; }
+.border-top-0 { border-top: 0 !important; }
+.border-right-0 { border-right: 0 !important; }
+.border-bottom-0 { border-bottom: 0 !important; }
+.border-left-0 { border-left: 0 !important; }
+
+// Border radius
+.rounded { border-radius: var(--border-radius) !important; }
+.rounded-top { border-top-left-radius: var(--border-radius) !important; border-top-right-radius: var(--border-radius) !important; }
+.rounded-right { border-top-right-radius: var(--border-radius) !important; border-bottom-right-radius: var(--border-radius) !important; }
+.rounded-bottom { border-bottom-right-radius: var(--border-radius) !important; border-bottom-left-radius: var(--border-radius) !important; }
+.rounded-left { border-top-left-radius: var(--border-radius) !important; border-bottom-left-radius: var(--border-radius) !important; }
+.rounded-circle { border-radius: 50% !important; }
+.rounded-0 { border-radius: 0 !important; }
+
+// Visibility utilities
+.visible { visibility: visible !important; }
+.invisible { visibility: hidden !important; }
+
+// Cursor utilities
+.cursor-pointer { cursor: pointer !important; }
+.cursor-default { cursor: default !important; }
+.cursor-move { cursor: move !important; }
+.cursor-not-allowed { cursor: not-allowed !important; }
+.cursor-text { cursor: text !important; }
+.cursor-wait { cursor: wait !important; }
+
+// Overflow utilities
+.overflow-auto { overflow: auto !important; }
+.overflow-hidden { overflow: hidden !important; }
+.overflow-visible { overflow: visible !important; }
+.overflow-scroll { overflow: scroll !important; }
+
+// Responsive display utilities
+@each $breakpoint in map-keys($grid-breakpoints) {
+  @include media-breakpoint-up($breakpoint) {
+    $infix: breakpoint-infix($breakpoint, $grid-breakpoints);
+    
+    .d#{$infix}-none { display: none !important; }
+    .d#{$infix}-inline { display: inline !important; }
+    .d#{$infix}-inline-block { display: inline-block !important; }
+    .d#{$infix}-block { display: block !important; }
+    .d#{$infix}-flex { display: flex !important; }
+    .d#{$infix}-inline-flex { display: inline-flex !important; }
+  }
+}

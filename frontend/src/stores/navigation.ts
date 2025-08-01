@@ -75,7 +75,13 @@ export const useNavigationStore = defineStore('navigation', {
       {
         title: 'Super Admin',
         icon: 'mdi-shield-crown',
-        to: '/super-admin'
+        children: [
+          { title: 'Dashboard', icon: 'mdi-view-dashboard', to: '/super-admin' },
+          { title: 'Company Management', icon: 'mdi-domain', to: '/super-admin/companies' },
+          { title: 'User Management', icon: 'mdi-account-group', to: '/super-admin/users' },
+          { title: 'System Settings', icon: 'mdi-cog', to: '/super-admin/settings' },
+          { title: 'Audit Logs', icon: 'mdi-clipboard-list', to: '/super-admin/audit-logs' }
+        ]
       }
     ] as NavigationItem[]
   }),

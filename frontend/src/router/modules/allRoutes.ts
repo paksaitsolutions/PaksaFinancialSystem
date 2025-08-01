@@ -3,7 +3,7 @@ import type { RouteRecordRaw } from 'vue-router';
 import { useAuthStore } from '../../modules/auth/store';
 
 // Import all view components
-import UnderConstruction from '@/views/UnderConstruction.vue';
+import UnderConstruction from '@/views/common/UnderConstruction.vue';
 
 // Import module routes
 import { cashRoutes } from './cash';

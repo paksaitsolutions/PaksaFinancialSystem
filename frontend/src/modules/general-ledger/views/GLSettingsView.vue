@@ -1,191 +1,158 @@
 <template>
   <v-container fluid>
-    <v-row>
-      <v-col cols="12">
-        <h1 class="text-h4 mb-4">General Ledger Settings</h1>
+    <v-card>
+      <v-card-title>
+        <v-icon left>mdi-cog</v-icon>
+        General Ledger Settings
+      </v-card-title>
+      
+      <v-card-text>
         <v-tabs v-model="activeTab">
-          <v-tab value="general">General Settings</v-tab>
-          <v-tab value="periods">Accounting Periods</v-tab>
-          <v-tab value="closing">Period Closing</v-tab>
-          <v-tab value="audit">Audit Settings</v-tab>
+          <v-tab>Account Settings</v-tab>
+          <v-tab>Period Settings</v-tab>
+          <v-tab>Posting Rules</v-tab>
+          <v-tab>Numbering</v-tab>
         </v-tabs>
-        <v-window v-model="activeTab" class="mt-4">
-          <v-window-item value="general">
-            <v-card>
-              <v-card-title>General GL Settings</v-card-title>
-              <v-card-text>
-                <v-form @submit.prevent="saveGeneralSettings">
-                  <v-row>
-                    <v-col cols="12" md="6">
-                      <v-select
-                        v-model="settings.defaultCurrency"
-                        :items="currencies"
-                        label="Default Currency"
-                        required
-                      />
-                    </v-col>
-                    <v-col cols="12" md="6">
-                      <v-select
-                        v-model="settings.fiscalYearEnd"
-                        :items="fiscalYearOptions"
-                        label="Fiscal Year End"
-                        required
-                      />
-                    </v-col>
-                    <v-col cols="12" md="6">
-                      <v-switch
-                        v-model="settings.requireApproval"
-                        label="Require Journal Entry Approval"
-                      />
-                    </v-col>
-                    <v-col cols="12" md="6">
-                      <v-switch
-                        v-model="settings.enableMultiCurrency"
-                        label="Enable Multi-Currency"
-                      />
-                    </v-col>
-                  </v-row>
-                  <v-btn type="submit" color="primary" :loading="saving">
-                    Save Settings
-                  </v-btn>
-                </v-form>
-              </v-card-text>
-            </v-card>
+        
+        <v-window v-model="activeTab">
+          <v-window-item>
+            <v-form>
+              <v-row>
+                <v-col cols="12" md="6">
+                  <v-text-field
+                    v-model="settings.defaultCurrency"
+                    label="Default Currency"
+                    outlined
+                  />
+                </v-col>
+                <v-col cols="12" md="6">
+                  <v-select
+                    v-model="settings.accountCodeFormat"
+                    :items="accountCodeFormats"
+                    label="Account Code Format"
+                    outlined
+                  />
+                </v-col>
+              </v-row>
+            </v-form>
           </v-window-item>
-          <v-window-item value="periods">
-            <v-card>
-              <v-card-title>Accounting Periods</v-card-title>
-              <v-card-text>
-                <v-data-table
-                  :headers="periodHeaders"
-                  :items="accountingPeriods"
-                  :loading="loading"
-                >
-                  <template v-slot:item.status="{ item }">
-                    <v-chip :color="getPeriodStatusColor(item.status)" small>
-                      {{ item.status }}
-                    </v-chip>
-                  </template>
-                  <template v-slot:item.actions="{ item }">
-                    <v-btn
-                      icon
-                      small
-                      @click="openPeriod(item)"
-                      :disabled="item.status === 'open'"
-                    >
-                      <v-icon>mdi-lock-open</v-icon>
-                    </v-btn>
-                    <v-btn
-                      icon
-                      small
-                      @click="closePeriod(item)"
-                      :disabled="item.status === 'closed'"
-                    >
-                      <v-icon>mdi-lock</v-icon>
-                    </v-btn>
-                  </template>
-                </v-data-table>
-              </v-card-text>
-            </v-card>
+          
+          <v-window-item>
+            <v-form>
+              <v-row>
+                <v-col cols="12" md="6">
+                  <v-select
+                    v-model="settings.fiscalYearStart"
+                    :items="months"
+                    label="Fiscal Year Start Month"
+                    outlined
+                  />
+                </v-col>
+                <v-col cols="12" md="6">
+                  <v-switch
+                    v-model="settings.autoCreatePeriods"
+                    label="Auto Create Periods"
+                  />
+                </v-col>
+              </v-row>
+            </v-form>
           </v-window-item>
-          <v-window-item value="closing">
-            <period-closing-settings @save="savePeriodClosingSettings" />
+          
+          <v-window-item>
+            <v-form>
+              <v-row>
+                <v-col cols="12" md="6">
+                  <v-switch
+                    v-model="settings.requireBalancedEntries"
+                    label="Require Balanced Journal Entries"
+                  />
+                </v-col>
+                <v-col cols="12" md="6">
+                  <v-switch
+                    v-model="settings.requireApproval"
+                    label="Require Journal Entry Approval"
+                  />
+                </v-col>
+              </v-row>
+            </v-form>
           </v-window-item>
-          <v-window-item value="audit">
-            <audit-settings @save="saveAuditSettings" />
+          
+          <v-window-item>
+            <v-form>
+              <v-row>
+                <v-col cols="12" md="6">
+                  <v-text-field
+                    v-model="settings.journalEntryPrefix"
+                    label="Journal Entry Prefix"
+                    outlined
+                  />
+                </v-col>
+                <v-col cols="12" md="6">
+                  <v-text-field
+                    v-model="settings.nextJournalNumber"
+                    label="Next Journal Entry Number"
+                    type="number"
+                    outlined
+                  />
+                </v-col>
+              </v-row>
+            </v-form>
           </v-window-item>
         </v-window>
-      </v-col>
-    </v-row>
+      </v-card-text>
+      
+      <v-card-actions>
+        <v-spacer />
+        <v-btn color="primary" @click="saveSettings">
+          Save Settings
+        </v-btn>
+      </v-card-actions>
+    </v-card>
   </v-container>
 </template>
 
-
-<script setup>
-import { ref, onMounted } from 'vue'
-import PeriodClosingSettings from '../components/PeriodClosingSettings.vue'
-import AuditSettings from '../components/AuditSettings.vue'
-import { useGLSettingsStore } from '../store/gl-settings'
-
-const glSettingsStore = useGLSettingsStore()
-const activeTab = ref('general')
-const loading = ref(false)
-const saving = ref(false)
-
-const settings = ref({
-  defaultCurrency: 'USD',
-  fiscalYearEnd: 'December',
-  requireApproval: false,
-  enableMultiCurrency: false
-})
-
-const currencies = ['USD', 'EUR', 'GBP', 'CAD', 'AUD']
-const fiscalYearOptions = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December'
-]
-
-const periodHeaders = [
-  { title: 'Period', key: 'name' },
-  { title: 'Start Date', key: 'startDate' },
-  { title: 'End Date', key: 'endDate' },
-  { title: 'Status', key: 'status' },
-  { title: 'Actions', key: 'actions', sortable: false }
-]
-
-const accountingPeriods = ref([])
-
-const getPeriodStatusColor = (status) => {
-  switch (status) {
-    case 'open': return 'success'
-    case 'closed': return 'error'
-    case 'pending': return 'warning'
-    default: return 'grey'
+<script>
+export default {
+  name: 'GLSettingsView',
+  
+  data: () => ({
+    activeTab: 0,
+    settings: {
+      defaultCurrency: 'USD',
+      accountCodeFormat: 'numeric',
+      fiscalYearStart: 1,
+      autoCreatePeriods: true,
+      requireBalancedEntries: true,
+      requireApproval: false,
+      journalEntryPrefix: 'JE',
+      nextJournalNumber: 1
+    },
+    
+    accountCodeFormats: [
+      { text: 'Numeric', value: 'numeric' },
+      { text: 'Alphanumeric', value: 'alphanumeric' }
+    ],
+    
+    months: [
+      { text: 'January', value: 1 },
+      { text: 'February', value: 2 },
+      { text: 'March', value: 3 },
+      { text: 'April', value: 4 },
+      { text: 'May', value: 5 },
+      { text: 'June', value: 6 },
+      { text: 'July', value: 7 },
+      { text: 'August', value: 8 },
+      { text: 'September', value: 9 },
+      { text: 'October', value: 10 },
+      { text: 'November', value: 11 },
+      { text: 'December', value: 12 }
+    ]
+  }),
+  
+  methods: {
+    saveSettings() {
+      console.log('Saving GL settings:', this.settings)
+    }
   }
 }
-
-const saveGeneralSettings = async () => {
-  saving.value = true
-  try {
-    await glSettingsStore.updateSettings(settings.value)
-  } finally {
-    saving.value = false
-  }
-}
-
-const openPeriod = async (period) => {
-  await glSettingsStore.openPeriod(period.id)
-  loadAccountingPeriods()
-}
-
-const closePeriod = async (period) => {
-  await glSettingsStore.closePeriod(period.id)
-  loadAccountingPeriods()
-}
-
-const savePeriodClosingSettings = async (closingSettings) => {
-  await glSettingsStore.updatePeriodClosingSettings(closingSettings)
-}
-
-const saveAuditSettings = async (auditSettings) => {
-  await glSettingsStore.updateAuditSettings(auditSettings)
-}
-
-const loadAccountingPeriods = async () => {
-  loading.value = true
-  try {
-    accountingPeriods.value = await glSettingsStore.getAccountingPeriods()
-  } finally {
-    loading.value = false
-  }
-}
-
-onMounted(async () => {
-  const currentSettings = await glSettingsStore.getSettings()
-  if (currentSettings) {
-    settings.value = { ...currentSettings }
-  }
-  await loadAccountingPeriods()
-})
-
 </script>

@@ -11,9 +11,42 @@ $grid-breakpoints: (
   'xxl': 2560px     // Extra extra large screen / 4K
 ) !default;
 
+// Container max-widths for responsive containers
+$container-max-widths: (
+  'sm': 540px,
+  'md': 720px,
+  'lg': 960px,
+  'xl': 1140px,
+  'xxl': 1320px
+) !default;
+
+// Grid columns and gutters
+$grid-columns: 12 !default;
+$grid-gutter-width: 24px !default;
+
+// Helper function to get minimum breakpoint width
+@function breakpoint-min($name, $breakpoints: $grid-breakpoints) {
+  $min: map-get($breakpoints, $name);
+  @return if($min != 0, $min, null);
+}
+
+// Helper function for breakpoint infix
+@function breakpoint-infix($name, $breakpoints: $grid-breakpoints) {
+  @return if(breakpoint-min($name, $breakpoints) == null, "", "-#{$name}");
+}
+
+// Helper function to get the next breakpoint
+@function breakpoint-next($name, $breakpoints: $grid-breakpoints, $breakpoint-names: map-keys($breakpoints)) {
+  $n: index($breakpoint-names, $name);
+  @if not $n {
+    @error "Breakpoint #{$name} not found in #{$breakpoints}";
+  }
+  @return if($n < length($breakpoint-names), nth($breakpoint-names, $n + 1), null);
+}
+
 // Media query mixins
 @mixin media-breakpoint-up($name, $breakpoints: $grid-breakpoints) {
-  $min: map-get($breakpoints, $name);
+  $min: breakpoint-min($name, $breakpoints);
   @if $min {
     @media (min-width: $min) {
       @content;
@@ -24,9 +57,9 @@ $grid-breakpoints: (
 }
 
 @mixin media-breakpoint-down($name, $breakpoints: $grid-breakpoints) {
-  $max: map-get($breakpoints, $name);
-  @if $max {
-    @media (max-width: ($max - 0.02px)) {
+  $next: breakpoint-next($name, $breakpoints);
+  @if $next {
+    @media (max-width: (breakpoint-min($next, $breakpoints) - 0.02px)) {
       @content;
     }
   } @else {
@@ -35,8 +68,8 @@ $grid-breakpoints: (
 }
 
 @mixin media-breakpoint-between($lower, $upper, $breakpoints: $grid-breakpoints) {
-  $min: map-get($breakpoints, $lower);
-  $max: map-get($breakpoints, $upper);
+  $min: breakpoint-min($lower, $breakpoints);
+  $max: breakpoint-min($upper, $breakpoints);
 
   @if $min != null and $max != null {
     @media (min-width: $min) and (max-width: ($max - 0.02px)) {
@@ -65,30 +98,6 @@ $grid-breakpoints: (
     .d#{$infix}-flex { display: flex !important; }
     .d#{$infix}-inline-flex { display: inline-flex !important; }
   }
-}
-
-// Container max-widths for responsive containers
-$container-max-widths: (
-  'sm': 540px,
-  'md': 720px,
-  'lg': 960px,
-  'xl': 1140px,
-  'xxl': 1320px
-) !default;
-
-// Grid columns and gutters
-$grid-columns: 12 !default;
-$grid-gutter-width: 24px !default;
-
-// Helper function for breakpoint infix
-@function breakpoint-infix($name, $breakpoints: $grid-breakpoints) {
-  @return if(breakpoint-min($name, $breakpoints) == null, "", "-#{$name}");
-}
-
-// Helper function to get minimum breakpoint width
-@function breakpoint-min($name, $breakpoints: $grid-breakpoints) {
-  $min: map-get($breakpoints, $name);
-  @return if($min != 0, $min, null);
 }
 
 // Export breakpoints for JavaScript/TypeScript

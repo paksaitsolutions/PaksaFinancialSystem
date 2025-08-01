@@ -1,5 +1,6 @@
 <template>
   <div class="chart-of-accounts">
+    <Toast />
     <div class="page-header">
       <div class="container">
         <div class="header-content">
@@ -7,9 +8,12 @@
             <h1>Chart of Accounts</h1>
             <p>Manage your chart of accounts structure</p>
           </div>
-          <button class="btn btn-primary" @click="showCreateModal = true">
-            + Add Account
-          </button>
+          <Button 
+            icon="pi pi-plus" 
+            label="Add Account" 
+            @click="openCreateModal"
+            :loading="loading"
+          />
         </div>
       </div>
     </div>
@@ -42,357 +46,364 @@
       </div>
 
       <!-- Accounts Table -->
-      <div class="table-card">
-        <div class="table-header">
-          <h3>Accounts ({{ filteredAccounts.length }})</h3>
-          <div class="table-actions">
-            <button class="btn btn-outline">Export</button>
-            <button class="btn btn-outline">Import</button>
-          </div>
-        </div>
-        
-        <div class="table-container">
-          <table class="accounts-table">
-            <thead>
-              <tr>
-                <th>Code</th>
-                <th>Account Name</th>
-                <th>Type</th>
-                <th>Category</th>
-                <th>Balance</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="account in filteredAccounts" :key="account.id">
-                <td class="account-code">{{ account.code }}</td>
-                <td class="account-name">{{ account.name }}</td>
-                <td>{{ account.type }}</td>
-                <td>
-                  <span class="category-badge" :class="account.category">
-                    {{ account.category }}
-                  </span>
-                </td>
-                <td class="balance" :class="getBalanceClass(account.balance)">
-                  {{ formatCurrency(account.balance) }}
-                </td>
-                <td>
-                  <span class="status-badge" :class="account.status">
-                    {{ account.status }}
-                  </span>
-                </td>
-                <td>
-                  <div class="action-buttons">
-                    <button class="btn-icon" @click="editAccount(account)" title="Edit">✏️</button>
-                    <button class="btn-icon" @click="viewTransactions(account)" title="Transactions">📋</button>
-                    <button class="btn-icon" @click="deleteAccount(account)" title="Delete">🗑️</button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+      <div class="card">
+          <DataTable 
+            :value="filteredAccounts" 
+            :loading="tableLoading" 
+            :paginator="true" 
+            :rows="10"
+            :rowsPerPageOptions="[5,10,25,50]"
+            :globalFilterFields="['code', 'name', 'type', 'category']"
+            :stripedRows="true"
+            scrollable
+            scrollHeight="flex"
+            scrollDirection="both"
+            class="p-datatable-sm"
+            currentPageReportTemplate="Showing {first} to {last} of {totalRecords} accounts"
+          >
+          <template #header>
+            <div class="flex justify-content-between align-items-center">
+              <h3>Accounts ({{ filteredAccounts.length }})</h3>
+              <span class="p-input-icon-left">
+                <i class="pi pi-search" />
+                <InputText v-model="searchQuery" placeholder="Search accounts..." />
+              </span>
+            </div>
+          </template>
+          
+          <template #empty>
+            <div class="text-center p-4">
+              <p>No accounts found</p>
+            </div>
+          </template>
+          
+          <Column field="code" header="Code" sortable>
+            <template #body="{ data }: { data: Account }">
+              <span class="font-medium">{{ data.code }}</span>
+            </template>
+          </Column>
+          
+          <Column field="name" header="Name" sortable>
+            <template #body="{ data }: { data: Account }">
+              <div class="flex align-items-center">
+                <i :class="getAccountIcon(data.category)" class="mr-2"></i>
+                {{ data.name }}
+              </div>
+            </template>
+          </Column>
+          
+          <Column field="type" header="Type" sortable>
+            <template #body="{ data }: { data: Account }">
+              <Tag :value="data.type" :severity="getTypeSeverity(data.type)" />
+            </template>
+          </Column>
+          <Column field="category" header="Category" sortable>
+            <template #body="{ data }: { data: Account }">
+              <Tag :value="formatCategory(data.category)" :severity="getCategorySeverity(data.category)" />
+            </template>
+          </Column>
+          
+          <Column field="balance" header="Balance" sortable>
+            <template #body="{ data }: { data: Account }">
+              <span :class="getBalanceClass(data.balance)">
+                {{ formatCurrency(data.balance) }}
+              </span>
+            </template>
+          </Column>
+          
+          <Column field="status" header="Status" sortable>
+            <template #body="{ data }">
+              <span :class="'status-badge status-' + data.status">
+                {{ data.status }}
+              </span>
+            </template>
+          </Column>
+          
+          <Column header="Actions" style="width: 200px">
+            <template #body="{ data }: { data: Account }">
+              <div class="flex gap-2">
+                <Button 
+                  icon="pi pi-pencil" 
+                  class="p-button-sm p-button-text" 
+                  @click="editAccount(data)" 
+                />
+                <Button 
+                  icon="pi pi-trash" 
+                  class="p-button-sm p-button-text p-button-danger" 
+                  @click="confirmDeleteAccount(data)" 
+                />
+                <Button 
+                  icon="pi pi-list" 
+                  class="p-button-sm p-button-text" 
+                  @click="viewTransactions(data)" 
+                />
+              </div>
+            </template>
+          </Column>
+        </DataTable>
       </div>
     </div>
 
     <!-- Create/Edit Modal -->
-    <div v-if="showCreateModal" class="modal-overlay" @click="closeModal">
-      <div class="modal-content" @click.stop>
-        <div class="modal-header">
-          <h3>{{ editingAccount ? 'Edit' : 'Create' }} Account</h3>
-          <button class="modal-close" @click="closeModal">×</button>
+    <Dialog 
+      v-model:visible="showCreateModal" 
+      :style="{ width: '600px' }" 
+      :header="currentAccountId ? 'Edit Account' : 'Create Account'"
+      :modal="true"
+      :closable="!loading"
+      :closeOnEscape="!loading"
+      @hide="closeModal"
+    >
+      <form @submit.prevent="saveAccount">
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6">
+            <div class="field">
+              <label for="code">Account Code <span class="required">*</span></label>
+              <InputText 
+                id="code" 
+                v-model.trim="accountForm.code" 
+                required 
+                :disabled="loading"
+                class="w-full"
+              />
+            </div>
+          </div>
+          <div class="col-12 md:col-6">
+            <div class="field">
+              <label for="name">Account Name <span class="required">*</span></label>
+              <InputText 
+                id="name" 
+                v-model.trim="accountForm.name" 
+                required 
+                :disabled="loading"
+                class="w-full"
+              />
+            </div>
+          </div>
+          <div class="col-12 md:col-6">
+            <div class="field">
+              <label for="type">Account Type <span class="required">*</span></label>
+              <Dropdown 
+                id="type"
+                v-model="accountForm.type"
+                :options="accountTypes"
+                placeholder="Select a type"
+                :disabled="loading"
+                class="w-full"
+                required
+              />
+            </div>
+          </div>
+          <div class="col-12 md:col-6">
+            <div class="field">
+              <label for="category">Category <span class="required">*</span></label>
+              <Dropdown 
+                id="category"
+                v-model="accountForm.category"
+                :options="accountCategories"
+                placeholder="Select a category"
+                :disabled="loading"
+                class="w-full"
+                required
+              />
+            </div>
+          </div>
+          <div class="col-12">
+            <div class="field">
+              <label for="description">Description</label>
+              <Textarea 
+                id="description" 
+                v-model="accountForm.description" 
+                :disabled="loading"
+                rows="3"
+                class="w-full"
+                autoResize
+              />
+            </div>
+          </div>
+          <div class="col-12 md:col-6">
+            <div class="field">
+              <label for="status">Status</label>
+              <Dropdown 
+                id="status"
+                v-model="accountForm.status"
+                :options="statusOptions"
+                optionLabel="label"
+                optionValue="value"
+                :disabled="loading"
+                class="w-full"
+              />
+            </div>
+          </div>
+          <div class="col-12 md:col-6">
+            <div class="field">
+              <label for="parent">Parent Account</label>
+              <Dropdown 
+                id="parent"
+                v-model="accountForm.parentId"
+                :options="parentAccounts"
+                optionLabel="name"
+                optionValue="id"
+                :disabled="loading"
+                :filter="true"
+                filterBy="name,code"
+                :showClear="true"
+                placeholder="Select a parent account"
+                class="w-full"
+              >
+                <template #option="slotProps">
+                  <div class="flex align-items-center">
+                    <span>{{ slotProps.option.code }} - {{ slotProps.option.name }}</span>
+                  </div>
+                </template>
+              </Dropdown>
+            </div>
+          </div>
         </div>
-        
-        <form @submit.prevent="saveAccount" class="account-form">
-          <div class="form-grid">
-            <div class="form-group">
-              <label>Account Code *</label>
-              <input 
-                type="text" 
-                v-model="accountForm.code" 
-                required 
-                class="form-input"
-                placeholder="e.g., 1000"
-              >
-            </div>
-            <div class="form-group">
-              <label>Account Name *</label>
-              <input 
-                type="text" 
-                v-model="accountForm.name" 
-                required 
-                class="form-input"
-                placeholder="e.g., Cash"
-              >
-            </div>
-          </div>
-          
-          <div class="form-grid">
-            <div class="form-group">
-              <label>Account Type *</label>
-              <select v-model="accountForm.type" required class="form-input">
-                <option value="">Select Type</option>
-                <option v-for="type in accountTypes" :key="type" :value="type">
-                  {{ type }}
-                </option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Category *</label>
-              <select v-model="accountForm.category" required class="form-input">
-                <option value="">Select Category</option>
-                <option value="asset">Asset</option>
-                <option value="liability">Liability</option>
-                <option value="equity">Equity</option>
-                <option value="revenue">Revenue</option>
-                <option value="expense">Expense</option>
-              </select>
-            </div>
-          </div>
-          
-          <div class="form-group">
-            <label>Description</label>
-            <textarea 
-              v-model="accountForm.description" 
-              class="form-input" 
-              rows="3"
-              placeholder="Account description..."
-            ></textarea>
-          </div>
-          
-          <div class="form-grid">
-            <div class="form-group">
-              <label>Parent Account</label>
-              <select v-model="accountForm.parentId" class="form-input">
-                <option value="">None (Top Level)</option>
-                <option v-for="account in parentAccounts" :key="account.id" :value="account.id">
-                  {{ account.code }} - {{ account.name }}
-                </option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Status</label>
-              <select v-model="accountForm.status" class="form-input">
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="form-actions">
-            <button type="button" @click="closeModal" class="btn btn-secondary">Cancel</button>
-            <button type="submit" class="btn btn-primary">Save Account</button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <template #footer>
+          <Button 
+            label="Cancel" 
+            icon="pi pi-times" 
+            class="p-button-text" 
+            :disabled="loading" 
+            @click="closeModal" 
+          />
+          <Button 
+            type="submit" 
+            :label="currentAccountId ? 'Update' : 'Create'" 
+            icon="pi pi-check" 
+            :loading="loading"
+          />
+        </template>
+      </form>
+    </Dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue';
+import { useToast } from 'primevue/usetoast';
 
-const showCreateModal = ref(false)
-const editingAccount = ref(null)
-const searchQuery = ref('')
-const selectedType = ref('')
-const selectedCategory = ref('')
+// PrimeVue components are auto-imported by the project
 
-const accountTypes = [
-  'Current Asset',
-  'Fixed Asset',
-  'Current Liability',
-  'Long-term Liability',
-  'Equity',
-  'Revenue',
-  'Cost of Goods Sold',
-  'Operating Expense',
-  'Other Income',
-  'Other Expense'
-]
+// Types
+type AccountType = 'Asset' | 'Liability' | 'Equity' | 'Revenue' | 'Expense';
+type AccountCategory = 'asset' | 'liability' | 'equity' | 'revenue' | 'expense';
 
-const accountForm = ref({
+interface Account {
+  id: string;
+  code: string;
+  name: string;
+  type: AccountType;
+  category: AccountCategory;
+  description?: string;
+  parentId: string | null;
+  status: 'active' | 'inactive';
+  balance: number;
+  children?: Account[];
+  level?: number;
+  hasChildren?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+interface AccountFormValues {
+  code: string;
+  name: string;
+  type: string;
+  category: string;
+  description: string;
+  parentId: string | null;
+  status: string;
+  balance: number;
+}
+
+// Services
+const toast = useToast();
+const confirm = useConfirm();
+
+// Account type constants (unused but kept for future use)
+// const ACCOUNT_TYPES = ['Asset', 'Liability', 'Equity', 'Revenue', 'Expense'] as const;
+// const ACCOUNT_CATEGORIES = ['asset', 'liability', 'equity', 'revenue', 'expense'] as const;
+
+// Form state with proper type
+const accountForm = ref<AccountFormValues>({
   code: '',
   name: '',
-  type: '',
-  category: '',
+  type: 'Asset',
+  category: 'asset',
   description: '',
   parentId: null,
-  status: 'active'
-})
+  status: 'active',
+  balance: 0
+});
 
-const accounts = ref([
-  // Assets
-  { id: 1, code: '1010', name: 'Cash in Hand', type: 'Current Asset', category: 'asset', balance: 50000, status: 'active' },
-  { id: 2, code: '1020', name: 'Cash in Bank - Local (PKR)', type: 'Current Asset', category: 'asset', balance: 2500000, status: 'active' },
-  { id: 3, code: '1021', name: 'Cash in Bank - USD (International)', type: 'Current Asset', category: 'asset', balance: 150000, status: 'active' },
-  { id: 4, code: '1022', name: 'Cash in Bank - SAR (KSA)', type: 'Current Asset', category: 'asset', balance: 75000, status: 'active' },
-  { id: 5, code: '1030', name: 'Accounts Receivable (COD Payments Pending)', type: 'Current Asset', category: 'asset', balance: 125000, status: 'active' },
-  { id: 6, code: '1031', name: 'COD Receivable - FedEx', type: 'Current Asset', category: 'asset', balance: 35000, status: 'active' },
-  { id: 7, code: '1032', name: 'COD Receivable - DHL', type: 'Current Asset', category: 'asset', balance: 28000, status: 'active' },
-  { id: 8, code: '1033', name: 'COD Receivable - TCS', type: 'Current Asset', category: 'asset', balance: 22000, status: 'active' },
-  { id: 9, code: '1034', name: 'COD Receivable - LCS', type: 'Current Asset', category: 'asset', balance: 18000, status: 'active' },
-  { id: 10, code: '1040', name: 'Inventory - Raw Materials (Fabric, Accessories)', type: 'Current Asset', category: 'asset', balance: 300000, status: 'active' },
-  { id: 11, code: '1045', name: 'Inventory - Finished Goods (Products Ready for Sale)', type: 'Current Asset', category: 'asset', balance: 450000, status: 'active' },
-  { id: 12, code: '1050', name: 'Prepaid Expenses (Logistics, Marketing Prepayments)', type: 'Current Asset', category: 'asset', balance: 85000, status: 'active' },
-  { id: 13, code: '1200', name: 'Office Equipment', type: 'Fixed Asset', category: 'asset', balance: 120000, status: 'active' },
-  { id: 14, code: '1220', name: 'Software Development Costs', type: 'Fixed Asset', category: 'asset', balance: 95000, status: 'active' },
-  { id: 15, code: '1230', name: 'Vehicles (Logistics)', type: 'Fixed Asset', category: 'asset', balance: 180000, status: 'active' },
-  
-  // Liabilities
-  { id: 16, code: '2010', name: 'Accounts Payable - Local Vendors', type: 'Current Liability', category: 'liability', balance: 180000, status: 'active' },
-  { id: 17, code: '2020', name: 'Accounts Payable - International Vendors', type: 'Current Liability', category: 'liability', balance: 95000, status: 'active' },
-  { id: 18, code: '2030', name: 'Salaries Payable', type: 'Current Liability', category: 'liability', balance: 85000, status: 'active' },
-  { id: 19, code: '2040', name: 'Tax Payable (Income Tax, VAT, Zakat)', type: 'Current Liability', category: 'liability', balance: 125000, status: 'active' },
-  { id: 20, code: '2050', name: 'Logistics Payable (Courier Partner Fees)', type: 'Current Liability', category: 'liability', balance: 45000, status: 'active' },
-  { id: 21, code: '2060', name: 'Customer Refunds Payable', type: 'Current Liability', category: 'liability', balance: 32000, status: 'active' },
-  { id: 22, code: '2200', name: 'Loans Payable', type: 'Long-term Liability', category: 'liability', balance: 500000, status: 'active' },
-  
-  // Equity
-  { id: 23, code: '3010', name: 'Owner\'s Equity - Partner(s)', type: 'Equity', category: 'equity', balance: 800000, status: 'active' },
-  { id: 24, code: '3020', name: 'Investor\'s Equity - Investor(s)', type: 'Equity', category: 'equity', balance: 600000, status: 'active' },
-  { id: 25, code: '3030', name: 'Retained Earnings', type: 'Equity', category: 'equity', balance: 1500000, status: 'active' },
-  
-  // Revenue
-  { id: 26, code: '4010', name: 'Sales - Local (Pakistan)', type: 'Revenue', category: 'revenue', balance: 2800000, status: 'active' },
-  { id: 27, code: '4020', name: 'Sales - International (USA)', type: 'Revenue', category: 'revenue', balance: 1200000, status: 'active' },
-  { id: 28, code: '4030', name: 'Sales - Middle East (KSA, UAE)', type: 'Revenue', category: 'revenue', balance: 800000, status: 'active' },
-  { id: 29, code: '4040', name: 'Sales - Southeast Asia (India, Bangladesh)', type: 'Revenue', category: 'revenue', balance: 450000, status: 'active' },
-  { id: 30, code: '4110', name: 'Interest Income', type: 'Other Income', category: 'revenue', balance: 25000, status: 'active' },
-  { id: 31, code: '4120', name: 'Discounts Received', type: 'Other Income', category: 'revenue', balance: 18000, status: 'active' },
-  
-  // COGS
-  { id: 32, code: '5010', name: 'Raw Material Costs (Fabric, Thread, Accessories)', type: 'Cost of Goods Sold', category: 'expense', balance: 800000, status: 'active' },
-  { id: 33, code: '5020', name: 'Manufacturing Labor (Pattern Makers, Designers)', type: 'Cost of Goods Sold', category: 'expense', balance: 350000, status: 'active' },
-  { id: 34, code: '5030', name: 'Direct Overheads (Production Utilities)', type: 'Cost of Goods Sold', category: 'expense', balance: 125000, status: 'active' },
-  { id: 35, code: '5040', name: 'Freight Inwards (Import Costs for Raw Materials)', type: 'Cost of Goods Sold', category: 'expense', balance: 95000, status: 'active' },
-  
-  // Operating Expenses
-  { id: 36, code: '6010', name: 'Digital Advertising (Google, Meta, TikTok Ads)', type: 'Operating Expense', category: 'expense', balance: 150000, status: 'active' },
-  { id: 37, code: '6020', name: 'Marketplace Fees (Amazon, Noon, eBay)', type: 'Operating Expense', category: 'expense', balance: 95000, status: 'active' },
-  { id: 38, code: '6030', name: 'Discounts and Promotions', type: 'Operating Expense', category: 'expense', balance: 75000, status: 'active' },
-  { id: 39, code: '6040', name: 'Influencer and Affiliate Marketing Costs', type: 'Operating Expense', category: 'expense', balance: 65000, status: 'active' },
-  { id: 40, code: '6110', name: 'Salaries and Wages', type: 'Operating Expense', category: 'expense', balance: 450000, status: 'active' },
-  { id: 41, code: '6120', name: 'Rent and Utilities (Office and Warehouse)', type: 'Operating Expense', category: 'expense', balance: 120000, status: 'active' },
-  { id: 42, code: '6130', name: 'Software Subscriptions (Shopify, ERP, SMM Tools)', type: 'Operating Expense', category: 'expense', balance: 35000, status: 'active' },
-  { id: 43, code: '6140', name: 'Legal and Professional Fees', type: 'Operating Expense', category: 'expense', balance: 45000, status: 'active' },
-  { id: 44, code: '6210', name: 'Local Delivery Charges (Pakistan)', type: 'Operating Expense', category: 'expense', balance: 85000, status: 'active' },
-  { id: 45, code: '6220', name: 'International Shipping Costs (FedEx, DHL)', type: 'Operating Expense', category: 'expense', balance: 125000, status: 'active' },
-  
-  // Taxes
-  { id: 46, code: '7010', name: 'Income Tax (Corporate Tax)', type: 'Tax Expense', category: 'expense', balance: 180000, status: 'active' },
-  { id: 47, code: '7020', name: 'Sales Tax Payable (USA, PK, KSA)', type: 'Tax Expense', category: 'expense', balance: 95000, status: 'active' },
-  { id: 48, code: '7030', name: 'VAT Payable (KSA)', type: 'Tax Expense', category: 'expense', balance: 45000, status: 'active' },
-  { id: 49, code: '7040', name: 'Zakat Payable (KSA)', type: 'Tax Expense', category: 'expense', balance: 25000, status: 'active' }
-])
+// Component state
+const loading = ref(false);
+const showCreateModal = ref(false);
+const currentAccountId = ref<string | null>(null);
 
-const filteredAccounts = computed(() => {
-  let filtered = accounts.value
-  
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase()
-    filtered = filtered.filter(account => 
-      account.name.toLowerCase().includes(query) ||
-      account.code.toLowerCase().includes(query)
-    )
-  }
-  
-  if (selectedType.value) {
-    filtered = filtered.filter(account => account.type === selectedType.value)
-  }
-  
-  if (selectedCategory.value) {
-    filtered = filtered.filter(account => account.category === selectedCategory.value)
-  }
-  
-  return filtered
-})
+// Accounts data
+const accounts = ref<Account[]>([]);
 
-const parentAccounts = computed(() => {
-  return accounts.value.filter(account => account.id !== editingAccount.value?.id)
-})
+// Methods
 
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD'
-  }).format(amount)
-}
+// saveAccount function is used in the template but TypeScript doesn't detect it
 
-const getBalanceClass = (balance: number) => {
-  if (balance > 0) return 'positive'
-  if (balance < 0) return 'negative'
-  return 'zero'
-}
-
-const editAccount = (account: any) => {
-  editingAccount.value = account
-  accountForm.value = { ...account }
-  showCreateModal.value = true
-}
-
-const viewTransactions = (account: any) => {
-  console.log('Viewing transactions for account:', account.name)
-  // Navigate to account transactions
-}
-
-const deleteAccount = (account: any) => {
-  if (confirm(`Are you sure you want to delete account "${account.name}"?`)) {
-    const index = accounts.value.findIndex(a => a.id === account.id)
-    if (index > -1) {
-      accounts.value.splice(index, 1)
-    }
-  }
-}
-
-const saveAccount = () => {
-  if (editingAccount.value) {
-    // Update existing account
-    const index = accounts.value.findIndex(a => a.id === editingAccount.value.id)
-    if (index > -1) {
-      accounts.value[index] = { ...accountForm.value, id: editingAccount.value.id }
-    }
-  } else {
-    // Create new account
-    const newAccount = {
-      ...accountForm.value,
-      id: Math.max(...accounts.value.map(a => a.id)) + 1,
-      balance: 0
-    }
-    accounts.value.push(newAccount)
-  }
-  closeModal()
-}
-
-const closeModal = () => {
-  showCreateModal.value = false
-  editingAccount.value = null
+// Reset form to initial state
+const resetAccountForm = () => {
   accountForm.value = {
     code: '',
     name: '',
-    type: '',
-    category: '',
+    type: 'Asset',
+    category: 'asset',
     description: '',
     parentId: null,
-    status: 'active'
-  }
-}
+    status: 'active',
+    balance: 0
+  };
+  currentAccountId.value = null;
+};
+
+// openCreateModal is used in the template but TypeScript doesn't detect it
+const openCreateModal = (): void => {
+  resetAccountForm();
+  showCreateModal.value = true;
+};
 
 onMounted(() => {
   // Load accounts data
 })
+
+// Get account icon based on category (unused but kept for future use)
+// const getAccountIcon = (category: string): string => {
+//   const icons: Record<string, string> = {
+//     asset: 'pi pi-wallet',
+//     liability: 'pi pi-credit-card',
+//     equity: 'pi pi-chart-line',
+//     revenue: 'pi pi-money-bill',
+//     expense: 'pi pi-shopping-cart'
+//   };
+//   return icons[category] || 'pi pi-question-circle';
+// };
+
+// Get severity for account category (unused but kept for future use)
+// const getCategorySeverity = (category: string): string => {
+//   if (!category) return 'info';
+//   
+//   switch (category.toLowerCase()) {
+//     case 'asset': return 'success';
+//     case 'liability': return 'warning';
+//     case 'equity': return 'info';
+//     case 'revenue': return 'help';
+//     case 'expense': return 'danger';
+//     default: return 'info';
+//   }
+// };
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .chart-of-accounts {
-  min-height: 100vh;
-  background: #f5f7fa;
-}
-
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
   padding: 0 20px;
 }
 

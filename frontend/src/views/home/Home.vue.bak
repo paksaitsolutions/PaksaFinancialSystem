@@ -1,0 +1,564 @@
+<template>
+  <v-container fluid class="px-4 py-6">
+    <!-- Hero Section with Gradient Background -->
+    <v-sheet
+      :elevation="0"
+      rounded="lg"
+      class="hero-section mb-8 py-8 px-4 text-center"
+      :style="{
+        background: 'linear-gradient(135deg, rgb(var(--v-theme-primary)) 0%, #1E88E5 100%)',
+        position: 'relative',
+        overflow: 'hidden'
+      }"
+    >
+      <v-container>
+        <v-avatar
+          size="80"
+          class="mb-4 elevation-4"
+          style="background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(5px)"
+        >
+          <v-icon size="40" color="white">mdi-finance</v-icon>
+        </v-avatar>
+        <h1 class="text-h4 text-white font-weight-bold mb-2">
+          Welcome to Financial Dashboard
+        </h1>
+        <p class="text-subtitle-1 text-white text-medium-emphasis">
+          Enterprise Management System
+        </p>
+        <v-chip
+          variant="flat"
+          color="white"
+          text-color="primary"
+          class="mt-4"
+          size="small"
+        >
+          <v-icon start>mdi-update</v-icon>
+          Last updated: Just now
+        </v-chip>
+      </v-container>
+      
+      <!-- Decorative Elements -->
+      <div class="decorative-circles">
+        <div class="circle circle-1"></div>
+        <div class="circle circle-2"></div>
+        <div class="circle circle-3"></div>
+      </div>
+    </v-sheet>
+
+    <!-- Quick Stats with Modern Cards -->
+    <v-row class="mb-8" dense>
+      <v-col
+        v-for="(stat, index) in quickStats"
+        :key="stat.title"
+        cols="12"
+        sm="6"
+        lg="3"
+      >
+        <v-card
+          :class="['stat-card', `stat-card-${index + 1}`]"
+          :elevation="0"
+          height="100%"
+        >
+          <v-card-text class="pa-4 d-flex align-center">
+            <v-avatar
+              :color="stat.color"
+              size="48"
+              class="elevation-2 mr-4"
+              style="border-radius: 12px"
+            >
+              <v-icon color="white" size="24">{{ stat.icon }}</v-icon>
+            </v-avatar>
+            <div>
+              <div class="text-h5 font-weight-bold">{{ stat.value }}</div>
+              <div class="text-caption text-medium-emphasis">{{ stat.title }}</div>
+              <v-progress-linear
+                :model-value="index * 25 + 75"
+                :color="stat.color"
+                height="4"
+                class="mt-2"
+                rounded
+                bg-color="grey-lighten-2"
+                style="max-width: 100px"
+              ></v-progress-linear>
+            </div>
+          </v-card-text>
+        </v-card>
+      </v-col>
+    </v-row>
+
+    <!-- Modules Section with Modern Grid -->
+    <v-card :elevation="0" class="mb-8" style="border-radius: 16px">
+      <v-card-text class="pa-0">
+        <div class="d-flex align-center pa-4">
+          <v-icon color="primary" size="28" class="mr-2">mdi-view-dashboard</v-icon>
+          <h2 class="text-h5 font-weight-bold">Available Modules</h2>
+          <v-spacer></v-spacer>
+          <v-chip
+            variant="flat"
+            color="primary"
+            size="small"
+            class="font-weight-medium"
+            prepend-icon="mdi-apps"
+          >
+            {{ modules.length }} Modules
+          </v-chip>
+        </div>
+        
+        <v-divider></v-divider>
+        
+        <v-container fluid class="pa-4">
+          <v-row dense>
+            <v-col
+              v-for="module in modules"
+              :key="module.name"
+              cols="12"
+              sm="6"
+              md="4"
+              lg="3"
+            >
+              <v-hover v-slot="{ isHovering, props }" close-delay="50">
+                <v-card
+                  v-bind="props"
+                  :class="['module-card', { 'on-hover': isHovering }]"
+                  :elevation="isHovering ? 8 : 2"
+                  @click="navigateToModule(module)"
+                  style="
+                    border-radius: 12px;
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    border: 1px solid rgba(0, 0, 0, 0.05);
+                  "
+                >
+                  <v-card-text class="pa-4 text-center">
+                    <v-avatar
+                      :color="module.color"
+                      size="56"
+                      class="mb-3 elevation-2"
+                      style="transition: all 0.3s ease"
+                    >
+                      <v-icon color="white" size="28">{{ module.icon }}</v-icon>
+                    </v-avatar>
+                    
+                    <h3 class="module-title text-subtitle-1 font-weight-bold mb-2">
+                      {{ module.name }}
+                    </h3>
+                    
+                    <p class="module-description text-caption text-medium-emphasis mb-3">
+                      {{ module.description }}
+                    </p>
+                    
+                    <v-chip
+                      :color="module.status === 'active' ? 'success' : 'warning'"
+                      size="small"
+                      variant="flat"
+                      class="font-weight-medium"
+                      :prepend-icon="module.status === 'active' ? 'mdi-check-circle' : 'mdi-alert-circle'"
+                    >
+                      {{ module.status }}
+                    </v-chip>
+                  </v-card-text>
+                </v-card>
+              </v-hover>
+            </v-col>
+          </v-row>
+        </v-container>
+      </v-card-text>
+    </v-card>
+
+    <!-- System Information Cards -->
+    <v-row class="mb-4">
+      <v-col cols="12" md="6">
+        <v-card :elevation="0" style="border-radius: 16px; border: 1px solid rgba(0, 0, 0, 0.05)">
+          <v-card-text class="pa-4">
+            <div class="d-flex align-center mb-3">
+              <v-avatar
+                color="orange-lighten-5"
+                size="44"
+                class="mr-3"
+                style="border-radius: 12px"
+              >
+                <v-icon color="orange-darken-2" size="24">mdi-api</v-icon>
+              </v-avatar>
+              <div>
+                <h3 class="text-subtitle-1 font-weight-bold mb-1">API Documentation</h3>
+                <p class="text-caption text-medium-emphasis mb-0">Interactive Swagger UI</p>
+              </div>
+              <v-spacer></v-spacer>
+              <v-btn
+                color="orange"
+                variant="flat"
+                size="small"
+                class="text-none font-weight-bold"
+                href="http://localhost:8000/docs"
+                target="_blank"
+                append-icon="mdi-open-in-new"
+              >
+                Open Docs
+              </v-btn>
+            </div>
+          </v-card-text>
+        </v-card>
+      </v-col>
+      
+      <v-col cols="12" md="6">
+        <v-card :elevation="0" style="border-radius: 16px; border: 1px solid rgba(0, 0, 0, 0.05)">
+          <v-card-text class="pa-4">
+            <div class="d-flex align-center">
+              <v-avatar
+                color="green-lighten-5"
+                size="44"
+                class="mr-3"
+                style="border-radius: 12px"
+              >
+                <v-icon color="green-darken-2" size="24">mdi-database</v-icon>
+              </v-avatar>
+              <div>
+                <h3 class="text-subtitle-1 font-weight-bold mb-1">Database Status</h3>
+                <p class="text-caption text-medium-emphasis mb-0">SQLite Connection</p>
+              </div>
+              <v-spacer></v-spacer>
+              <v-chip
+                color="success"
+                variant="flat"
+                size="small"
+                class="font-weight-medium"
+                prepend-icon="mdi-database-check"
+              >
+                Connected
+              </v-chip>
+            </div>
+            <v-progress-linear
+              model-value="100"
+              color="success"
+              height="4"
+              class="mt-3"
+              rounded
+              bg-color="grey-lighten-2"
+            ></v-progress-linear>
+          </v-card-text>
+        </v-card>
+      </v-col>
+    </v-row>
+  </v-container>
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
+const quickStats = ref([
+  {
+    title: 'Active Modules',
+    value: '12',
+    icon: 'mdi-apps',
+    color: 'primary'
+  },
+  {
+    title: 'Total Accounts',
+    value: '156',
+    icon: 'mdi-account-multiple',
+    color: 'success'
+  },
+  {
+    title: 'Monthly Revenue',
+    value: '$125K',
+    icon: 'mdi-trending-up',
+    color: 'info'
+  },
+  {
+    title: 'System Health',
+    value: '99.9%',
+    icon: 'mdi-heart-pulse',
+    color: 'warning'
+  }
+])
+
+const modules = ref([
+  {
+    name: 'General Ledger',
+    description: 'Chart of accounts',
+    icon: 'mdi-book-open-variant',
+    color: 'deep-purple',
+    status: 'active',
+    route: '/gl'
+  },
+  {
+    name: 'Accounts Payable',
+    description: 'Vendor payments',
+    icon: 'mdi-credit-card-outline',
+    color: 'blue',
+    status: 'active',
+    route: '/ap'
+  },
+  {
+    name: 'Accounts Receivable',
+    description: 'Customer invoicing',
+    icon: 'mdi-cash-multiple',
+    color: 'green',
+    status: 'active',
+    route: '/ar'
+  },
+  {
+    name: 'Cash Management',
+    description: 'Bank reconciliation',
+    icon: 'mdi-bank',
+    color: 'cyan',
+    status: 'active',
+    route: '/cash'
+  },
+  {
+    name: 'Fixed Assets',
+    description: 'Asset tracking',
+    icon: 'mdi-office-building',
+    color: 'brown',
+    status: 'active',
+    route: '/assets'
+  },
+  {
+    name: 'Payroll',
+    description: 'Employee payroll',
+    icon: 'mdi-account-cash',
+    color: 'orange',
+    status: 'active',
+    route: '/payroll'
+  },
+  {
+    name: 'Human Resources',
+    description: 'Employee management',
+    icon: 'mdi-account-group',
+    color: 'indigo',
+    status: 'active',
+    route: '/hrm'
+  },
+  {
+    name: 'Inventory',
+    description: 'Stock management',
+    icon: 'mdi-package-variant',
+    color: 'teal',
+    status: 'active',
+    route: '/inventory'
+  },
+  {
+    name: 'Budget Planning',
+    description: 'Budget analysis',
+    icon: 'mdi-chart-pie',
+    color: 'pink',
+    status: 'active',
+    route: '/budget'
+  },
+  {
+    name: 'Financial Reports',
+    description: 'Reporting suite',
+    icon: 'mdi-chart-bar',
+    color: 'red',
+    status: 'active',
+    route: '/reports'
+  },
+  {
+    name: 'System Admin',
+    description: 'Administration',
+    icon: 'mdi-shield-crown',
+    color: 'deep-orange',
+    status: 'active',
+    route: '/admin'
+  },
+  {
+    name: 'Settings',
+    description: 'Configuration',
+    icon: 'mdi-cog',
+    color: 'grey',
+    status: 'active',
+    route: '/settings'
+  }
+])
+
+const navigateToModule = (module: any) => {
+  router.push(module.route)
+}
+</script>
+
+<style scoped>
+/* Modern Card Styles */
+.v-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  will-change: transform, box-shadow;
+  overflow: hidden;
+}
+
+/* Hero Section */
+.hero-section {
+  position: relative;
+  overflow: hidden;
+  background-size: cover;
+  background-position: center;
+  border-radius: 16px !important;
+}
+
+.hero-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(30, 136, 229, 0.9) 0%, rgba(21, 101, 192, 0.9) 100%);
+  z-index: 0;
+}
+
+/* Decorative Circles */
+.decorative-circles {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.circle {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  pointer-events: none;
+}
+
+.circle-1 {
+  width: 200px;
+  height: 200px;
+  top: -100px;
+  right: -50px;
+}
+
+.circle-2 {
+  width: 300px;
+  height: 300px;
+  bottom: -150px;
+  right: -100px;
+  opacity: 0.7;
+}
+
+.circle-3 {
+  width: 150px;
+  height: 150px;
+  bottom: 50px;
+  left: -50px;
+  opacity: 0.5;
+}
+
+/* Stat Cards */
+.stat-card {
+  border-radius: 12px !important;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  position: relative;
+}
+
+.stat-card:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1) !important;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #2196F3, #00BCD4);
+}
+
+.stat-card-2::before { background: linear-gradient(90deg, #4CAF50, #8BC34A); }
+.stat-card-3::before { background: linear-gradient(90deg, #FF9800, #FFC107); }
+.stat-card-4::before { background: linear-gradient(90deg, #9C27B0, #E91E63); }
+
+/* Module Cards */
+.module-card {
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform, box-shadow;
+  border-radius: 12px !important;
+  overflow: hidden;
+  position: relative;
+  background: white !important;
+}
+
+.module-card.on-hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1) !important;
+  border-color: transparent !important;
+}
+
+.module-card.on-hover .module-title {
+  color: rgb(var(--v-theme-primary)) !important;
+}
+
+.module-card.on-hover .module-description {
+  color: rgba(var(--v-theme-primary), 0.8) !important;
+}
+
+.module-card.on-hover .v-avatar {
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15) !important;
+}
+
+.module-title {
+  color: rgb(var(--v-theme-on-surface)) !important;
+  transition: color 0.3s ease;
+  font-weight: 600 !important;
+  letter-spacing: 0.3px;
+}
+
+.module-description {
+  color: rgba(var(--v-theme-on-surface), 0.7) !important;
+  transition: color 0.3s ease;
+  line-height: 1.4;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 600px) {
+  .hero-section {
+    padding: 2rem 1rem !important;
+  }
+  
+  .module-title {
+    font-size: 0.9rem !important;
+  }
+  
+  .module-description {
+    font-size: 0.7rem !important;
+  }
+}
+
+/* Smooth Scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+</style>

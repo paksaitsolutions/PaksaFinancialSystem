@@ -5,11 +5,11 @@
         <v-card>
           <v-card-title>Help Topics</v-card-title>
           <v-list>
-            <v-list-item
-              v-for="topic in helpTopics"
+            <v-list-item 
+              v-for="topic in helpTopics" 
               :key="topic.id"
               @click="selectedTopic = topic"
-              :class="{ 'v-list-item--active': selectedTopic?.id === topic.id }"
+              :class="{ 'v-list-item--active': selectedTopic.id === topic.id }"
             >
               <template v-slot:prepend>
                 <v-icon>{{ topic.icon }}</v-icon>
@@ -18,315 +18,341 @@
             </v-list-item>
           </v-list>
         </v-card>
-        
-        <v-card class="mt-4">
-          <v-card-title>Quick Actions</v-card-title>
-          <v-card-text>
-            <v-btn block class="mb-2" @click="openVideoTutorial">
-              <v-icon left>mdi-play-circle</v-icon>
-              Video Tutorials
-            </v-btn>
-            <v-btn block class="mb-2" @click="downloadUserGuide">
-              <v-icon left>mdi-download</v-icon>
-              Download User Guide
-            </v-btn>
-            <v-btn block @click="contactSupport">
-              <v-icon left>mdi-help-circle</v-icon>
-              Contact Support
-            </v-btn>
-          </v-card-text>
-        </v-card>
       </v-col>
       
       <v-col cols="12" md="9">
-        <v-card v-if="selectedTopic">
+        <v-card>
           <v-card-title>
             <v-icon left>{{ selectedTopic.icon }}</v-icon>
             {{ selectedTopic.title }}
           </v-card-title>
+          
           <v-card-text>
             <div v-html="selectedTopic.content"></div>
-            
-            <v-divider class="my-4" />
-            
-            <h3 class="mb-3">Related Articles</h3>
-            <v-chip-group>
-              <v-chip
-                v-for="related in selectedTopic.relatedTopics"
-                :key="related"
-                @click="selectRelatedTopic(related)"
-                small
-              >
-                {{ related }}
-              </v-chip>
-            </v-chip-group>
-            
-            <v-divider class="my-4" />
-            
-            <h3 class="mb-3">Was this helpful?</h3>
-            <v-btn-toggle v-model="feedback" mandatory>
-              <v-btn value="yes" color="success">
-                <v-icon>mdi-thumb-up</v-icon>
-                Yes
-              </v-btn>
-              <v-btn value="no" color="error">
-                <v-icon>mdi-thumb-down</v-icon>
-                No
-              </v-btn>
-            </v-btn-toggle>
-            
-            <v-textarea
-              v-if="feedback === 'no'"
-              v-model="feedbackComment"
-              label="How can we improve this article?"
-              rows="3"
-              class="mt-3"
-            />
-            
-            <v-btn
-              v-if="feedback"
-              @click="submitFeedback"
-              color="primary"
-              class="mt-3"
-            >
-              Submit Feedback
-            </v-btn>
-          </v-card-text>
-        </v-card>
-        
-        <v-card v-else>
-          <v-card-title>General Ledger Help Center</v-card-title>
-          <v-card-text>
-            <p class="text-h6 mb-4">Welcome to the General Ledger Help Center</p>
-            <p>Select a topic from the left sidebar to get detailed information about using the General Ledger module.</p>
-            
-            <v-row class="mt-6">
-              <v-col cols="12" md="4" v-for="category in helpCategories" :key="category.title">
-                <v-card outlined>
-                  <v-card-text class="text-center">
-                    <v-icon size="48" color="primary">{{ category.icon }}</v-icon>
-                    <h3 class="mt-2">{{ category.title }}</h3>
-                    <p>{{ category.description }}</p>
-                    <v-btn @click="selectCategory(category)" color="primary" small>
-                      Learn More
-                    </v-btn>
-                  </v-card-text>
-                </v-card>
-              </v-col>
-            </v-row>
           </v-card-text>
         </v-card>
       </v-col>
     </v-row>
-    
-    <!-- Video Tutorial Dialog -->
-    <v-dialog v-model="showVideoDialog" max-width="800">
-      <v-card>
-        <v-card-title>Video Tutorials</v-card-title>
-        <v-card-text>
-          <v-list>
-            <v-list-item
-              v-for="video in videoTutorials"
-              :key="video.id"
-              @click="playVideo(video)"
-            >
-              <template v-slot:prepend>
-                <v-icon>mdi-play-circle</v-icon>
-              </template>
-              <v-list-item-title>{{ video.title }}</v-list-item-title>
-              <v-list-item-subtitle>{{ video.duration }}</v-list-item-subtitle>
-            </v-list-item>
-          </v-list>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn @click="showVideoDialog = false">Close</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
   </v-container>
 </template>
 
-<script setup>
-import { ref, onMounted } from 'vue'
-import { useGLHelpStore } from '../store/gl-help'
-
-const glHelpStore = useGLHelpStore()
-const selectedTopic = ref(null)
-const feedback = ref(null)
-const feedbackComment = ref('')
-const showVideoDialog = ref(false)
-
-const helpCategories = [
-  {
-    title: 'Getting Started',
-    description: 'Learn the basics of the General Ledger module',
-    icon: 'mdi-rocket-launch'
-  },
-  {
-    title: 'Chart of Accounts',
-    description: 'Manage your chart of accounts effectively',
-    icon: 'mdi-file-tree'
-  },
-  {
-    title: 'Journal Entries',
-    description: 'Create and manage journal entries',
-    icon: 'mdi-book-open-page-variant'
-  },
-  {
-    title: 'Financial Reports',
-    description: 'Generate and customize financial reports',
-    icon: 'mdi-chart-line'
-  },
-  {
-    title: 'Period Closing',
-    description: 'Learn about period-end closing procedures',
-    icon: 'mdi-calendar-check'
-  },
-  {
-    title: 'Troubleshooting',
-    description: 'Common issues and solutions',
-    icon: 'mdi-tools'
+<script>
+export default {
+  name: 'GLHelpDocumentation',
+  
+  data: () => ({
+    selectedTopic: null,
+    
+    helpTopics: [
+      {
+        id: 1,
+        title: 'Getting Started',
+        icon: 'mdi-play-circle',
+        content: `
+          <h3>Welcome to General Ledger</h3>
+          <p>The General Ledger is the core of your accounting system. It contains all financial transactions and provides the foundation for financial reporting.</p>
+          
+          <h4>Key Features:</h4>
+          <ul>
+            <li>Chart of Accounts management</li>
+            <li>Journal Entry processing</li>
+            <li>Trial Balance generation</li>
+            <li>Financial Statement preparation</li>
+            <li>Period-end closing procedures</li>
+          </ul>
+          
+          <h4>Quick Start:</h4>
+          <ol>
+            <li>Set up your Chart of Accounts</li>
+            <li>Configure GL settings</li>
+            <li>Start recording journal entries</li>
+            <li>Generate reports as needed</li>
+          </ol>
+        `
+      },
+      {
+        id: 2,
+        title: 'Chart of Accounts',
+        icon: 'mdi-file-tree',
+        content: `
+          <h3>Chart of Accounts Management</h3>
+          <p>The Chart of Accounts is a listing of all accounts used in your general ledger.</p>
+          
+          <h4>Account Types:</h4>
+          <ul>
+            <li><strong>Assets:</strong> Resources owned by the company</li>
+            <li><strong>Liabilities:</strong> Debts owed by the company</li>
+            <li><strong>Equity:</strong> Owner's interest in the company</li>
+            <li><strong>Revenue:</strong> Income earned by the company</li>
+            <li><strong>Expenses:</strong> Costs incurred by the company</li>
+          </ul>
+          
+          <h4>Best Practices:</h4>
+          <ul>
+            <li>Use consistent numbering scheme</li>
+            <li>Group similar accounts together</li>
+            <li>Keep account names clear and descriptive</li>
+            <li>Review and update regularly</li>
+          </ul>
+          
+          <h4>How to Add an Account:</h4>
+          <ol>
+            <li>Go to Chart of Accounts</li>
+            <li>Click "Add Account"</li>
+            <li>Enter account code and name</li>
+            <li>Select account type</li>
+            <li>Save the account</li>
+          </ol>
+        `
+      },
+      {
+        id: 3,
+        title: 'Journal Entries',
+        icon: 'mdi-notebook',
+        content: `
+          <h3>Journal Entry Processing</h3>
+          <p>Journal entries record financial transactions using double-entry bookkeeping principles.</p>
+          
+          <h4>Double-Entry Bookkeeping:</h4>
+          <p>Every transaction affects at least two accounts, with total debits equaling total credits.</p>
+          
+          <h4>Creating Journal Entries:</h4>
+          <ol>
+            <li>Navigate to Journal Entries</li>
+            <li>Click "New Entry"</li>
+            <li>Enter entry date and description</li>
+            <li>Add debit and credit lines</li>
+            <li>Ensure debits equal credits</li>
+            <li>Save and post the entry</li>
+          </ol>
+          
+          <h4>Common Entry Types:</h4>
+          <ul>
+            <li>Sales transactions</li>
+            <li>Purchase transactions</li>
+            <li>Adjusting entries</li>
+            <li>Closing entries</li>
+            <li>Correcting entries</li>
+          </ul>
+          
+          <h4>Tips:</h4>
+          <ul>
+            <li>Use clear, descriptive references</li>
+            <li>Review entries before posting</li>
+            <li>Keep supporting documentation</li>
+            <li>Follow company policies</li>
+          </ul>
+        `
+      },
+      {
+        id: 4,
+        title: 'Trial Balance',
+        icon: 'mdi-scale-balance',
+        content: `
+          <h3>Trial Balance Reports</h3>
+          <p>The Trial Balance lists all accounts with their debit and credit balances to verify that debits equal credits.</p>
+          
+          <h4>Purpose:</h4>
+          <ul>
+            <li>Verify accounting equation balance</li>
+            <li>Detect posting errors</li>
+            <li>Prepare for financial statements</li>
+            <li>Review account balances</li>
+          </ul>
+          
+          <h4>Types of Trial Balance:</h4>
+          <ul>
+            <li><strong>Unadjusted:</strong> Before adjusting entries</li>
+            <li><strong>Adjusted:</strong> After adjusting entries</li>
+            <li><strong>Post-Closing:</strong> After closing entries</li>
+          </ul>
+          
+          <h4>Generating Trial Balance:</h4>
+          <ol>
+            <li>Go to Reports > Trial Balance</li>
+            <li>Select date range</li>
+            <li>Choose account filters if needed</li>
+            <li>Generate report</li>
+            <li>Review for accuracy</li>
+          </ol>
+          
+          <h4>Troubleshooting:</h4>
+          <p>If trial balance doesn't balance:</p>
+          <ul>
+            <li>Check for transposition errors</li>
+            <li>Verify all entries are posted</li>
+            <li>Review journal entry calculations</li>
+            <li>Check for missing entries</li>
+          </ul>
+        `
+      },
+      {
+        id: 5,
+        title: 'Financial Statements',
+        icon: 'mdi-file-document-multiple',
+        content: `
+          <h3>Financial Statement Generation</h3>
+          <p>Generate key financial statements from your general ledger data.</p>
+          
+          <h4>Primary Statements:</h4>
+          <ul>
+            <li><strong>Balance Sheet:</strong> Financial position at a point in time</li>
+            <li><strong>Income Statement:</strong> Revenues and expenses for a period</li>
+            <li><strong>Cash Flow Statement:</strong> Cash receipts and payments</li>
+            <li><strong>Statement of Equity:</strong> Changes in owner's equity</li>
+          </ul>
+          
+          <h4>Generating Statements:</h4>
+          <ol>
+            <li>Ensure all transactions are recorded</li>
+            <li>Complete adjusting entries</li>
+            <li>Generate trial balance</li>
+            <li>Run financial statement reports</li>
+            <li>Review for accuracy</li>
+          </ol>
+          
+          <h4>Customization Options:</h4>
+          <ul>
+            <li>Date ranges and periods</li>
+            <li>Comparative periods</li>
+            <li>Account groupings</li>
+            <li>Format preferences</li>
+            <li>Export options</li>
+          </ul>
+        `
+      },
+      {
+        id: 6,
+        title: 'Period-End Closing',
+        icon: 'mdi-calendar-check',
+        content: `
+          <h3>Period-End Closing Process</h3>
+          <p>The period-end closing process prepares your books for the next accounting period.</p>
+          
+          <h4>Closing Steps:</h4>
+          <ol>
+            <li><strong>Pre-closing checklist:</strong>
+              <ul>
+                <li>Complete bank reconciliations</li>
+                <li>Review accounts receivable</li>
+                <li>Review accounts payable</li>
+                <li>Record depreciation</li>
+                <li>Make adjusting entries</li>
+              </ul>
+            </li>
+            <li><strong>Generate reports:</strong>
+              <ul>
+                <li>Trial balance</li>
+                <li>Financial statements</li>
+                <li>Account analysis</li>
+              </ul>
+            </li>
+            <li><strong>Closing entries:</strong>
+              <ul>
+                <li>Close revenue accounts</li>
+                <li>Close expense accounts</li>
+                <li>Close income summary</li>
+              </ul>
+            </li>
+            <li><strong>Final review:</strong>
+              <ul>
+                <li>Verify all entries posted</li>
+                <li>Review financial statements</li>
+                <li>Lock the period</li>
+              </ul>
+            </li>
+          </ol>
+          
+          <h4>Best Practices:</h4>
+          <ul>
+            <li>Follow a consistent schedule</li>
+            <li>Use closing checklists</li>
+            <li>Document procedures</li>
+            <li>Review before finalizing</li>
+          </ul>
+        `
+      },
+      {
+        id: 7,
+        title: 'Settings & Configuration',
+        icon: 'mdi-cog',
+        content: `
+          <h3>General Ledger Settings</h3>
+          <p>Configure your GL settings to match your company's accounting practices.</p>
+          
+          <h4>Account Settings:</h4>
+          <ul>
+            <li>Default currency</li>
+            <li>Account code format</li>
+            <li>Account code length</li>
+            <li>Description requirements</li>
+          </ul>
+          
+          <h4>Period Settings:</h4>
+          <ul>
+            <li>Fiscal year start month</li>
+            <li>Period type (monthly/quarterly)</li>
+            <li>Auto-create periods</li>
+            <li>Future period posting rules</li>
+          </ul>
+          
+          <h4>Posting Rules:</h4>
+          <ul>
+            <li>Require balanced entries</li>
+            <li>Allow negative balances</li>
+            <li>Approval requirements</li>
+            <li>Approval thresholds</li>
+          </ul>
+          
+          <h4>Numbering:</h4>
+          <ul>
+            <li>Journal entry prefix</li>
+            <li>Next journal number</li>
+            <li>Yearly reset options</li>
+          </ul>
+          
+          <h4>Accessing Settings:</h4>
+          <ol>
+            <li>Go to General Ledger</li>
+            <li>Click Settings</li>
+            <li>Modify configurations</li>
+            <li>Save changes</li>
+          </ol>
+        `
+      }
+    ]
+  }),
+  
+  mounted() {
+    this.selectedTopic = this.helpTopics[0]
   }
-]
-
-const helpTopics = ref([
-  {
-    id: 1,
-    title: 'Getting Started with GL',
-    icon: 'mdi-rocket-launch',
-    content: `
-      <h3>Welcome to the General Ledger Module</h3>
-      <p>The General Ledger is the foundation of your financial system. Here's how to get started:</p>
-      <ol>
-        <li><strong>Set up your Chart of Accounts:</strong> Navigate to the Chart of Accounts section to create your account structure.</li>
-        <li><strong>Configure GL Settings:</strong> Set your default currency, fiscal year, and other preferences.</li>
-        <li><strong>Create Journal Entries:</strong> Start recording your financial transactions.</li>
-        <li><strong>Generate Reports:</strong> Use the reporting dashboard to view your financial position.</li>
-      </ol>
-      <h4>Key Features:</h4>
-      <ul>
-        <li>Multi-currency support</li>
-        <li>Automated journal entries</li>
-        <li>Real-time reporting</li>
-        <li>Period-end closing</li>
-        <li>Audit trail</li>
-      </ul>
-    `,
-    relatedTopics: ['Chart of Accounts Setup', 'Journal Entry Basics', 'GL Settings']
-  },
-  {
-    id: 2,
-    title: 'Chart of Accounts Setup',
-    icon: 'mdi-file-tree',
-    content: `
-      <h3>Setting Up Your Chart of Accounts</h3>
-      <p>A well-structured chart of accounts is essential for accurate financial reporting.</p>
-      <h4>Account Types:</h4>
-      <ul>
-        <li><strong>Assets:</strong> What your company owns (Cash, Accounts Receivable, Equipment)</li>
-        <li><strong>Liabilities:</strong> What your company owes (Accounts Payable, Loans)</li>
-        <li><strong>Equity:</strong> Owner's stake in the company</li>
-        <li><strong>Revenue:</strong> Income from business operations</li>
-        <li><strong>Expenses:</strong> Costs of doing business</li>
-      </ul>
-      <h4>Best Practices:</h4>
-      <ul>
-        <li>Use a consistent numbering system</li>
-        <li>Keep account names clear and descriptive</li>
-        <li>Group similar accounts together</li>
-        <li>Plan for future growth</li>
-      </ul>
-    `,
-    relatedTopics: ['Account Numbering', 'Account Categories', 'Account Hierarchies']
-  },
-  {
-    id: 3,
-    title: 'Creating Journal Entries',
-    icon: 'mdi-book-open-page-variant',
-    content: `
-      <h3>Journal Entry Fundamentals</h3>
-      <p>Journal entries are the building blocks of your financial records.</p>
-      <h4>Double-Entry Accounting:</h4>
-      <p>Every transaction affects at least two accounts, and total debits must equal total credits.</p>
-      <h4>Creating an Entry:</h4>
-      <ol>
-        <li>Navigate to Journal Entries</li>
-        <li>Click "New Entry"</li>
-        <li>Enter the transaction date</li>
-        <li>Add description</li>
-        <li>Select accounts and enter amounts</li>
-        <li>Verify debits equal credits</li>
-        <li>Save and post</li>
-      </ol>
-      <h4>Entry Types:</h4>
-      <ul>
-        <li>Manual entries</li>
-        <li>Recurring entries</li>
-        <li>Adjusting entries</li>
-        <li>Closing entries</li>
-      </ul>
-    `,
-    relatedTopics: ['Double-Entry Accounting', 'Recurring Entries', 'Entry Approval']
-  }
-])
-
-const videoTutorials = [
-  { id: 1, title: 'GL Module Overview', duration: '5:30' },
-  { id: 2, title: 'Setting Up Chart of Accounts', duration: '8:15' },
-  { id: 3, title: 'Creating Journal Entries', duration: '6:45' },
-  { id: 4, title: 'Generating Financial Reports', duration: '7:20' },
-  { id: 5, title: 'Period-End Closing Process', duration: '12:10' }
-]
-
-const selectCategory = (category) => {
-  const topic = helpTopics.value.find(t => t.title.includes(category.title.split(' ')[0]))
-  if (topic) {
-    selectedTopic.value = topic
-  }
 }
-
-const selectRelatedTopic = (topicTitle) => {
-  const topic = helpTopics.value.find(t => t.title === topicTitle)
-  if (topic) {
-    selectedTopic.value = topic
-  }
-}
-
-const openVideoTutorial = () => {
-  showVideoDialog.value = true
-}
-
-const playVideo = (video) => {
-  // Implement video playback
-  console.log('Playing video:', video.title)
-}
-
-const downloadUserGuide = () => {
-  // Implement user guide download
-  const link = document.createElement('a')
-  link.href = '/docs/gl-user-guide.pdf'
-  link.download = 'GL-User-Guide.pdf'
-  link.click()
-}
-
-const contactSupport = () => {
-  // Implement support contact
-  window.open('mailto:support@paksa.com.pk?subject=GL Module Support')
-}
-
-const submitFeedback = async () => {
-  await glHelpStore.submitFeedback({
-    topicId: selectedTopic.value.id,
-    helpful: feedback.value === 'yes',
-    comment: feedbackComment.value
-  })
-  feedback.value = null
-  feedbackComment.value = ''
-}
-
-onMounted(() => {
-  // Load help content
-  selectedTopic.value = helpTopics.value[0]
-})
 </script>
+
+<style scoped>
+.v-list-item--active {
+  background-color: rgba(25, 118, 210, 0.12);
+}
+
+h3 {
+  color: #1976d2;
+  margin-bottom: 16px;
+}
+
+h4 {
+  color: #424242;
+  margin: 16px 0 8px 0;
+}
+
+ul, ol {
+  margin-left: 20px;
+}
+
+li {
+  margin-bottom: 4px;
+}
+
+p {
+  margin-bottom: 12px;
+}
+</style>

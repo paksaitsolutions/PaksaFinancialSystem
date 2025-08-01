@@ -1,20 +1,9 @@
-// frontend/src/modules/auth/store/auth.store.ts
 import { defineStore } from 'pinia';
 import { login as apiLogin, logout as apiLogout, isAuthenticated as checkAuth } from '@/services/api/authService';
 import router from '@/router';
-import type { User, AuthResponse } from '@/types/auth';
+import type { User } from '@/types/auth';
 import { ref, computed } from 'vue';
 import axios from 'axios';
-
-interface AuthState {
-  user: User | null;
-  token: string | null;
-  error: string | null;
-  loading: boolean;
-  isInitialized: boolean;
-  rememberMe: boolean;
-  refreshToken: string | null;
-}
 
 export const useAuthStore = defineStore('auth', () => {
   // State
@@ -37,12 +26,14 @@ export const useAuthStore = defineStore('auth', () => {
   };
 
   // Helper function to set authentication data
-  const setAuthData = (authData: { user: User; token: string; refreshToken?: string }, remember: boolean = false) => {
+  const setAuthData = (authData: { user: User; token: string; refreshToken?: string | null }, remember: boolean = false) => {
     user.value = authData.user;
     token.value = authData.token;
     
-    if (authData.refreshToken) {
+    if (authData.refreshToken != null) {
       refreshToken.value = authData.refreshToken;
+    } else {
+      refreshToken.value = null;
     }
     
     // Set axios default authorization header
@@ -51,8 +42,10 @@ export const useAuthStore = defineStore('auth', () => {
     // Store tokens in appropriate storage based on remember me
     const storage = remember ? localStorage : sessionStorage;
     storage.setItem('auth_token', authData.token);
-    if (authData.refreshToken) {
+    if (authData.refreshToken != null) {
       storage.setItem('refresh_token', authData.refreshToken);
+    } else {
+      storage.removeItem('refresh_token');
     }
     
     // Clear the other storage to prevent conflicts
@@ -62,22 +55,28 @@ export const useAuthStore = defineStore('auth', () => {
   };
 
   // Actions
+  interface LoginResponse {
+    user: User;
+    token: string;
+    refresh_token: string | null;
+  }
+
   const login = async (credentials: { email: string; password: string; rememberMe: boolean }): Promise<boolean> => {
     loading.value = true;
     error.value = null;
     
     try {
-      const response = await apiLogin(credentials.email, credentials.password);
+      const response = await apiLogin(credentials.email, credentials.password) as LoginResponse;
       
-      if (response && response.user && response.token) {
+      if (response?.user && response?.token) {
         setAuthData({
           user: response.user,
           token: response.token,
-          refreshToken: response.refreshToken
+          refreshToken: response.refresh_token || null
         }, credentials.rememberMe);
         
         // Redirect to intended route or home
-        const redirectPath = router.currentRoute.value.query.redirect?.toString() || '/';
+        const redirectPath = router.currentRoute.value.query['redirect']?.toString() || '/';
         await router.push(redirectPath);
         return true;
       }

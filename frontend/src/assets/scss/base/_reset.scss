@@ -1,6 +1,11 @@
-// Reset and normalize styles
+/* ===================================
+   CSS Reset & Base Styles
+   ===================================
+   A modern CSS reset with sensible defaults
+   and improved consistency across browsers
+*/
 
-// Box sizing rules
+/* Box sizing rules */
 *,
 *::before,
 *::after {
@@ -9,45 +14,58 @@
   padding: 0;
 }
 
-// Remove default margin
+/* Remove default margin and padding */
 body,
-h1,
-h2,
-h3,
-h4,
-p,
-figure,
-blockquote,
-dl,
-dd {
+h1, h2, h3, h4, h5, h6,
+p, figure, blockquote, dl, dd,
+ul, ol, li,
+pre, fieldset, legend,
+table, th, td, caption,
+hr {
   margin: 0;
+  padding: 0;
 }
 
-// Remove list styles on ul, ol elements with a list role
+/* Set core root defaults */
+html {
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Set core body defaults */
+body {
+  min-height: 100vh;
+  line-height: var(--line-height-base, 1.5);
+  color: var(--text-primary, #333);
+  background-color: var(--bg-primary, #fff);
+  font-family: var(--font-family-sans, system-ui, -apple-system, sans-serif);
+  font-size: var(--font-size-base, 1rem);
+  font-weight: var(--font-weight-regular, 400);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Remove list styles on ul, ol elements with a list role */
 ul[role='list'],
 ol[role='list'] {
   list-style: none;
 }
 
-// Set core root defaults
-html:focus-within {
-  scroll-behavior: smooth;
-}
-
-// Set core body defaults
-body {
-  min-height: 100vh;
-  text-rendering: optimizeSpeed;
-  line-height: 1.5;
-}
-
-// A elements that don't have a class get default styles
+/* A elements that don't have a class get default styles */
 a:not([class]) {
   text-decoration-skip-ink: auto;
+  color: var(--link-color, currentColor);
 }
 
-// Make images easier to work with
+/* Make images and media elements easier to work with */
 img,
+picture,
+video,
+canvas,
+svg,
 picture {
   max-width: 100%;
   display: block;
@@ -102,31 +120,33 @@ table {
 // Remove default hr styles
 hr {
   border: none;
-  border-top: 1px solid $border-color;
-  margin: $spacer 0;
+  border-top: 1px solid var(--border-color, #e2e8f0);
+  margin: var(--spacer, 1rem) 0;
 }
 
 // Remove default form element styles
 input,
 select,
 textarea {
+  /* Standard property */
+  appearance: none;
+  /* Vendor prefixes for better browser compatibility */
   -webkit-appearance: none;
   -moz-appearance: none;
-  appearance: none;
   background: none;
-  border: 1px solid $border-color;
+  border: 1px solid var(--border-color, #e2e8f0);
   border-radius: 4px;
   padding: 0.5rem 0.75rem;
   width: 100%;
   
   &:focus {
-    border-color: $primary;
-    box-shadow: 0 0 0 2px rgba($primary, 0.2);
+    border-color: var(--primary-500, #0ea5e9);
+    box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.2);
     outline: none;
   }
   
   &:disabled {
-    background-color: $gray-100;
+    background-color: var(--neutral-100, #f1f5f9);
     cursor: not-allowed;
     opacity: 0.7;
   }
@@ -149,7 +169,7 @@ input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
   -webkit-box-shadow: 0 0 0 1000px white inset !important;
-  -webkit-text-fill-color: $text-primary !important;
+  -webkit-text-fill-color: var(--text-primary, #333) !important;
   transition: background-color 5000s ease-in-out 0s;
 }
 

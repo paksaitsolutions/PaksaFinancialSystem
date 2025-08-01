@@ -1,73 +1,229 @@
 <template>
-  <v-app>
-    <v-container fluid class="fill-height pa-0">
-      <v-row no-gutters class="fill-height">
-        <!-- Left side - Content -->
-        <v-col cols="12" lg="6" class="d-flex align-center justify-center pa-4">
-          <div class="auth-form" style="width: 100%; max-width: 400px;">
-            <div class="text-center mb-6">
-              <v-img src="/logo.png" alt="Paksa Financial System" height="60" class="mb-4 mx-auto" style="max-width: 60px;"></v-img>
-              <slot name="header">
-                <h1 class="text-h4 font-weight-bold">Welcome</h1>
-                <p class="text-body-1 text-medium-emphasis">Sign in to your account</p>
-              </slot>
-            </div>
-
+  <div class="auth-layout">
+    <div class="auth-container">
+      <!-- Left Side: Form Container -->
+      <div class="form-container">
+        <div class="form-content">
+          <!-- Branding (mobile only) -->
+          <div class="mobile-branding">
+            <img 
+              :src="logoSrc" 
+              alt="Paksa Financial System" 
+              class="logo"
+            />
+            <h1 class="brand-title">Paksa Financial System</h1>
+          </div>
+          
+          <!-- Page Header Slot -->
+          <slot name="header"></slot>
+          
+          <!-- Main Content Slot -->
+          <div class="content-slot">
             <slot></slot>
           </div>
-        </v-col>
+        </div>
+      </div>
 
-        <!-- Right side - Background image -->
-        <v-col cols="12" lg="6" class="d-none d-lg-flex">
-          <v-img
-            src="https://images.unsplash.com/photo-1551434678-e076c223a692?ixlib=rb-1.2.1&auto=format&fit=crop&w=2850&q=80"
-            cover
-            class="h-100"
-            gradient="to top right, rgba(25,32,72,.7), rgba(25,32,72,.8)"
-          >
-            <div class="d-flex flex-column justify-center align-center fill-height text-white px-8">
-              <h2 class="text-h3 font-weight-bold mb-4 text-center">Paksa Financial System</h2>
-              <p class="text-h6 text-center mb-8">
-                A comprehensive enterprise financial management solution
-              </p>
-              <div class="d-flex flex-wrap justify-center gap-2">
-                <v-chip color="primary" size="large">Secure Login</v-chip>
-                <v-chip color="primary" variant="outlined" size="large">Enterprise Ready</v-chip>
-              </div>
-            </div>
-          </v-img>
-        </v-col>
-      </v-row>
-    </v-container>
-  </v-app>
+      <!-- Right Side: Hero Background (Desktop Only) -->
+      <div class="hero-sidebar">
+        <div class="hero-background" :style="{ backgroundImage: `url(${loginBg})` }"></div>
+        <div class="hero-overlay"></div>
+
+        <div class="hero-content">
+          <div class="hero-inner">
+            <img 
+              :src="logoSrc" 
+              alt="Paksa Financial System" 
+              class="hero-logo"
+            />
+            <h2 class="hero-title">Paksa Financial System</h2>
+            <p class="hero-subtitle">
+              Streamline your financial operations with our comprehensive suite of tools.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
-<script setup>
-// No additional logic needed
+<script setup lang="ts">
+import loginBg from '@/assets/login-bg.jpg';
+import logoSrc from '@/assets/logo.svg';
 </script>
 
 <style scoped>
-.fill-height {
+/* Base Layout */
+.auth-layout {
   min-height: 100vh;
+  background: linear-gradient(135deg, var(--primary-50) 0%, var(--primary-100) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
 }
 
-.auth-form {
+.auth-container {
+  display: flex;
   width: 100%;
+  max-width: 1100px;
+  min-height: 650px;
+  background: var(--surface-card);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* Form Container */
+.form-container {
+  flex: 1;
+  padding: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-card);
+  position: relative;
+  z-index: 2;
+}
+
+.form-content {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+/* Mobile Branding */
+.mobile-branding {
+  text-align: center;
+  margin-bottom: 2rem;
+  display: none;
+}
+
+.mobile-branding .logo {
+  height: 64px;
+  margin-bottom: 1rem;
+}
+
+.mobile-branding .brand-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin: 0;
+}
+
+/* Hero Sidebar */
+.hero-sidebar {
+  flex: 1;
+  position: relative;
+  display: none;
+  background: var(--primary-color);
+}
+
+.hero-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.9;
+}
+
+.hero-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-900) 100%);
+  opacity: 0.9;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  color: white;
+  text-align: center;
+}
+
+.hero-inner {
   max-width: 400px;
 }
 
-.gap-2 {
-  gap: 0.5rem;
+.hero-logo {
+  height: 80px;
+  margin-bottom: 1.5rem;
 }
 
-@media (max-width: 1264px) {
-  .auth-form {
-    max-width: 500px;
+.hero-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  line-height: 1.2;
+}
+
+.hero-subtitle {
+  font-size: 1.1rem;
+  opacity: 0.9;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Content Slot */
+.content-slot {
+  margin-top: 1.5rem;
+}
+
+/* Responsive Styles */
+@media (min-width: 992px) {
+  .auth-layout {
+    padding: 2rem;
+  }
+  
+  .hero-sidebar {
+    display: flex;
+  }
+  
+  .mobile-branding {
+    display: none;
+  }
+  
+  .form-container {
+    flex: 0 0 50%;
+    max-width: 50%;
   }
 }
 
-@media (max-width: 600px) {
-  .auth-form {
+@media (max-width: 991px) {
+  .mobile-branding {
+    display: block;
+  }
+  
+  .auth-container {
+    min-height: auto;
+    max-width: 500px;
+  }
+  
+  .form-container {
+    padding: 2rem 1.5rem;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .hero-sidebar {
+    display: none;
+  }
+  
+  .form-container {
+    flex: 1;
     max-width: 100%;
   }
 }

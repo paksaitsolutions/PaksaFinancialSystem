@@ -1,0 +1,190 @@
+// Media query mixins
+@mixin media-breakpoint-up($name, $breakpoints: (
+  xs: $breakpoint-xs,
+  sm: $breakpoint-sm,
+  md: $breakpoint-md,
+  lg: $breakpoint-lg,
+  xl: $breakpoint-xl,
+  xxl: $breakpoint-xxl
+)) {
+  $min: map-get($breakpoints, $name);
+  @if $min {
+    @media (min-width: $min) {
+      @content;
+    }
+  } @else {
+    @content;
+  }
+}
+
+@mixin media-breakpoint-down($name, $breakpoints: (
+  xs: $breakpoint-xs,
+  sm: $breakpoint-sm,
+  md: $breakpoint-md,
+  lg: $breakpoint-lg,
+  xl: $breakpoint-xl,
+  xxl: $breakpoint-xxl
+)) {
+  $max: map-get($breakpoints, $name);
+  @if $max {
+    @media (max-width: ($max - 0.02)) {
+      @content;
+    }
+  } @else {
+    @content;
+  }
+}
+
+// Flexbox mixins
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@mixin flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+// Text overflow
+@mixin text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Position mixins
+@mixin position-absolute($top: null, $right: null, $bottom: null, $left: null) {
+  position: absolute;
+  top: $top;
+  right: $right;
+  bottom: $bottom;
+  left: $left;
+}
+
+@mixin position-fixed($top: null, $right: null, $bottom: null, $left: null) {
+  position: fixed;
+  top: $top;
+  right: $right;
+  bottom: $bottom;
+  left: $left;
+}
+
+// Button variants
+@mixin button-variant($background, $color: #fff, $hover-background: darken($background, 7.5%), $hover-color: $color) {
+  background-color: $background;
+  color: $color;
+  border: 1px solid $background;
+  
+  &:hover:not(:disabled) {
+    background-color: $hover-background;
+    color: $hover-color;
+    border-color: $hover-background;
+  }
+  
+  &:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+  }
+}
+
+// Form control mixin
+@mixin form-control-focus() {
+  &:focus {
+    border-color: $input-focus-border-color;
+    outline: 0;
+    box-shadow: $input-focus-box-shadow;
+  }
+}
+
+// Transition mixin
+@mixin transition($properties...) {
+  $transition: ();
+  
+  @each $property in $properties {
+    $transition: append($transition, $property $transition-duration $transition-timing, $separator: comma);
+  }
+  
+  transition: $transition;
+}
+
+// Clearfix
+@mixin clearfix {
+  &::after {
+    content: "";
+    display: table;
+    clear: both;
+  }
+}
+
+// Visually hidden (for accessibility)
+@mixin sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+// Scrollbar styling
+@mixin scrollbar($width: 8px, $track: #f1f1f1, $thumb: #c1c1c1, $thumb-hover: #a8a8a8) {
+  &::-webkit-scrollbar {
+    width: $width;
+    height: $width;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: $track;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: $thumb;
+    border-radius: $width / 2;
+    
+    &:hover {
+      background: $thumb-hover;
+    }
+  }
+}
+
+// Placeholder text
+@mixin placeholder($color: $text-color-disabled) {
+  &::placeholder {
+    color: $color;
+    opacity: 1;
+  }
+}
+
+// Truncate text with line clamp
+@mixin line-clamp($lines: 2) {
+  display: -webkit-box;
+  -webkit-line-clamp: $lines;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// Aspect ratio
+@mixin aspect-ratio($width, $height) {
+  position: relative;
+  padding-top: ($height / $width) * 100%;
+  
+  > * {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+}

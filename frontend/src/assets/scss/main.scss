@@ -1,170 +1,36 @@
-// Main SCSS file - imports all other SCSS files
+// ============================================
+// Paksa Financial System - Main SCSS Entry Point
+// ============================================
+// This file serves as the main entry point for all styles.
+// It follows a modular architecture with clear separation of concerns.
 
-// 1. Include functions first (so you can manipulate colors, SVGs, calc, etc)
-@import '~vuetify/src/styles/tools/functions';
+// 1. Core Theme & Variables
+// -------------------------
+@import 'theme';                // Design tokens and theming
+@import 'utilities';            // Utility classes and mixins
 
-// 2. Include any default variable overrides here
-@import 'variables/colors';
-@import 'variables/typography';
-@import 'variables/spacing';
-@import 'variables/breakpoints';
-
-// 3. Include Vuetify styles
-@import '~vuetify/src/styles/styles.sass';
-
-// 4. Base styles
+// 2. Base Styles
+// --------------
+// Global resets and base element styles
 @import 'base/reset';
 @import 'base/typography';
-@import 'base/utilities';
 
-// 5. Layout & components
-@import 'layout/grid';
-@import 'layout/containers';
-@import 'layout/navigation';
-@import 'layout/footer';
-@import 'layout/forms';
-@import 'layout/buttons';
-@import 'layout/cards';
-@import 'layout/tables';
-@import 'layout/alerts';
-@import 'layout/modals';
-@import 'layout/tabs';
-@import 'layout/transitions';
+// 3. PrimeVue Component Overrides
+// ------------------------------
+// Custom styles for PrimeVue components to match our design system
+@import 'primevue-overrides';
 
-// 6. Component styles
-@import 'components/auth';
-@import 'components/dashboard';
-@import 'components/sidebar';
-@import 'components/toolbar';
-@import 'components/notifications';
-@import 'components/loaders';
+// 4. Layout Components
+// -------------------
+// Global layout components
+@import 'layout/app-layout';
 
-// 7. Page-specific styles
-@import 'pages/login';
-@import 'pages/dashboard';
-@import 'pages/accounts';
-@import 'pages/transactions';
-@import 'pages/reports';
-@import 'pages/settings';
+// 5. Print Styles
+// ---------------
+// Print-specific styles
+@import 'base/print';
 
-// 8. Themes
-@import 'themes/light';
-@import 'themes/dark';
-
-// 9. Vendor overrides
-@import 'vendor/overrides';
-
-// 10. Utility classes - always last for specificity
-@import 'utilities/helpers';
-@import 'utilities/animations';
-@import 'utilities/print';
-
-// 11. Global styles
-html {
-  box-sizing: border-box;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-  font-size: 16px; // Base font size for rem units
-  scroll-behavior: smooth;
-}
-
-*,
-*::before,
-*::after {
-  box-sizing: inherit;
-}
-
-body {
-  margin: 0;
-  padding: 0;
-  font-family: $font-family-base;
-  font-size: $body-font-size-base;
-  font-weight: $font-weight-regular;
-  line-height: $line-height-base;
-  color: $text-primary;
-  background-color: $background;
-  overflow-x: hidden;
-}
-
-// Responsive images
-img {
-  max-width: 100%;
-  height: auto;
-  vertical-align: middle;
-}
-
-// Links
-a {
-  color: $primary;
-  text-decoration: none;
-  transition: color 0.2s ease-in-out;
-  
-  &:hover {
-    color: darken($primary, 10%);
-    text-decoration: underline;
-  }
-  
-  &:focus {
-    outline: 2px solid $primary-light;
-    outline-offset: 2px;
-  }
-}
-
-// Selection styles
-::selection {
-  background-color: rgba($primary, 0.2);
-  color: $primary-dark;
-}
-
-// Scrollbar styling (WebKit)
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: $gray-100;
-}
-
-::-webkit-scrollbar-thumb {
-  background: $gray-400;
-  border-radius: 4px;
-  
-  &:hover {
-    background: $gray-500;
-  }
-}
-
-// Print styles
-@media print {
-  body {
-    background: none;
-    color: $black;
-    font-size: 12pt;
-  }
-  
-  .no-print,
-  .v-toolbar,
-  .v-navigation-drawer,
-  .v-footer {
-    display: none !important;
-  }
-  
-  .v-application {
-    padding: 0 !important;
-  }
-  
-  .v-main {
-    padding: 0 !important;
-  }
-  
-  .v-container {
-    max-width: 100% !important;
-    padding: 0 !important;
-  }
-  
-  @page {
-    margin: 1cm;
-  }
-}
+// 6. Dark Mode
+// ------------
+// Dark mode overrides are included in each component's styles
+// using the dark-theme mixin from _utilities.scss
