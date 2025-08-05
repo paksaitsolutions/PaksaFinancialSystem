@@ -186,15 +186,12 @@ import logoSrc from '@/assets/logo.svg';
   .auth-layout {
     padding: 2rem;
   }
-  
   .hero-sidebar {
     display: flex;
   }
-  
   .mobile-branding {
     display: none;
   }
-  
   .form-container {
     flex: 0 0 50%;
     max-width: 50%;
@@ -202,17 +199,27 @@ import logoSrc from '@/assets/logo.svg';
 }
 
 @media (max-width: 991px) {
+  .auth-container {
+    width: 100vw;
+    max-width: none;
+    min-height: 100vh;
+    flex-direction: column;
+  }
+  .form-container,
+  .hero-sidebar {
+    max-width: 100%;
+    width: 100%;
+    min-width: 0;
+    flex: 1 1 100%;
+  }
+  .form-container {
+    padding: 2rem 0.5rem;
+  }
+  .hero-sidebar {
+    display: none;
+  }
   .mobile-branding {
     display: block;
-  }
-  
-  .auth-container {
-    min-height: auto;
-    max-width: 500px;
-  }
-  
-  .form-container {
-    padding: 2rem 1.5rem;
   }
 }
 
@@ -221,7 +228,6 @@ import logoSrc from '@/assets/logo.svg';
   .hero-sidebar {
     display: none;
   }
-  
   .form-container {
     flex: 1;
     max-width: 100%;

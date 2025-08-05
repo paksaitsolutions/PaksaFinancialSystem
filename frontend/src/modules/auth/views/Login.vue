@@ -1,67 +1,65 @@
 <template>
-  <div class="login-content">
-    <div class="login-brand">
-      <h2>Welcome Back</h2>
-      <p>Sign in to continue to Paksa Financial System</p>
+  <div class="login-brand">
+    <h2>Welcome Back</h2>
+    <p>Sign in to continue to Paksa Financial System</p>
+  </div>
+
+  <form @submit.prevent="handleLogin" class="login-form">
+    <div class="mb-4">
+      <label for="email" class="block text-600 text-sm font-medium mb-2">Email</label>
+      <InputText
+        id="email"
+        v-model="form.email"
+        type="email"
+        class="w-full"
+        placeholder="Enter your email"
+        required
+      />
     </div>
 
-    <form @submit.prevent="handleLogin" class="login-form">
-      <div class="mb-4">
-        <label for="email" class="block text-600 text-sm font-medium mb-2">Email</label>
-        <InputText
-          id="email"
-          v-model="form.email"
-          type="email"
-          class="w-full"
-          placeholder="Enter your email"
-          required
-        />
-      </div>
-
-      <div class="mb-4">
-        <div class="flex justify-content-between align-items-center mb-2">
-          <label for="password" class="block text-600 text-sm font-medium">Password</label>
-          <router-link to="/forgot-password" class="text-primary-500 text-sm font-medium hover:underline">
-            Forgot password?
-          </router-link>
-        </div>
-        <Password
-          id="password"
-          v-model="form.password"
-          class="w-full"
-          inputClass="w-full"
-          :feedback="false"
-          toggleMask
-          placeholder="Enter your password"
-          required
-        />
-      </div>
-
-      <div class="flex align-items-center mb-6">
-        <Checkbox
-          v-model="form.remember"
-          :binary="true"
-          class="mr-2"
-          inputId="remember-checkbox"
-        />
-        <label for="remember-checkbox" class="text-600 text-sm">Remember me</label>
-      </div>
-
-      <Button
-        type="submit"
-        :label="loading ? 'Signing in...' : 'Sign In'"
-        class="w-full p-button-primary mb-4"
-        :loading="loading"
-      />
-
-      <div class="text-center mt-4">
-        <span class="text-600 text-sm">Don't have an account? </span>
-        <router-link to="/auth/register" class="text-primary-500 font-medium hover:underline">
-          Sign up
+    <div class="mb-4">
+      <div class="flex justify-content-between align-items-center mb-2">
+        <label for="password" class="block text-600 text-sm font-medium">Password</label>
+        <router-link to="/forgot-password" class="text-primary-500 text-sm font-medium hover:underline">
+          Forgot password?
         </router-link>
       </div>
-    </form>
-  </div>
+      <Password
+        id="password"
+        v-model="form.password"
+        class="w-full"
+        inputClass="w-full"
+        :feedback="false"
+        toggleMask
+        placeholder="Enter your password"
+        required
+      />
+    </div>
+
+    <div class="flex align-items-center mb-6">
+      <Checkbox
+        v-model="form.remember"
+        :binary="true"
+        class="mr-2"
+        inputId="remember-checkbox"
+      />
+      <label for="remember-checkbox" class="text-600 text-sm">Remember me</label>
+    </div>
+
+    <Button
+      type="submit"
+      :label="loading ? 'Signing in...' : 'Sign In'"
+      class="w-full p-button-primary mb-4"
+      :loading="loading"
+    />
+
+    <div class="text-center mt-4">
+      <span class="text-600 text-sm">Don't have an account? </span>
+      <router-link to="/auth/register" class="text-primary-500 font-medium hover:underline">
+        Sign up
+      </router-link>
+    </div>
+  </form>
 </template>
 
 <script setup lang="ts">
@@ -131,7 +129,7 @@ const handleLogin = async () => {
     await authStore.login({
       email: form.email,
       password: form.password,
-      remember: form.remember
+      rememberMe: form.remember
     });
 
     // Show success message
@@ -177,19 +175,11 @@ onMounted(async () => {
 
 <style scoped>
 /* Base Layout */
-.login-content {
-  width: 100%;
-  max-width: 400px;
-  margin: 2rem auto;
-  padding: 0 1.5rem;
-}
+
 
 /* Form Styles */
 .login-form {
-  background: var(--surface-card);
   padding: 2rem;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .login-brand {
@@ -273,13 +263,12 @@ onMounted(async () => {
 }
 
 /* Responsive adjustments */
-@media (max-width: 576px) {
+@media (max-width: 991px) {
   .login-content {
-    padding: 0 1rem;
+    padding: 0 0.5rem;
   }
-  
   .login-form {
-    padding: 1.5rem;
+    padding: 1.25rem;
   }
 }
 </style>

@@ -251,7 +251,7 @@ async def init_db() -> None:
     from sqlalchemy import text
     
     # Check if using SQLite by examining the database URL
-    db_url = getattr(settings, 'DATABASE_URL', '').lower()
+    db_url = str(getattr(settings, 'DATABASE_URL', '')).lower()
     is_sqlite = 'sqlite' in db_url
     is_postgresql = 'postgresql' in db_url
     
