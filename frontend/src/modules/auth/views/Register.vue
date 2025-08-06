@@ -1,254 +1,335 @@
 <template>
-  <div class="register-brand">
-    <h2>Create Account</h2>
-    <p>Join Paksa Financial System</p>
-  </div>
+  <v-container fluid class="register-container">
+    <v-row justify="center" align="center" class="fill-height">
+      <v-col cols="12" sm="8" md="6" lg="5" xl="4">
+        <v-card class="register-card" elevation="12" rounded="lg">
+          <!-- Header Section -->
+          <v-card-title class="register-header">
+            <div class="text-center w-100">
+              <v-avatar size="64" class="mb-4" color="primary">
+                <v-icon size="32" color="white">mdi-account-plus</v-icon>
+              </v-avatar>
+              <h2 class="text-h4 font-weight-bold mb-2">Create Account</h2>
+              <p class="text-body-1 text-medium-emphasis">
+                Join Paksa Financial System today
+              </p>
+            </div>
+          </v-card-title>
 
-  <form @submit.prevent="handleRegister" class="register-form">
-    <div class="form-field">
-      <label for="name">Full Name</label>
-      <input
-        id="name"
-        v-model="form.name"
-        type="text"
-        class="form-input"
-        :class="{ error: errors.name }"
-        placeholder="Enter your full name"
-        required
+          <!-- Form Section -->
+          <v-card-text class="register-form">
+            <v-form ref="registerForm" v-model="formValid" @submit.prevent="handleRegister">
+              <!-- Full Name Field -->
+              <v-text-field
+                v-model="form.fullName"
+                :rules="nameRules"
+                label="Full Name"
+                prepend-inner-icon="mdi-account"
+                variant="outlined"
+                color="primary"
+                class="mb-3"
+                required
+              />
+
+              <!-- Email Field -->
+              <v-text-field
+                v-model="form.email"
+                :rules="emailRules"
+                label="Email Address"
+                type="email"
+                prepend-inner-icon="mdi-email"
+                variant="outlined"
+                color="primary"
+                class="mb-3"
+                required
+              />
+
+              <!-- Company Field -->
+              <v-text-field
+                v-model="form.company"
+                :rules="companyRules"
+                label="Company Name"
+                prepend-inner-icon="mdi-office-building"
+                variant="outlined"
+                color="primary"
+                class="mb-3"
+                required
+              />
+
+              <!-- Password Field -->
+              <v-text-field
+                v-model="form.password"
+                :rules="passwordRules"
+                :type="showPassword ? 'text' : 'password'"
+                label="Password"
+                prepend-inner-icon="mdi-lock"
+                :append-inner-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+                @click:append-inner="showPassword = !showPassword"
+                variant="outlined"
+                color="primary"
+                class="mb-3"
+                required
+              />
+
+              <!-- Confirm Password Field -->
+              <v-text-field
+                v-model="form.confirmPassword"
+                :rules="confirmPasswordRules"
+                :type="showConfirmPassword ? 'text' : 'password'"
+                label="Confirm Password"
+                prepend-inner-icon="mdi-lock-check"
+                :append-inner-icon="showConfirmPassword ? 'mdi-eye' : 'mdi-eye-off'"
+                @click:append-inner="showConfirmPassword = !showConfirmPassword"
+                variant="outlined"
+                color="primary"
+                class="mb-3"
+                required
+              />
+
+              <!-- Terms and Conditions -->
+              <v-checkbox
+                v-model="form.acceptTerms"
+                :rules="termsRules"
+                color="primary"
+                class="mb-4"
+              >
+                <template #label>
+                  <span class="text-body-2">
+                    I agree to the
+                    <v-btn variant="text" color="primary" size="small" class="pa-0">
+                      Terms of Service
+                    </v-btn>
+                    and
+                    <v-btn variant="text" color="primary" size="small" class="pa-0">
+                      Privacy Policy
+                    </v-btn>
+                  </span>
+                </template>
+              </v-checkbox>
+
+              <!-- Register Button -->
+              <v-btn
+                type="submit"
+                color="primary"
+                size="large"
+                block
+                :loading="loading"
+                :disabled="!formValid"
+                class="mb-4"
+              >
+                <v-icon start>mdi-account-plus</v-icon>
+                Create Account
+              </v-btn>
+
+              <!-- Divider -->
+              <v-divider class="mb-4">
+                <span class="text-medium-emphasis px-4">or</span>
+              </v-divider>
+
+              <!-- Login Link -->
+              <div class="text-center">
+                <span class="text-body-2 text-medium-emphasis">
+                  Already have an account?
+                </span>
+                <v-btn
+                  variant="text"
+                  color="primary"
+                  :to="{ name: 'Login' }"
+                  class="ml-1"
+                >
+                  Sign in
+                </v-btn>
+              </div>
+            </v-form>
+          </v-card-text>
+        </v-card>
+      </v-col>
+    </v-row>
+
+    <!-- Loading Overlay -->
+    <v-overlay v-model="loading" class="align-center justify-center">
+      <v-progress-circular
+        color="primary"
+        indeterminate
+        size="64"
       />
-      <div v-if="errors.name" class="error-message">{{ errors.name }}</div>
-    </div>
+    </v-overlay>
 
-    <div class="form-field">
-      <label for="email">Email Address</label>
-      <input
-        id="email"
-        v-model="form.email"
-        type="email"
-        class="form-input"
-        :class="{ error: errors.email }"
-        placeholder="Enter your email"
-        required
-      />
-      <div v-if="errors.email" class="error-message">{{ errors.email }}</div>
-    </div>
-
-    <div class="form-field">
-      <label for="password">Password</label>
-      <input
-        id="password"
-        v-model="form.password"
-        type="password"
-        class="form-input"
-        :class="{ error: errors.password }"
-        placeholder="Enter your password"
-        required
-      />
-      <div v-if="errors.password" class="error-message">{{ errors.password }}</div>
-    </div>
-
-    <div class="form-field">
-      <label for="confirmPassword">Confirm Password</label>
-      <input
-        id="confirmPassword"
-        v-model="form.confirmPassword"
-        type="password"
-        class="form-input"
-        :class="{ error: errors.confirmPassword }"
-        placeholder="Confirm your password"
-        required
-      />
-      <div v-if="errors.confirmPassword" class="error-message">{{ errors.confirmPassword }}</div>
-    </div>
-
-    <button
-      type="submit"
-      class="submit-button"
-      :disabled="loading"
+    <!-- Snackbar for notifications -->
+    <v-snackbar
+      v-model="snackbar.show"
+      :color="snackbar.color"
+      :timeout="snackbar.timeout"
+      location="top"
     >
-      {{ loading ? 'Creating Account...' : 'Create Account' }}
-    </button>
-
-    <div class="login-link">
-      <span>Already have an account? </span>
-      <router-link to="/auth/login">Sign in</router-link>
-    </div>
-  </form>
+      {{ snackbar.message }}
+      <template #actions>
+        <v-btn
+          color="white"
+          variant="text"
+          @click="snackbar.show = false"
+        >
+          Close
+        </v-btn>
+      </template>
+    </v-snackbar>
+  </v-container>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, reactive } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/modules/auth/store/auth.store'
 
-const router = useRouter();
+const router = useRouter()
+const authStore = useAuthStore()
 
+// Form data
 const form = reactive({
-  name: '',
+  fullName: '',
   email: '',
+  company: '',
   password: '',
   confirmPassword: '',
-});
+  acceptTerms: false
+})
 
-const loading = ref(false);
-const errors = reactive({
-  name: '',
-  email: '',
-  password: '',
-  confirmPassword: ''
-});
+// Form validation
+const formValid = ref(false)
+const registerForm = ref()
+const loading = ref(false)
+const showPassword = ref(false)
+const showConfirmPassword = ref(false)
 
-const validateForm = (): boolean => {
-  let isValid = true;
-  Object.keys(errors).forEach(key => errors[key] = '');
+// Snackbar for notifications
+const snackbar = reactive({
+  show: false,
+  message: '',
+  color: 'error',
+  timeout: 5000
+})
 
-  if (!form.name.trim()) {
-    errors.name = 'Full name is required';
-    isValid = false;
-  }
+// Validation rules
+const nameRules = [
+  (v: string) => !!v || 'Full name is required',
+  (v: string) => v.length >= 2 || 'Name must be at least 2 characters'
+]
 
-  if (!form.email.trim()) {
-    errors.email = 'Email is required';
-    isValid = false;
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
-    errors.email = 'Please enter a valid email address';
-    isValid = false;
-  }
+const emailRules = [
+  (v: string) => !!v || 'Email is required',
+  (v: string) => /.+@.+\..+/.test(v) || 'Email must be valid'
+]
 
-  if (!form.password) {
-    errors.password = 'Password is required';
-    isValid = false;
-  } else if (form.password.length < 6) {
-    errors.password = 'Password must be at least 6 characters';
-    isValid = false;
-  }
+const companyRules = [
+  (v: string) => !!v || 'Company name is required',
+  (v: string) => v.length >= 2 || 'Company name must be at least 2 characters'
+]
 
-  if (!form.confirmPassword) {
-    errors.confirmPassword = 'Please confirm your password';
-    isValid = false;
-  } else if (form.password !== form.confirmPassword) {
-    errors.confirmPassword = 'Passwords do not match';
-    isValid = false;
-  }
+const passwordRules = [
+  (v: string) => !!v || 'Password is required',
+  (v: string) => v.length >= 8 || 'Password must be at least 8 characters',
+  (v: string) => /(?=.*[a-z])/.test(v) || 'Password must contain lowercase letter',
+  (v: string) => /(?=.*[A-Z])/.test(v) || 'Password must contain uppercase letter',
+  (v: string) => /(?=.*\d)/.test(v) || 'Password must contain number'
+]
 
-  return isValid;
-};
+const confirmPasswordRules = [
+  (v: string) => !!v || 'Please confirm your password',
+  (v: string) => v === form.password || 'Passwords do not match'
+]
+
+const termsRules = [
+  (v: boolean) => !!v || 'You must accept the terms and conditions'
+]
+
+// Methods
+const showNotification = (message: string, color: string = 'error') => {
+  snackbar.message = message
+  snackbar.color = color
+  snackbar.show = true
+}
 
 const handleRegister = async () => {
-  if (!validateForm()) return;
+  if (!registerForm.value?.validate()) return
 
   try {
-    loading.value = true;
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    loading.value = true
+
+    // Simulate registration API call
+    await new Promise(resolve => setTimeout(resolve, 2000))
+
+    showNotification('Account created successfully! Please check your email to verify your account.', 'success')
     
     // Redirect to login after successful registration
-    await router.push('/auth/login');
+    setTimeout(() => {
+      router.push({ name: 'Login' })
+    }, 2000)
+
   } catch (error) {
-    errors.email = 'Registration failed. Please try again.';
+    console.error('Registration error:', error)
+    showNotification('Registration failed. Please try again.')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 </script>
 
 <style scoped>
-.register-brand {
-  text-align: center;
-  margin-bottom: 2rem;
+.register-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  position: relative;
 }
 
-.register-brand h2 {
-  font-size: 1.75rem;
-  font-weight: 700;
-  margin-bottom: 0.5rem;
-  color: #1f2937;
+.register-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('@/assets/login-bg.jpg') center/cover;
+  opacity: 0.1;
+  z-index: 0;
 }
 
-.register-brand p {
-  font-size: 1rem;
-  color: #6b7280;
-  margin: 0;
+.register-card {
+  position: relative;
+  z-index: 1;
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.register-header {
+  padding: 2rem 2rem 1rem 2rem;
+  background: transparent;
 }
 
 .register-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+  padding: 0 2rem 2rem 2rem;
 }
 
-.form-field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+.v-card-title h2 {
+  color: #1a1a1a;
 }
 
-label {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #1f2937;
+.v-card-title p {
+  color: #666;
 }
 
-.form-input {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  font-size: 1rem;
-  transition: border-color 0.2s;
-}
-
-.form-input:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.form-input.error {
-  border-color: #ef4444;
-}
-
-.error-message {
-  color: #ef4444;
-  font-size: 0.875rem;
-  font-weight: 500;
-}
-
-.submit-button {
-  width: 100%;
-  padding: 0.875rem 1.5rem;
-  background: #3b82f6;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.submit-button:hover:not(:disabled) {
-  background: #2563eb;
-}
-
-.submit-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.login-link {
-  text-align: center;
-  font-size: 0.875rem;
-  color: #6b7280;
-}
-
-.login-link a {
-  color: #3b82f6;
-  text-decoration: none;
-  font-weight: 500;
-}
-
-.login-link a:hover {
-  text-decoration: underline;
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .register-header {
+    padding: 1.5rem 1.5rem 1rem 1.5rem;
+  }
+  
+  .register-form {
+    padding: 0 1.5rem 1.5rem 1.5rem;
+  }
+  
+  .register-card {
+    margin: 1rem;
+  }
 }
 </style>

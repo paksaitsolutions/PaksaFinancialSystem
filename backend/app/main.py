@@ -144,6 +144,50 @@ async def verify_token():
 async def logout():
     return {"message": "Logged out successfully"}
 
+@app.post("/auth/register")
+async def register(
+    fullName: str = Form(),
+    email: str = Form(),
+    company: str = Form(),
+    password: str = Form()
+):
+    # Simple registration simulation
+    return {
+        "success": True,
+        "message": "Registration successful",
+        "user_id": "new-user-123"
+    }
+
+@app.post("/auth/forgot-password")
+async def forgot_password(email: str = Form()):
+    # Simulate sending reset email
+    return {
+        "success": True,
+        "message": "Password reset email sent"
+    }
+
+@app.post("/auth/reset-password")
+async def reset_password(
+    token: str = Form(),
+    password: str = Form()
+):
+    # Simulate password reset
+    return {
+        "success": True,
+        "message": "Password reset successful"
+    }
+
+@app.post("/auth/refresh-token")
+async def refresh_token(refresh_token: str = Form()):
+    # Simulate token refresh
+    if refresh_token == "demo-refresh-token-12345":
+        return {
+            "access_token": "demo-jwt-token-refreshed-12345",
+            "token_type": "bearer",
+            "expires_in": 3600
+        }
+    raise HTTPException(status_code=401, detail="Invalid refresh token")
+
 # General Ledger endpoints
 @app.get("/api/v1/gl/accounts")
 async def get_gl_accounts(db = Depends(get_db), user = Depends(get_current_user)):
