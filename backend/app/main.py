@@ -116,7 +116,7 @@ async def health_check():
 # Authentication endpoints
 @app.post("/auth/token")
 async def login(username: str = Form(), password: str = Form()):
-    # Simple demo authentication
+    # Simple hardcoded authentication for demo
     if username == "admin@paksa.com" and password == "admin123":
         return {
             "access_token": "demo-jwt-token-12345",
@@ -132,7 +132,7 @@ async def get_current_user():
     return {
         "id": "1",
         "email": "admin@paksa.com",
-        "name": "Admin User",
+        "name": "System Administrator",
         "permissions": ["admin"]
     }
 

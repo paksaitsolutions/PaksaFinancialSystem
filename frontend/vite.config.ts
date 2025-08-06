@@ -67,6 +67,11 @@ export default defineConfig(({ mode }: ConfigEnv) => {
           secure: false,
           ws: true,
           rewrite: (path) => path.replace(/^\/api/, '')
+        },
+        '/auth': {
+          target: 'http://localhost:8000',
+          changeOrigin: true,
+          secure: false
         }
       }
     },

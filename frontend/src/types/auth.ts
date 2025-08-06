@@ -23,4 +23,5 @@ export interface LoginCredentials {
 export interface AuthResponse {
   user: User;
   token: string;
+  refreshToken?: string | null;
 }

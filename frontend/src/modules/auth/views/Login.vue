@@ -26,15 +26,24 @@
           Forgot password?
         </router-link>
       </div>
-      <input
-        id="password"
-        v-model="form.password"
-        type="password"
-        class="form-input"
-        :class="{ error: errors.password }"
-        placeholder="Enter your password"
-        required
-      />
+      <div class="password-input-wrapper">
+        <input
+          id="password"
+          v-model="form.password"
+          :type="showPassword ? 'text' : 'password'"
+          class="form-input"
+          :class="{ error: errors.password }"
+          placeholder="Enter your password"
+          required
+        />
+        <button
+          type="button"
+          class="password-toggle"
+          @click="showPassword = !showPassword"
+        >
+          {{ showPassword ? '👁️' : '👁️‍🗨️' }}
+        </button>
+      </div>
       <div v-if="errors.password" class="error-message">{{ errors.password }}</div>
     </div>
 
@@ -66,11 +75,10 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { useAuthStore } from '@/modules/auth/store/auth.store';
+import axios from 'axios';
 
 const router = useRouter();
 const route = useRoute();
-const authStore = useAuthStore();
 
 const form = reactive({
   email: '',
@@ -79,6 +87,7 @@ const form = reactive({
 });
 
 const loading = ref(false);
+const showPassword = ref(false);
 const errors = reactive({
   email: '',
   password: ''
@@ -114,14 +123,21 @@ const handleLogin = async () => {
   try {
     loading.value = true;
     
-    const success = await authStore.login({
-      email: form.email.trim(),
-      password: form.password,
-      rememberMe: form.remember
-    });
+    const response = await axios.post('/auth/token', 
+      new URLSearchParams({
+        username: form.email.trim(),
+        password: form.password
+      }),
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }
+    );
     
-    if (!success && authStore.error) {
-      errors.password = authStore.error;
+    if (response.data.access_token) {
+      localStorage.setItem('auth_token', response.data.access_token);
+      window.location.href = '/';
     }
   } catch (error) {
     console.error('Login failed:', error);
@@ -183,6 +199,12 @@ label {
   color: #1f2937;
 }
 
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
 .form-input {
   width: 100%;
   padding: 0.75rem 1rem;
@@ -190,6 +212,27 @@ label {
   border-radius: 8px;
   font-size: 1rem;
   transition: border-color 0.2s;
+}
+
+.password-input-wrapper .form-input {
+  padding-right: 3rem;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  color: #6b7280;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: color 0.2s;
+}
+
+.password-toggle:hover {
+  color: #3b82f6;
 }
 
 .form-input:focus {
