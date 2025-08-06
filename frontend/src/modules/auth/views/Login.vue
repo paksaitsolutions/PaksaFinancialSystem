@@ -5,59 +5,60 @@
   </div>
 
   <form @submit.prevent="handleLogin" class="login-form">
-    <div class="mb-4">
-      <label for="email" class="block text-600 text-sm font-medium mb-2">Email</label>
-      <InputText
+    <div class="form-field">
+      <label for="email">Email Address</label>
+      <input
         id="email"
         v-model="form.email"
         type="email"
-        class="w-full"
+        class="form-input"
+        :class="{ error: errors.email }"
         placeholder="Enter your email"
         required
       />
+      <div v-if="errors.email" class="error-message">{{ errors.email }}</div>
     </div>
 
-    <div class="mb-4">
-      <div class="flex justify-content-between align-items-center mb-2">
-        <label for="password" class="block text-600 text-sm font-medium">Password</label>
-        <router-link to="/forgot-password" class="text-primary-500 text-sm font-medium hover:underline">
+    <div class="form-field">
+      <div class="field-header">
+        <label for="password">Password</label>
+        <router-link to="/auth/forgot-password" class="forgot-link">
           Forgot password?
         </router-link>
       </div>
-      <Password
+      <input
         id="password"
         v-model="form.password"
-        class="w-full"
-        inputClass="w-full"
-        :feedback="false"
-        toggleMask
+        type="password"
+        class="form-input"
+        :class="{ error: errors.password }"
         placeholder="Enter your password"
         required
       />
+      <div v-if="errors.password" class="error-message">{{ errors.password }}</div>
     </div>
 
-    <div class="flex align-items-center mb-6">
-      <Checkbox
+    <div class="checkbox-field">
+      <input
+        id="remember"
         v-model="form.remember"
-        :binary="true"
-        class="mr-2"
-        inputId="remember-checkbox"
+        type="checkbox"
+        class="checkbox"
       />
-      <label for="remember-checkbox" class="text-600 text-sm">Remember me</label>
+      <label for="remember">Remember me for 30 days</label>
     </div>
 
-    <Button
+    <button
       type="submit"
-      :label="loading ? 'Signing in...' : 'Sign In'"
-      class="w-full p-button-primary mb-4"
-      :loading="loading"
-    />
+      class="submit-button"
+      :disabled="loading"
+    >
+      {{ loading ? 'Signing in...' : 'Sign In' }}
+    </button>
 
-    <div class="text-center mt-4">
-      <span class="text-600 text-sm">Don't have an account? </span>
-      <router-link to="/auth/register" class="text-primary-500 font-medium hover:underline">
-        Sign up
-      </router-link>
+    <div class="signup-link">
+      <span>Don't have an account? </span>
+      <router-link to="/auth/register">Create account</router-link>
     </div>
   </form>
 </template>
@@ -65,53 +66,42 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { useAuthStore } from '@/store/auth';
-import { useToast } from 'primevue/usetoast';
-import InputText from 'primevue/inputtext';
-import Password from 'primevue/password';
-import Button from 'primevue/button';
-import Checkbox from 'primevue/checkbox';
-
-interface LoginCredentials {
-  email: string;
-  password: string;
-  remember: boolean;
-}
+import { useAuthStore } from '@/modules/auth/store/auth.store';
 
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
-const toast = useToast();
 
-const form = reactive<LoginCredentials>({
+const form = reactive({
   email: '',
   password: '',
   remember: false,
 });
 
 const loading = ref(false);
-const errors = reactive<Record<string, string>>({});
+const errors = reactive({
+  email: '',
+  password: ''
+});
 
 const validateForm = (): boolean => {
   let isValid = true;
-  errors['email'] = '';
-  errors['password'] = '';
+  errors.email = '';
+  errors.password = '';
 
-  // Email validation
-  if (!form.email) {
-    errors['email'] = 'Email is required';
+  if (!form.email.trim()) {
+    errors.email = 'Email is required';
     isValid = false;
-  } else if (!/\S+@\S+\.\S+/.test(form.email)) {
-    errors['email'] = 'Please enter a valid email address';
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+    errors.email = 'Please enter a valid email address';
     isValid = false;
   }
 
-  // Password validation
   if (!form.password) {
-    errors['password'] = 'Password is required';
+    errors.password = 'Password is required';
     isValid = false;
   } else if (form.password.length < 6) {
-    errors['password'] = 'Password must be at least 6 characters';
+    errors.password = 'Password must be at least 6 characters';
     isValid = false;
   }
 
@@ -119,69 +109,38 @@ const validateForm = (): boolean => {
 };
 
 const handleLogin = async () => {
-  if (!validateForm()) {
-    return;
-  }
+  if (!validateForm()) return;
 
   try {
     loading.value = true;
     
-    await authStore.login({
-      email: form.email,
+    const success = await authStore.login({
+      email: form.email.trim(),
       password: form.password,
       rememberMe: form.remember
     });
-
-    // Show success message
-    toast.add({
-      severity: 'success',
-      summary: 'Success',
-      detail: 'Login successful',
-      life: 3000
-    } as any);
-
-    // Redirect to dashboard or intended route
-    const redirectTo = route.query['redirect'] || '/';
-    await router.push({ path: redirectTo as string });
-  } catch (error: any) {
-    const errorMessage = error.response?.data?.message || 'An error occurred during login';
     
-    // Show error message
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: errorMessage,
-      life: 5000
-    } as any);
+    if (!success && authStore.error) {
+      errors.password = authStore.error;
+    }
+  } catch (error) {
+    console.error('Login failed:', error);
+    errors.password = 'Login failed. Please try again.';
   } finally {
     loading.value = false;
   }
 };
 
-// Check for remembered email
-onMounted(async () => {
+onMounted(() => {
   const rememberedEmail = localStorage.getItem('rememberedEmail');
   if (rememberedEmail) {
     form.email = rememberedEmail;
     form.remember = true;
   }
-  
-  // Clear any existing auth state on login page load
-  if (authStore.isAuthenticated && router.currentRoute.value.path === '/login') {
-    await router.push('/dashboard');
-  }
 });
 </script>
 
 <style scoped>
-/* Base Layout */
-
-
-/* Form Styles */
-.login-form {
-  padding: 2rem;
-}
-
 .login-brand {
   text-align: center;
   margin-bottom: 2rem;
@@ -191,84 +150,125 @@ onMounted(async () => {
   font-size: 1.75rem;
   font-weight: 700;
   margin-bottom: 0.5rem;
-  line-height: 1.2;
-  color: var(--text-color);
+  color: #1f2937;
 }
 
 .login-brand p {
   font-size: 1rem;
-  line-height: 1.5;
-  color: var(--text-color-secondary);
+  color: #6b7280;
   margin: 0;
 }
 
-/* Form Elements */
-:deep(.p-button) {
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.field-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+label {
+  font-size: 0.875rem;
   font-weight: 500;
-  letter-spacing: 0.025em;
-  transition: all 0.2s ease;
-  padding: 0.75rem 1.5rem;
+  color: #1f2937;
 }
 
-:deep(.p-button:not(:disabled):hover) {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
-
-:deep(.p-inputtext) {
-  border-radius: 6px;
-  border: 1px solid var(--surface-300);
-  transition: all 0.2s ease;
+.form-input {
+  width: 100%;
   padding: 0.75rem 1rem;
-  font-size: 0.9375rem;
-  background-color: var(--surface-a);
-  color: var(--text-color);
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
 }
 
-:deep(.p-inputtext:enabled:hover) {
-  border-color: var(--primary-300);
-}
-
-:deep(.p-inputtext:enabled:focus) {
-  border-color: var(--primary-500);
-  box-shadow: 0 0 0 1px var(--primary-500);
+.form-input:focus {
   outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-:deep(.p-password) {
-  display: block;
-  width: 100%;
+.form-input.error {
+  border-color: #ef4444;
 }
 
-:deep(.p-password-input) {
-  width: 100%;
+.error-message {
+  color: #ef4444;
+  font-size: 0.875rem;
+  font-weight: 500;
 }
 
-/* Checkbox */
-:deep(.p-checkbox .p-checkbox-box) {
-  border-radius: 4px;
-  border: 1px solid var(--surface-300);
+.checkbox-field {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.checkbox {
   width: 1.25rem;
   height: 1.25rem;
 }
 
-:deep(.p-checkbox .p-checkbox-box.p-highlight) {
-  background-color: var(--primary-500);
-  border-color: var(--primary-500);
+.submit-button {
+  width: 100%;
+  padding: 0.875rem 1.5rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
 }
 
-:deep(.p-checkbox:not(.p-checkbox-disabled) .p-checkbox-box.p-highlight:hover) {
-  background-color: var(--primary-600);
-  border-color: var(--primary-600);
+.submit-button:hover:not(:disabled) {
+  background: #2563eb;
 }
 
-/* Responsive adjustments */
-@media (max-width: 991px) {
-  .login-content {
-    padding: 0 0.5rem;
+.submit-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.forgot-link,
+.signup-link a {
+  color: #3b82f6;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.forgot-link:hover,
+.signup-link a:hover {
+  text-decoration: underline;
+}
+
+.signup-link {
+  text-align: center;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+@media (max-width: 768px) {
+  .login-brand h2 {
+    font-size: 1.5rem;
   }
-  .login-form {
-    padding: 1.25rem;
+  
+  .field-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
   }
 }
 </style>

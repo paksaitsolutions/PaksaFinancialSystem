@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory, type RouteRecordRaw, type RouteMeta } from 'vue-router';
-import { useAuthStore } from '../stores/auth';
+import { useAuthStore } from '@/modules/auth/store/auth.store';
 
 // Extend the RouteMeta interface to include our custom properties
 declare module 'vue-router' {
@@ -25,22 +25,14 @@ type AppRouteRecordRaw = RouteRecordRaw;
 const publicRoutes: AppRouteRecordRaw[] = [
   {
     path: '/auth',
-    redirect: '/auth/login',
     component: () => import('@/layouts/AuthLayout.vue'),
-    meta: { 
-      requiresGuest: true,
-      layout: 'AuthLayout'  // Explicitly set layout for auth routes
-    },
+    meta: { requiresGuest: true },
     children: [
       {
         path: 'login',
         name: 'Login',
         component: () => import('@/modules/auth/views/Login.vue'),
-        meta: { 
-          title: 'Login',
-          layout: 'AuthLayout',  // Use AuthLayout for login
-          hideTopMenu: true     // Hide top menu for login page
-        }
+        meta: { title: 'Login' }
       },
       {
         path: 'register',

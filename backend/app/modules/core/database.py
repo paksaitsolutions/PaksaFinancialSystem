@@ -321,7 +321,7 @@ async def _run_migrations(conn: AsyncConnection) -> None:
                     WHERE table_schema = 'public' AND table_name = 'alembic_version'
                 """)
             )
-        has_migrations = bool((await result.first()) is not None)
+        has_migrations = bool(result.first() is not None)
         
         if not has_migrations:
             # This is a fresh database - initialize it
@@ -378,18 +378,7 @@ async def seed_users(conn: AsyncConnection) -> None:
         raise
 
 
-@contextlib.asynccontextmanager
-async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
-    """Context manager for database sessions."""
-    async with async_session_factory() as session:
-        try:
-            yield session
-            await session.commit()
-        except Exception:
-            await session.rollback()
-            raise
-        finally:
-            await session.close()
+
 
 
 # For backward compatibility

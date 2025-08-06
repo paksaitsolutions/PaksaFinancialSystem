@@ -1,7 +1,8 @@
 <template>
-  <component :is="layout">
+  <component :is="layout" v-if="layout">
     <router-view />
   </component>
+  <router-view v-else />
 </template>
 
 <script setup lang="ts">
@@ -28,6 +29,11 @@ const layouts = {
 
 // Determine which layout to use based on the route
 const layout = computed(() => {
+  // If layout is explicitly null, return null (no wrapper)
+  if (route.meta.layout === null) {
+    return null;
+  }
+  
   // Get the layout name from route meta or default to 'AppLayout'
   const layoutName = (route.meta.layout || 'AppLayout') as keyof typeof layouts;
   

@@ -1,7 +1,7 @@
 """
 Paksa Financial System - Production-Ready Main Application
 """
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from datetime import datetime
@@ -114,26 +114,35 @@ async def health_check():
     }
 
 # Authentication endpoints
-@app.post("/api/v1/auth/login")
-async def login(credentials: dict, db = Depends(get_db)):
-    username = credentials.get("username")
-    password = credentials.get("password")
-    
+@app.post("/auth/token")
+async def login(username: str = Form(), password: str = Form()):
     # Simple demo authentication
     if username == "admin@paksa.com" and password == "admin123":
         return {
             "access_token": "demo-jwt-token-12345",
             "token_type": "bearer",
             "expires_in": 3600,
-            "user": {
-                "id": "1", 
-                "username": "admin", 
-                "email": "admin@paksa.com",
-                "tenant_id": DEFAULT_TENANT_ID
-            }
+            "refresh_token": "demo-refresh-token-12345"
         }
     
     raise HTTPException(status_code=401, detail="Invalid credentials")
+
+@app.get("/auth/me")
+async def get_current_user():
+    return {
+        "id": "1",
+        "email": "admin@paksa.com",
+        "name": "Admin User",
+        "permissions": ["admin"]
+    }
+
+@app.get("/auth/verify-token")
+async def verify_token():
+    return {"valid": True}
+
+@app.post("/auth/logout")
+async def logout():
+    return {"message": "Logged out successfully"}
 
 # General Ledger endpoints
 @app.get("/api/v1/gl/accounts")

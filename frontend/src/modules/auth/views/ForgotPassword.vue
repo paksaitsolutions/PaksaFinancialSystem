@@ -1,138 +1,194 @@
 <template>
-  <v-app>
-    <v-main>
-      <v-container fluid class="fill-height">
-        <v-row align="center" justify="center" class="fill-height">
-          <v-col cols="12" sm="8" md="4">
-            <v-card class="elevation-12 pa-4">
-              <v-card-title class="text-center">
-                <div class="d-flex flex-column align-center">
-                  <v-img
-                    src="/logo.png"
-                    alt="Paksa Financial System"
-                    max-width="80"
-                    class="mb-4"
-                  ></v-img>
-                  <h2 class="text-h4 font-weight-bold primary--text">
-                    Reset Password
-                  </h2>
-                  <p class="text-subtitle-1 text-center mt-2">
-                    Enter your email to receive reset instructions
-                  </p>
-                </div>
-              </v-card-title>
+  <div class="forgot-brand">
+    <h2>Reset Password</h2>
+    <p>Enter your email to receive reset instructions</p>
+  </div>
 
-              <v-card-text>
-                <v-form ref="form" v-model="valid" @submit.prevent="resetPassword">
-                  <v-text-field
-                    v-model="email"
-                    label="Email Address"
-                    type="email"
-                    prepend-inner-icon="mdi-email"
-                    :rules="emailRules"
-                    required
-                    outlined
-                    class="mb-3"
-                  ></v-text-field>
+  <form @submit.prevent="handleReset" class="forgot-form">
+    <div class="form-field">
+      <label for="email">Email Address</label>
+      <input
+        id="email"
+        v-model="form.email"
+        type="email"
+        class="form-input"
+        :class="{ error: errors.email }"
+        placeholder="Enter your email"
+        required
+      />
+      <div v-if="errors.email" class="error-message">{{ errors.email }}</div>
+    </div>
 
-                  <v-alert
-                    v-if="successMessage"
-                    type="success"
-                    class="mb-4"
-                  >
-                    {{ successMessage }}
-                  </v-alert>
+    <div v-if="successMessage" class="success-message">
+      {{ successMessage }}
+    </div>
 
-                  <v-alert
-                    v-if="errorMessage"
-                    type="error"
-                    class="mb-4"
-                    dismissible
-                    @click:close="errorMessage = ''"
-                  >
-                    {{ errorMessage }}
-                  </v-alert>
+    <button
+      type="submit"
+      class="submit-button"
+      :disabled="loading || !!successMessage"
+    >
+      {{ loading ? 'Sending...' : 'Send Reset Instructions' }}
+    </button>
 
-                  <v-btn
-                    type="submit"
-                    color="primary"
-                    size="large"
-                    block
-                    :loading="loading"
-                    :disabled="!valid || successMessage"
-                    class="mb-3"
-                  >
-                    Send Reset Instructions
-                  </v-btn>
-
-                  <div class="text-center">
-                    <v-btn
-                      text
-                      color="primary"
-                      @click="$router.push('/auth/login')"
-                    >
-                      <v-icon class="mr-2">mdi-arrow-left</v-icon>
-                      Back to Login
-                    </v-btn>
-                  </div>
-                </v-form>
-              </v-card-text>
-            </v-card>
-          </v-col>
-        </v-row>
-      </v-container>
-    </v-main>
-  </v-app>
+    <div class="back-link">
+      <router-link to="/auth/login">← Back to Login</router-link>
+    </div>
+  </form>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, reactive } from 'vue';
 
-// Form data
-const email = ref('')
-const valid = ref(false)
-const loading = ref(false)
-const errorMessage = ref('')
-const successMessage = ref('')
+const form = reactive({
+  email: '',
+});
 
-// Validation rules
-const emailRules = [
-  (v: string) => !!v || 'Email is required',
-  (v: string) => /.+@.+\..+/.test(v) || 'Email must be valid'
-]
+const loading = ref(false);
+const successMessage = ref('');
+const errors = reactive({
+  email: ''
+});
 
-// Reset password function
-const resetPassword = async () => {
-  if (!valid.value) return
+const validateForm = (): boolean => {
+  let isValid = true;
+  errors.email = '';
 
-  loading.value = true
-  errorMessage.value = ''
-  successMessage.value = ''
+  if (!form.email.trim()) {
+    errors.email = 'Email is required';
+    isValid = false;
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+    errors.email = 'Please enter a valid email address';
+    isValid = false;
+  }
+
+  return isValid;
+};
+
+const handleReset = async () => {
+  if (!validateForm()) return;
 
   try {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500))
+    loading.value = true;
     
-    // Mock success response
-    successMessage.value = `Password reset instructions have been sent to ${email.value}. Please check your email and follow the instructions to reset your password.`
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    successMessage.value = `Password reset instructions have been sent to ${form.email}. Please check your email.`;
   } catch (error) {
-    errorMessage.value = 'Failed to send reset instructions. Please try again.'
+    errors.email = 'Failed to send reset instructions. Please try again.';
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 </script>
 
 <style scoped>
-.fill-height {
-  min-height: 100vh;
+.forgot-brand {
+  text-align: center;
+  margin-bottom: 2rem;
 }
 
-.v-card {
-  border-radius: 12px;
+.forgot-brand h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: #1f2937;
 }
 
-.primary--text {
-  color: #1976d2 !important;
+.forgot-brand p {
+  font-size: 1rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.forgot-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-input.error {
+  border-color: #ef4444;
+}
+
+.error-message {
+  color: #ef4444;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.success-message {
+  color: #10b981;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.75rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+}
+
+.submit-button {
+  width: 100%;
+  padding: 0.875rem 1.5rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.submit-button:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+.submit-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.back-link {
+  text-align: center;
+}
+
+.back-link a {
+  color: #3b82f6;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.back-link a:hover {
+  text-decoration: underline;
 }
 </style>
