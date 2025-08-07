@@ -25,10 +25,10 @@ type AppRouteRecordRaw = RouteRecordRaw;
 const publicRoutes: AppRouteRecordRaw[] = [
   {
     path: '/auth',
-    component: () => import('@/layouts/AuthLayout.vue'),
+    component: { template: '<router-view />' },
     meta: { 
       requiresGuest: true,
-      layout: 'AuthLayout' // Explicitly set layout
+      layout: 'AuthLayout' // Only set layout here, not component
     },
     children: [
       {
@@ -36,8 +36,8 @@ const publicRoutes: AppRouteRecordRaw[] = [
         name: 'Login',
         component: () => import('@/modules/auth/views/Login.vue'),
         meta: { 
-          title: 'Login',
-          layout: 'AuthLayout' // Ensure child routes inherit this layout
+          title: 'Login'
+          // Remove duplicate layout from child routes
         }
       },
       {
