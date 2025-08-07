@@ -1,128 +1,110 @@
 <template>
   <div class="auth-layout">
-    <div class="auth-background">
-      <div class="auth-background-overlay"></div>
-    </div>
-
-    <div class="auth-content">
-      <div class="auth-branding hidden lg:flex">
-        <div class="branding-content">
-          <div class="logo-section mb-8">
-            <img
-              src="@/assets/logo.svg"
-              alt="Paksa Financial System"
-              class="logo mb-4"
-            />
-            <h1 class="text-4xl font-bold text-white mb-2">
-              Paksa Financial System
-            </h1>
-            <p class="text-xl text-white opacity-90">
-              Complete Enterprise Financial Management
-            </p>
-          </div>
-
-          <div class="features-section">
-            <div class="feature-item mb-6" v-for="feature in features" :key="feature.title">
-              <i :class="feature.icon" class="text-4xl text-white mb-3"></i>
-              <h3 class="text-xl font-medium text-white mb-2">
-                {{ feature.title }}
-              </h3>
-              <p class="text-white opacity-80">
-                {{ feature.description }}
-              </p>
-            </div>
-          </div>
-        </div>
+    <!-- Left Panel with Branding and Features -->
+    <div class="left-panel">
+      <div class="logo-container">
+        <img 
+          src="@/assets/logo.png" 
+          alt="Paksa Financial System" 
+          class="logo"
+        >
+        <h1 class="system-title">
+          Paksa Financial System
+        </h1>
+        <p class="system-tagline">
+          Complete Enterprise Financial Management
+        </p>
       </div>
 
-      <div class="auth-form-section">
-        <div class="form-container">
-          <div class="mobile-logo lg:hidden text-center mb-8">
-            <img
-              src="@/assets/logo.svg"
-              alt="Paksa Financial System"
-              class="mobile-logo-img mx-auto mb-3"
-            />
-            <h2 class="text-2xl font-bold text-primary">
-              Paksa Financial System
-            </h2>
-          </div>
-
-          <router-view />
-
-          <div class="auth-footer text-center mt-8">
-            <div class="flex justify-content-center align-items-center flex-wrap mb-4">
-              <a href="#" class="text-primary text-sm mx-2">Privacy Policy</a>
-              <span class="text-300 mx-2">|</span>
-              <a href="#" class="text-primary text-sm mx-2">Terms of Service</a>
-              <span class="text-300 mx-2">|</span>
-              <a href="#" class="text-primary text-sm mx-2">Support</a>
-            </div>
-            <p class="text-600 text-sm">
-              © {{ currentYear }} Paksa IT Solutions. All rights reserved.
-            </p>
-          </div>
+      <div class="features-section">
+        <div class="feature-item" v-for="feature in features" :key="feature.title">
+          <i :class="feature.icon"></i>
+          <h3>{{ feature.title }}</h3>
+          <p>{{ feature.description }}</p>
         </div>
+      </div>
+    </div>
+
+    <!-- Right Panel with Authentication Form -->
+    <div class="right-panel">
+      <div class="form-container">
+        <slot />
       </div>
     </div>
   </div>
 </template>
 
-<script setup lang="ts">
-import { computed } from 'vue'
+<script setup>
+import { ref, onMounted } from 'vue';
 
-const currentYear = computed(() => new Date().getFullYear())
+const currentYear = ref(new Date().getFullYear());
 
 const features = [
   {
-    icon: 'pi pi-chart-line',
-    title: 'Advanced Analytics',
-    description: 'Real-time financial insights and comprehensive reporting tools.'
-  },
-  {
     icon: 'pi pi-shield',
-    title: 'Enterprise Security',
-    description: 'Bank-level security with multi-factor authentication and encryption.'
+    title: 'Secure & Reliable',
+    description: 'Enterprise-grade security to protect your financial data'
   },
   {
-    icon: 'pi pi-cloud',
-    title: 'Cloud Integration',
-    description: 'Seamless synchronization across all your devices and platforms.'
+    icon: 'pi pi-chart-line',
+    title: 'Real-time Analytics',
+    description: 'Get instant insights into your financial performance'
+  },
+  {
+    icon: 'pi pi-cog',
+    title: 'Customizable',
+    description: 'Tailor the system to fit your business needs'
   }
-]
+];
+
+// Add meta tag to prevent layout shift on mobile
+onMounted(() => {
+  const viewportMeta = document.createElement('meta');
+  viewportMeta.name = 'viewport';
+  viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+  document.head.appendChild(viewportMeta);
+  
+  return () => {
+    document.head.removeChild(viewportMeta);
+  };
+});
 </script>
 
 <style scoped>
+/* Base Layout */
 .auth-layout {
+  display: flex;
   min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  line-height: 1.5;
+  color: #2c3e50;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f8f9fa;
+}
+
+/* Left Panel */
+.left-panel {
+  flex: 1;
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  color: white;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   position: relative;
   overflow: hidden;
+  min-height: 100vh;
 }
 
-.auth-background {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  z-index: 0;
-}
-
-.auth-background-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.3);
+.logo-container {
+  text-align: center;
+  margin-bottom: 3rem;
   z-index: 1;
-}
-
-.auth-content {
-  position: relative;
-  z-index: 3;
-  display: flex;
+  padding: 0 2rem;
   min-height: 100vh;
 }
 
