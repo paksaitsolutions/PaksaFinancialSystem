@@ -1,16 +1,15 @@
 <template>
-  <div class="flex align-items-center justify-content-center min-h-screen w-full bg-surface-ground">
+  <div class="login-container">
     <Toast position="top-right" />
-    
-    <div class="surface-card p-4 shadow-2 border-round w-full max-w-30rem">
-      <div class="text-center mb-5">
-        <div class="text-900 text-3xl font-medium mb-2">Welcome Back</div>
-        <span class="text-600 font-medium">Please enter your credentials to continue</span>
+    <div class="login-card">
+      <div class="login-header">
+        <h2>Welcome Back</h2>
+        <p>Please enter your credentials to continue</p>
       </div>
 
-      <form @submit.prevent="handleLogin" @keydown.enter="onFormKeyDown" class="w-full">
-        <div class="mb-3">
-          <label for="email" class="block text-900 font-medium mb-2">Email</label>
+      <form @submit.prevent="handleLogin" class="login-form">
+        <div class="form-group">
+          <label for="email">Email</label>
           <InputText
             id="email"
             v-model="form.email"
@@ -18,19 +17,14 @@
             placeholder="Enter your email"
             :class="{ 'p-invalid': errors.email }"
             class="w-full"
-            autocomplete="username"
           />
-          <small v-if="errors.email" class="p-error">{{ errors.email }}</small>
+          <small v-if="errors.email" class="error-message">{{ errors.email }}</small>
         </div>
 
-        <div class="mb-3">
-          <div class="flex align-items-center justify-content-between mb-2">
-            <label for="password" class="block text-900 font-medium">Password</label>
-            <router-link 
-              to="/forgot-password" 
-              class="font-medium text-primary hover:underline cursor-pointer"
-              style="font-size: 0.875rem"
-            >
+        <div class="form-group">
+          <div class="password-header">
+            <label for="password">Password</label>
+            <router-link to="/forgot-password" class="forgot-password">
               Forgot password?
             </router-link>
           </div>
@@ -43,22 +37,19 @@
             :class="{ 'p-invalid': errors.password }"
             class="w-full"
             inputClass="w-full"
-            autocomplete="current-password"
             @keyup.enter="handleLogin"
           />
-          <small v-if="errors.password" class="p-error">{{ errors.password }}</small>
+          <small v-if="errors.password" class="error-message">{{ errors.password }}</small>
         </div>
 
-        <div class="flex align-items-center justify-content-between mb-4">
-          <div class="flex align-items-center">
-            <Checkbox
-              v-model="form.remember"
-              :binary="true"
-              inputId="remember"
-              class="mr-2"
-            />
-            <label for="remember" class="text-900">Remember me</label>
-          </div>
+        <div class="remember-me">
+          <Checkbox
+            v-model="form.remember"
+            :binary="true"
+            inputId="remember"
+            class="mr-2"
+          />
+          <label for="remember">Remember me</label>
         </div>
 
         <Button
@@ -67,25 +58,23 @@
           icon="pi pi-sign-in"
           :loading="loading"
           :disabled="!isFormValid"
-          class="w-full mb-3"
+          class="login-button"
         />
 
-        <div class="text-center">
-          <span class="text-600 font-medium">Don't have an account? </span>
-          <router-link to="/register" class="font-medium text-primary hover:underline cursor-pointer">
-            Sign up
-          </router-link>
+        <div class="signup-link">
+          Don't have an account? 
+          <router-link to="/register">Sign up</router-link>
         </div>
       </form>
       
-      <Divider align="center" class="my-4">
-        <span class="text-600 font-normal text-sm">OR</span>
-      </Divider>
+      <div class="divider">
+        <span>OR</span>
+      </div>
       
       <Button
         label="Try Demo Account"
         icon="pi pi-user"
-        class="p-button-outlined w-full"
+        class="demo-button"
         @click="handleDemoLogin"
         :loading="loading"
       />
@@ -274,75 +263,170 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* Using PrimeVue and project SCSS variables */
-.field {
-  margin-bottom: 1.25rem;
+/* Base Styles */
+.login-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 1rem;
+  background-color: var(--surface-ground);
 }
 
-.field label {
-  display: block;
-  margin-bottom: 0.5rem;
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--surface-card);
+  padding: 2rem;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-2);
+}
+
+/* Header */
+.login-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.login-header h2 {
+  color: var(--text-color);
+  margin: 0 0 0.5rem;
+  font-size: 1.75rem;
+}
+
+.login-header p {
+  color: var(--text-color-secondary);
+  margin: 0;
+}
+
+/* Form */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+label {
   font-weight: 500;
   color: var(--text-color);
 }
 
-/* Input fields */
-:deep(.p-inputtext) {
-  width: 100%;
+/* Password Header */
+.password-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-/* Error messages */
-.p-error {
-  display: block;
-  margin-top: 0.25rem;
-  font-size: 0.875rem;
-  color: var(--red-500);
-}
-
-/* Forgot password link */
 .forgot-password {
   font-size: 0.875rem;
-  font-weight: 500;
   color: var(--primary-color);
   text-decoration: none;
-  transition: color 0.2s;
 }
 
 .forgot-password:hover {
-  color: var(--primary-600);
   text-decoration: underline;
 }
 
-/* Remember me checkbox */
+/* Remember Me */
 .remember-me {
   display: flex;
   align-items: center;
-  margin: 1rem 0;
+  margin: 0.5rem 0;
 }
 
-.remember-me label {
-  margin-left: 0.5rem;
-  cursor: pointer;
-  user-select: none;
-}
-
-/* Login button */
-.login-btn {
+/* Buttons */
+.login-button,
+.demo-button {
   width: 100%;
   margin-top: 1rem;
 }
 
-/* Demo login button */
-.demo-login-btn {
-  width: 100%;
-  margin-top: 1rem;
-  background-color: var(--surface-ground);
-  color: var(--text-color);
-  border: 1px solid var(--surface-border);
+.demo-button {
+  background: transparent;
+  border: 1px solid var(--primary-color);
+  color: var(--primary-color);
 }
 
-.demo-login-btn:hover {
-  background-color: var(--surface-100);
+.demo-button:hover {
+  background: rgba(var(--primary-color-rgb), 0.05);
+}
+
+/* Sign Up Link */
+.signup-link {
+  text-align: center;
+  margin-top: 1rem;
+  color: var(--text-color-secondary);
+}
+
+.signup-link a {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 500;
+  margin-left: 0.25rem;
+}
+
+.signup-link a:hover {
+  text-decoration: underline;
+}
+
+/* Divider */
+.divider {
+  display: flex;
+  align-items: center;
+  margin: 1.5rem 0;
+  color: var(--text-color-secondary);
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid var(--surface-border);
+}
+
+.divider span {
+  padding: 0 1rem;
+  font-size: 0.875rem;
+}
+
+/* Error Message */
+.error-message {
+  color: var(--red-500);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+  .login-card {
+    padding: 1.5rem;
+  }
+  
+  .login-header h2 {
+    font-size: 1.5rem;
+  }
+  
+  .login-header p {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-height: 700px) {
+  .login-container {
+    align-items: flex-start;
+    padding: 1rem;
+  }
+  
+  .login-card {
+    margin: 1rem 0;
+  }
 }
 
 /* Register link */
