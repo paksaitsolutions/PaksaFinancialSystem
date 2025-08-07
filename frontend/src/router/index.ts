@@ -97,12 +97,11 @@ function createModuleRoute(
   name: string,
   path: string,
   routes: RouteRecordRaw[],
-  meta?: RouteMeta
+  meta: RouteMeta = { requiresAuth: true, layout: 'MainLayout' }
 ): RouteRecordRaw {
   return {
     path: `/${path}`,
     name,
-    component: () => import(`@/layouts/MainLayout.vue`),
     meta: {
       ...meta,
       module: path,
@@ -357,8 +356,8 @@ const appRoutes: RouteRecordRaw[] = [
   
   // Main app routes (require authentication)
   {
-    path: '/',
-    component: () => import('@/layouts/AppLayout.vue'),
+    path: '/app',
+    name: 'App',
     meta: { 
       requiresAuth: true,
       layout: 'AppLayout'  // Explicitly set layout for app routes
@@ -419,7 +418,25 @@ const appRoutes: RouteRecordRaw[] = [
 // Create the router instance with all routes
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  routes: appRoutes,
+  routes: [
+    {
+      path: '/',
+      redirect: '/auth/login'
+    },
+    ...publicRoutes,
+    ...Object.values(moduleRoutes),
+    ...appRoutes,
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'NotFound',
+      component: () => import('@/views/errors/NotFound.vue'),
+      meta: { 
+        title: 'Page Not Found',
+        requiresAuth: false,
+        layout: 'ErrorLayout'
+      }
+    }
+  ],
   // Using _ for unused parameters
   scrollBehavior(_, _savedPosition) {
     return { top: 0 };

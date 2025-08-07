@@ -15,12 +15,14 @@ const route = useRoute()
 import AppLayout from './layouts/AppLayout.vue'
 import AuthLayout from './layouts/AuthLayout.vue'
 import ErrorLayout from './layouts/ErrorLayout.vue'
+import MainLayout from './layouts/MainLayout.vue'
 
 // Map of layout names to their components
 const layouts = {
   AppLayout,
   AuthLayout,
-  ErrorLayout
+  ErrorLayout,
+  MainLayout
 }
 
 // Determine which layout to use based on the route

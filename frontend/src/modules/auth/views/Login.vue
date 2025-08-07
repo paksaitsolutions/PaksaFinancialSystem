@@ -1,92 +1,94 @@
 <template>
-  <div class="login-form-container">
-    <Toast />
-    <div class="login-card">
-          <div class="login-card-header">
-            <h2 class="text-2xl font-bold mb-1">Welcome Back</h2>
-            <p class="text-color-secondary text-sm">Please enter your credentials to continue</p>
+  <div class="flex align-items-center justify-content-center min-h-screen w-full bg-surface-ground">
+    <Toast position="top-right" />
+    
+    <div class="surface-card p-4 shadow-2 border-round w-full max-w-30rem">
+      <div class="text-center mb-5">
+        <div class="text-900 text-3xl font-medium mb-2">Welcome Back</div>
+        <span class="text-600 font-medium">Please enter your credentials to continue</span>
+      </div>
+
+      <form @submit.prevent="handleLogin" @keydown.enter="onFormKeyDown" class="w-full">
+        <div class="mb-3">
+          <label for="email" class="block text-900 font-medium mb-2">Email</label>
+          <InputText
+            id="email"
+            v-model="form.email"
+            type="email"
+            placeholder="Enter your email"
+            :class="{ 'p-invalid': errors.email }"
+            class="w-full"
+            autocomplete="username"
+          />
+          <small v-if="errors.email" class="p-error">{{ errors.email }}</small>
+        </div>
+
+        <div class="mb-3">
+          <div class="flex align-items-center justify-content-between mb-2">
+            <label for="password" class="block text-900 font-medium">Password</label>
+            <router-link 
+              to="/forgot-password" 
+              class="font-medium text-primary hover:underline cursor-pointer"
+              style="font-size: 0.875rem"
+            >
+              Forgot password?
+            </router-link>
           </div>
-          
-          <div class="login-form" @keydown.enter="onFormKeyDown">
-            <div class="field">
-              <label for="email" class="block text-sm font-medium mb-2">Email</label>
-              <InputText
-                id="email"
-                v-model="form.email"
-                type="email"
-                placeholder="Enter your email"
-                :class="{ 'p-invalid': errors.email }"
-                class="w-full"
-                autocomplete="username"
-                @keyup.enter="handleLogin"
-              />
-              <small v-if="errors.email" class="p-error">{{ errors.email }}</small>
-            </div>
-            
-            <div class="field mt-4">
-              <div class="flex justify-content-between mb-2">
-                <label for="password" class="block text-sm font-medium">Password</label>
-                <router-link 
-                  to="/forgot-password" 
-                  class="text-primary text-sm font-medium hover:underline"
-                >
-                  Forgot password?
-                </router-link>
-              </div>
-              <Password
-                id="password"
-                v-model="form.password"
-                :feedback="false"
-                :toggleMask="true"
-                placeholder="Enter your password"
-                :class="{ 'p-invalid': errors.password }"
-                class="w-full"
-                inputClass="w-full"
-                autocomplete="current-password"
-                @keyup.enter="handleLogin"
-              />
-              <small v-if="errors.password" class="p-error">{{ errors.password }}</small>
-            </div>
-            
-            <div class="flex align-items-center justify-content-between mb-4">
-              <div class="flex align-items-center">
-                <Checkbox
-                  v-model="form.remember"
-                  :binary="true"
-                  inputId="remember"
-                  class="mr-2"
-                />
-                <label for="remember" class="text-sm">Remember me</label>
-              </div>
-            </div>
-            
-            <Button
-              label="Sign In"
-              icon="pi pi-sign-in"
-              :loading="loading"
-              :disabled="!isFormValid"
-              class="w-full"
-              @click="handleLogin"
+          <Password
+            id="password"
+            v-model="form.password"
+            :feedback="false"
+            :toggleMask="true"
+            placeholder="Enter your password"
+            :class="{ 'p-invalid': errors.password }"
+            class="w-full"
+            inputClass="w-full"
+            autocomplete="current-password"
+            @keyup.enter="handleLogin"
+          />
+          <small v-if="errors.password" class="p-error">{{ errors.password }}</small>
+        </div>
+
+        <div class="flex align-items-center justify-content-between mb-4">
+          <div class="flex align-items-center">
+            <Checkbox
+              v-model="form.remember"
+              :binary="true"
+              inputId="remember"
+              class="mr-2"
             />
-            
-            <div class="text-center mt-4">
-              <p class="text-sm text-color-secondary">
-                Don't have an account? 
-                <router-link to="/register" class="text-primary font-medium hover:underline">
-                  Sign up
-                </router-link>
-              </p>
-            </div>
-            
-            <div class="text-center mt-6">
-              <Button
-                label="Try Demo Account"
-                icon="pi pi-user"
-                class="p-button-outlined p-button-secondary w-full"
-                @click="handleDemoLogin"
-              />
-            </div>
+            <label for="remember" class="text-900">Remember me</label>
           </div>
+        </div>
+
+        <Button
+          type="submit"
+          label="Sign In"
+          icon="pi pi-sign-in"
+          :loading="loading"
+          :disabled="!isFormValid"
+          class="w-full mb-3"
+        />
+
+        <div class="text-center">
+          <span class="text-600 font-medium">Don't have an account? </span>
+          <router-link to="/register" class="font-medium text-primary hover:underline cursor-pointer">
+            Sign up
+          </router-link>
+        </div>
+      </form>
+      
+      <Divider align="center" class="my-4">
+        <span class="text-600 font-normal text-sm">OR</span>
+      </Divider>
+      
+      <Button
+        label="Try Demo Account"
+        icon="pi pi-user"
+        class="p-button-outlined w-full"
+        @click="handleDemoLogin"
+        :loading="loading"
+      />
     </div>
   </div>
 </template>
@@ -272,37 +274,7 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.login-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100%;
-  padding: 2rem;
-  width: 100%;
-}
-
-.login-card {
-  width: 100%;
-  max-width: 400px;
-  background: #ffffff;
-  border-radius: 0.75rem;
-  padding: 2.5rem;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
-}
-
-.login-header {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.login-card-header h2 {
-  color: var(--text-color);
-  margin-bottom: 0.5rem;
-  font-size: 1.5rem;
-  font-weight: 600;
-}
-
-/* Form elements */
+/* Using PrimeVue and project SCSS variables */
 .field {
   margin-bottom: 1.25rem;
 }

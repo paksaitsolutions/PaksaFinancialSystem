@@ -77,13 +77,25 @@ onMounted(() => {
   min-height: 100vh;
   margin: 0;
   padding: 0;
-  overflow: hidden;
+  overflow: auto;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   line-height: 1.5;
   color: #2c3e50;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: #f8f9fa;
+}
+
+/* Ensure form container takes full height */
+.form-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 100%;
+  padding: 2rem;
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
 }
 
 /* Left Panel */
