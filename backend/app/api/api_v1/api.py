@@ -2,7 +2,6 @@
 API v1 router.
 """
 from fastapi import APIRouter
-<<<<<<< HEAD
 from app.api.endpoints.accounts_payable import vendor, invoice, payment, credit_memo, form_1099
 from app.modules.core_financials.accounts_payable.api import vendor_api, bill_api, payment_api
 from app.modules.core_financials.accounts_receivable.api import customer_api, invoice_api, collections_api
@@ -19,8 +18,6 @@ from app.api.endpoints.ai_assistant import ai_assistant_endpoints as ai_assistan
 from app.api.endpoints import monitoring
 from app.api.endpoints import integrations
 from app.api.endpoints import performance
-=======
->>>>>>> 1f165d554f9014f0b749be3a8fe06df77942d7c1
 
 api_router = APIRouter()
 

@@ -8,7 +8,10 @@ import asyncio
 import uuid
 
 from app.core.logging import logger
-from app.services.notifications.notification_service import notification_service
+from app.services.notifications.notification_service import (
+    notification_service
+)
+
 
 class WorkflowStatus(Enum):
     PENDING = "pending"
@@ -16,6 +19,7 @@ class WorkflowStatus(Enum):
     COMPLETED = "completed"
     FAILED = "failed"
     CANCELLED = "cancelled"
+
 
 class WorkflowStep:
     """Individual workflow step."""
@@ -53,7 +57,9 @@ class WorkflowStep:
                 
             except Exception as e:
                 self.error = str(e)
-                logger.error(f"Step {self.name} failed (attempt {attempt + 1}): {str(e)}")
+                logger.error(
+                    f"Step {self.name} failed (attempt {attempt + 1}): {str(e)}"
+                )
                 
                 if attempt == self.retry_count - 1:
                     self.status = WorkflowStatus.FAILED
@@ -62,6 +68,7 @@ class WorkflowStep:
                 await asyncio.sleep(2 ** attempt)  # Exponential backoff
         
         return False
+
 
 class Workflow:
     """Workflow definition and execution."""
@@ -96,7 +103,9 @@ class Workflow:
                 success = await step.execute(self.context)
                 if not success:
                     self.status = WorkflowStatus.FAILED
-                    logger.error(f"Workflow {self.name} failed at step {step.name}")
+                    logger.error(
+                        f"Workflow {self.name} failed at step {step.name}"
+                    )
                     return False
                 
                 # Update context with step result
@@ -113,6 +122,7 @@ class Workflow:
             logger.error(f"Workflow {self.name} failed: {str(e)}")
             return False
 
+
 class WorkflowEngine:
     """Workflow engine for managing business processes."""
     
@@ -124,20 +134,22 @@ class WorkflowEngine:
     def register_workflow_template(self, name: str, template_func: Callable):
         """Register workflow template."""
         self.workflow_templates[name] = template_func
-    
+
     async def create_workflow(
-        self, 
-        template_name: str, 
+        self,
+        template_name: str,
         tenant_id: str,
-        context: Dict[str, Any] = None
+        context: Optional[Dict[str, Any]] = None
     ) -> str:
         """Create workflow from template."""
         if template_name not in self.workflow_templates:
             raise ValueError(f"Unknown workflow template: {template_name}")
-        
-        workflow = self.workflow_templates[template_name](tenant_id, context or {})
+
+        workflow = self.workflow_templates[template_name](
+            tenant_id, context or {}
+        )
         self.workflows[workflow.id] = workflow
-        
+
         logger.info(f"Created workflow {workflow.name} ({workflow.id})")
         return workflow.id
     
@@ -160,8 +172,12 @@ class WorkflowEngine:
             "name": workflow.name,
             "status": workflow.status.value,
             "created_at": workflow.created_at.isoformat(),
-            "started_at": workflow.started_at.isoformat() if workflow.started_at else None,
-            "completed_at": workflow.completed_at.isoformat() if workflow.completed_at else None,
+            "started_at": (
+                workflow.started_at.isoformat() if workflow.started_at else None
+            ),
+            "completed_at": (
+                workflow.completed_at.isoformat() if workflow.completed_at else None
+            ),
             "steps": [
                 {
                     "name": step.name,
@@ -174,15 +190,17 @@ class WorkflowEngine:
     
     def _register_default_workflows(self):
         """Register default workflow templates."""
-        
-        def invoice_approval_workflow(tenant_id: str, context: Dict[str, Any]) -> Workflow:
+
+        def invoice_approval_workflow(
+            tenant_id: str, context: Dict[str, Any]
+        ) -> Workflow:
             """Invoice approval workflow."""
             workflow = Workflow("Invoice Approval", tenant_id)
-            
+
             async def validate_invoice(ctx):
                 # Validate invoice data
                 return ctx.get("invoice_id") is not None
-            
+
             async def send_approval_request(ctx):
                 # Send approval notification
                 await notification_service.send_notification(
@@ -191,33 +209,39 @@ class WorkflowEngine:
                     {"invoice_number": ctx.get("invoice_number")}
                 )
                 return True
-            
+
             async def check_approval_status(ctx):
                 # Check if approved (mock implementation)
                 return True
-            
+
             async def finalize_invoice(ctx):
                 # Finalize invoice
                 return {"status": "approved"}
-            
+
             workflow.add_step(WorkflowStep("validate", validate_invoice))
-            workflow.add_step(WorkflowStep("request_approval", send_approval_request))
-            workflow.add_step(WorkflowStep("check_approval", check_approval_status))
+            workflow.add_step(
+                WorkflowStep("request_approval", send_approval_request)
+            )
+            workflow.add_step(
+                WorkflowStep("check_approval", check_approval_status)
+            )
             workflow.add_step(WorkflowStep("finalize", finalize_invoice))
-            
+
             return workflow
-        
-        def expense_approval_workflow(tenant_id: str, context: Dict[str, Any]) -> Workflow:
+
+        def expense_approval_workflow(
+            tenant_id: str, context: Dict[str, Any]
+        ) -> Workflow:
             """Expense approval workflow."""
             workflow = Workflow("Expense Approval", tenant_id)
-            
+
             async def validate_expense(ctx):
                 return ctx.get("expense_id") is not None
-            
+
             async def check_amount_threshold(ctx):
                 amount = ctx.get("amount", 0)
                 return amount > 1000  # Require approval for amounts > $1000
-            
+
             async def send_approval_request(ctx):
                 await notification_service.send_notification(
                     "expense_approval_request",
@@ -225,14 +249,24 @@ class WorkflowEngine:
                     {"expense_id": ctx.get("expense_id"), "amount": ctx.get("amount")}
                 )
                 return True
-            
+
             workflow.add_step(WorkflowStep("validate", validate_expense))
-            workflow.add_step(WorkflowStep("request_approval", send_approval_request, check_amount_threshold))
-            
+            workflow.add_step(
+                WorkflowStep(
+                    "request_approval",
+                    send_approval_request,
+                    check_amount_threshold
+                )
+            )
+
             return workflow
-        
-        self.register_workflow_template("invoice_approval", invoice_approval_workflow)
-        self.register_workflow_template("expense_approval", expense_approval_workflow)
+
+        self.register_workflow_template(
+            "invoice_approval", invoice_approval_workflow
+        )
+        self.register_workflow_template(
+            "expense_approval", expense_approval_workflow
+        )
 
 # Global workflow engine instance
 workflow_engine = WorkflowEngine()

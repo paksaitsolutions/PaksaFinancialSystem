@@ -1,16 +1,16 @@
 """
 User activity and management service.
 """
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import List, Optional, Dict, Any
 from uuid import UUID
 
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, desc, func
+from sqlalchemy import desc
 
 from app.models.user_activity import (
-    LoginHistory, UserActivity, CompanyPasswordPolicy, 
-    CrossCompanyAccess, UserSessionActivity, ActivityType
+    LoginHistory, UserActivity, CompanyPasswordPolicy,
+    CrossCompanyAccess
 )
 
 

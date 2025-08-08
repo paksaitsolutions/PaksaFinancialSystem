@@ -1,5 +1,6 @@
 import pyotp
 
+
 class TOTPManager:
     @staticmethod
     def generate_secret():
@@ -7,7 +8,9 @@ class TOTPManager:
 
     @staticmethod
     def get_uri(secret, email, issuer_name="PaksaFinancialSystem"):
-        return pyotp.totp.TOTP(secret).provisioning_uri(name=email, issuer_name=issuer_name)
+                return pyotp.totp.TOTP(secret).provisioning_uri(
+            name=email, issuer_name=issuer_name
+        )
 
     @staticmethod
     def verify_code(secret, code):

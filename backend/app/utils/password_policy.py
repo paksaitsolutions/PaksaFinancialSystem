@@ -1,5 +1,6 @@
 import re
 
+
 class PasswordPolicy:
     MIN_LENGTH = 8
     REQUIRE_UPPER = True
@@ -18,7 +19,7 @@ class PasswordPolicy:
             return False
         if cls.REQUIRE_DIGIT and not re.search(r'[0-9]', password):
             return False
-        if cls.REQUIRE_SPECIAL and not re.search(r'[' + re.escape(cls.SPECIAL_CHARS) + ']', password):
+                if cls.REQUIRE_SPECIAL and not re.search(r'[' + re.escape(cls.SPECIAL_CHARS) + r']', password):
             return False
         return True
 
