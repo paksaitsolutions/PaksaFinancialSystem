@@ -19,13 +19,15 @@ class PasswordPolicy:
             return False
         if cls.REQUIRE_DIGIT and not re.search(r'[0-9]', password):
             return False
-                if cls.REQUIRE_SPECIAL and not re.search(r'[' + re.escape(cls.SPECIAL_CHARS) + r']', password):
+        if cls.REQUIRE_SPECIAL and not re.search(r'[' + re.escape(cls.SPECIAL_CHARS) + r']', password):
             return False
         return True
 
     @classmethod
     def get_policy_description(cls) -> str:
-        return (
-            f"Password must be at least {cls.MIN_LENGTH} characters, "
-            f"contain upper and lower case letters, a digit, and a special character."
-        )
+        parts = [
+            f"Password must be at least {cls.MIN_LENGTH} characters, ",
+            "contain upper and lower case letters, ",
+            "a digit, and a special character.",
+        ]
+        return "".join(parts)

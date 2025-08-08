@@ -91,8 +91,10 @@ class TaxFilingService:
                     filing_id=str(filing.id),
                     status=FilingStatus.SUBMITTED,
                     submission_id=submission_result.get("submission_id"),
-                    confirmation_number=submission_result.get("confirmation_number"),
-                    next_steps=["Monitor filing status for updates"]
+                    confirmation_number=submission_result.get(
+                        "confirmation_number"
+                    ),
+                    next_steps=["Monitor filing status for updates"],
                 )
             
             return TaxFilingResponse(
@@ -123,10 +125,14 @@ class TaxFilingService:
             "filing_id": str(filing.id),
             "status": filing.status,
             "submission_id": filing.submission_id,
-            "submitted_at": filing.submitted_at.isoformat() if filing.submitted_at else None,
-            "processed_at": filing.processed_at.isoformat() if filing.processed_at else None,
+            "submitted_at": (
+                filing.submitted_at.isoformat() if filing.submitted_at else None
+            ),
+            "processed_at": (
+                filing.processed_at.isoformat() if filing.processed_at else None
+            ),
             "errors": filing.errors or [],
-            "warnings": filing.warnings or []
+            "warnings": filing.warnings or [],
         }
     
     def _validate_filing_request(self, request: TaxFilingRequest):
@@ -146,9 +152,13 @@ class TaxFilingService:
             tax_type=request.tax_type,
             jurisdiction=request.jurisdiction,
             form_type=request.form_type,
-            status=FilingStatus.DRAFT if not request.auto_submit else FilingStatus.PENDING,
+            status=(
+                FilingStatus.DRAFT
+                if not request.auto_submit
+                else FilingStatus.PENDING
+            ),
             submitted_by=user_id,
-            forms=forms
+            forms=forms,
         )
         self.db.add(filing)
         self.db.commit()

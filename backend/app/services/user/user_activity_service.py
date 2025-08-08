@@ -115,8 +115,7 @@ class UserActivityService:
         
         self.db.add(policy)
         self.db.commit()
-        self.db.refresh(policy)
-        
+        self.db.refresh(policy)        
         return policy
     
     def grant_cross_company_access(
@@ -136,10 +135,8 @@ class UserActivityService:
             access_type=access_type,
             permissions=permissions,
             approved_by=approved_by
-        )
-        
+        )        
         self.db.add(access)
         self.db.commit()
-        self.db.refresh(access)
-        
+        self.db.refresh(access)        
         return access

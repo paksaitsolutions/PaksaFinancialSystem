@@ -8,7 +8,7 @@ class TOTPManager:
 
     @staticmethod
     def get_uri(secret, email, issuer_name="PaksaFinancialSystem"):
-                return pyotp.totp.TOTP(secret).provisioning_uri(
+        return pyotp.totp.TOTP(secret).provisioning_uri(
             name=email, issuer_name=issuer_name
         )
 
