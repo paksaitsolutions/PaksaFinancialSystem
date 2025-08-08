@@ -102,6 +102,8 @@ function createModuleRoute(
   return {
     path: `/${path}`,
     name,
+    // Parent route needs a component with <router-view> to render children
+    component: { template: '<router-view />' },
     meta: {
       ...meta,
       module: path,
@@ -349,71 +351,8 @@ const moduleRoutes = {
   ]),
 };
 
-// Define the main application routes
-const appRoutes: RouteRecordRaw[] = [
-  // Public routes (auth, errors, etc.)
-  ...publicRoutes,
-  
-  // Main app routes (require authentication)
-  {
-    path: '/app',
-    name: 'App',
-    meta: { 
-      requiresAuth: true,
-      layout: 'AppLayout'  // Explicitly set layout for app routes
-    },
-    children: [
-      // Dashboard
-      // Root path loads Home component directly
-      {
-        path: '',
-        name: 'Dashboard',
-        component: () => import('@/views/home/Home.vue'),
-        meta: { title: 'Dashboard' }
-      },
-      // Root-level module routes
-      {
-        path: '/ap',
-        redirect: { name: 'APDashboard' },
-        meta: { title: 'Accounts Payable' }
-      },
-      {
-        path: '/ar',
-        redirect: { name: 'ARDashboard' },
-        meta: { title: 'Accounts Receivable' }
-      },
-      {
-        path: '/gl',
-        redirect: { name: 'GLDashboard' },
-        meta: { title: 'General Ledger' }
-      },
-      {
-        path: '/cash',
-        redirect: { name: 'CashDashboard' },
-        meta: { title: 'Cash Management' }
-      },
-      {
-        path: '/fixed-assets',
-        redirect: { name: 'FixedAssetsDashboard' },
-        meta: { title: 'Fixed Assets' }
-      },
-      {
-        path: '/payroll',
-        redirect: { name: 'PayrollDashboard' },
-        meta: { title: 'Payroll' }
-      },
-      // Module routes
-      ...Object.values(moduleRoutes),
-      // 404 page for authenticated users
-      {
-        path: ':pathMatch(.*)*',
-        name: 'NotFound',
-        component: () => import('@/views/errors/NotFound.vue'),
-        meta: { requiresAuth: false }
-      }
-    ]
-  }
-];
+// The main application routes are now composed of public and module routes.
+// The redundant 'appRoutes' wrapper has been removed to simplify the structure.
 
 // Create the router instance with all routes
 const router = createRouter({
@@ -421,14 +360,18 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      redirect: '/auth/login'
+      // Redirect to dashboard if authenticated, otherwise to login
+      redirect: to => {
+        const authStore = useAuthStore();
+        return authStore.isAuthenticated ? '/dashboard' : '/auth/login';
+      }
     },
     ...publicRoutes,
     ...Object.values(moduleRoutes),
-    ...appRoutes,
+    // Catch-all 404 route
     {
       path: '/:pathMatch(.*)*',
-      name: 'NotFound',
+      name: 'GlobalNotFound',
       component: () => import('@/views/errors/NotFound.vue'),
       meta: { 
         title: 'Page Not Found',

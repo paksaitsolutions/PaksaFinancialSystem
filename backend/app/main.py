@@ -1,31 +1,21 @@
 """
 Paksa Financial System - Production-Ready Main Application
 """
-from fastapi import FastAPI, Depends, HTTPException, status, Form
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from datetime import datetime
-from contextlib import asynccontextmanager
-from dotenv import load_dotenv
-from typing import List, Dict, Any
 import os
+from contextlib import asynccontextmanager
+from datetime import datetime
+from typing import Any, Dict, List
 
-# Load environment variables
-load_dotenv()
+from dotenv import load_dotenv
+from fastapi import Depends, FastAPI, Form, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-# Import after loading env vars
-from app.core.db.session import init_db, get_db
-from app.core.config import settings
+from app.core.db.session import get_db, init_db
 from app.services.gl_service import GLService
-from app.services.ap_service import APService
-from app.services.ar_service import ARService
-from app.services.budget_service import BudgetService
-from app.services.cash_service import CashService
-from app.services.hrm_service import HRMService
-from app.services.inventory_service import InventoryService
-from app.services.payroll_service import PayrollService
-from app.services.tax_service import TaxService
-from app.services.reports_service import ReportsService
+
+# Load environment variables before any other imports that need them
+load_dotenv()
 
 security = HTTPBearer()
 
@@ -37,7 +27,10 @@ async def lifespan(app: FastAPI):
     try:
         await init_db()
         print("✅ Database initialized successfully")
-        print("🎯 All 12 modules operational: GL, AP, AR, Budget, Cash, HRM, Inventory, Payroll, Tax, Assets, Reports, Admin")
+        print(
+            "🎯 All 12 modules operational: GL, AP, AR, Budget, Cash, HRM, "
+            "Inventory, Payroll, Tax, Assets, Reports, Admin"
+        )
     except Exception as e:
         print(f"❌ Database initialization failed: {e}")
         print("⚠️ Starting with limited functionality")
@@ -67,7 +60,9 @@ app.add_middleware(
 DEFAULT_TENANT_ID = "12345678-1234-5678-9012-123456789012"
 
 # Authentication helper
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
     return {"id": 1, "username": "admin", "tenant_id": DEFAULT_TENANT_ID}
 
 # Root endpoint
@@ -78,7 +73,10 @@ async def root():
         "version": "1.0.0",
         "status": "operational",
         "timestamp": datetime.utcnow().isoformat(),
-        "modules": ["GL", "AP", "AR", "Budget", "Cash", "HRM", "Inventory", "Payroll", "Tax", "Assets", "Reports", "Admin"],
+        "modules": [
+            "GL", "AP", "AR", "Budget", "Cash", "HRM", "Inventory",
+            "Payroll", "Tax", "Assets", "Reports", "Admin"
+        ],
         "endpoints": {
             "docs": "/docs",
             "health": "/health",
@@ -190,14 +188,25 @@ async def refresh_token(refresh_token: str = Form()):
 
 # General Ledger endpoints
 @app.get("/api/v1/gl/accounts")
-async def get_gl_accounts(db = Depends(get_db), user = Depends(get_current_user)):
+async def get_gl_accounts(db=Depends(get_db), user=Depends(get_current_user)):
     service = GLService(db, user["tenant_id"])
     accounts = await service.get_accounts()
-    return [{"id": str(acc.id), "code": acc.account_code, "name": acc.account_name, 
-             "type": acc.account_type, "balance": float(acc.balance)} for acc in accounts]
+    return [
+        {
+            "id": str(acc.id),
+            "code": acc.account_code,
+            "name": acc.account_name,
+            "type": acc.account_type,
+            "balance": float(acc.balance),
+        }
+        for acc in accounts
+    ]
 
 @app.post("/api/v1/gl/accounts")
-async def create_gl_account(account_data: dict, db = Depends(get_db), user = Depends(get_current_user)):
+async def create_gl_account(
+    account_data: dict, db=Depends(get_db), user=Depends(get_current_user)
+):
+
     service = GLService(db, user["tenant_id"])
     account = await service.create_account(account_data)
     return {"id": str(account.id), "code": account.account_code, "name": account.account_name}

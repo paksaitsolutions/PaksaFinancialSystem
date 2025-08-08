@@ -42,7 +42,9 @@ class PasswordPolicy(BaseModel):
     is_active = Column(Boolean, nullable=False, default=True)
     
     def __repr__(self) -> str:
-        return f"<PasswordPolicy(name='{self.name}', active={self.is_active})>"
+        return (
+            f"<PasswordPolicy(name='{self.name}', active={self.is_active})>"
+        )
 
 
 class PasswordHistory(BaseModel):
@@ -50,14 +52,14 @@ class PasswordHistory(BaseModel):
     Password history for users.
     """
     __tablename__ = "password_history"
-    
-    user_id = Column(GUID(), ForeignKey("users.id"), nullable=False)
+
+    user_id = Column(GUID, ForeignKey("users.id"), nullable=False)
     password_hash = Column(String(255), nullable=False)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-    
+
     # Relationships
     user = relationship("User", back_populates="password_history")
-    
+
     def __repr__(self) -> str:
         return f"<PasswordHistory(user_id={self.user_id}, created_at={self.created_at})>"
 
@@ -78,4 +80,7 @@ class LoginAttempt(BaseModel):
     user = relationship("User", back_populates="login_attempts")
     
     def __repr__(self) -> str:
-        return f"<LoginAttempt(user_id={self.user_id}, success={self.success}, attempted_at={self.attempted_at})>"
+        return (
+            f"<LoginAttempt(user_id={self.user_id}, success={self.success}, "
+            f"attempted_at={self.attempted_at})>"
+        )

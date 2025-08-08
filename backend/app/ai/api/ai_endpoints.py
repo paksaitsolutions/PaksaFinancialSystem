@@ -13,6 +13,8 @@ predictive_service = PredictiveAnalyticsService()
 recommendation_engine = RecommendationEngine()
 nlp_service = NLPService()
 
+
+
 @router.post("/detect-anomalies")
 async def detect_anomalies(transactions: List[Dict[str, Any]]):
     """Detect anomalies in transaction data"""
@@ -22,14 +24,22 @@ async def detect_anomalies(transactions: List[Dict[str, Any]]):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+
 @router.post("/predict-cash-flow")
-async def predict_cash_flow(historical_data: List[Dict[str, Any]], days_ahead: int = 30):
+async def predict_cash_flow(
+    historical_data: List[Dict[str, Any]], days_ahead: int = 30
+):
     """Predict cash flow for specified days ahead"""
     try:
-        prediction = predictive_service.predict_cash_flow(historical_data, days_ahead)
+        prediction = predictive_service.predict_cash_flow(
+            historical_data, days_ahead
+        )
         return prediction
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
 
 @router.post("/predict-customer-payment")
 async def predict_customer_payment(customer_data: Dict[str, Any]):
@@ -40,23 +50,35 @@ async def predict_customer_payment(customer_data: Dict[str, Any]):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+
 @router.post("/forecast-revenue")
-async def forecast_revenue(revenue_data: List[Dict[str, Any]], months_ahead: int = 3):
+async def forecast_revenue(
+    revenue_data: List[Dict[str, Any]], months_ahead: int = 3
+):
     """Forecast revenue for specified months ahead"""
     try:
-        forecast = predictive_service.forecast_revenue(revenue_data, months_ahead)
+        forecast = predictive_service.forecast_revenue(
+            revenue_data, months_ahead
+        )
         return {"forecast": forecast}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
 
 @router.post("/get-recommendations")
 async def get_recommendations(user_id: str, user_data: Dict[str, Any]):
     """Get AI-powered financial recommendations"""
     try:
-        recommendations = recommendation_engine.get_financial_recommendations(user_id, user_data)
+        recommendations = recommendation_engine.get_financial_recommendations(
+            user_id, user_data
+        )
         return {"recommendations": recommendations}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
 
 @router.post("/natural-query")
 async def process_natural_query(query: str):
