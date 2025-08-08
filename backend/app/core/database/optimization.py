@@ -5,6 +5,7 @@ from functools import wraps
 import redis
 import json
 from typing import Any, Dict, List
+from app.models import Account
 
 # Redis cache instance
 cache = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
