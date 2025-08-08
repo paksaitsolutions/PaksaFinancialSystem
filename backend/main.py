@@ -10,6 +10,8 @@ It runs the FastAPI application using uvicorn.
 import os
 import sys
 from typing import Dict
+import logging
+logger = logging.getLogger(__name__)
 
 # Add the backend directory to the Python path
 backend_dir = os.path.dirname(os.path.abspath(__file__))

@@ -1,9 +1,14 @@
-import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse, type AxiosError } from 'axios';
+import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosError } from 'axios';
 import { useAuthStore } from '@/store/auth';
 
-// Get environment variables with fallbacks
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-const API_PREFIX = import.meta.env.VITE_API_PREFIX || '/api/v1';
+// Get environment variables with fallbacks using proper TypeScript typing
+const env = import.meta.env as {
+  VITE_API_BASE_URL?: string;
+  VITE_API_PREFIX?: string;
+};
+
+const API_BASE_URL = env.VITE_API_BASE_URL || 'http://localhost:8000';
+const API_PREFIX = env.VITE_API_PREFIX || '/api/v1';
 
 export class ApiClient {
   private static instance: ApiClient;
@@ -20,8 +25,10 @@ export class ApiClient {
       baseURL: `${API_BASE_URL}${API_PREFIX}`,
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
       },
       timeout: 30000, // 30 seconds timeout
+      withCredentials: true, // Ensure cookies are sent with requests
     });
 
     // Request interceptor for auth token
