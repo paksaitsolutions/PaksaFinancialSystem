@@ -14,6 +14,16 @@ from app.core.tax import tax_reporting_service
 from app.core.security import get_current_active_user
 from app.core.db.session import get_db
 from app.core.config import settings
+import logging
+
+# Configure logging for this module
+logging.basicConfig(
+    level=logging.INFO,  # Or DEBUG for more detail
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+
+logger = logging.getLogger(__name__)
+
 
 router = APIRouter()
 
@@ -328,4 +338,5 @@ async def get_upcoming_tax_filings(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred while retrieving upcoming tax filings"
         )
+
 
