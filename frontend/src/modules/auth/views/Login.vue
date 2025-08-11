@@ -1,70 +1,67 @@
 <template>
-  <AuthLayout>
-    <Card>
-      <template #header>
-        <div class="login-header">
-          <Avatar icon="pi pi-user" size="xlarge" />
-          <h2>Welcome Back</h2>
-          <p>Sign in to continue to Paksa Financial System</p>
-        </div>
-      </template>
-      <template #content>
-        <form @submit.prevent="handleLogin" class="login-form">
-          <div class="field">
-            <label for="email">Email Address</label>
-            <InputText
-              id="email"
-              v-model="form.email"
-              type="email"
-              placeholder="Enter your email"
-              :class="{ 'p-invalid': errors.email }"
-              required
-            />
-            <small v-if="errors.email" class="p-error">{{ errors.email }}</small>
-          </div>
-          <div class="field">
-            <div class="password-header">
-              <label for="password">Password</label>
-              <router-link to="/auth/forgot-password" class="forgot-link">
-                Forgot password?
-              </router-link>
-            </div>
-            <Password
-              id="password"
-              v-model="form.password"
-              placeholder="Enter your password"
-              :feedback="false"
-              toggleMask
-              :class="{ 'p-invalid': errors.password }"
-              required
-            />
-            <small v-if="errors.password" class="p-error">{{ errors.password }}</small>
-          </div>
-          <div class="field-checkbox">
-            <Checkbox
-              id="remember"
-              v-model="form.remember"
-              :binary="true"
-            />
-            <label for="remember">Remember me for 30 days</label>
-          </div>
-          <Button
-            type="submit"
-            label="Sign In"
-            icon="pi pi-sign-in"
-            :loading="loading"
-            :disabled="!isFormValid || loading"
-            class="submit-btn"
+  <Card>
+    <template #header>
+      <div class="login-header">
+        <Avatar icon="pi pi-user" size="xlarge" />
+        <h2>Welcome Back</h2>
+        <p>Sign in to continue to Paksa Financial System</p>
+      </div>
+    </template>
+    <template #content>
+      <form @submit.prevent="handleLogin" class="login-form">
+        <div class="field">
+          <label for="email">Email Address</label>
+          <InputText
+            id="email"
+            v-model="form.email"
+            type="email"
+            placeholder="Enter your email"
+            :class="{ 'p-invalid': errors.email }"
+            required
           />
-          <div class="signup-link">
-            <span>Don't have an account? </span>
-            <router-link to="/auth/register">Create account</router-link>
+          <small v-if="errors.email" class="p-error">{{ errors.email }}</small>
+        </div>
+        <div class="field">
+          <div class="password-header">
+            <label for="password">Password</label>
+            <router-link to="/auth/forgot-password" class="forgot-link">
+              Forgot password?
+            </router-link>
           </div>
-        </form>
-      </template>
-    </Card>
-    <Toast />
-  </AuthLayout>
+          <Password
+            id="password"
+            v-model="form.password"
+            placeholder="Enter your password"
+            :feedback="false"
+            toggleMask
+            :class="{ 'p-invalid': errors.password }"
+            required
+          />
+          <small v-if="errors.password" class="p-error">{{ errors.password }}</small>
+        </div>
+        <div class="field-checkbox">
+          <Checkbox
+            v-model="form.remember"
+            :binary="true"
+          />
+          <label for="remember">Remember me for 30 days</label>
+        </div>
+        <Button
+          type="submit"
+          label="Sign In"
+          icon="pi pi-sign-in"
+          :loading="loading"
+          :disabled="!isFormValid || loading"
+          class="submit-btn"
+        />
+        <div class="signup-link">
+          <span>Don't have an account? </span>
+          <router-link to="/auth/register">Create account</router-link>
+        </div>
+      </form>
+    </template>
+  </Card>
+  <Toast />
 </template>
 
 <script setup lang="ts">
@@ -79,7 +76,6 @@ import Button from 'primevue/button'
 import Checkbox from 'primevue/checkbox'
 import Avatar from 'primevue/avatar'
 import Toast from 'primevue/toast'
-import AuthLayout from '@/layouts/AuthLayout.vue'
 
 const router = useRouter()
 const toast = useToast()
@@ -185,4 +181,3 @@ onMounted(() => {
   }
 })
 </script>
-

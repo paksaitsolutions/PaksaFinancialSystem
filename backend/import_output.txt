@@ -1,4 +1,0 @@
-Python version: 3.13.3 (tags/v3.13.3:6280bb5, Apr  8 2025, 14:47:33) [MSC v.1943 64 bit (AMD64)]
-Python path: ['', 'C:\\Users\\chzaf\\AppData\\Local\\Programs\\Python\\Python313\\python313.zip', 'C:\\Users\\chzaf\\AppData\\Local\\Programs\\Python\\Python313\\DLLs', 'C:\\Users\\chzaf\\AppData\\Local\\Programs\\Python\\Python313\\Lib', 'C:\\Users\\chzaf\\AppData\\Local\\Programs\\Python\\Python313', 'C:\\Users\\chzaf\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages']
-\nAttempting to import database module...
-Successfully imported database module

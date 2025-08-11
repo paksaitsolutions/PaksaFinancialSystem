@@ -1,7 +1,0 @@
-{
-  "extends": "./tsconfig.json",
-  "compilerOptions": {
-    "types": ["node", "jsdom", "vitest"]
-  },
-  "include": ["src/**/*.test.ts", "src/**/*.spec.ts", "tests/**/*.ts"]
-}

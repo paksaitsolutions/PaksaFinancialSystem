@@ -310,38 +310,353 @@ const moduleRoutes = {
     },
     {
       path: 'employees',
-      name: 'Employees',
-      component: () => import('@/modules/payroll/views/EmployeesView.vue'),
-      meta: { 
-        title: 'Employees',
-        requiresAdmin: true
-      }
+      name: 'PayrollEmployees',
+      component: () => import('@/modules/payroll/views/EmployeeManagementView.vue'),
+      meta: { title: 'Employee Management', requiresAdmin: true }
     },
     {
       path: 'pay-runs',
       name: 'PayRuns',
-      component: () => import('@/modules/payroll/views/PayRunsView.vue'),
-      meta: { 
-        title: 'Pay Runs',
-        requiresAdmin: true
-      }
+      component: () => import('@/modules/payroll/views/PayRunListView.vue'),
+      meta: { title: 'Pay Runs', requiresAdmin: true }
+    },
+    {
+      path: 'pay-runs/create',
+      name: 'PayRunCreate',
+      component: () => import('@/modules/payroll/views/PayRunCreateView.vue'),
+      meta: { title: 'Create Pay Run', requiresAdmin: true }
+    },
+    {
+      path: 'pay-runs/:id',
+      name: 'PayRunDetail',
+      component: () => import('@/modules/payroll/views/PayRunView.vue'),
+      meta: { title: 'Pay Run Details', requiresAdmin: true }
+    },
+    {
+      path: 'payslips',
+      name: 'Payslips',
+      component: () => import('@/modules/payroll/views/PayslipsView.vue'),
+      meta: { title: 'Payslips' }
+    },
+    {
+      path: 'deductions-benefits',
+      name: 'DeductionsBenefits',
+      component: () => import('@/modules/payroll/views/PayrollDeductionsBenefitsView.vue'),
+      meta: { title: 'Deductions & Benefits', requiresAdmin: true }
     },
     {
       path: 'reports',
       name: 'PayrollReports',
-      component: () => import('@/modules/payroll/views/ReportsView.vue'),
+      component: () => import('@/modules/payroll/views/PayrollReportsView.vue'),
       meta: { title: 'Reports' }
     },
     {
-      path: 'taxes',
-      name: 'TaxSettings',
-      component: () => import('@/modules/payroll/views/TaxSettingsView.vue'),
-      meta: { 
-        title: 'Tax Settings',
-        requiresAdmin: true
-      }
+      path: 'settings',
+      name: 'PayrollSettings',
+      component: () => import('@/modules/payroll/views/PayrollSettingsView.vue'),
+      meta: { title: 'Settings', requiresAdmin: true }
     }
   ]),
+  
+  budget: createModuleRoute('Budget Management', 'budget', [
+    {
+      path: '',
+      name: 'BudgetDashboard',
+      component: () => import('@/modules/budget/views/BudgetDashboard.vue'),
+      meta: { title: 'Dashboard' }
+    },
+    {
+      path: 'planning',
+      name: 'BudgetPlanning',
+      component: () => import('@/modules/budget/views/BudgetPlanningView.vue'),
+      meta: { title: 'Budget Planning' }
+    },
+    {
+      path: 'monitoring',
+      name: 'BudgetMonitoring',
+      component: () => import('@/modules/budget/views/BudgetMonitoringView.vue'),
+      meta: { title: 'Budget Monitoring' }
+    },
+    {
+      path: 'approval',
+      name: 'BudgetApproval',
+      component: () => import('@/modules/budget/views/BudgetApprovalView.vue'),
+      meta: { title: 'Budget Approval', requiresAdmin: true }
+    },
+    {
+      path: 'forecasts',
+      name: 'BudgetForecasts',
+      component: () => import('@/modules/budget/views/Forecasts.vue'),
+      meta: { title: 'Forecasts' }
+    },
+    {
+      path: 'scenarios',
+      name: 'BudgetScenarios',
+      component: () => import('@/modules/budget/views/Scenarios.vue'),
+      meta: { title: 'Scenarios' }
+    },
+    {
+      path: 'reports',
+      name: 'BudgetReports',
+      component: () => import('@/modules/budget/views/BudgetReportView.vue'),
+      meta: { title: 'Reports' }
+    }
+  ]),
+  
+  inventory: createModuleRoute('Inventory Management', 'inventory', [
+    {
+      path: '',
+      name: 'InventoryDashboard',
+      component: () => import('@/modules/inventory/views/InventoryManagementView.vue'),
+      meta: { title: 'Dashboard' }
+    },
+    {
+      path: 'items',
+      name: 'InventoryItems',
+      component: () => import('@/modules/inventory/views/ItemsView.vue'),
+      meta: { title: 'Items' }
+    },
+    {
+      path: 'locations',
+      name: 'InventoryLocations',
+      component: () => import('@/modules/inventory/views/LocationsView.vue'),
+      meta: { title: 'Locations' }
+    },
+    {
+      path: 'adjustments',
+      name: 'InventoryAdjustments',
+      component: () => import('@/modules/inventory/views/AdjustmentsView.vue'),
+      meta: { title: 'Adjustments' }
+    },
+    {
+      path: 'reports',
+      name: 'InventoryReports',
+      component: () => import('@/modules/inventory/views/ReportsView.vue'),
+      meta: { title: 'Reports' }
+    }
+  ]),
+  
+  tax: createModuleRoute('Tax Management', 'tax', [
+    {
+      path: '',
+      name: 'TaxDashboard',
+      component: () => import('@/modules/tax/views/TaxDashboard.vue'),
+      meta: { title: 'Dashboard' }
+    },
+    {
+      path: 'rates',
+      name: 'TaxRates',
+      component: () => import('@/modules/tax/views/TaxRates.vue'),
+      meta: { title: 'Tax Rates' }
+    },
+    {
+      path: 'codes',
+      name: 'TaxCodes',
+      component: () => import('@/modules/tax/views/TaxCodes.vue'),
+      meta: { title: 'Tax Codes' }
+    },
+    {
+      path: 'jurisdictions',
+      name: 'TaxJurisdictions',
+      component: () => import('@/modules/tax/views/TaxJurisdictions.vue'),
+      meta: { title: 'Jurisdictions' }
+    },
+    {
+      path: 'returns',
+      name: 'TaxReturns',
+      component: () => import('@/modules/tax/views/TaxReturns.vue'),
+      meta: { title: 'Tax Returns' }
+    },
+    {
+      path: 'exemptions',
+      name: 'TaxExemptions',
+      component: () => import('@/modules/tax/views/TaxExemptionsView.vue'),
+      meta: { title: 'Tax Exemptions' }
+    },
+    {
+      path: 'compliance',
+      name: 'TaxCompliance',
+      component: () => import('@/modules/tax/views/TaxComplianceDashboard.vue'),
+      meta: { title: 'Compliance' }
+    },
+    {
+      path: 'analytics',
+      name: 'TaxAnalytics',
+      component: () => import('@/modules/tax/views/TaxAnalyticsDashboard.vue'),
+      meta: { title: 'Analytics' }
+    },
+    {
+      path: 'reports',
+      name: 'TaxReports',
+      component: () => import('@/modules/tax/views/TaxReports.vue'),
+      meta: { title: 'Reports' }
+    }
+  ]),
+  
+  hrm: createModuleRoute('Human Resources', 'hrm', [
+    {
+      path: '',
+      name: 'HRMDashboard',
+      component: () => import('@/modules/hrm/views/HRMView.vue'),
+      meta: { title: 'Dashboard' }
+    },
+    {
+      path: 'attendance',
+      name: 'Attendance',
+      component: () => import('@/modules/hrm/views/AttendanceView.vue'),
+      meta: { title: 'Attendance' }
+    },
+    {
+      path: 'leave-management',
+      name: 'LeaveManagement',
+      component: () => import('@/modules/hrm/views/LeaveManagementView.vue'),
+      meta: { title: 'Leave Management' }
+    },
+    {
+      path: 'performance',
+      name: 'Performance',
+      component: () => import('@/modules/hrm/views/PerformanceView.vue'),
+      meta: { title: 'Performance' }
+    }
+  ]),
+  
+  reports: createModuleRoute('Reports', 'reports', [
+    {
+      path: '',
+      name: 'ReportsDashboard',
+      component: () => import('@/modules/reports/views/ReportsView.vue'),
+      meta: { title: 'Dashboard' }
+    },
+    {
+      path: 'financial',
+      name: 'FinancialReports',
+      component: () => import('@/modules/reports/views/FinancialReportsView.vue'),
+      meta: { title: 'Financial Reports' }
+    },
+    {
+      path: 'balance-sheet',
+      name: 'BalanceSheet',
+      component: () => import('@/modules/reports/views/BalanceSheetReport.vue'),
+      meta: { title: 'Balance Sheet' }
+    },
+    {
+      path: 'income-statement',
+      name: 'IncomeStatement',
+      component: () => import('@/modules/reports/views/IncomeStatementReport.vue'),
+      meta: { title: 'Income Statement' }
+    },
+    {
+      path: 'cash-flow',
+      name: 'CashFlowReport',
+      component: () => import('@/modules/reports/views/CashFlowReport.vue'),
+      meta: { title: 'Cash Flow' }
+    },
+    {
+      path: 'ap-aging',
+      name: 'APAging',
+      component: () => import('@/modules/reports/views/APAgingReport.vue'),
+      meta: { title: 'AP Aging' }
+    },
+    {
+      path: 'ar-aging',
+      name: 'ARAging',
+      component: () => import('@/modules/reports/views/ARAgingReport.vue'),
+      meta: { title: 'AR Aging' }
+    },
+    {
+      path: 'templates',
+      name: 'ReportTemplates',
+      component: () => import('@/modules/reports/views/ReportTemplatesView.vue'),
+      meta: { title: 'Templates' }
+    },
+    {
+      path: 'schedules',
+      name: 'ReportSchedules',
+      component: () => import('@/modules/reports/views/ReportSchedulesView.vue'),
+      meta: { title: 'Schedules' }
+    }
+  ]),
+  
+  aiBi: createModuleRoute('AI & Business Intelligence', 'ai-bi', [
+    {
+      path: '',
+      name: 'AIBIDashboard',
+      component: () => import('@/modules/ai-bi/views/AIDashboard.vue'),
+      meta: { title: 'Dashboard' }
+    },
+    {
+      path: 'assistant',
+      name: 'AIAssistant',
+      component: () => import('@/modules/ai-bi/views/AIAssistant.vue'),
+      meta: { title: 'AI Assistant' }
+    },
+    {
+      path: 'business-intelligence',
+      name: 'BusinessIntelligence',
+      component: () => import('@/modules/ai-bi/views/BusinessIntelligence.vue'),
+      meta: { title: 'Business Intelligence' }
+    },
+    {
+      path: 'reports',
+      name: 'AIReports',
+      component: () => import('@/modules/ai-bi/views/Reports.vue'),
+      meta: { title: 'AI Reports' }
+    }
+  ]),
+  
+  settings: createModuleRoute('Settings', 'settings', [
+    {
+      path: '',
+      name: 'SettingsDashboard',
+      component: () => import('@/modules/settings/views/SystemConfigurationView.vue'),
+      meta: { title: 'System Configuration', requiresAdmin: true }
+    },
+    {
+      path: 'company',
+      name: 'CompanySettings',
+      component: () => import('@/modules/settings/views/CompanySettingsView.vue'),
+      meta: { title: 'Company Settings', requiresAdmin: true }
+    },
+    {
+      path: 'currency',
+      name: 'CurrencyManagement',
+      component: () => import('@/modules/settings/views/CurrencyManagementView.vue'),
+      meta: { title: 'Currency Management', requiresAdmin: true }
+    }
+  ]),
+  
+  userManagement: createModuleRoute('User Management', 'users', [
+    {
+      path: '',
+      name: 'UserManagement',
+      component: () => import('@/modules/user/views/UserManagementView.vue'),
+      meta: { title: 'User Management', requiresAdmin: true }
+    }
+  ]),
+  
+  superAdmin: createModuleRoute('Super Admin', 'super-admin', [
+    {
+      path: '',
+      name: 'SuperAdminDashboard',
+      component: () => import('@/modules/super-admin/views/SuperAdminView.vue'),
+      meta: { title: 'Super Admin Dashboard', requiresAdmin: true }
+    }
+  ]),
+  
+  compliance: createModuleRoute('Compliance', 'compliance', [
+    {
+      path: '',
+      name: 'ComplianceDashboard',
+      component: () => import('@/modules/compliance/views/DashboardView.vue'),
+      meta: { title: 'Compliance Dashboard' }
+    },
+    {
+      path: 'settings',
+      name: 'ComplianceSettings',
+      component: () => import('@/modules/compliance/views/SettingsView.vue'),
+      meta: { title: 'Compliance Settings', requiresAdmin: true }
+    }
+  ])
 };
 
 // Define the main application routes
@@ -396,6 +711,56 @@ const appRoutes: RouteRecordRaw[] = [
         path: '/payroll',
         redirect: { name: 'PayrollDashboard' },
         meta: { title: 'Payroll' }
+      },
+      {
+        path: '/budget',
+        redirect: { name: 'BudgetDashboard' },
+        meta: { title: 'Budget Management' }
+      },
+      {
+        path: '/inventory',
+        redirect: { name: 'InventoryDashboard' },
+        meta: { title: 'Inventory Management' }
+      },
+      {
+        path: '/tax',
+        redirect: { name: 'TaxDashboard' },
+        meta: { title: 'Tax Management' }
+      },
+      {
+        path: '/hrm',
+        redirect: { name: 'HRMDashboard' },
+        meta: { title: 'Human Resources' }
+      },
+      {
+        path: '/reports',
+        redirect: { name: 'ReportsDashboard' },
+        meta: { title: 'Reports' }
+      },
+      {
+        path: '/ai-bi',
+        redirect: { name: 'AIBIDashboard' },
+        meta: { title: 'AI & Business Intelligence' }
+      },
+      {
+        path: '/settings',
+        redirect: { name: 'SettingsDashboard' },
+        meta: { title: 'Settings' }
+      },
+      {
+        path: '/users',
+        redirect: { name: 'UserManagement' },
+        meta: { title: 'User Management' }
+      },
+      {
+        path: '/super-admin',
+        redirect: { name: 'SuperAdminDashboard' },
+        meta: { title: 'Super Admin' }
+      },
+      {
+        path: '/compliance',
+        redirect: { name: 'ComplianceDashboard' },
+        meta: { title: 'Compliance' }
       },
       // Module routes
       ...Object.values(moduleRoutes),
