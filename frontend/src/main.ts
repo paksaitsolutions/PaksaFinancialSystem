@@ -3,6 +3,7 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 import { setupPrimeVue } from './plugins/primevue'
+import './plugins/axios'
 
 // PrimeVue Theme and Styles
 import './assets/primevue/theme.css'

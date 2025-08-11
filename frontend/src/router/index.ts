@@ -26,7 +26,8 @@ const publicRoutes: AppRouteRecordRaw[] = [
   {
     path: '/auth',
     component: () => import('@/layouts/AuthLayout.vue'),
-    meta: { requiresGuest: true },
+    meta: { requiresGuest: true, layout: null },
+    redirect: '/auth/login',
     children: [
       {
         path: 'login',
@@ -101,7 +102,7 @@ function createModuleRoute(
       ...meta,
       module: path,
       requiresAuth: true,
-      layout: 'MainLayout'  // Explicitly set layout for module routes
+      layout: null  // Set to null since MainLayout is used as component
     },
     children: routes
   };
@@ -670,7 +671,7 @@ const appRoutes: RouteRecordRaw[] = [
     component: () => import('@/layouts/AppLayout.vue'),
     meta: { 
       requiresAuth: true,
-      layout: 'AppLayout'  // Explicitly set layout for app routes
+      layout: null  // Set to null since AppLayout is used as component
     },
     children: [
       // Dashboard
@@ -785,10 +786,22 @@ const router = createRouter({
   }
 });
 
-// Temporarily disabled router guard for testing
-// router.beforeEach((to, from, next) => {
-//   next();
-// });
+// Router guard for authentication
+router.beforeEach(async (to, from, next) => {
+  const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
+  const requiresGuest = to.matched.some(record => record.meta.requiresGuest)
+  const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token')
+  
+  if (requiresAuth && !token) {
+    // Redirect to login if authentication is required but user is not logged in
+    next('/auth/login')
+  } else if (requiresGuest && token) {
+    // Redirect to dashboard if user is already logged in and trying to access guest pages
+    next('/')
+  } else {
+    next()
+  }
+});
 
 // Handle navigation errors
 router.onError((error) => {

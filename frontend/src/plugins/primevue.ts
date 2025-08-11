@@ -24,6 +24,8 @@ import SplitButton from 'primevue/splitbutton';
 import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
 import Chart from 'primevue/chart';
+import Checkbox from 'primevue/checkbox';
+import Avatar from 'primevue/avatar';
 
 // Import PrimeVue styles at the top level
 import 'primeicons/primeicons.css';
@@ -70,6 +72,8 @@ export function setupPrimeVue(app: App) {
   app.component('TabView', TabView);
   app.component('TabPanel', TabPanel);
   app.component('Chart', Chart);
+  app.component('Checkbox', Checkbox);
+  app.component('Avatar', Avatar);
 
   // Add PrimeVue services
   app.use(ToastService);
