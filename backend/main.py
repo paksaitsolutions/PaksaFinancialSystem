@@ -61,20 +61,18 @@ async def lifespan(app: FastAPI):
 
 # Create FastAPI application
 app = FastAPI(
-    title=settings.APP_NAME,
-    description="Comprehensive Financial Management System",
-    version=settings.API_VERSION,
-    docs_url="/api/docs" if settings.ENVIRONMENT != "production" else None,
-    redoc_url="/api/redoc" if settings.ENVIRONMENT != "production" else None,
-    openapi_url=f"{settings.API_PREFIX}/openapi.json" if settings.ENVIRONMENT != "production" else None,
-    lifespan=lifespan,
-    default_response_class=JSONResponse,
+    title=settings.PROJECT_NAME,
+    description="Paksa Financial System API",
+    version="1.0.0",
+    openapi_url=f"{settings.API_V1_STR}/openapi.json",
+    docs_url=f"{settings.API_V1_STR}/docs",
+    redoc_url=f"{settings.API_V1_STR}/redoc",
 )
 
-# Set up middleware
-setup_middleware(app)
+# Set up exception handlers
+setup_exception_handlers(app)
 
-# Set up CORS
+# Set all CORS enabled origins
 if settings.BACKEND_CORS_ORIGINS:
     app.add_middleware(
         CORSMiddleware,
@@ -82,11 +80,25 @@ if settings.BACKEND_CORS_ORIGINS:
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
-        expose_headers=["Content-Range", "X-Total-Count"],
     )
 
 # Include API router
-app.include_router(api_router)
+app.include_router(api_router, prefix=settings.API_V1_STR)
+
+# Health check endpoint
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
+
+# Startup event
+@app.on_event("startup")
+async def startup_event():
+    logger.info("Starting up Paksa Financial System...")
+
+# Shutdown event
+@app.on_event("shutdown")
+async def shutdown_event():
+    logger.info("Shutting down Paksa Financial System...")
 
 # Global exception handlers
 @app.exception_handler(StarletteHTTPException)
