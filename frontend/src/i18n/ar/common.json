@@ -1,0 +1,41 @@
+{
+  "common": {
+    "welcome": "مرحبًا بكم في نظام باكشا المالي",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "view": "عرض",
+    "search": "بحث...",
+    "confirm": "تأكيد",
+    "back": "عودة",
+    "next": "التالي",
+    "previous": "السابق",
+    "loading": "جاري التحميل...",
+    "error": "حدث خطأ",
+    "success": "تمت العملية بنجاح",
+    "noData": "لا توجد بيانات متاحة",
+    "actions": "الإجراءات",
+    "status": "الحالة",
+    "date": "التاريخ",
+    "amount": "المبلغ",
+    "description": "الوصف",
+    "createdAt": "تاريخ الإنشاء",
+    "updatedAt": "تاريخ التحديث",
+    "createdBy": "تم الإنشاء بواسطة",
+    "updatedBy": "تم التحديث بواسطة"
+  },
+  "validation": {
+    "required": "{field} مطلوب",
+    "email": "الرجاء إدخال عنوان بريد إلكتروني صالح",
+    "minLength": "يجب أن يكون {field} {min} أحرف على الأقل",
+    "maxLength": "يجب ألا يزيد {field} عن {max} حرفًا",
+    "passwordMismatch": "كلمة المرور غير متطابقة",
+    "invalidFormat": "تنسيق غير صالح"
+  },
+  "languages": {
+    "en": "الإنجليزية",
+    "ur": "الأردية",
+    "ar": "العربية"
+  }
+}

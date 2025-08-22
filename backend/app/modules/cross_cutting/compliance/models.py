@@ -18,7 +18,11 @@ from sqlalchemy import Column, String, Text, DateTime, ForeignKey, Boolean, Inte
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID, JSONB
 from sqlalchemy.orm import relationship, backref
 
+<<<<<<< HEAD
 from app.core.database import Base
+=======
+from app.core.db.base import Base
+>>>>>>> e96df7278ce4216131b6c65d411c0723f4de7f91
 
 
 class AuditActionType(str, Enum):

@@ -1,0 +1,503 @@
+// ====================================
+// Typography System
+// ====================================
+// Defines all typography rules for the application
+// Uses a modular scale for consistent vertical rhythm
+
+// Base Typography
+// ---------------
+body {
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-base);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+// Headings
+// --------
+// Define CSS custom properties for heading sizes in the :root selector
+:root {
+  --heading-1-size: 3.052rem;    // 48.83px
+  --heading-2-size: 2.441rem;    // 39.06px
+  --heading-3-size: 1.953rem;    // 31.25px
+  --heading-4-size: 1.563rem;    // 25.00px
+  --heading-5-size: 1.25rem;     // 20.00px
+  --heading-6-size: 1rem;        // 16.00px
+}
+
+// Heading scale based on a 1.25 modular scale (perfect fourth)
+$heading-scale: (
+  h1: var(--heading-1-size),
+  h2: var(--heading-2-size),
+  h3: var(--heading-3-size),
+  h4: var(--heading-4-size),
+  h5: var(--heading-5-size),
+  h6: var(--heading-6-size),
+);
+
+// Heading mixin for consistent styling
+@mixin heading($level, $size, $weight: var(--font-weight-semibold), $line-height: 1.2, $margin-bottom: 1rem) {
+  font-size: $size;
+  font-weight: $weight;
+  line-height: $line-height;
+  margin: 0 0 $margin-bottom 0;
+  color: var(--text-heading);
+  
+  @if $level == h1 {
+    letter-spacing: -0.02em;
+  } @else if $level == h2 {
+    letter-spacing: -0.015em;
+  } @else {
+    letter-spacing: -0.01em;
+  }
+}
+
+// Generate heading classes
+@each $level, $size in $heading-scale {
+  #{$level}, .#{$level} {
+    @if $level == h1 {
+      @include heading($level, $size, var(--font-weight-bold), 1.15, 1.5rem);
+    } @else if $level == h2 {
+      @include heading($level, $size, var(--font-weight-bold), 1.2, 1.25rem);
+    } @else if $level == h3 {
+      @include heading($level, $size, var(--font-weight-semibold), 1.3, 1rem);
+    } @else {
+      @include heading($level, $size, var(--font-weight-semibold), 1.4, 0.75rem);
+    }
+  }
+}
+
+// Responsive typography
+// --------------------
+@include media-breakpoint-down(md) {
+  :root {
+    --heading-1-size: 2.441rem;  // 39.06px
+    --heading-2-size: 1.953rem;  // 31.25px
+    --heading-3-size: 1.563rem;  // 25.00px
+    --heading-4-size: 1.25rem;   // 20.00px
+    --heading-5-size: 1rem;      // 16.00px
+    --heading-6-size: 0.875rem;  // 14.00px
+  }
+  
+  // The $heading-scale map will automatically use the updated CSS variables
+}
+
+// Text Styles
+// -----------
+.text- {
+  // Text weights
+  &light { font-weight: var(--font-weight-light) !important; }
+  &regular { font-weight: var(--font-weight-regular) !important; }
+  &medium { font-weight: var(--font-weight-medium) !important; }
+  &semibold { font-weight: var(--font-weight-semibold) !important; }
+  &bold { font-weight: var(--font-weight-bold) !important; }
+  
+  // Text colors
+  &primary { color: var(--text-primary) !important; }
+  &secondary { color: var(--text-secondary) !important; }
+  &muted { color: var(--text-muted) !important; }
+  &success { color: var(--success-color) !important; }
+  &warning { color: var(--warning-color) !important; }
+  &danger { color: var(--danger-color) !important; }
+  &info { color: var(--info-color) !important; }
+  
+  // Text transforms
+  &uppercase { text-transform: uppercase; }
+  &lowercase { text-transform: lowercase; }
+  &capitalize { text-transform: capitalize; }
+  &normal-case { text-transform: none; }
+  
+  // Text decoration
+  &underline { text-decoration: underline; }
+  &line-through { text-decoration: line-through; }
+  &no-underline { text-decoration: none; }
+  
+  // Text alignment
+  &left { text-align: left; }
+  &center { text-align: center; }
+  &right { text-align: right; }
+  &justify { text-align: justify; }
+  
+  // Text overflow
+  &truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  // Text wrapping
+  &wrap { white-space: normal; }
+  &nowrap { white-space: nowrap; }
+  &pre { white-space: pre; }
+  &pre-line { white-space: pre-line; }
+  &pre-wrap { white-space: pre-wrap; }
+  
+  // Font styles
+  &italic { font-style: italic; }
+  &not-italic { font-style: normal; }
+  &sub, &sup {
+    font-size: 75%;
+    line-height: 0;
+    position: relative;
+    vertical-align: baseline;
+  }
+  &sub { bottom: -0.25em; }
+  &sup { top: -0.5em; }
+}
+
+h6, .h6 {
+  font-size: var(--heading-6-size, 1rem);
+  font-weight: var(--font-weight-medium, 500);
+  letter-spacing: 0.0075em;
+  text-transform: uppercase;
+  margin: 0 0 0.75rem 0;
+  line-height: 1.4;
+  color: var(--text-heading, inherit);
+}
+
+// Paragraphs
+p {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+// Links
+a {
+  color: var(--primary-500, #0ea5e9);
+  text-decoration: none;
+  background-color: transparent;
+  transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out;
+  
+  &:hover {
+    color: var(--primary-600, #0284c7);
+    text-decoration: underline;
+  }
+  
+  &:focus {
+    outline: 2px solid var(--primary-200, #bae6fd);
+    outline-offset: 2px;
+  }
+  
+  // Link without underline
+  &.no-underline {
+    text-decoration: none;
+    
+    &:hover {
+      text-decoration: none;
+    }
+  }
+}
+
+// Text utilities
+.text-uppercase {
+  text-transform: uppercase !important;
+}
+
+.text-lowercase {
+  text-transform: lowercase !important;
+}
+
+.text-capitalize {
+  text-transform: capitalize !important;
+}
+
+.text-nowrap {
+  white-space: nowrap !important;
+}
+
+.text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Font weights
+.font-weight-light {
+  font-weight: var(--font-weight-light, 300) !important;
+}
+
+.font-weight-regular {
+  font-weight: var(--font-weight-regular, 400) !important;
+}
+
+.font-weight-medium {
+  font-weight: var(--font-weight-medium, 500) !important;
+}
+
+.font-weight-semibold {
+  font-weight: var(--font-weight-semibold, 600) !important;
+}
+
+.font-weight-bold {
+  font-weight: var(--font-weight-bold, 700) !important;
+}
+
+// Text colors using CSS custom properties
+.text-primary {
+  color: var(--primary-500) !important;
+}
+
+.text-success {
+  color: var(--success-500) !important;
+}
+
+.text-warning {
+  color: var(--warning-500) !important;
+}
+
+.text-danger {
+  color: var(--danger-500) !important;
+}
+
+.text-info {
+  color: var(--info-500) !important;
+}
+
+.text-muted {
+  color: var(--neutral-500) !important;
+}
+
+// Light and dark variants for each color
+@each $color in (primary, success, warning, danger, info) {
+  .text-#{$color}-light {
+    color: var(--#{$color}-400) !important;
+  }
+  
+  .text-#{$color}-dark {
+    color: var(--#{$color}-600) !important;
+  }
+}
+
+// Text alignment
+.text-left {
+  text-align: left !important;
+}
+
+.text-center {
+  text-align: center !important;
+}
+
+.text-right {
+  text-align: right !important;
+}
+
+// Responsive text alignment
+@each $breakpoint in map-keys($grid-breakpoints) {
+  @include media-breakpoint-up($breakpoint) {
+    $infix: breakpoint-infix($breakpoint, $grid-breakpoints);
+    
+    .text#{$infix}-left {
+      text-align: left !important;
+    }
+    
+    .text#{$infix}-center {
+      text-align: center !important;
+    }
+    
+    .text#{$infix}-right {
+      text-align: right !important;
+    }
+  }
+}
+
+// Text truncation
+.text-truncate {
+  @include text-truncate();
+}
+
+// Text decoration
+.text-decoration-none {
+  text-decoration: none !important;
+}
+
+.text-decoration-underline {
+  text-decoration: underline !important;
+}
+
+.text-decoration-line-through {
+  text-decoration: line-through !important;
+}
+
+// White space
+.white-space-nowrap {
+  white-space: nowrap !important;
+}
+
+.white-space-pre {
+  white-space: pre !important;
+}
+
+.white-space-pre-line {
+  white-space: pre-line !important;
+}
+
+.white-space-pre-wrap {
+  white-space: pre-wrap !important;
+}
+
+// Word break
+.word-break-normal {
+  word-break: normal !important;
+}
+
+.word-break-words {
+  word-break: break-word !important;
+}
+
+.word-break-all {
+  word-break: break-all !important;
+}
+
+// Text overflow
+text-overflow-ellipsis {
+  text-overflow: ellipsis !important;
+}
+
+text-overflow-clip {
+  text-overflow: clip !important;
+}
+
+// Line height
+.line-height-1 {
+  line-height: 1 !important;
+}
+
+.line-height-sm {
+  line-height: 1.25 !important;
+}
+
+.line-height-base {
+  line-height: $line-height-base !important;
+}
+
+.line-height-lg {
+  line-height: 1.75 !important;
+}
+
+// Font style
+.font-italic {
+  font-style: italic !important;
+}
+
+.font-normal {
+  font-style: normal !important;
+}
+
+// Text transform
+.text-lowercase {
+  text-transform: lowercase !important;
+}
+
+.text-uppercase {
+  text-transform: uppercase !important;
+}
+
+.text-capitalize {
+  text-transform: capitalize !important;
+}
+
+// Font size utilities
+@for $i from 10 through 72 {
+  .fs-#{$i} {
+    font-size: #{$i}px !important;
+  }
+}
+
+// Responsive font sizes
+@each $breakpoint in map-keys($grid-breakpoints) {
+  @include media-breakpoint-up($breakpoint) {
+    $infix: breakpoint-infix($breakpoint, $grid-breakpoints);
+    
+    @for $i from 10 through 72 {
+      .fs#{$infix}-#{$i} {
+        font-size: #{$i}px !important;
+      }
+    }
+  }
+}
+
+// Text colors for light/dark themes
+.text-muted {
+  color: $text-secondary !important;
+}
+
+.text-light {
+  color: $white !important;
+}
+
+.text-dark {
+  color: $gray-900 !important;
+}
+
+.text-body {
+  color: $text-primary !important;
+}
+
+.text-muted-light {
+  color: rgba($white, 0.7) !important;
+}
+
+// Text shadow
+.text-shadow {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.text-shadow-sm {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.text-shadow-lg {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.text-shadow-none {
+  text-shadow: none !important;
+}
+
+// Letter spacing
+.letter-spacing-normal {
+  letter-spacing: normal !important;
+}
+
+.letter-spacing-wide {
+  letter-spacing: $letter-spacing-wide !important;
+}
+
+.letter-spacing-wider {
+  letter-spacing: $letter-spacing-wider !important;
+}
+
+// Text selection
+::selection {
+  background-color: rgba($primary, 0.15);
+  color: $primary-dark;
+}
+
+// Print styles
+@media print {
+  body {
+    font-size: 12pt;
+    line-height: 1.4;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+  }
+  
+  p, h2, h3 {
+    orphans: 3;
+    widows: 3;
+  }
+  
+  a {
+    text-decoration: underline !important;
+  }
+}

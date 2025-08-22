@@ -223,7 +223,7 @@ class JournalEntry(Base):
         return value
     
     def __repr__(self):
-        return f"<JournalEntry {self.entry_number} - {self.entry_date}>
+        return f"<JournalEntry {self.entry_number} - {self.entry_date}>"
 
 class JournalEntryLine(Base):
     """Individual line items within a journal entry."""

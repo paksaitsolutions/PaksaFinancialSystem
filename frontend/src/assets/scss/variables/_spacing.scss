@@ -1,0 +1,143 @@
+/* ===================================
+   Spacing System
+   ===================================
+   Defines the spacing scale and utilities for consistent spacing throughout the application.
+   Based on an 8px grid system for better vertical rhythm and alignment.
+*/
+
+// Base spacing unit (8px)
+$spacer: 0.5rem !default; // 8px
+
+// Spacing scale (8px grid system)
+$spacers: (
+  0: 0,                    // 0px
+  1: $spacer * 0.5,        // 4px
+  2: $spacer,              // 8px
+  3: $spacer * 1.5,        // 12px
+  4: $spacer * 2,          // 16px
+  5: $spacer * 2.5,        // 20px
+  6: $spacer * 3,          // 24px
+  7: $spacer * 3.5,        // 28px
+  8: $spacer * 4,          // 32px
+  9: $spacer * 5,          // 40px
+  10: $spacer * 6,         // 48px
+  11: $spacer * 8,         // 64px
+  12: $spacer * 10,        // 80px
+  13: $spacer * 12,        // 96px
+  14: $spacer * 16,        // 128px
+  15: $spacer * 20,        // 160px
+  16: $spacer * 24,        // 192px
+  17: $spacer * 32,        // 256px
+) !default;
+
+// Spacing for specific components
+$component-spacers: (
+  'card': map-get($spacers, 4),     // 16px
+  'input': map-get($spacers, 3),    // 12px
+  'button': map-get($spacers, 3),   // 12px
+  'section': map-get($spacers, 8),  // 32px
+  'container': map-get($spacers, 6),// 24px
+) !default;
+
+// Spacing utility generator mixin
+@mixin generate-spacing-utilities($prefix, $property) {
+  @each $key, $value in $spacers {
+    .#{$prefix}-#{$key} { #{$property}: $value !important; }
+    .#{$prefix}t-#{$key} { #{$property}-top: $value !important; }
+    .#{$prefix}r-#{$key} { #{$property}-right: $value !important; }
+    .#{$prefix}b-#{$key} { #{$property}-bottom: $value !important; }
+    .#{$prefix}l-#{$key} { #{$property}-left: $value !important; }
+    .#{$prefix}x-#{$key} { 
+      #{$property}-left: $value !important;
+      #{$property}-right: $value !important;
+    }
+    .#{$prefix}y-#{$key} { 
+      #{$property}-top: $value !important;
+      #{$property}-bottom: $value !important;
+    }
+  }
+}
+
+// Generate margin utilities
+@include generate-spacing-utilities('m', 'margin');
+
+// Generate padding utilities
+@include generate-spacing-utilities('p', 'padding');
+
+// Special spacing utilities
+.gap-0 { gap: 0 !important; }
+.gap-1 { gap: map-get($spacers, 1) !important; }
+.gap-2 { gap: map-get($spacers, 2) !important; }
+.gap-3 { gap: map-get($spacers, 3) !important; }
+.gap-4 { gap: map-get($spacers, 4) !important; }
+.gap-5 { gap: map-get($spacers, 5) !important; }
+
+// Responsive spacing utilities
+@each $breakpoint in map-keys($grid-breakpoints) {
+  @include media-breakpoint-up($breakpoint) {
+    $infix: breakpoint-infix($breakpoint, $grid-breakpoints);
+    
+    @each $key, $value in $spacers {
+      .m#{$infix}-#{$key} { margin: $value !important; }
+      .mt#{$infix}-#{$key} { margin-top: $value !important; }
+      .mr#{$infix}-#{$key} { margin-right: $value !important; }
+      .mb#{$infix}-#{$key} { margin-bottom: $value !important; }
+      .ml#{$infix}-#{$key} { margin-left: $value !important; }
+      .mx#{$infix}-#{$key} { 
+        margin-left: $value !important;
+        margin-right: $value !important;
+      }
+      .my#{$infix}-#{$key} { 
+        margin-top: $value !important;
+        margin-bottom: $value !important;
+      }
+      
+      .p#{$infix}-#{$key} { padding: $value !important; }
+      .pt#{$infix}-#{$key} { padding-top: $value !important; }
+      .pr#{$infix}-#{$key} { padding-right: $value !important; }
+      .pb#{$infix}-#{$key} { padding-bottom: $value !important; }
+      .pl#{$infix}-#{$key} { padding-left: $value !important; }
+      .px#{$infix}-#{$key} { 
+        padding-left: $value !important;
+        padding-right: $value !important;
+      }
+      .py#{$infix}-#{$key} { 
+        padding-top: $value !important;
+        padding-bottom: $value !important;
+      }
+    }
+    
+    // Gap utilities
+    .gap#{$infix}-0 { gap: 0 !important; }
+    .gap#{$infix}-1 { gap: map-get($spacers, 1) !important; }
+    .gap#{$infix}-2 { gap: map-get($spacers, 2) !important; }
+    .gap#{$infix}-3 { gap: map-get($spacers, 3) !important; }
+    .gap#{$infix}-4 { gap: map-get($spacers, 4) !important; }
+    .gap#{$infix}-5 { gap: map-get($spacers, 5) !important; }
+  }
+}
+
+// Auto margins
+.mx-auto {
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+// Negative margins (for spacing utilities)
+@each $key, $value in $spacers {
+  @if $key != 0 {
+    .m-n#{$key} { margin: -$value !important; }
+    .mt-n#{$key} { margin-top: -$value !important; }
+    .mr-n#{$key} { margin-right: -$value !important; }
+    .mb-n#{$key} { margin-bottom: -$value !important; }
+    .ml-n#{$key} { margin-left: -$value !important; }
+    .mx-n#{$key} { 
+      margin-left: -$value !important;
+      margin-right: -$value !important;
+    }
+    .my-n#{$key} { 
+      margin-top: -$value !important;
+      margin-bottom: -$value !important;
+    }
+  }
+}

@@ -18,7 +18,11 @@ from sqlalchemy.dialects.postgresql import UUID as PG_UUID, JSONB
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.sql import func
 
+<<<<<<< HEAD
 from app.db.base_class import Base
+=======
+from app.core.db.base import Base
+>>>>>>> e96df7278ce4216131b6c65d411c0723f4de7f91
 
 # Association tables for many-to-many relationships
 model_data_sources = Table(

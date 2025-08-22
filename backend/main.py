@@ -1,12 +1,10 @@
 """
-Paksa Financial System - Main Application
+Paksa Financial System - Main Application Entry Point
 Version: 1.0.0
 Copyright (c) 2025 Paksa IT Solutions. All rights reserved.
 
-This software is the proprietary information of Paksa IT Solutions.
-Use is subject to license terms and restrictions.
-
-Main FastAPI application entry point.
+This is the main entry point for the Paksa Financial System application.
+It runs the FastAPI application using uvicorn.
 """
 
 import logging

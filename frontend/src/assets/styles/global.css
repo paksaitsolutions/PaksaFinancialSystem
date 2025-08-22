@@ -1,0 +1,349 @@
+/* Global Paksa Financial System Styles */
+
+/* Root Variables */
+:root {
+  /* Paksa Brand Colors */
+  --paksa-primary: #1565C0;
+  --paksa-primary-light: #42A5F5;
+  --paksa-primary-dark: #0D47A1;
+  --paksa-secondary: #37474F;
+  --paksa-accent: #3F51B5;
+  
+  /* Semantic Colors */
+  --paksa-success: #388E3C;
+  --paksa-warning: #F57C00;
+  --paksa-error: #D32F2F;
+  --paksa-info: #1976D2;
+  
+  /* Neutral Colors */
+  --paksa-background: #F8FAFC;
+  --paksa-surface: #FFFFFF;
+  --paksa-surface-variant: #F1F5F9;
+  --paksa-text-primary: #1E293B;
+  --paksa-text-secondary: #64748B;
+  
+  /* Spacing */
+  --paksa-spacing-xs: 4px;
+  --paksa-spacing-sm: 8px;
+  --paksa-spacing-md: 16px;
+  --paksa-spacing-lg: 24px;
+  --paksa-spacing-xl: 32px;
+  --paksa-spacing-2xl: 48px;
+  
+  /* Border Radius */
+  --paksa-radius-sm: 6px;
+  --paksa-radius-md: 8px;
+  --paksa-radius-lg: 12px;
+  --paksa-radius-xl: 16px;
+  
+  /* Shadows */
+  --paksa-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --paksa-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --paksa-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --paksa-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  
+  /* Typography */
+  --paksa-font-family: 'Inter', 'Roboto', sans-serif;
+  --paksa-font-size-xs: 0.75rem;
+  --paksa-font-size-sm: 0.875rem;
+  --paksa-font-size-base: 1rem;
+  --paksa-font-size-lg: 1.125rem;
+  --paksa-font-size-xl: 1.25rem;
+  --paksa-font-size-2xl: 1.5rem;
+  --paksa-font-size-3xl: 1.875rem;
+  --paksa-font-size-4xl: 2.25rem;
+  
+  /* Transitions */
+  --paksa-transition-fast: 150ms ease-in-out;
+  --paksa-transition-normal: 250ms ease-in-out;
+  --paksa-transition-slow: 350ms ease-in-out;
+}
+
+/* Dark Theme Variables */
+[data-theme="dark"] {
+  --paksa-primary: #42A5F5;
+  --paksa-primary-light: #90CAF9;
+  --paksa-primary-dark: #1976D2;
+  --paksa-secondary: #78909C;
+  --paksa-background: #0F172A;
+  --paksa-surface: #1E293B;
+  --paksa-surface-variant: #334155;
+  --paksa-text-primary: #F1F5F9;
+  --paksa-text-secondary: #94A3B8;
+}
+
+/* Global Resets */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--paksa-font-family);
+  line-height: 1.6;
+  color: var(--paksa-text-primary);
+  background-color: var(--paksa-background);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Vuetify Component Overrides */
+.v-application {
+  font-family: var(--paksa-font-family) !important;
+  background-color: var(--paksa-background) !important;
+}
+
+/* Card Enhancements */
+.v-card {
+  border-radius: var(--paksa-radius-lg) !important;
+  box-shadow: var(--paksa-shadow-md) !important;
+  transition: all var(--paksa-transition-normal) !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+.v-card:hover {
+  box-shadow: var(--paksa-shadow-lg) !important;
+  transform: translateY(-2px);
+}
+
+/* Button Enhancements */
+.v-btn {
+  border-radius: var(--paksa-radius-lg) !important;
+  text-transform: none !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.025em !important;
+  transition: all var(--paksa-transition-fast) !important;
+}
+
+.v-btn--variant-elevated {
+  box-shadow: var(--paksa-shadow-sm) !important;
+}
+
+.v-btn--variant-elevated:hover {
+  box-shadow: var(--paksa-shadow-md) !important;
+  transform: translateY(-1px);
+}
+
+/* Input Field Enhancements */
+.v-field {
+  border-radius: var(--paksa-radius-md) !important;
+}
+
+.v-field--variant-outlined .v-field__outline {
+  --v-field-border-opacity: 0.3;
+}
+
+.v-field--variant-outlined.v-field--focused .v-field__outline {
+  --v-field-border-opacity: 1;
+}
+
+/* Navigation Drawer Enhancements */
+.v-navigation-drawer {
+  border-radius: 0 var(--paksa-radius-xl) var(--paksa-radius-xl) 0 !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(20px) !important;
+}
+
+/* List Item Enhancements */
+.v-list-item {
+  border-radius: var(--paksa-radius-lg) !important;
+  margin: var(--paksa-spacing-xs) var(--paksa-spacing-sm) !important;
+  transition: all var(--paksa-transition-fast) !important;
+}
+
+.v-list-item:hover {
+  transform: translateX(4px);
+}
+
+.v-list-item--active {
+  background: linear-gradient(90deg, rgba(21, 101, 192, 0.15), rgba(21, 101, 192, 0.08)) !important;
+  border-left: 3px solid var(--paksa-primary) !important;
+  font-weight: 600 !important;
+}
+
+/* Chip Enhancements */
+.v-chip {
+  border-radius: var(--paksa-radius-lg) !important;
+  font-weight: 500 !important;
+}
+
+/* Table Enhancements */
+.v-table {
+  border-radius: var(--paksa-radius-lg) !important;
+  overflow: hidden;
+}
+
+.v-table .v-table__wrapper > table > thead > tr > th {
+  background-color: var(--paksa-surface-variant) !important;
+  font-weight: 600 !important;
+  color: var(--paksa-text-primary) !important;
+}
+
+/* Alert Enhancements */
+.v-alert {
+  border-radius: var(--paksa-radius-lg) !important;
+  border-left: 4px solid currentColor !important;
+}
+
+/* Utility Classes */
+.paksa-gradient-bg {
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.paksa-glass {
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.paksa-shadow-soft {
+  box-shadow: var(--paksa-shadow-md);
+}
+
+.paksa-shadow-strong {
+  box-shadow: var(--paksa-shadow-xl);
+}
+
+.paksa-text-gradient {
+  background: linear-gradient(135deg, var(--paksa-primary), var(--paksa-accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Animation Classes */
+.paksa-fade-in {
+  animation: paksaFadeIn 0.5s ease-in-out;
+}
+
+.paksa-slide-up {
+  animation: paksaSlideUp 0.5s ease-out;
+}
+
+.paksa-scale-in {
+  animation: paksaScaleIn 0.3s ease-out;
+}
+
+/* Keyframes */
+@keyframes paksaFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes paksaSlideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes paksaScaleIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .v-card {
+    margin: var(--paksa-spacing-sm);
+  }
+  
+  .v-btn {
+    min-width: auto !important;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .v-navigation-drawer,
+  .v-app-bar,
+  .v-btn {
+    display: none !important;
+  }
+  
+  .v-card {
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+  }
+}
+
+/* Accessibility Enhancements */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Focus Styles */
+.v-btn:focus-visible,
+.v-field:focus-within,
+.v-list-item:focus-visible {
+  outline: 2px solid var(--paksa-primary);
+  outline-offset: 2px;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--paksa-surface-variant);
+  border-radius: var(--paksa-radius-sm);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--paksa-text-secondary);
+  border-radius: var(--paksa-radius-sm);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--paksa-text-primary);
+}
+
+/* Loading States */
+.paksa-loading {
+  position: relative;
+  overflow: hidden;
+}
+
+.paksa-loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  animation: paksaShimmer 1.5s infinite;
+}
+
+@keyframes paksaShimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}

@@ -1,0 +1,611 @@
+/* ===================================
+   PrimeVue Component Overrides
+   ===================================
+   Custom styles for PrimeVue components to match our design system.
+   These styles enhance and override the default PrimeVue component styles.
+*/
+
+// 1. Buttons
+.p-button {
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0.01em;
+  transition: all 0.2s ease;
+  
+  &.p-button-sm {
+    padding: 0.4rem 1rem;
+    font-size: 0.875rem;
+  }
+  
+  &.p-button-lg {
+    padding: 0.75rem 1.5rem;
+    font-size: 1.1rem;
+  }
+  
+  // Primary button
+  &.p-button-primary {
+    background: var(--primary-600);
+    border-color: var(--primary-600);
+    
+    &:hover, 
+    &:focus {
+      background: var(--primary-700);
+      border-color: var(--primary-700);
+      box-shadow: 0 0 0 0.2rem rgba(2, 132, 199, 0.3);
+    }
+    
+    &:active {
+      background: var(--primary-800);
+      border-color: var(--primary-800);
+    }
+  }
+  
+  // Secondary button
+  &.p-button-secondary {
+    background: var(--neutral-100);
+    color: var(--neutral-800);
+    border-color: var(--neutral-300);
+    
+    &:hover, 
+    &:focus {
+      background: var(--neutral-200);
+      border-color: var(--neutral-400);
+      box-shadow: 0 0 0 0.2rem rgba(203, 213, 225, 0.3);
+    }
+    
+    &:active {
+      background: var(--neutral-300);
+    }
+  }
+  
+  // Text button
+  &.p-button-text {
+    color: var(--primary-600);
+    background: transparent;
+    border-color: transparent;
+    
+    &:hover, 
+    &:focus {
+      background: rgba(2, 132, 199, 0.1);
+      border-color: transparent;
+      box-shadow: none;
+    }
+  }
+}
+
+// 2. Inputs
+.p-inputtext {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-size: 1rem;
+  color: var(--text-primary);
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius);
+  transition: all 0.2s ease;
+  
+  &:enabled:hover {
+    border-color: var(--input-hover-border);
+  }
+  
+  &:enabled:focus {
+    border-color: var(--input-focus-border);
+    box-shadow: 0 0 0 0.2rem rgba(2, 132, 199, 0.25);
+  }
+  
+  &.p-invalid {
+    border-color: var(--danger-500);
+    
+    &:focus {
+      box-shadow: 0 0 0 0.2rem rgba(220, 38, 38, 0.25);
+    }
+  }
+}
+
+// 3. Dropdowns
+.p-dropdown {
+  width: 100%;
+  
+  .p-dropdown-label {
+    padding: 0.5rem 0.75rem;
+  }
+  
+  .p-dropdown-trigger {
+    width: 2.5rem;
+  }
+  
+  &:not(.p-disabled).p-focus {
+    box-shadow: 0 0 0 0.2rem rgba(2, 132, 199, 0.25);
+    border-color: var(--primary-500);
+  }
+}
+
+// 4. DataTable
+.p-datatable {
+  .p-datatable-thead > tr > th {
+    background: var(--neutral-50);
+    color: var(--neutral-700);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    padding: 0.75rem 1rem;
+    border-color: var(--neutral-200);
+  }
+  
+  .p-datatable-tbody > tr {
+    transition: background-color 0.2s ease;
+    
+    > td {
+      padding: 1rem;
+      border-color: var(--neutral-100);
+    }
+    
+    &:hover {
+      background: var(--neutral-50);
+    }
+    
+    &.p-highlight {
+      background: var(--primary-50);
+      color: var(--primary-700);
+    }
+  }
+  
+  .p-paginator {
+    border: none;
+    background: transparent;
+    padding: 1rem 0 0 0;
+    
+    .p-paginator-pages {
+      .p-paginator-page {
+        min-width: 2.5rem;
+        height: 2.5rem;
+        margin: 0 0.15rem;
+        
+        &.p-highlight {
+          background: var(--primary-600);
+          color: white;
+        }
+      }
+    }
+  }
+}
+
+// 5. Cards
+.p-card {
+  @include card(1);
+  
+  .p-card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+  }
+  
+  .p-card-subtitle {
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+  }
+  
+  .p-card-body {
+    padding: 1.5rem;
+  }
+  
+  .p-card-content {
+    padding: 0;
+    padding-top: 1rem;
+  }
+  
+  .p-card-footer {
+    padding: 1.5rem 0 0 0;
+    border-top: 1px solid var(--border-light);
+    margin-top: 1.5rem;
+  }
+}
+
+// 6. Messages
+.p-message {
+  border-width: 1px;
+  
+  .p-message-wrapper {
+    padding: 1rem 1.25rem;
+  }
+  
+  &.p-message-success {
+    background: var(--success-50);
+    border-color: var(--success-200);
+    color: var(--success-700);
+  }
+  
+  &.p-message-info {
+    background: var(--info-50);
+    border-color: var(--info-200);
+    color: var(--info-700);
+  }
+  
+  &.p-message-warn {
+    background: var(--warning-50);
+    border-color: var(--warning-200);
+    color: var(--warning-700);
+  }
+  
+  &.p-message-error {
+    background: var(--danger-50);
+    border-color: var(--danger-200);
+    color: var(--danger-700);
+  }
+}
+
+// 7. Tabs
+.p-tabview {
+  .p-tabview-nav {
+    border: none;
+    background: transparent;
+    
+    .p-tabview-nav-link {
+      padding: 1rem 1.5rem;
+      border: none;
+      color: var(--text-secondary);
+      font-weight: 500;
+      transition: all 0.2s ease;
+      
+      &:hover {
+        background: var(--neutral-100);
+        color: var(--text-primary);
+      }
+      
+      &.p-highlight {
+        color: var(--primary-600);
+        border-bottom: 2px solid var(--primary-600);
+      }
+    }
+  }
+  
+  .p-tabview-panels {
+    padding: 1.5rem 0;
+    background: transparent;
+    border: none;
+  }
+}
+
+// 8. Dialogs
+.p-dialog {
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-2xl);
+  border: 1px solid var(--border-light);
+  
+  .p-dialog-header {
+    padding: 1.5rem 1.5rem 1rem;
+    border-bottom: 1px solid var(--border-light);
+    
+    .p-dialog-title {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+  }
+  
+  .p-dialog-content {
+    padding: 1.5rem;
+  }
+  
+  .p-dialog-footer {
+    padding: 1rem 1.5rem 1.5rem;
+    border-top: 1px solid var(--border-light);
+    text-align: right;
+    
+    button + button {
+      margin-left: 0.5rem;
+    }
+  }
+}
+
+// 9. Overlay Panels
+.p-overlaypanel {
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-lg);
+  border-radius: var(--radius-lg);
+  
+  .p-overlaypanel-content {
+    padding: 1.25rem;
+  }
+  
+  &::before {
+    display: none;
+  }
+  
+  &::after {
+    border-color: rgba(255, 255, 255, 0) rgba(255, 255, 255, 0) var(--bg-primary) rgba(255, 255, 255, 0);
+    border-width: 0.5rem;
+    margin-top: -0.5rem;
+  }
+  
+  &.p-overlaypanel-flipped::after {
+    border-color: var(--bg-primary) rgba(255, 255, 255, 0) rgba(255, 255, 255, 0) rgba(255, 255, 255, 0);
+  }
+}
+
+// 10. Menus
+.p-menu {
+  padding: 0.5rem 0;
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-lg);
+  border-radius: var(--radius);
+  min-width: 15rem;
+  
+  .p-menuitem {
+    .p-menuitem-link {
+      padding: 0.75rem 1rem;
+      color: var(--text-primary);
+      border-radius: 0;
+      transition: all 0.2s ease;
+      
+      .p-menuitem-icon {
+        color: var(--text-secondary);
+        margin-right: 0.5rem;
+      }
+      
+      .p-menuitem-text {
+        color: var(--text-primary);
+      }
+      
+      &:not(.p-disabled):hover {
+        background: var(--neutral-100);
+        
+        .p-menuitem-icon,
+        .p-menuitem-text {
+          color: var(--primary-600);
+        }
+      }
+    }
+  }
+  
+  .p-menu-separator {
+    border-top: 1px solid var(--border-light);
+    margin: 0.5rem 0;
+  }
+}
+
+// 11. Progress Bar
+.p-progressbar {
+  height: 0.5rem;
+  background: var(--neutral-100);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  
+  .p-progressbar-value {
+    background: var(--primary-500);
+  }
+}
+
+// 12. Checkbox & Radio
+.p-checkbox,
+.p-radiobutton {
+  .p-checkbox-box,
+  .p-radiobutton-box {
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 1px solid var(--border-regular);
+    
+    &.p-highlight {
+      background: var(--primary-600);
+      border-color: var(--primary-600);
+    }
+    
+    &:not(.p-disabled).p-focus {
+      box-shadow: 0 0 0 0.2rem rgba(2, 132, 199, 0.25);
+      border-color: var(--primary-500);
+    }
+  }
+  
+  .p-checkbox-icon,
+  .p-radiobutton-icon {
+    font-size: 0.75rem;
+  }
+}
+
+// 13. Toggle Switch
+.p-inputswitch {
+  .p-inputswitch-slider {
+    background: var(--neutral-300);
+    border-radius: 1rem;
+    
+    &::before {
+      background: white;
+      width: 1.25rem;
+      height: 1.25rem;
+      margin-top: -0.625rem;
+      border-radius: 50%;
+      transition: all 0.2s;
+    }
+  }
+  
+  &.p-inputswitch-checked {
+    .p-inputswitch-slider {
+      background: var(--primary-600);
+      
+      &::before {
+        transform: translateX(1.15rem);
+      }
+    }
+  }
+}
+
+// 14. Badges
+.p-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  line-height: 1.25rem;
+  padding: 0 0.4rem;
+  
+  &.p-badge-success {
+    background: var(--success-500);
+  }
+  
+  &.p-badge-info {
+    background: var(--info-500);
+  }
+  
+  &.p-badge-warning {
+    background: var(--warning-500);
+  }
+  
+  &.p-badge-danger {
+    background: var(--danger-500);
+  }
+}
+
+// 15. Tooltips
+.p-tooltip {
+  .p-tooltip-text {
+    background: var(--neutral-800);
+    color: white;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius);
+    font-size: 0.875rem;
+    box-shadow: var(--shadow-md);
+  }
+  
+  &.p-tooltip-right .p-tooltip-arrow {
+    border-right-color: var(--neutral-800);
+  }
+  
+  &.p-tooltip-left .p-tooltip-arrow {
+    border-left-color: var(--neutral-800);
+  }
+  
+  &.p-tooltip-top .p-tooltip-arrow {
+    border-top-color: var(--neutral-800);
+  }
+  
+  &.p-tooltip-bottom .p-tooltip-arrow {
+    border-bottom-color: var(--neutral-800);
+  }
+}
+
+// 16. Responsive Adjustments
+@media (max-width: 768px) {
+  .p-dialog {
+    width: 95% !important;
+    max-width: 100%;
+    margin: 0.5rem;
+  }
+  
+  .p-datatable {
+    .p-datatable-thead > tr > th,
+    .p-datatable-tbody > tr > td {
+      padding: 0.75rem 0.5rem;
+    }
+  }
+}
+
+// 17. Dark Mode Adjustments
+@include dark-theme {
+  .p-datatable {
+    .p-datatable-thead > tr > th {
+      background: var(--neutral-800);
+      color: var(--neutral-100);
+      border-color: var(--neutral-700);
+    }
+    
+    .p-datatable-tbody > tr {
+      > td {
+        border-color: var(--neutral-700);
+      }
+      
+      &:hover {
+        background: var(--neutral-800);
+      }
+      
+      &.p-highlight {
+        background: var(--primary-900);
+        color: var(--primary-100);
+      }
+    }
+  }
+  
+  .p-dropdown-panel,
+  .p-multiselect-panel,
+  .p-datepicker,
+  .p-menu,
+  .p-tabview .p-tabview-nav,
+  .p-dialog,
+  .p-overlaypanel {
+    background: var(--neutral-800);
+    border-color: var(--neutral-700);
+    color: var(--neutral-100);
+    
+    .p-dropdown-item,
+    .p-multiselect-item,
+    .p-datepicker-calendar td > span,
+    .p-menuitem-link,
+    .p-tabview-nav-link {
+      color: var(--neutral-100);
+      
+      &:hover {
+        background: var(--neutral-700);
+      }
+      
+      &.p-highlight,
+      &.p-datepicker-today > span {
+        background: var(--primary-600);
+        color: white;
+      }
+    }
+  }
+  
+  .p-inputtext,
+  .p-dropdown,
+  .p-multiselect,
+  .p-chips,
+  .p-inputnumber,
+  .p-inputtextarea,
+  .p-calendar,
+  .p-password,
+  .p-inputmask,
+  .p-inputswitch {
+    background: var(--neutral-700);
+    border-color: var(--neutral-600);
+    color: var(--neutral-100);
+    
+    &:enabled:hover {
+      border-color: var(--primary-400);
+    }
+    
+    &:enabled:focus {
+      border-color: var(--primary-500);
+      box-shadow: 0 0 0 0.2rem rgba(56, 189, 248, 0.3);
+    }
+  }
+  
+  .p-card {
+    background: var(--neutral-800);
+    border-color: var(--neutral-700);
+    
+    .p-card-title,
+    .p-card-subtitle {
+      color: var(--neutral-100);
+    }
+    
+    .p-card-footer {
+      border-top-color: var(--neutral-700);
+    }
+  }
+  
+  .p-tabview {
+    .p-tabview-nav-link {
+      color: var(--neutral-300);
+      
+      &:hover {
+        background: var(--neutral-700);
+        color: var(--neutral-100);
+      }
+      
+      &.p-highlight {
+        color: var(--primary-400);
+        border-color: var(--primary-400);
+      }
+    }
+  }
+}

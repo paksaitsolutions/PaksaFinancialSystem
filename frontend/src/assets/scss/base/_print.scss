@@ -1,0 +1,428 @@
+/* ===================================
+   Print Styles
+   ===================================
+   Optimizes the application for printing
+*/
+
+@media print {
+  // Reset body styles for printing
+  body {
+    background: #fff !important;
+    color: #000 !important;
+    font-size: 12pt;
+    line-height: 1.3;
+  }
+
+  // Hide elements that shouldn't print
+  .no-print,
+  .p-sidebar,
+  .p-menubar,
+  .p-toolbar,
+  .p-dataview-layout-options,
+  .p-paginator,
+  .p-dataview-header,
+  .p-dataview-footer,
+  .p-datatable-header,
+  .p-datatable-footer,
+  .p-datatable-thead,
+  .p-datatable-tfoot,
+  .p-column-title,
+  .p-sortable-column-icon,
+  .p-datatable-reorder,
+  .p-datatable-row-editor,
+  .p-datatable-row-toggler,
+  .p-datatable-row-expand,
+  .p-datatable-row-group-header,
+  .p-datatable-row-group-footer,
+  .p-datatable-row-group-toggler,
+  .p-datatable-row-group-icon,
+  .p-datatable-row-group-name,
+  .p-datatable-row-group-content,
+  .p-datatable-row-group-actions,
+  .p-datatable-row-group-expand,
+  .p-datatable-row-group-collapse,
+  .p-datatable-row-group-toggler-icon,
+  .p-datatable-row-group-toggler-label,
+  .p-datatable-row-group-toggler-icon-close,
+  .p-datatable-row-group-toggler-icon-open,
+  .p-datatable-row-group-toggler-icon-close:before,
+  .p-datatable-row-group-toggler-icon-open:before,
+  .p-datatable-row-group-toggler-label-close,
+  .p-datatable-row-group-toggler-label-open,
+  .p-datatable-row-group-toggler-label-close:before,
+  .p-datatable-row-group-toggler-label-open:before,
+  .p-datatable-row-group-toggler-label-close:after,
+  .p-datatable-row-group-toggler-label-open:after,
+  .p-datatable-row-group-toggler-label-close:before,
+  .p-datatable-row-group-toggler-label-open:before,
+  .p-datatable-row-group-toggler-label-close:after,
+  .p-datatable-row-group-toggler-label-open:after,
+  .p-datatable-row-group-toggler-label-close:before,
+  .p-datatable-row-group-toggler-label-open:before,
+  .p-datatable-row-group-toggler-label-close:after,
+  .p-datatable-row-group-toggler-label-open:after,
+  .p-datatable-row-group-toggler-label-close:before,
+  .p-datatable-row-group-toggler-label-open:before,
+  .p-datatable-row-group-toggler-label-close:after,
+  .p-datatable-row-group-toggler-label-open:after,
+  .p-datatable-row-group-toggler-label-close:before,
+  .p-datatable-row-group-toggler-label-open:before,
+  .p-datatable-row-group-toggler-label-close:after,
+  .p-datatable-row-group-toggler-label-open:after,
+  .p-datatable-row-group-toggler-label-close:before,
+  .p-datatable-row-group-toggler-label-open:before,
+  .p-datatable-row-group-toggler-label-close:after,
+  .p-datatable-row-group-toggler-label-open:after {
+    display: none !important;
+  }
+
+  // Ensure links are visible and include URLs
+  a {
+    text-decoration: underline !important;
+    color: #000 !important;
+  }
+
+  // Ensure content takes full width
+  .p-datatable-wrapper,
+  .p-datatable,
+  .p-datatable-table,
+  .p-datatable-thead > tr > th,
+  .p-datatable-tbody > tr > td,
+  .p-datatable-tfoot > tr > td {
+    display: table !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  // Ensure tables don't break across pages
+  table {
+    page-break-inside: auto;
+  }
+
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+
+  // Ensure images don't break across pages
+  img {
+    max-width: 100% !important;
+    page-break-inside: avoid;
+  }
+
+  // Ensure proper page breaks for sections
+  .page-break-before {
+    page-break-before: always;
+  }
+
+  .page-break-after {
+    page-break-after: always;
+  }
+
+  .avoid-break-inside {
+    page-break-inside: avoid;
+  }
+
+  // Hide interactive elements
+  button,
+  .btn,
+  .p-button,
+  .p-dropdown,
+  .p-calendar,
+  .p-inputtext,
+  .p-inputnumber,
+  .p-inputswitch,
+  .p-checkbox,
+  .p-radiobutton,
+  .p-inputgroup,
+  .p-inputgroup-addon,
+  .p-inputgroup-button,
+  .p-inputgroup-addon:first-child,
+  .p-inputgroup button:first-child,
+  .p-inputgroup .p-button:first-child,
+  .p-inputgroup .p-inputtext:first-child,
+  .p-inputgroup .p-dropdown:first-child,
+  .p-inputgroup .p-inputnumber:first-child,
+  .p-inputgroup .p-inputswitch:first-child,
+  .p-inputgroup .p-checkbox:first-child,
+  .p-inputgroup .p-radiobutton:first-child,
+  .p-inputgroup .p-multiselect:first-child,
+  .p-inputgroup .p-cascadeselect:first-child,
+  .p-inputgroup .p-inputtext:first-child,
+  .p-inputgroup .p-inputnumber:first-child,
+  .p-inputgroup .p-inputswitch:first-child,
+  .p-inputgroup .p-checkbox:first-child,
+  .p-inputgroup .p-radiobutton:first-child,
+  .p-inputgroup .p-multiselect:first-child,
+  .p-inputgroup .p-cascadeselect:first-child {
+    display: none !important;
+  }
+
+  // Ensure forms print correctly
+  form {
+    page-break-inside: avoid;
+  }
+
+  // Ensure proper spacing for printed content
+  .p-datatable .p-datatable-thead > tr > th,
+  .p-datatable .p-datatable-tbody > tr > td,
+  .p-datatable .p-datatable-tfoot > tr > td {
+    padding: 0.25rem 0.5rem !important;
+  }
+
+  // Ensure proper text colors for printing
+  .text-primary,
+  .text-success,
+  .text-info,
+  .text-warning,
+  .text-danger {
+    color: #000 !important;
+  }
+
+  // Ensure proper background colors for printing
+  .bg-primary,
+  .bg-success,
+  .bg-info,
+  .bg-warning,
+  .bg-danger {
+    background-color: #fff !important;
+    color: #000 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  // Ensure proper borders for printing
+  .border,
+  .border-top,
+  .border-right,
+  .border-bottom,
+  .border-left,
+  .border-0,
+  .border-top-0,
+  .border-right-0,
+  .border-bottom-0,
+  .border-left-0 {
+    border-color: #000 !important;
+  }
+
+  // Ensure proper display for print
+  .d-print-none {
+    display: none !important;
+  }
+
+  .d-print-inline {
+    display: inline !important;
+  }
+
+  .d-print-inline-block {
+    display: inline-block !important;
+  }
+
+  .d-print-block {
+    display: block !important;
+  }
+
+  .d-print-table {
+    display: table !important;
+  }
+
+  .d-print-table-row {
+    display: table-row !important;
+  }
+
+  .d-print-table-cell {
+    display: table-cell !important;
+  }
+
+  .d-print-flex {
+    display: flex !important;
+  }
+
+  .d-print-inline-flex {
+    display: inline-flex !important;
+  }
+
+  // Ensure proper page breaks for large elements
+  .break-before {
+    page-break-before: always;
+  }
+
+  .break-after {
+    page-break-after: always;
+  }
+
+  .avoid-break {
+    page-break-inside: avoid;
+  }
+
+  // Ensure proper display for print-only elements
+  .print-only {
+    display: block !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  // Ensure proper page margins
+  @page {
+    size: auto;
+    margin: 1cm;
+  }
+
+  // Ensure proper page breaks for sections
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+  }
+
+  // Ensure proper page breaks for lists
+  ul, ol, dl {
+    page-break-before: avoid;
+  }
+
+  // Ensure proper page breaks for pre and blockquote
+  pre, blockquote {
+    page-break-inside: avoid;
+  }
+
+  // Ensure proper page breaks for thead and tfoot
+  thead {
+    display: table-header-group;
+  }
+
+  tfoot {
+    display: table-footer-group;
+  }
+
+  // Ensure proper page breaks for tr, th, td
+  tr, th, td {
+    page-break-inside: avoid;
+  }
+
+  // Ensure proper page breaks for images
+  img {
+    max-width: 100% !important;
+    height: auto !important;
+    page-break-inside: avoid;
+  }
+
+  // Ensure proper page breaks for SVG
+  svg {
+    max-width: 100% !important;
+    height: auto !important;
+    page-break-inside: avoid;
+  }
+
+  // Ensure proper page breaks for canvas
+  canvas {
+    max-width: 100% !important;
+    height: auto !important;
+    page-break-inside: avoid;
+  }
+
+  // Ensure proper page breaks for video and audio
+  video, audio {
+    max-width: 100% !important;
+    height: auto !important;
+    page-break-inside: avoid;
+  }
+
+  // Ensure proper page breaks for iframe
+  iframe {
+    max-width: 100% !important;
+    height: auto !important;
+    page-break-inside: avoid;
+  }
+
+  // Ensure proper page breaks for object and embed
+  object, embed {
+    max-width: 100% !important;
+    height: auto !important;
+    page-break-inside: avoid;
+  }
+
+  // Ensure proper page breaks for figure
+  figure {
+    page-break-inside: avoid;
+  }
+
+  // Ensure proper page breaks for table
+  table {
+    page-break-inside: auto;
+  }
+
+  // Ensure proper page breaks for thead and tfoot
+  thead, tfoot {
+    display: table-row-group;
+  }
+
+  // Ensure proper page breaks for tr
+  tr {
+    page-break-inside: avoid;
+  }
+
+  // Ensure proper page breaks for td and th
+  td, th {
+    page-break-inside: avoid;
+  }
+
+  // Ensure proper page breaks for thead and tfoot
+  thead, tfoot {
+    display: table-header-group;
+  }
+
+  // Ensure proper page breaks for tbody
+  tbody {
+    display: table-row-group;
+  }
+
+  // Ensure proper page breaks for tr
+  tr {
+    page-break-inside: avoid;
+  }
+
+  // Ensure proper page breaks for td and th
+  td, th {
+    page-break-inside: avoid;
+  }
+
+  // Ensure proper page breaks for thead and tfoot
+  thead, tfoot {
+    display: table-header-group;
+  }
+
+  // Ensure proper page breaks for tbody
+  tbody {
+    display: table-row-group;
+  }
+
+  // Ensure proper page breaks for tr
+  tr {
+    page-break-inside: avoid;
+  }
+
+  // Ensure proper page breaks for td and th
+  td, th {
+    page-break-inside: avoid;
+  }
+
+  // Ensure proper page breaks for thead and tfoot
+  thead, tfoot {
+    display: table-header-group;
+  }
+
+  // Ensure proper page breaks for tbody
+  tbody {
+    display: table-row-group;
+  }
+
+  // Ensure proper page breaks for tr
+  tr {
+    page-break-inside: avoid;
+  }
+
+  // Ensure proper page breaks for td and th
+  td, th {
+    page-break-inside: avoid;
+  }
+}
