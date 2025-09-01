@@ -5,7 +5,7 @@ python-dotenv>=0.21.0
 pydantic[email]
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
-python-multipart==0.0.6
+python-multipart==0.0.18
 sqlalchemy==2.0.23
 alembic==1.12.1
 pydantic==2.4.2
@@ -18,7 +18,7 @@ sqlalchemy-utils==0.41.1
 # Authentication
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
-python-multipart==0.0.6
+python-multipart==0.0.18
 
 # API Documentation
 typing-extensions==4.8.0
