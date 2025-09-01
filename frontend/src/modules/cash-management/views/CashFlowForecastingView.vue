@@ -1,40 +1,32 @@
 <template>
-  <v-container fluid>
-    <v-row>
-      <v-col cols="12">
-        <div class="d-flex justify-space-between align-center mb-4">
-          <h1 class="text-h4">Cash Flow Management</h1>
-          <v-btn color="primary" @click="refreshData">
-            <v-icon left>mdi-refresh</v-icon>
-            Refresh
-          </v-btn>
-        </div>
-        
-        <v-tabs v-model="activeTab">
-          <v-tab value="forecasting">Cash Flow Forecasting</v-tab>
-          <v-tab value="reconciliation">Bank Reconciliation</v-tab>
-          <v-tab value="position">Cash Position</v-tab>
-        </v-tabs>
-        
-        <v-window v-model="activeTab" class="mt-4">
-          <v-window-item value="forecasting">
-            <cash-flow-forecasting-dashboard @forecast="generateForecast" />
-          </v-window-item>
-          
-          <v-window-item value="reconciliation">
-            <bank-reconciliation-interface @reconcile="performReconciliation" />
-          </v-window-item>
-          
-          <v-window-item value="position">
-            <cash-position-monitoring />
-          </v-window-item>
-        </v-window>
-      </v-col>
-    </v-row>
-  </v-container>
+  <div class="cash-flow-management">
+    <div class="flex justify-content-between align-items-center mb-4">
+      <h1>Cash Flow Management</h1>
+      <Button 
+        label="Refresh" 
+        icon="pi pi-refresh" 
+        @click="refreshData"
+        :loading="loading"
+      />
+    </div>
+    
+    <TabView v-model:activeIndex="activeTab">
+      <TabPanel header="Cash Flow Forecasting">
+        <CashFlowForecastingDashboard @forecast="generateForecast" />
+      </TabPanel>
+      
+      <TabPanel header="Bank Reconciliation">
+        <BankReconciliationInterface @reconcile="performReconciliation" />
+      </TabPanel>
+      
+      <TabPanel header="Cash Position">
+        <CashPositionMonitoring />
+      </TabPanel>
+    </TabView>
+  </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
 import CashFlowForecastingDashboard from '../components/CashFlowForecastingDashboard.vue'
 import BankReconciliationInterface from '../components/BankReconciliationInterface.vue'
@@ -42,17 +34,29 @@ import CashPositionMonitoring from '../components/CashPositionMonitoring.vue'
 import { useCashManagementStore } from '../store/cash-management'
 
 const cashStore = useCashManagementStore()
-const activeTab = ref('forecasting')
+const activeTab = ref(0)
+const loading = ref(false)
 
 const refreshData = async () => {
-  await cashStore.refreshAllData()
+  loading.value = true
+  try {
+    await cashStore.refreshAllData()
+  } finally {
+    loading.value = false
+  }
 }
 
-const generateForecast = async (forecastParams) => {
+const generateForecast = async (forecastParams: any) => {
   await cashStore.generateCashFlowForecast(forecastParams)
 }
 
-const performReconciliation = async (reconciliationData) => {
+const performReconciliation = async (reconciliationData: any) => {
   await cashStore.performBankReconciliation(reconciliationData)
 }
 </script>
+
+<style scoped>
+.cash-flow-management {
+  padding: 1rem;
+}
+</style>

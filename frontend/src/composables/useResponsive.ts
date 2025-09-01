@@ -1,16 +1,28 @@
-import { computed } from 'vue'
-import { useDisplay } from 'vuetify'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 
 export function useResponsive() {
-  const display = useDisplay()
+  const windowWidth = ref(window.innerWidth)
 
-  const isMobile = computed(() => display.mobile.value)
-  const isTablet = computed(() => display.tablet.value)
-  const isDesktop = computed(() => display.desktop.value)
+  const updateWidth = () => {
+    windowWidth.value = window.innerWidth
+  }
+
+  onMounted(() => {
+    window.addEventListener('resize', updateWidth)
+  })
+
+  onUnmounted(() => {
+    window.removeEventListener('resize', updateWidth)
+  })
+
+  const isMobile = computed(() => windowWidth.value < 768)
+  const isTablet = computed(() => windowWidth.value >= 768 && windowWidth.value < 1024)
+  const isDesktop = computed(() => windowWidth.value >= 1024)
 
   return {
     isMobile,
     isTablet,
-    isDesktop
+    isDesktop,
+    windowWidth
   }
 }

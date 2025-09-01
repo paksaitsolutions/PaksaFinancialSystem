@@ -1,17 +1,17 @@
 import { ref, computed } from 'vue';
-import { useStore } from 'vuex';
+import { useAuthStore } from '@/stores/auth';
 import { useToast } from 'primevue/usetoast';
 import enhancedReportsService from '@/services/enhancedReportsService';
 
 export function useEnhancedReports() {
-  const store = useStore();
+  const authStore = useAuthStore();
   const toast = useToast();
   
   const loading = ref(false);
   const exportLoading = ref(false);
   const reports = ref([]);
   
-  const currentCompany = computed(() => store.state.auth.currentCompany);
+  const currentCompany = computed(() => authStore.currentCompany || { id: '1', name: 'Default Company' });
   
   const generateReport = async (reportType: string, params: any) => {
     if (!currentCompany.value?.id) {

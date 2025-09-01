@@ -23,6 +23,7 @@ from app.api.v1.endpoints import financial_statements
 from app.api.v1.endpoints.gl import trial_balance as gl_trial_balance
 from app.api.v1.endpoints.gl import recurring_journals as gl_recurring_journals
 from app.api.v1.endpoints import auth as auth_v1
+from app.api.v1.endpoints import reconciliation as reconciliation_v1
 
 api_router = APIRouter()
 
@@ -114,11 +115,21 @@ api_router.include_router(auth_v1.router, prefix="/auth", tags=["auth"])
 api_router.include_router(gl_trial_balance.router, prefix="/gl", tags=["gl"])
 api_router.include_router(gl_recurring_journals.router, prefix="/gl", tags=["gl"])
 
+# Reconciliation (cash-based)
+api_router.include_router(reconciliation_v1.router, prefix="", tags=["reconciliation"]) 
+
 # Reports (enhanced)
 try:
     from app.api.endpoints import enhanced_reports
     api_router.include_router(enhanced_reports.router, prefix="/reports", tags=["reports"])
 except ImportError as e:
     print(f"Warning: Could not import enhanced reports module: {e}")
+
+# Fixed Assets
+try:
+    from app.api.endpoints import fixed_assets
+    api_router.include_router(fixed_assets.router, prefix="/fixed-assets", tags=["fixed-assets"])
+except ImportError as e:
+    print(f"Warning: Could not import fixed assets module: {e}")
 
 # Add additional routers below as needed, using the same style.

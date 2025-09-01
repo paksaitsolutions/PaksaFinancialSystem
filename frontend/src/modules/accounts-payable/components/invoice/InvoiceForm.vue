@@ -342,7 +342,7 @@ import { ref, reactive, computed, onMounted, watch } from 'vue';
 import { useSnackbar } from '@/composables/useSnackbar';
 import { formatCurrency } from '@/utils/formatters';
 import { apiClient } from '@/utils/apiClient';
-import { addDays } from '@/utils/dateUtils';
+import { addToDate } from '@/utils/date';
 
 // Props
 const props = defineProps({
@@ -528,7 +528,7 @@ const updateDueDate = () => {
       daysToAdd = 30;
   }
   
-  formData.due_date = addDays(invoiceDate, daysToAdd).toISOString().substr(0, 10);
+  formData.due_date = addToDate(invoiceDate, daysToAdd, 'days').toISOString().substr(0, 10);
 };
 
 const openLineItemDialog = () => {

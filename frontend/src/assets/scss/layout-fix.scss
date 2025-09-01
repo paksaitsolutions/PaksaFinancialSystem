@@ -1,0 +1,46 @@
+/* Layout Fix - Remove Empty Spaces */
+
+/* Ensure full height usage */
+html, body, #app {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Fix layout wrapper */
+.layout-wrapper {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Remove default margins */
+.dashboard,
+.p-card,
+.p-datatable {
+  margin: 0;
+}
+
+/* Remove default margins from common elements */
+.dashboard,
+.p-card,
+.p-datatable {
+  margin: 0;
+}
+
+/* Ensure cards fill space properly */
+.dashboard-cards {
+  margin-bottom: 1.5rem;
+}
+
+.dashboard-content {
+  flex: 1;
+}
+
+/* Fix PrimeVue component spacing */
+.p-card .p-card-body {
+  padding: 1rem;
+}
+
+.p-card .p-card-content {
+  padding: 0;
+}

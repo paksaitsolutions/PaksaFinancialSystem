@@ -1,51 +1,34 @@
 <template>
   <ResponsiveContainer>
-    <v-tabs v-model="activeTab" class="mb-4">
-      <v-tab value="customers">Customers</v-tab>
-      <v-tab value="invoices">Invoices</v-tab>
-      <v-tab value="payments">Payments</v-tab>
-      <v-tab value="aging">Aging Report</v-tab>
-    </v-tabs>
-
-    <v-window v-model="activeTab">
-      <v-window-item value="customers">
+    <TabView v-model:activeIndex="activeTabIndex" class="mb-4">
+      <TabPanel header="Customers">
         <CustomerManagement />
-      </v-window-item>
+      </TabPanel>
       
-      <v-window-item value="invoices">
+      <TabPanel header="Invoices">
         <InvoiceGeneration />
-      </v-window-item>
+      </TabPanel>
       
-      <v-window-item value="payments">
+      <TabPanel header="Payments">
         <PaymentProcessing />
-      </v-window-item>
+      </TabPanel>
       
-      <v-window-item value="aging">
+      <TabPanel header="Aging Report">
         <AgingReport />
-      </v-window-item>
-    </v-window>
+      </TabPanel>
+    </TabView>
   </ResponsiveContainer>
 </template>
 
-<script>
+<script setup lang="ts">
+import { ref } from 'vue'
 import ResponsiveContainer from '@/components/layout/ResponsiveContainer.vue'
 import CustomerManagement from '../components/CustomerManagement.vue'
 import InvoiceGeneration from '../components/InvoiceGeneration.vue'
 import PaymentProcessing from '../components/PaymentProcessing.vue'
 import AgingReport from '../components/AgingReport.vue'
+import TabView from 'primevue/tabview'
+import TabPanel from 'primevue/tabpanel'
 
-export default {
-  name: 'AccountsReceivableView',
-  components: {
-    ResponsiveContainer,
-    CustomerManagement,
-    InvoiceGeneration,
-    PaymentProcessing,
-    AgingReport
-  },
-  
-  data: () => ({
-    activeTab: 'customers'
-  })
-}
+const activeTabIndex = ref(0)
 </script>

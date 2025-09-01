@@ -253,7 +253,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
-import { useBudgetStore } from '../../store/budget'
+import { useBudgetStore } from '../store/budget'
 import { Budget, BudgetStatus, BudgetType } from '../types/budget'
 
 const budgetStore = useBudgetStore()

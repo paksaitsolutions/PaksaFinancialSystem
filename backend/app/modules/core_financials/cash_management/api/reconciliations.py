@@ -16,7 +16,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.security import get_current_active_user
+from app.core.deps import get_current_active_user
 from app.schemas.user import User as UserSchema
 from .. import schemas, services, exceptions
 

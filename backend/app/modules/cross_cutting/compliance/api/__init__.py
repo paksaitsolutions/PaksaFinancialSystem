@@ -14,7 +14,7 @@ from typing import List, Optional, TypeVar, Generic, Type, Any, Dict
 from uuid import UUID
 from pydantic.generics import GenericModel
 
-from ....core.security import get_current_active_user, get_current_active_admin
+from ....core.deps import get_current_active_user, get_current_admin_user as get_current_active_admin
 from ....db.session import get_db
 from ....schemas.user import UserInDB
 from .. import schemas

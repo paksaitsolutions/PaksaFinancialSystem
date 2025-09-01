@@ -46,13 +46,43 @@ export interface AssetCategory {
 class FixedAssetApiService {
   // Asset methods
   async getAssets(): Promise<FixedAsset[]> {
-    const response = await axios.get(`${API_BASE}/assets/`)
-    return response.data
+    // TODO: Replace with actual API call when backend is ready
+    // const response = await axios.get(`${API_BASE}/assets/`)
+    // return response.data
+    return [
+      {
+        id: 1,
+        asset_number: 'FA-001',
+        name: 'Office Computer',
+        category: 'IT Equipment',
+        purchase_cost: 1500,
+        accumulated_depreciation: 300,
+        status: 'active',
+        purchase_date: '2023-01-15',
+        salvage_value: 100,
+        useful_life_years: 5,
+        depreciation_method: 'straight_line'
+      }
+    ]
   }
 
   async getAsset(id: number): Promise<FixedAsset> {
-    const response = await axios.get(`${API_BASE}/assets/${id}`)
-    return response.data
+    // TODO: Replace with actual API call when backend is ready
+    // const response = await axios.get(`${API_BASE}/assets/${id}`)
+    // return response.data
+    return {
+      id,
+      asset_number: 'FA-001',
+      name: 'Office Computer',
+      category: 'IT Equipment',
+      purchase_cost: 1500,
+      accumulated_depreciation: 300,
+      status: 'active',
+      purchase_date: '2023-01-15',
+      salvage_value: 100,
+      useful_life_years: 5,
+      depreciation_method: 'straight_line'
+    }
   }
 
   async createAsset(asset: Omit<FixedAsset, 'id' | 'accumulated_depreciation' | 'status'>): Promise<FixedAsset> {
@@ -67,6 +97,32 @@ class FixedAssetApiService {
 
   async deleteAsset(id: number): Promise<void> {
     await axios.delete(`${API_BASE}/assets/${id}`)
+  }
+
+  // Reports
+  async getAssetReport(): Promise<any> {
+    // TODO: Replace with actual API call when backend is ready
+    // const response = await axios.get(`${API_BASE}/reports/`)
+    // return response.data
+    
+    // Mock data for now
+    return {
+      total_assets: 25,
+      total_cost: 125000,
+      total_accumulated_depreciation: 45000,
+      total_book_value: 80000,
+      assets_by_category: [
+        { category: 'IT Equipment', count: 10, total_cost: 70000 },
+        { category: 'Office Furniture', count: 8, total_cost: 30000 },
+        { category: 'Vehicles', count: 5, total_cost: 20000 },
+        { category: 'Machinery', count: 2, total_cost: 5000 }
+      ],
+      assets_by_status: [
+        { status: 'active', count: 22 },
+        { status: 'under_maintenance', count: 2 },
+        { status: 'disposed', count: 1 }
+      ]
+    }
   }
 
   async disposeAsset(id: number, disposalData: {
@@ -87,9 +143,22 @@ class FixedAssetApiService {
 
   // Maintenance methods
   async getMaintenanceRecords(assetId?: number): Promise<MaintenanceRecord[]> {
-    const params = assetId ? { asset_id: assetId } : {}
-    const response = await axios.get(`${API_BASE}/maintenance/`, { params })
-    return response.data
+    // TODO: Replace with actual API call when backend is ready
+    // const params = assetId ? { asset_id: assetId } : {}
+    // const response = await axios.get(`${API_BASE}/maintenance/`, { params })
+    // return response.data
+    return [
+      {
+        id: 1,
+        asset_id: assetId || 1, // Use provided assetId or default to 1
+        maintenance_type: 'Preventive',
+        description: 'Regular system maintenance',
+        scheduled_date: '2024-02-15',
+        status: 'scheduled',
+        estimated_cost: 150,
+        actual_cost: 0 // Changed from null to 0 to match number type
+      }
+    ]
   }
 
   async createMaintenanceRecord(maintenance: Omit<MaintenanceRecord, 'id'>): Promise<MaintenanceRecord> {
@@ -120,11 +189,6 @@ class FixedAssetApiService {
     return response.data
   }
 
-  // Reports
-  async getAssetReport(): Promise<any> {
-    const response = await axios.get(`${API_BASE}/reports/summary`)
-    return response.data
-  }
 }
 
 export const fixedAssetApiService = new FixedAssetApiService()

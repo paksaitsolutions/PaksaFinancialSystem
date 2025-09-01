@@ -1,77 +1,93 @@
 <template>
-  <ResponsiveContainer>
-    <v-card>
-      <v-card-title class="d-flex align-center">
-        <h2>Fixed Assets Management</h2>
-        <v-spacer></v-spacer>
-        <v-btn color="primary" @click="openAssetDialog">
-          <v-icon left>mdi-plus</v-icon>
-          New Asset
-        </v-btn>
-      </v-card-title>
-
-      <v-card-text>
-        <v-data-table
-          :headers="headers"
-          :items="assets"
-          :loading="loading"
-          :items-per-page="10"
-        >
-          <template v-slot:item.asset_number="{ item }">
-            <a href="#" @click.prevent="openAssetDialog(item)" class="text-primary">
-              {{ item.asset_number }}
-            </a>
-          </template>
-          
-          <template v-slot:item.purchase_cost="{ item }">
-            {{ formatCurrency(item.purchase_cost) }}
-          </template>
-          
-          <template v-slot:item.book_value="{ item }">
-            {{ formatCurrency(item.purchase_cost - item.accumulated_depreciation) }}
-          </template>
-          
-          <template v-slot:item.status="{ item }">
-            <v-chip :color="getStatusColor(item.status)" small>
-              {{ item.status.replace('_', ' ').toUpperCase() }}
-            </v-chip>
-          </template>
-          
-          <template v-slot:item.actions="{ item }">
-            <v-btn icon small @click="openAssetDialog(item)">
-              <v-icon small>mdi-pencil</v-icon>
-            </v-btn>
-            <v-btn icon small @click="openMaintenanceDialog(item)">
-              <v-icon small>mdi-wrench</v-icon>
-            </v-btn>
-            <v-btn 
-              v-if="item.status === 'active'"
-              icon 
-              small 
-              color="warning"
-              @click="disposeAsset(item)"
-            >
-              <v-icon small>mdi-delete</v-icon>
-            </v-btn>
-          </template>
-        </v-data-table>
-      </v-card-text>
-    </v-card>
-
-    <v-dialog v-model="assetDialog" max-width="800px">
-      <v-card>
-        <v-card-title>{{ editMode ? 'Edit Asset' : 'New Asset' }}</v-card-title>
-        <v-card-text>
-          <AssetForm 
-            :asset="selectedAsset"
-            :loading="formLoading"
-            @submit="handleAssetSave"
-            @cancel="assetDialog = false"
+  <div>
+    <p>Asset Management Component Loaded</p>
+    <Card>
+      <template #header>
+        <div class="flex justify-content-between align-items-center p-4">
+          <h2 class="m-0">Fixed Assets Management</h2>
+          <Button 
+            label="New Asset" 
+            icon="pi pi-plus" 
+            @click="openAssetDialog"
           />
-        </v-card-text>
-      </v-card>
-    </v-dialog>
-  </ResponsiveContainer>
+        </div>
+      </template>
+      
+      <template #content>
+        <DataTable
+          :value="assets"
+          :loading="loading"
+          :paginator="true"
+          :rows="10"
+          responsiveLayout="scroll"
+        >
+          <Column field="asset_number" header="Asset Number">
+            <template #body="{ data }">
+              <a href="#" @click.prevent="openAssetDialog(data)" class="text-primary cursor-pointer">
+                {{ data.asset_number }}
+              </a>
+            </template>
+          </Column>
+          
+          <Column field="name" header="Name"></Column>
+          <Column field="category" header="Category"></Column>
+          
+          <Column field="purchase_cost" header="Purchase Cost">
+            <template #body="{ data }">
+              {{ formatCurrency(data.purchase_cost) }}
+            </template>
+          </Column>
+          
+          <Column field="book_value" header="Book Value">
+            <template #body="{ data }">
+              {{ formatCurrency(data.purchase_cost - data.accumulated_depreciation) }}
+            </template>
+          </Column>
+          
+          <Column field="status" header="Status">
+            <template #body="{ data }">
+              <Tag :value="data.status.replace('_', ' ').toUpperCase()" :severity="getStatusSeverity(data.status)" />
+            </template>
+          </Column>
+          
+          <Column header="Actions">
+            <template #body="{ data }">
+              <Button 
+                icon="pi pi-pencil" 
+                class="p-button-text p-button-sm mr-2" 
+                @click="openAssetDialog(data)"
+              />
+              <Button 
+                icon="pi pi-wrench" 
+                class="p-button-text p-button-sm mr-2" 
+                @click="openMaintenanceDialog(data)"
+              />
+              <Button 
+                v-if="data.status === 'active'"
+                icon="pi pi-trash" 
+                class="p-button-text p-button-sm p-button-danger" 
+                @click="disposeAsset(data)"
+              />
+            </template>
+          </Column>
+        </DataTable>
+      </template>
+    </Card>
+
+    <Dialog 
+      v-model:visible="assetDialog" 
+      :header="editMode ? 'Edit Asset' : 'New Asset'"
+      :style="{ width: '800px' }"
+      :modal="true"
+    >
+      <AssetForm 
+        :asset="selectedAsset"
+        :loading="formLoading"
+        @submit="handleAssetSave"
+        @cancel="assetDialog = false"
+      />
+    </Dialog>
+  </div>
 </template>
 
 <script>
@@ -158,14 +174,14 @@ export default {
       }
     },
     
-    getStatusColor(status) {
-      const colors = {
+    getStatusSeverity(status) {
+      const severities = {
         active: 'success',
-        disposed: 'error',
+        disposed: 'danger',
         under_maintenance: 'warning',
         retired: 'secondary'
       }
-      return colors[status] || 'grey'
+      return severities[status] || 'info'
     },
     
     formatCurrency(amount) {

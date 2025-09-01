@@ -1,133 +1,50 @@
-import { defineStore } from 'pinia';
+import { defineStore } from 'pinia'
+import { ref } from 'vue'
 
-export const useCashManagementStore = defineStore('cashManagement', {
-  state: () => ({
-    // Shared state for the Cash Management module
-    loading: false,
-    error: null as string | null,
-  }),
+export const useCashManagementStore = defineStore('cashManagement', () => {
+  const loading = ref(false)
+  const cashFlowData = ref([])
+  const reconciliationData = ref([])
   
-  actions: {
-    setLoading(loading: boolean) {
-      this.loading = loading;
-    },
-    
-    setError(error: string | null) {
-      this.error = error;
-    },
-    
-    clearError() {
-      this.error = null;
-    },
-    
-    async refreshAllData() {
-      this.setLoading(true)
-      try {
-        // Refresh all cash management data
-        console.log('Refreshing cash management data')
-      } catch (error) {
-        this.setError('Failed to refresh data')
-      } finally {
-        this.setLoading(false)
-      }
-    },
-    
-    async generateCashFlowForecast(forecastParams: any) {
-      this.setLoading(true)
-      try {
-        // Generate cash flow forecast
-        const response = await fetch('/api/v1/cash-management/cash-flow/forecast', {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' }
-        })
-        return await response.json()
-      } catch (error) {
-        this.setError('Failed to generate forecast')
-        throw error
-      } finally {
-        this.setLoading(false)
-      }
-    },
-    
-    async performBankReconciliation(reconciliationData: any) {
-      this.setLoading(true)
-      try {
-        const response = await fetch('/api/v1/cash-management/reconciliations', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(reconciliationData)
-        })
-        return await response.json()
-      } catch (error) {
-        this.setError('Failed to perform reconciliation')
-        throw error
-      } finally {
-        this.setLoading(false)
-      }
-    },
-    
-    async importBankStatement(statementData: any) {
-      this.setLoading(true)
-      try {
-        const response = await fetch('/api/v1/cash-management/bank-statements/import', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(statementData)
-        })
-        return await response.json()
-      } catch (error) {
-        this.setError('Failed to import statement')
-        throw error
-      } finally {
-        this.setLoading(false)
-      }
-    },
-    
-    async processPayment(paymentData: any) {
-      this.setLoading(true)
-      try {
-        const response = await fetch('/api/v1/cash-management/payments/process', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(paymentData)
-        })
-        return await response.json()
-      } catch (error) {
-        this.setError('Failed to process payment')
-        throw error
-      } finally {
-        this.setLoading(false)
-      }
-    },
-    
-    async createBankingFee(feeData: any) {
-      this.setLoading(true)
-      try {
-        const response = await fetch('/api/v1/cash-management/banking-fees', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(feeData)
-        })
-        return await response.json()
-      } catch (error) {
-        this.setError('Failed to create banking fee')
-        throw error
-      } finally {
-        this.setLoading(false)
-      }
-    },
-    
-    async getCashPosition() {
-      this.setLoading(true)
-      try {
-        const response = await fetch('/api/v1/cash-management/cash-flow/position')
-        return await response.json()
-      } catch (error) {
-        this.setError('Failed to get cash position')
-        throw error
-      } finally {
-        this.setLoading(false)
-      }
+  const refreshAllData = async () => {
+    loading.value = true
+    try {
+      // Mock API calls
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      console.log('Refreshing cash management data...')
+    } finally {
+      loading.value = false
     }
-  },
-});
+  }
+  
+  const generateCashFlowForecast = async (params: any) => {
+    loading.value = true
+    try {
+      // Mock forecast generation
+      await new Promise(resolve => setTimeout(resolve, 1500))
+      console.log('Generating cash flow forecast with params:', params)
+    } finally {
+      loading.value = false
+    }
+  }
+  
+  const performBankReconciliation = async (data: any) => {
+    loading.value = true
+    try {
+      // Mock reconciliation
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      console.log('Performing bank reconciliation with data:', data)
+    } finally {
+      loading.value = false
+    }
+  }
+  
+  return {
+    loading,
+    cashFlowData,
+    reconciliationData,
+    refreshAllData,
+    generateCashFlowForecast,
+    performBankReconciliation
+  }
+})

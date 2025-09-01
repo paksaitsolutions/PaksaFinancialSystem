@@ -1,0 +1,497 @@
+/* ===================================
+   PrimeVue Component Fixes & Enhancements
+   ===================================
+   Fixes for common styling issues after Vuetify to PrimeVue conversion
+*/
+
+/* Global fixes */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-family-sans);
+  background-color: var(--surface-ground);
+  color: var(--text-color);
+  line-height: 1.6;
+}
+
+/* Layout fixes */
+.layout-wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* PrimeVue Button fixes */
+.p-button {
+  font-weight: 500;
+  border-radius: var(--border-radius);
+  transition: all 0.2s ease;
+  
+  &.p-button-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+  }
+  
+  &.p-button-lg {
+    padding: 0.75rem 1.5rem;
+    font-size: 1.125rem;
+  }
+  
+  &.w-full {
+    width: 100%;
+  }
+}
+
+/* PrimeVue Card fixes */
+.p-card {
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--surface-border);
+  
+  .p-card-header {
+    padding: 1.5rem 1.5rem 0;
+    border-bottom: none;
+  }
+  
+  .p-card-body {
+    padding: 1.5rem;
+  }
+  
+  .p-card-content {
+    padding: 0;
+  }
+  
+  .p-card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
+  }
+  
+  .p-card-subtitle {
+    color: var(--text-color-secondary);
+    margin-bottom: 1rem;
+  }
+}
+
+/* PrimeVue DataTable fixes */
+.p-datatable {
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  
+  .p-datatable-header {
+    background: var(--surface-section);
+    border: 1px solid var(--surface-border);
+    padding: 1rem;
+  }
+  
+  .p-datatable-thead > tr > th {
+    background: var(--surface-100);
+    color: var(--text-color);
+    font-weight: 600;
+    padding: 1rem;
+    border-bottom: 1px solid var(--surface-border);
+  }
+  
+  .p-datatable-tbody > tr {
+    background: var(--surface-0);
+    transition: background-color 0.2s;
+    
+    &:nth-child(odd) {
+      background: var(--surface-50);
+    }
+    
+    &:hover {
+      background: var(--surface-hover);
+    }
+    
+    > td {
+      padding: 1rem;
+      border-bottom: 1px solid var(--surface-border);
+    }
+  }
+  
+  .p-datatable-footer {
+    background: var(--surface-section);
+    border: 1px solid var(--surface-border);
+    padding: 1rem;
+  }
+}
+
+/* PrimeVue Input fixes */
+.p-inputtext,
+.p-password input,
+.p-dropdown,
+.p-calendar input,
+.p-inputnumber input,
+.p-multiselect,
+.p-autocomplete input {
+  border-radius: var(--border-radius);
+  border: 1px solid var(--surface-300);
+  padding: 0.75rem;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  background: var(--surface-0);
+  color: var(--text-color);
+  
+  &:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+  }
+  
+  &.p-invalid {
+    border-color: var(--red-500);
+  }
+  
+  &:disabled {
+    background: var(--surface-100);
+    color: var(--text-color-secondary);
+    cursor: not-allowed;
+  }
+}
+
+/* PrimeVue Textarea fixes */
+.p-inputtextarea {
+  border-radius: var(--border-radius);
+  border: 1px solid var(--surface-300);
+  padding: 0.75rem;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  background: var(--surface-0);
+  color: var(--text-color);
+  resize: vertical;
+  min-height: 100px;
+  
+  &:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+  }
+}
+
+/* PrimeVue Dialog fixes */
+.p-dialog {
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-xl);
+  
+  .p-dialog-header {
+    background: var(--surface-0);
+    border-bottom: 1px solid var(--surface-border);
+    padding: 1.5rem;
+    
+    .p-dialog-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+  }
+  
+  .p-dialog-content {
+    background: var(--surface-0);
+    padding: 1.5rem;
+    color: var(--text-color);
+  }
+  
+  .p-dialog-footer {
+    background: var(--surface-0);
+    border-top: 1px solid var(--surface-border);
+    padding: 1rem 1.5rem;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
+}
+
+/* PrimeVue Menu fixes */
+.p-menu {
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--surface-border);
+  background: var(--surface-0);
+  
+  .p-menuitem-link {
+    padding: 0.75rem 1rem;
+    color: var(--text-color);
+    transition: all 0.2s ease;
+    
+    &:hover {
+      background: var(--surface-hover);
+    }
+    
+    .p-menuitem-icon {
+      margin-right: 0.5rem;
+      color: var(--text-color-secondary);
+    }
+  }
+  
+  .p-menu-separator {
+    border-top: 1px solid var(--surface-border);
+    margin: 0.25rem 0;
+  }
+}
+
+/* PrimeVue Toast fixes */
+.p-toast {
+  .p-toast-message {
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-lg);
+    margin: 0 0 1rem 0;
+    
+    &.p-toast-message-info {
+      background: var(--blue-50);
+      border: 1px solid var(--blue-200);
+      color: var(--blue-800);
+      
+      .p-toast-message-icon {
+        color: var(--blue-600);
+      }
+    }
+    
+    &.p-toast-message-success {
+      background: var(--green-50);
+      border: 1px solid var(--green-200);
+      color: var(--green-800);
+      
+      .p-toast-message-icon {
+        color: var(--green-600);
+      }
+    }
+    
+    &.p-toast-message-warn {
+      background: var(--yellow-50);
+      border: 1px solid var(--yellow-200);
+      color: var(--yellow-800);
+      
+      .p-toast-message-icon {
+        color: var(--yellow-600);
+      }
+    }
+    
+    &.p-toast-message-error {
+      background: var(--red-50);
+      border: 1px solid var(--red-200);
+      color: var(--red-800);
+      
+      .p-toast-message-icon {
+        color: var(--red-600);
+      }
+    }
+  }
+}
+
+/* PrimeVue Tag fixes */
+.p-tag {
+  border-radius: var(--border-radius);
+  font-weight: 500;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  
+  &.p-tag-success {
+    background: var(--green-100);
+    color: var(--green-800);
+  }
+  
+  &.p-tag-info {
+    background: var(--blue-100);
+    color: var(--blue-800);
+  }
+  
+  &.p-tag-warning {
+    background: var(--yellow-100);
+    color: var(--yellow-800);
+  }
+  
+  &.p-tag-danger {
+    background: var(--red-100);
+    color: var(--red-800);
+  }
+}
+
+/* Form field styling */
+.field {
+  margin-bottom: 1rem;
+  
+  label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-color);
+    font-size: 0.875rem;
+  }
+  
+  .p-error {
+    color: var(--red-600);
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+    display: block;
+  }
+}
+
+.field-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  
+  label {
+    margin-bottom: 0;
+    cursor: pointer;
+  }
+}
+
+/* Responsive utilities */
+@media (max-width: 768px) {
+  .p-dialog {
+    width: 95vw !important;
+    margin: 1rem;
+  }
+  
+  .p-datatable {
+    font-size: 0.875rem;
+    
+    .p-datatable-thead > tr > th,
+    .p-datatable-tbody > tr > td {
+      padding: 0.5rem;
+    }
+  }
+  
+  .p-card .p-card-body {
+    padding: 1rem;
+  }
+}
+
+/* Loading states */
+.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Error states */
+.error-state {
+  color: var(--red-600);
+  background: var(--red-50);
+  border: 1px solid var(--red-200);
+  border-radius: var(--border-radius);
+  padding: 1rem;
+  text-align: center;
+}
+
+/* Empty states */
+.empty-state {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-color-secondary);
+  
+  .empty-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+  }
+  
+  .empty-message {
+    font-size: 1.125rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .empty-description {
+    font-size: 0.875rem;
+  }
+}
+
+/* Utility classes for common layouts */
+.flex {
+  display: flex;
+}
+
+.flex-column {
+  flex-direction: column;
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
+.justify-content-between {
+  justify-content: space-between;
+}
+
+.justify-content-center {
+  justify-content: center;
+}
+
+.align-items-center {
+  align-items: center;
+}
+
+.gap-1 { gap: 0.25rem; }
+.gap-2 { gap: 0.5rem; }
+.gap-3 { gap: 1rem; }
+.gap-4 { gap: 1.5rem; }
+
+.w-full { width: 100%; }
+.h-full { height: 100%; }
+
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+
+.font-bold { font-weight: 700; }
+.font-semibold { font-weight: 600; }
+.font-medium { font-weight: 500; }
+
+.text-sm { font-size: 0.875rem; }
+.text-lg { font-size: 1.125rem; }
+.text-xl { font-size: 1.25rem; }
+
+.mb-0 { margin-bottom: 0; }
+.mb-1 { margin-bottom: 0.25rem; }
+.mb-2 { margin-bottom: 0.5rem; }
+.mb-3 { margin-bottom: 1rem; }
+.mb-4 { margin-bottom: 1.5rem; }
+
+.mt-0 { margin-top: 0; }
+.mt-1 { margin-top: 0.25rem; }
+.mt-2 { margin-top: 0.5rem; }
+.mt-3 { margin-top: 1rem; }
+.mt-4 { margin-top: 1.5rem; }
+
+.mr-1 { margin-right: 0.25rem; }
+.mr-2 { margin-right: 0.5rem; }
+.mr-3 { margin-right: 1rem; }
+
+.ml-1 { margin-left: 0.25rem; }
+.ml-2 { margin-left: 0.5rem; }
+.ml-3 { margin-left: 1rem; }
+
+.p-1 { padding: 0.25rem; }
+.p-2 { padding: 0.5rem; }
+.p-3 { padding: 1rem; }
+.p-4 { padding: 1.5rem; }
+
+/* Dark mode adjustments */
+[data-theme="dark"] {
+  .p-card {
+    background: var(--surface-card);
+    border-color: var(--surface-border);
+  }
+  
+  .p-datatable .p-datatable-thead > tr > th {
+    background: var(--surface-100);
+  }
+  
+  .p-inputtext,
+  .p-password input,
+  .p-dropdown,
+  .p-calendar input,
+  .p-inputnumber input,
+  .p-multiselect,
+  .p-autocomplete input {
+    background: var(--surface-card);
+    border-color: var(--surface-border);
+    color: var(--text-color);
+  }
+}

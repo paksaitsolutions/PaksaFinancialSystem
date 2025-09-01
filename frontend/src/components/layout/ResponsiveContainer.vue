@@ -1,11 +1,10 @@
 <template>
-  <v-container
-    :fluid="fluid"
+  <div
     :class="containerClass"
     :style="containerStyle"
   >
     <slot />
-  </v-container>
+  </div>
 </template>
 
 <script setup>

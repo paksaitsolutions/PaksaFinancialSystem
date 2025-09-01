@@ -1,159 +1,133 @@
 <template>
   <div class="trial-balance">
     <div class="page-header">
-      <div class="container">
-        <div class="header-content">
+      <div class="header-content">
+        <div class="header-left">
+          <Button icon="pi pi-arrow-left" class="p-button-text" @click="$router.go(-1)" />
           <div>
             <h1>Trial Balance</h1>
-            <p>View account balances and verify accounting equation</p>
+            <p class="subtitle">View account balances and verify debits equal credits</p>
           </div>
-          <div class="header-actions">
-            <select v-model="selectedPeriod" class="period-select">
-              <option value="current">Current Month</option>
-              <option value="ytd">Year to Date</option>
-              <option value="custom">Custom Period</option>
-            </select>
-            <button class="btn btn-primary" @click="exportReport">Export PDF</button>
-          </div>
+        </div>
+        <div class="header-actions">
+          <Button label="Export PDF" icon="pi pi-file-pdf" class="p-button-outlined" />
+          <Button label="Export Excel" icon="pi pi-file-excel" class="p-button-outlined" />
+          <Button label="Print" icon="pi pi-print" class="p-button-outlined" />
         </div>
       </div>
     </div>
 
-    <div class="container">
-      <!-- Summary Cards -->
-      <div class="summary-section">
-        <div class="summary-grid">
-          <div class="summary-card">
-            <h3>Total Debits</h3>
-            <div class="amount">{{ formatCurrency(totals.debits) }}</div>
+    <div class="content-container">
+      <Card>
+        <template #title>
+          <div class="flex justify-content-between align-items-center">
+            <span>Trial Balance Report</span>
+            <div class="flex gap-2">
+              <Calendar v-model="asOfDate" dateFormat="mm/dd/yy" showIcon placeholder="As of Date" />
+              <Button label="Generate" icon="pi pi-refresh" @click="generateReport" :loading="loading" />
+            </div>
           </div>
-          <div class="summary-card">
-            <h3>Total Credits</h3>
-            <div class="amount">{{ formatCurrency(totals.credits) }}</div>
-          </div>
-          <div class="summary-card" :class="{ 'balanced': isBalanced }">
-            <h3>Difference</h3>
-            <div class="amount">{{ formatCurrency(totals.difference) }}</div>
-            <div class="status">{{ isBalanced ? 'Balanced' : 'Out of Balance' }}</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Trial Balance Table -->
-      <div class="table-card">
-        <div class="table-header">
-          <h3>Trial Balance Report</h3>
-          <div class="report-date">
-            As of {{ formatDate(reportDate) }}
-          </div>
-        </div>
+        </template>
         
-        <div class="table-container">
-          <table class="trial-balance-table">
-            <thead>
-              <tr>
-                <th>Account Code</th>
-                <th>Account Name</th>
-                <th>Account Type</th>
-                <th class="amount-col">Debit Balance</th>
-                <th class="amount-col">Credit Balance</th>
-              </tr>
-            </thead>
-            <tbody>
-              <!-- Assets -->
-              <tr class="category-header">
-                <td colspan="5"><strong>ASSETS</strong></td>
-              </tr>
-              <tr v-for="account in assetAccounts" :key="account.id">
-                <td>{{ account.code }}</td>
-                <td>{{ account.name }}</td>
-                <td>{{ account.type }}</td>
-                <td class="amount-col">{{ account.balance > 0 ? formatCurrency(account.balance) : '-' }}</td>
-                <td class="amount-col">{{ account.balance < 0 ? formatCurrency(Math.abs(account.balance)) : '-' }}</td>
-              </tr>
-              
-              <!-- Liabilities -->
-              <tr class="category-header">
-                <td colspan="5"><strong>LIABILITIES</strong></td>
-              </tr>
-              <tr v-for="account in liabilityAccounts" :key="account.id">
-                <td>{{ account.code }}</td>
-                <td>{{ account.name }}</td>
-                <td>{{ account.type }}</td>
-                <td class="amount-col">{{ account.balance < 0 ? formatCurrency(Math.abs(account.balance)) : '-' }}</td>
-                <td class="amount-col">{{ account.balance > 0 ? formatCurrency(account.balance) : '-' }}</td>
-              </tr>
-              
-              <!-- Equity -->
-              <tr class="category-header">
-                <td colspan="5"><strong>EQUITY</strong></td>
-              </tr>
-              <tr v-for="account in equityAccounts" :key="account.id">
-                <td>{{ account.code }}</td>
-                <td>{{ account.name }}</td>
-                <td>{{ account.type }}</td>
-                <td class="amount-col">{{ account.balance < 0 ? formatCurrency(Math.abs(account.balance)) : '-' }}</td>
-                <td class="amount-col">{{ account.balance > 0 ? formatCurrency(account.balance) : '-' }}</td>
-              </tr>
-              
-              <!-- Revenue -->
-              <tr class="category-header">
-                <td colspan="5"><strong>REVENUE</strong></td>
-              </tr>
-              <tr v-for="account in revenueAccounts" :key="account.id">
-                <td>{{ account.code }}</td>
-                <td>{{ account.name }}</td>
-                <td>{{ account.type }}</td>
-                <td class="amount-col">{{ account.balance < 0 ? formatCurrency(Math.abs(account.balance)) : '-' }}</td>
-                <td class="amount-col">{{ account.balance > 0 ? formatCurrency(account.balance) : '-' }}</td>
-              </tr>
-              
-              <!-- Expenses -->
-              <tr class="category-header">
-                <td colspan="5"><strong>EXPENSES</strong></td>
-              </tr>
-              <tr v-for="account in expenseAccounts" :key="account.id">
-                <td>{{ account.code }}</td>
-                <td>{{ account.name }}</td>
-                <td>{{ account.type }}</td>
-                <td class="amount-col">{{ account.balance > 0 ? formatCurrency(account.balance) : '-' }}</td>
-                <td class="amount-col">{{ account.balance < 0 ? formatCurrency(Math.abs(account.balance)) : '-' }}</td>
-              </tr>
-            </tbody>
-            <tfoot>
-              <tr class="totals-row">
-                <td colspan="3"><strong>TOTALS</strong></td>
-                <td class="amount-col"><strong>{{ formatCurrency(totals.debits) }}</strong></td>
-                <td class="amount-col"><strong>{{ formatCurrency(totals.credits) }}</strong></td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-      </div>
+        <template #content>
+          <div class="report-header mb-4">
+            <div class="text-center">
+              <h2 class="text-2xl font-bold mb-1">Paksa Financial System</h2>
+              <h3 class="text-xl mb-1">Trial Balance</h3>
+              <p class="text-600">As of {{ formatDate(asOfDate) }}</p>
+            </div>
+          </div>
 
-      <!-- Accounting Equation Verification -->
-      <div class="equation-card">
-        <h3>Accounting Equation Verification</h3>
-        <div class="equation">
-          <div class="equation-part">
-            <span class="label">Assets</span>
-            <span class="amount">{{ formatCurrency(equationTotals.assets) }}</span>
+          <DataTable 
+            :value="trialBalanceData" 
+            :loading="loading"
+            responsiveLayout="scroll"
+            class="trial-balance-table"
+          >
+            <Column field="accountCode" header="Account Code" style="width: 120px">
+              <template #body="{ data }">
+                <span class="font-mono">{{ data.accountCode }}</span>
+              </template>
+            </Column>
+
+            <Column field="accountName" header="Account Name">
+              <template #body="{ data }">
+                <div class="flex align-items-center gap-2">
+                  <div class="account-type-indicator" :class="getTypeColor(data.accountType)"></div>
+                  <span>{{ data.accountName }}</span>
+                </div>
+              </template>
+            </Column>
+
+            <Column field="debit" header="Debit" class="text-right" style="width: 150px">
+              <template #body="{ data }">
+                <span v-if="data.debit > 0" class="font-medium">
+                  {{ formatCurrency(data.debit) }}
+                </span>
+                <span v-else class="text-400">-</span>
+              </template>
+            </Column>
+
+            <Column field="credit" header="Credit" class="text-right" style="width: 150px">
+              <template #body="{ data }">
+                <span v-if="data.credit > 0" class="font-medium">
+                  {{ formatCurrency(data.credit) }}
+                </span>
+                <span v-else class="text-400">-</span>
+              </template>
+            </Column>
+
+            <template #footer>
+              <div class="trial-balance-totals">
+                <div class="totals-row">
+                  <div class="totals-label">
+                    <strong>TOTALS</strong>
+                  </div>
+                  <div class="totals-debit">
+                    <strong>{{ formatCurrency(totalDebits) }}</strong>
+                  </div>
+                  <div class="totals-credit">
+                    <strong>{{ formatCurrency(totalCredits) }}</strong>
+                  </div>
+                </div>
+                <div class="balance-check" :class="{ 'balanced': isBalanced, 'unbalanced': !isBalanced }">
+                  <i :class="isBalanced ? 'pi pi-check-circle' : 'pi pi-exclamation-triangle'"></i>
+                  <span>{{ isBalanced ? 'Trial Balance is Balanced' : 'Trial Balance is NOT Balanced' }}</span>
+                  <span v-if="!isBalanced" class="difference">
+                    (Difference: {{ formatCurrency(Math.abs(totalDebits - totalCredits)) }})
+                  </span>
+                </div>
+              </div>
+            </template>
+          </DataTable>
+
+          <!-- Summary by Account Type -->
+          <div class="mt-4">
+            <h4 class="mb-3">Summary by Account Type</h4>
+            <div class="grid">
+              <div class="col-12 md:col-6">
+                <DataTable :value="accountTypeSummary" class="p-datatable-sm">
+                  <Column field="type" header="Account Type">
+                    <template #body="{ data }">
+                      <div class="flex align-items-center gap-2">
+                        <div class="account-type-indicator" :class="getTypeColor(data.type)"></div>
+                        <span>{{ data.type }}</span>
+                      </div>
+                    </template>
+                  </Column>
+                  <Column field="balance" header="Total Balance" class="text-right">
+                    <template #body="{ data }">
+                      <span :class="data.balance >= 0 ? 'text-green-600' : 'text-red-600'" class="font-medium">
+                        {{ formatCurrency(Math.abs(data.balance)) }}
+                      </span>
+                    </template>
+                  </Column>
+                </DataTable>
+              </div>
+            </div>
           </div>
-          <div class="equation-operator">=</div>
-          <div class="equation-part">
-            <span class="label">Liabilities</span>
-            <span class="amount">{{ formatCurrency(equationTotals.liabilities) }}</span>
-          </div>
-          <div class="equation-operator">+</div>
-          <div class="equation-part">
-            <span class="label">Equity</span>
-            <span class="amount">{{ formatCurrency(equationTotals.equity) }}</span>
-          </div>
-        </div>
-        <div class="equation-status" :class="{ 'valid': equationBalanced }">
-          {{ equationBalanced ? '✓ Equation Balanced' : '⚠ Equation Not Balanced' }}
-        </div>
-      </div>
+        </template>
+      </Card>
     </div>
   </div>
 </template>
@@ -161,369 +135,225 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 
-const selectedPeriod = ref('current')
-const reportDate = ref(new Date().toISOString().split('T')[0])
+const loading = ref(false)
+const asOfDate = ref(new Date())
 
-const accounts = ref([
-  // Assets
-  { id: 1, code: '1000', name: 'Cash', type: 'Current Asset', category: 'asset', balance: 50000 },
-  { id: 2, code: '1200', name: 'Accounts Receivable', type: 'Current Asset', category: 'asset', balance: 25000 },
-  { id: 3, code: '1500', name: 'Inventory', type: 'Current Asset', category: 'asset', balance: 75000 },
-  { id: 4, code: '1700', name: 'Equipment', type: 'Fixed Asset', category: 'asset', balance: 100000 },
-  
-  // Liabilities
-  { id: 5, code: '2000', name: 'Accounts Payable', type: 'Current Liability', category: 'liability', balance: 15000 },
-  { id: 6, code: '2500', name: 'Notes Payable', type: 'Long-term Liability', category: 'liability', balance: 50000 },
-  
-  // Equity
-  { id: 7, code: '3000', name: 'Owner\'s Capital', type: 'Equity', category: 'equity', balance: 150000 },
-  { id: 8, code: '3200', name: 'Retained Earnings', type: 'Equity', category: 'equity', balance: 20000 },
-  
-  // Revenue
-  { id: 9, code: '4000', name: 'Sales Revenue', type: 'Revenue', category: 'revenue', balance: 85000 },
-  { id: 10, code: '4100', name: 'Service Revenue', type: 'Revenue', category: 'revenue', balance: 35000 },
-  
-  // Expenses
-  { id: 11, code: '5000', name: 'Cost of Goods Sold', type: 'Expense', category: 'expense', balance: 45000 },
-  { id: 12, code: '6000', name: 'Rent Expense', type: 'Expense', category: 'expense', balance: 12000 },
-  { id: 13, code: '6100', name: 'Utilities Expense', type: 'Expense', category: 'expense', balance: 3000 }
+const trialBalanceData = ref([
+  { accountCode: '1000', accountName: 'Cash', accountType: 'Asset', debit: 50000, credit: 0 },
+  { accountCode: '1100', accountName: 'Accounts Receivable', accountType: 'Asset', debit: 25000, credit: 0 },
+  { accountCode: '1200', accountName: 'Inventory', accountType: 'Asset', debit: 75000, credit: 0 },
+  { accountCode: '1500', accountName: 'Equipment', accountType: 'Asset', debit: 100000, credit: 0 },
+  { accountCode: '2000', accountName: 'Accounts Payable', accountType: 'Liability', debit: 0, credit: 15000 },
+  { accountCode: '2100', accountName: 'Notes Payable', accountType: 'Liability', debit: 0, credit: 50000 },
+  { accountCode: '3000', accountName: 'Owner Equity', accountType: 'Equity', debit: 0, credit: 100000 },
+  { accountCode: '4000', accountName: 'Sales Revenue', accountType: 'Revenue', debit: 0, credit: 45000 },
+  { accountCode: '5000', accountName: 'Cost of Goods Sold', accountType: 'Expense', debit: 20000, credit: 0 },
+  { accountCode: '6000', accountName: 'Office Expenses', accountType: 'Expense', debit: 8000, credit: 0 },
+  { accountCode: '6100', accountName: 'Rent Expense', accountType: 'Expense', debit: 12000, credit: 0 }
 ])
 
-const assetAccounts = computed(() => 
-  accounts.value.filter(acc => acc.category === 'asset')
-)
+const totalDebits = computed(() => {
+  return trialBalanceData.value.reduce((sum, item) => sum + item.debit, 0)
+})
 
-const liabilityAccounts = computed(() => 
-  accounts.value.filter(acc => acc.category === 'liability')
-)
+const totalCredits = computed(() => {
+  return trialBalanceData.value.reduce((sum, item) => sum + item.credit, 0)
+})
 
-const equityAccounts = computed(() => 
-  accounts.value.filter(acc => acc.category === 'equity')
-)
+const isBalanced = computed(() => {
+  return Math.abs(totalDebits.value - totalCredits.value) < 0.01
+})
 
-const revenueAccounts = computed(() => 
-  accounts.value.filter(acc => acc.category === 'revenue')
-)
-
-const expenseAccounts = computed(() => 
-  accounts.value.filter(acc => acc.category === 'expense')
-)
-
-const totals = computed(() => {
-  let debits = 0
-  let credits = 0
+const accountTypeSummary = computed(() => {
+  const summary = {}
   
-  accounts.value.forEach(account => {
-    if (account.category === 'asset' || account.category === 'expense') {
-      if (account.balance > 0) debits += account.balance
-      else credits += Math.abs(account.balance)
+  trialBalanceData.value.forEach(item => {
+    if (!summary[item.accountType]) {
+      summary[item.accountType] = { type: item.accountType, balance: 0 }
+    }
+    
+    // For assets and expenses, debit increases balance
+    // For liabilities, equity, and revenue, credit increases balance
+    if (['Asset', 'Expense'].includes(item.accountType)) {
+      summary[item.accountType].balance += item.debit - item.credit
     } else {
-      if (account.balance > 0) credits += account.balance
-      else debits += Math.abs(account.balance)
+      summary[item.accountType].balance += item.credit - item.debit
     }
   })
   
-  return {
-    debits,
-    credits,
-    difference: Math.abs(debits - credits)
-  }
+  return Object.values(summary)
 })
 
-const isBalanced = computed(() => totals.value.difference === 0)
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value)
+}
 
-const equationTotals = computed(() => {
-  const assets = assetAccounts.value.reduce((sum, acc) => sum + acc.balance, 0)
-  const liabilities = liabilityAccounts.value.reduce((sum, acc) => sum + acc.balance, 0)
-  const equity = equityAccounts.value.reduce((sum, acc) => sum + acc.balance, 0)
-  
-  return { assets, liabilities, equity }
-})
-
-const equationBalanced = computed(() => 
-  Math.abs(equationTotals.value.assets - (equationTotals.value.liabilities + equationTotals.value.equity)) < 0.01
-)
-
-const formatDate = (date: string) => {
-  return new Date(date).toLocaleDateString('en-US', {
+const formatDate = (date: Date) => {
+  return new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric'
-  })
+  }).format(date)
 }
 
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD'
-  }).format(amount)
+const getTypeColor = (type: string) => {
+  const colors = {
+    Asset: 'bg-blue-500',
+    Liability: 'bg-red-500',
+    Equity: 'bg-green-500',
+    Revenue: 'bg-teal-500',
+    Expense: 'bg-amber-500'
+  }
+  return colors[type] || 'bg-gray-500'
 }
 
-const exportReport = () => {
-  console.log('Exporting trial balance report...')
+const generateReport = async () => {
+  loading.value = true
+  try {
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    // Mock data refresh
+  } finally {
+    loading.value = false
+  }
 }
 
 onMounted(() => {
-  // Load trial balance data
+  generateReport()
 })
 </script>
 
 <style scoped>
 .trial-balance {
-  min-height: 100vh;
-  background: #f5f7fa;
-}
-
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 20px;
+  padding: 0;
 }
 
 .page-header {
   background: white;
-  border-bottom: 1px solid #e0e6ed;
-  padding: 20px 0;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 1.5rem 2rem;
+  margin-bottom: 2rem;
 }
 
 .header-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
-.header-content h1 {
-  font-size: 2rem;
-  font-weight: 600;
-  color: #2d3748;
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.header-left h1 {
   margin: 0;
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #1f2937;
 }
 
-.header-content p {
-  color: #718096;
-  margin: 5px 0 0 0;
+.subtitle {
+  margin: 0.25rem 0 0 0;
+  color: #6b7280;
+  font-size: 0.875rem;
 }
 
 .header-actions {
   display: flex;
-  gap: 12px;
-  align-items: center;
+  gap: 0.75rem;
 }
 
-.period-select {
-  padding: 10px;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  background: white;
+.content-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem 2rem;
 }
 
-.btn {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 6px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
+.report-header {
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 1rem;
 }
 
-.btn-primary {
-  background: #1976D2;
-  color: white;
+.account-type-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
 }
 
-.summary-section {
-  margin: 30px 0;
-}
-
-.summary-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
-}
-
-.summary-card {
-  background: white;
-  padding: 24px;
-  border-radius: 12px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  text-align: center;
-}
-
-.summary-card.balanced {
-  border: 2px solid #38a169;
-}
-
-.summary-card h3 {
-  margin: 0 0 12px 0;
-  color: #4a5568;
-  font-size: 1rem;
-}
-
-.summary-card .amount {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: #2d3748;
-  margin-bottom: 8px;
-}
-
-.summary-card .status {
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: #38a169;
-}
-
-.table-card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  overflow: hidden;
-  margin-bottom: 30px;
-}
-
-.table-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 24px;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.table-header h3 {
-  margin: 0;
-  color: #2d3748;
-}
-
-.report-date {
-  color: #718096;
-  font-weight: 500;
-}
-
-.trial-balance-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.trial-balance-table th,
-.trial-balance-table td {
-  padding: 12px 16px;
-  text-align: left;
-  border-bottom: 1px solid #f7fafc;
-}
-
-.trial-balance-table th {
-  background: #f8f9fa;
-  font-weight: 600;
-  color: #4a5568;
-}
-
-.amount-col {
-  text-align: right;
-  font-weight: 500;
-}
-
-.category-header {
-  background: #edf2f7;
-}
-
-.category-header td {
-  font-weight: 600;
-  color: #2d3748;
-  padding: 16px;
+.trial-balance-totals {
+  background: #f9fafb;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin-top: 1rem;
 }
 
 .totals-row {
-  background: #f8f9fa;
-  border-top: 2px solid #e2e8f0;
-}
-
-.totals-row td {
-  font-weight: 600;
-  color: #2d3748;
-}
-
-.equation-card {
-  background: white;
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  text-align: center;
-}
-
-.equation-card h3 {
-  margin: 0 0 20px 0;
-  color: #2d3748;
-}
-
-.equation {
-  display: flex;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: 1fr 150px 150px;
+  gap: 1rem;
   align-items: center;
-  gap: 20px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 0.75rem;
 }
 
-.equation-part {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-
-.equation-part .label {
-  font-size: 0.9rem;
-  color: #718096;
-  font-weight: 500;
-}
-
-.equation-part .amount {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: #2d3748;
-}
-
-.equation-operator {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #4a5568;
-}
-
-.equation-status {
+.totals-label {
   font-size: 1.1rem;
+}
+
+.totals-debit,
+.totals-credit {
+  text-align: right;
+  font-size: 1.1rem;
+}
+
+.balance-check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   font-weight: 600;
-  padding: 12px 24px;
-  border-radius: 8px;
-  display: inline-block;
 }
 
-.equation-status.valid {
-  background: #c6f6d5;
-  color: #22543d;
+.balance-check.balanced {
+  color: #059669;
 }
 
-.equation-status:not(.valid) {
-  background: #fed7d7;
-  color: #742a2a;
+.balance-check.unbalanced {
+  color: #dc2626;
+}
+
+.difference {
+  font-weight: normal;
+  font-size: 0.875rem;
+}
+
+:deep(.trial-balance-table .p-datatable-tbody > tr:last-child) {
+  border-bottom: 2px solid #374151;
 }
 
 @media (max-width: 768px) {
   .header-content {
     flex-direction: column;
-    gap: 16px;
-    text-align: center;
+    gap: 1rem;
+    align-items: flex-start;
   }
   
-  .summary-grid {
+  .header-actions {
+    width: 100%;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+  
+  .content-container {
+    padding: 0 1rem 2rem;
+  }
+  
+  .totals-row {
     grid-template-columns: 1fr;
-  }
-  
-  .equation {
-    flex-direction: column;
-    gap: 12px;
-  }
-  
-  .equation-operator {
-    transform: rotate(90deg);
+    text-align: center;
   }
 }
 </style>

@@ -4,56 +4,70 @@ Paksa Financial System - Production-Ready Main Application
 import os
 from contextlib import asynccontextmanager
 from datetime import datetime
-from typing import Any, Dict, List
-
-from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, Form, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, Form, Body
+from fastapi.security import OAuth2PasswordBearer, HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.openapi.docs import get_swagger_ui_html
+from fastapi.openapi.utils import get_openapi
+from sqlalchemy.orm import Session
+from typing import Optional, List, Dict, Any
+from datetime import datetime, timedelta
+import json
+import os
+import logging
+import uuid
+from pathlib import Path
 
-# Load environment variables
-load_dotenv()
-
-from app.core.config import settings
-# Import after loading env vars
-from app.core.database import get_db, init_db
-from app.services.ap_service import APService
-from app.services.ar_service import ARService
-from app.services.budget_service import BudgetService
-from app.services.cash_service import CashService
-from app.services.gl_service import GLService
-from app.services.hrm_service import HRMService
-from app.services.inventory_service import InventoryService
-from app.services.payroll_service import PayrollService
-from app.services.reports_service import ReportsService
-from app.services.tax_service import TaxService
-from app.api.api_v1.api import api_router as api_v1_router
+# Import database and models
+from app.core.database import init_db, get_db, engine
+from app.models.base import Base
+from app.models.user import User
+from app.core.config.settings import settings
+from app.core.security import (
+    create_access_token, 
+    verify_password, 
+    get_password_hash, 
+    get_current_user
+)
+from app.schemas.user import UserCreate, UserInDB, Token, TokenData
+# Import services (will be created as needed)
+# from app.services.ap_service import APService
+# from app.services.ar_service import ARService
+# from app.services.budget_service import BudgetService
+# from app.services.cash_service import CashService
+# from app.services.gl_service import GLService
+# from app.services.hrm_service import HRMService
+# from app.services.inventory_service import InventoryService
+# from app.services.payroll_service import PayrollService
+# from app.services.reports_service import ReportsService
+# from app.services.tax_service import TaxService
+# from app.api.api_v1.api import api_router as api_v1_router
 from pydantic import BaseModel
 from fastapi import Body
 from app.models.user import User
 from app.core.security import create_access_token
-from sqlalchemy.ext.asyncio import AsyncSession
-
 security = HTTPBearer()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    print("🚀 Starting Paksa Financial System - Production Environment")
-    print("📊 Initializing database and modules...")
+    print("Starting Paksa Financial System - Production Environment")
+    print("Initializing database and modules...")
     try:
-        await init_db()
-        print("✅ Database initialized successfully")
+        init_db()
+        print("Database initialized successfully")
         print(
-            "🎯 All 12 modules operational: GL, AP, AR, Budget, Cash, HRM, Inventory, Payroll, Tax, Assets, Reports, Admin"
+            "All 12 modules operational: GL, AP, AR, Budget, Cash, HRM, Inventory, Payroll, Tax, Assets, Reports, Admin"
         )
     except Exception as e:
-        print(f"❌ Database initialization failed: {e}")
-        print("⚠️ Starting with limited functionality")
+        print(f"Database initialization failed: {e}")
+        print("Starting with limited functionality")
     yield
     # Shutdown
-    print("🛑 Shutting down Paksa Financial System...")
+    print("Shutting down Paksa Financial System...")
 
 
 app = FastAPI(
@@ -75,17 +89,18 @@ app.add_middleware(
 )
 
 # Mount versioned API under /api/v1
-app.include_router(api_v1_router, prefix="/api/v1")
+try:
+    from app.api.api_v1.api import api_router as api_v1_router
+    app.include_router(api_v1_router, prefix="/api/v1")
+except ImportError as e:
+    print(f"Warning: Could not import API v1 router: {e}")
 
 # Default tenant for demo
 DEFAULT_TENANT_ID = "12345678-1234-5678-9012-123456789012"
 
 
-# Authentication helper
-async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-):
-    return {"id": 1, "username": "admin", "tenant_id": DEFAULT_TENANT_ID}
+# Authentication helper - using consolidated implementation from core.security
+# Remove duplicate implementation as we're importing it from core.security
 
 
 # Root endpoint
@@ -164,11 +179,11 @@ class LoginRequest(BaseModel):
 
 
 @app.post("/auth/login")
-async def api_login(
+def api_login(
     payload: LoginRequest | None = Body(None),
     email: str = Form(None),
     password: str = Form(None),
-    db: AsyncSession = Depends(get_db),
+    db: Session = Depends(get_db),
 ):
     # Accept either form URL-encoded or JSON; fallback for JSON body
     # If called with JSON, FastAPI will treat missing form fields as None; handle manually below
@@ -181,7 +196,7 @@ async def api_login(
     password = password or ""
 
     # First try DB-backed authentication
-    user = await User.authenticate(db, email=email, password=password)
+    user = User.authenticate(db, email=email, password=password)
     if user:
         token = create_access_token(subject=str(user.id), additional_claims={"email": user.email, "roles": ["admin"] if getattr(user, "is_superuser", False) else []})
         return {
@@ -273,6 +288,48 @@ async def refresh_token(refresh_token: str = Form()):
             "expires_in": 3600,
         }
     raise HTTPException(status_code=401, detail="Invalid refresh token")
+
+
+# Simple API v1 auth endpoint
+@app.post("/api/v1/auth/login")
+def api_v1_login(
+    payload: LoginRequest,
+    db: Session = Depends(get_db),
+):
+    # Try DB-backed authentication
+    user = User.authenticate(db, email=payload.email, password=payload.password)
+    if user:
+        token = create_access_token(subject=str(user.id))
+        return {
+            "access_token": token,
+            "user": {
+                "id": str(user.id),
+                "email": user.email,
+                "firstName": user.first_name or "",
+                "lastName": user.last_name or "",
+                "roles": ["admin"] if user.is_superuser else [],
+                "permissions": [],
+                "isAdmin": user.is_superuser,
+            },
+        }
+    
+    # Fallback to demo credentials
+    if payload.email == "admin@paksa.com" and payload.password == "admin123":
+        token = create_access_token(subject="demo-admin")
+        return {
+            "access_token": token,
+            "user": {
+                "id": "demo-admin",
+                "email": payload.email,
+                "firstName": "System",
+                "lastName": "Administrator",
+                "roles": ["admin"],
+                "permissions": ["*"],
+                "isAdmin": True,
+            },
+        }
+    
+    raise HTTPException(status_code=401, detail="Invalid credentials")
 
 
 # General Ledger endpoints

@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="dialog" max-width="500">
+  <v-dialog :model-value="dialog" @update:model-value="$emit('update:dialog', $event)" max-width="500">
     <v-card>
       <v-card-title>Invite User</v-card-title>
       <v-card-text>
@@ -13,7 +13,7 @@
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn color="primary" @click="inviteUser">Invite</v-btn>
-        <v-btn text @click="dialog = false">Cancel</v-btn>
+        <v-btn text @click="$emit('update:dialog', false)">Cancel</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -27,6 +27,7 @@ export default {
     companyId: String,
     roles: Array
   },
+  emits: ['update:dialog', 'invited'],
   data() {
     return {
       email: '',
@@ -48,7 +49,7 @@ export default {
         params: { company_id: this.companyId }
       })
       this.$emit('invited')
-      this.dialog = false
+      this.$emit('update:dialog', false)
     }
   }
 }

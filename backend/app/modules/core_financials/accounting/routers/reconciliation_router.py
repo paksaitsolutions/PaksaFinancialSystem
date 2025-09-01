@@ -14,7 +14,7 @@ from app.core.database import get_db
 from .. import schemas, services
 from ..models import ReconciliationStatus, ReconciliationMatchType
 from ..services import reconciliation_service
-from ...auth.dependencies import get_current_user
+from ....core.deps import get_current_user
 from ...users.models import User
 
 router = APIRouter(prefix="/reconciliations", tags=["reconciliations"])

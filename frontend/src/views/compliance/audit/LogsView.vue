@@ -250,7 +250,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
 import type { RouteLocationNormalizedLoaded, Router } from 'vue-router';
-import { useToast } from 'vue/usetoast';
+import { useToast } from 'primevue/usetoast';
 import { format, parseISO } from 'date-fns';
 
 // Types and Interfaces

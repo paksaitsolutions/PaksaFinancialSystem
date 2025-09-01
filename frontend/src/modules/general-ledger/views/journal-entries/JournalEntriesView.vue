@@ -274,28 +274,34 @@
         </div>
       </div>
       
-      <template #footer>
-        <Button 
-          label="Cancel" 
-          @click="showEntryDialog = false"
-          class="p-button-text"
-          :disabled="saving"
-        />
-        <Button 
-          label="Save as Draft" 
-          @click="saveEntry('Draft')"
-          class="p-button-secondary"
-          :loading="saving"
-        />
-        <Button 
-          label="Save & Post" 
-          @click="saveEntry('Posted')"
-          class="p-button-success"
-          :loading="saving"
-          :disabled="!isBalanced"
-        />
-      </template>
-    </Dialog>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn 
+            text
+            @click="showEntryDialog = false"
+            :disabled="saving"
+          >
+            Cancel
+          </v-btn>
+          <v-btn 
+            color="primary"
+            @click="saveEntry('Draft')"
+            :loading="saving"
+          >
+            Save as Draft
+          </v-btn>
+          <v-btn 
+            color="success"
+            @click="saveEntry('Posted')"
+            :loading="saving"
+            :disabled="!isBalanced"
+          >
+            Save & Post
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
     
     <!-- Delete Confirmation Dialog -->
     <Dialog 
@@ -443,6 +449,7 @@ export default {
     const exporting = ref(false);
     const exportProgress = ref(0);
     const showNewEntryDialog = ref(false);
+    const deleting = ref(false);
     const exportDialogVisible = ref(false);
     const showDeleteDialog = ref(false);
     const editingEntry = ref(false);
@@ -640,6 +647,7 @@ export default {
     const deleteEntry = async () => {
       if (!entryToDelete.value) return;
       
+      deleting.value = true;
       try {
         // TODO: Replace with actual API call
         journalEntries.value = journalEntries.value.filter(e => e.id !== entryToDelete.value.id);
@@ -649,6 +657,7 @@ export default {
         console.error('Error deleting journal entry:', error);
         showSnackbar('Failed to delete journal entry', 'error');
       } finally {
+        deleting.value = false;
         showDeleteDialog.value = false;
         entryToDelete.value = null;
       }
@@ -768,7 +777,8 @@ export default {
       snackbar,
       snackbarText,
       snackbarColor,
-      showSnackbar
+      showSnackbar,
+      deleting
     };
   }
 };

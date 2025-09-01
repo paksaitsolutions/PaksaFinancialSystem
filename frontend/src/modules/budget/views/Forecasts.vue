@@ -1,18 +1,19 @@
 <template>
   <div class="budget-forecasts">
-    <PageHeader 
-      title="Budget Forecasts" 
-      subtitle="Projected budget performance and variance analysis" 
-    >
-      <template #actions>
+    <div class="card mb-4">
+      <div class="flex justify-content-between align-items-center">
+        <div>
+          <h1 class="text-3xl font-bold mb-2">Budget Forecasts</h1>
+          <p class="text-500">Projected budget performance and variance analysis</p>
+        </div>
         <Button 
           label="New Forecast" 
           icon="pi pi-plus" 
           class="p-button-outlined"
           @click="openNewForecastDialog"
         />
-      </template>
-    </PageHeader>
+      </div>
+    </div>
 
     <!-- Forecast Controls -->
     <div class="card mb-4">
@@ -338,8 +339,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { FilterMatchMode } from 'primevue/api';
-import { useFormatting } from '../../composables/useFormatting';
-import PageHeader from '../../components/layout/PageHeader.vue';
+import { useFormatting } from '@/composables/useFormatting';
+
 import Chart from 'primevue/chart';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';

@@ -1,125 +1,270 @@
 <template>
-  <div class="sidebar">
-    <div class="sidebar-content">
-      <div v-for="item in sidebarModules" :key="item.title">
-        <div v-if="!item.children" class="menu-item">
+  <div class="sidebar-content">
+    <div class="sidebar-menu">
+      <ul class="menu-list">
+        <li v-for="item in menuItems" :key="item.label" class="menu-item">
           <router-link 
+            v-if="!item.items" 
             :to="item.to" 
-            class="p-ripple p-d-flex p-ai-center p-p-3"
-            :class="{ 'active-route': isActive(item) }"
+            class="menu-link"
+            :class="{ 'active': isActiveRoute(item.to) }"
           >
-            <i :class="item.icon" class="p-mr-2"></i>
-            <span>{{ item.title }}</span>
+            <i :class="item.icon"></i>
+            <span>{{ item.label }}</span>
           </router-link>
-        </div>
-        
-        <div v-else class="menu-item">
+          
           <div 
-            class="p-d-flex p-ai-center p-p-3 menu-header"
-            @click="toggleExpand(item)"
+            v-else 
+            class="menu-header"
+            @click="toggleSubmenu(item.label)"
           >
-            <i :class="item.icon" class="p-mr-2"></i>
-            <span class="p-mr-auto">{{ item.title }}</span>
-            <i :class="expanded[item.title] ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"></i>
+            <i :class="item.icon"></i>
+            <span>{{ item.label }}</span>
+            <i class="pi pi-chevron-down toggle-icon" :class="{ 'rotated': expandedMenus.includes(item.label) }"></i>
           </div>
           
-          <div v-if="expanded[item.title]" class="submenu">
-            <router-link 
-              v-for="child in item.children" 
-              :key="child.title"
-              :to="child.to"
-              class="p-ripple p-d-flex p-ai-center p-p-3 p-pl-5"
-              :class="{ 'active-route': isActive(child) }"
-            >
-              <i :class="child.icon" class="p-mr-2"></i>
-              <span>{{ child.title }}</span>
-            </router-link>
-          </div>
-        </div>
-      </div>
+          <ul v-if="item.items && expandedMenus.includes(item.label)" class="submenu">
+            <li v-for="child in item.items" :key="child.label">
+              <router-link 
+                :to="child.to" 
+                class="submenu-link"
+                :class="{ 'active': isActiveRoute(child.to) }"
+              >
+                <i :class="child.icon"></i>
+                <span>{{ child.label }}</span>
+              </router-link>
+            </li>
+          </ul>
+        </li>
+      </ul>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue';
-import { useRoute } from 'vue-router';
-import { sidebarModules } from '@/utils/sidebarModules';
+import { ref } from 'vue'
+import { useRoute } from 'vue-router'
 
+const route = useRoute()
+const expandedMenus = ref(['Financial Management'])
 
-const route = useRoute();
-const drawer = ref(true);
-const expanded = reactive<Record<string, boolean>>({});
-
-// Initialize expanded state
-sidebarModules.forEach(item => {
-  if (item.children) {
-    expanded[item.title] = false;
+const menuItems = [
+  {
+    label: 'Dashboard',
+    icon: 'pi pi-home',
+    to: '/'
+  },
+  {
+    label: 'Financial Management',
+    icon: 'pi pi-chart-line',
+    items: [
+      {
+        label: 'General Ledger',
+        icon: 'pi pi-book',
+        to: '/gl'
+      },
+      {
+        label: 'Accounts Payable',
+        icon: 'pi pi-shopping-cart',
+        to: '/ap'
+      },
+      {
+        label: 'Accounts Receivable',
+        icon: 'pi pi-credit-card',
+        to: '/ar'
+      },
+      {
+        label: 'Cash Management',
+        icon: 'pi pi-wallet',
+        to: '/cash'
+      }
+    ]
+  },
+  {
+    label: 'Operations',
+    icon: 'pi pi-cog',
+    items: [
+      {
+        label: 'Inventory',
+        icon: 'pi pi-box',
+        to: '/inventory'
+      },
+      {
+        label: 'Fixed Assets',
+        icon: 'pi pi-building',
+        to: '/fixed-assets'
+      },
+      {
+        label: 'Budget Management',
+        icon: 'pi pi-calculator',
+        to: '/budget'
+      }
+    ]
+  },
+  {
+    label: 'Human Resources',
+    icon: 'pi pi-users',
+    items: [
+      {
+        label: 'HRM',
+        icon: 'pi pi-user',
+        to: '/hrm'
+      },
+      {
+        label: 'Payroll',
+        icon: 'pi pi-dollar',
+        to: '/payroll'
+      }
+    ]
+  },
+  {
+    label: 'Settings',
+    icon: 'pi pi-cog',
+    items: [
+      {
+        label: 'General Settings',
+        icon: 'pi pi-sliders-h',
+        to: '/settings/general'
+      },
+      {
+        label: 'User Management',
+        icon: 'pi pi-users',
+        to: '/settings/users'
+      },
+      {
+        label: 'Tenant Management',
+        icon: 'pi pi-building',
+        to: '/settings/tenant'
+      },
+      {
+        label: 'Security Settings',
+        icon: 'pi pi-shield',
+        to: '/settings/security'
+      }
+    ]
   }
-});
+]
 
-const isActive = (item: any) => {
-  if (!item.to) return false;
-  return route.path === item.to || 
-         (item.children && item.children.some((child: any) => route.path === child.to));
-};
+const isActiveRoute = (path: string) => {
+  return route.path === path || (path !== '/' && route.path.startsWith(path))
+}
 
-const toggleExpand = (item: any) => {
-  if (item.children) {
-    expanded[item.title] = !expanded[item.title];
+const toggleSubmenu = (label: string) => {
+  const index = expandedMenus.value.indexOf(label)
+  if (index > -1) {
+    expandedMenus.value.splice(index, 1)
+  } else {
+    expandedMenus.value.push(label)
   }
-};
+}
 </script>
 
 <style scoped>
-.sidebar {
+.sidebar-content {
   height: 100%;
-  background-color: var(--surface-card);
-  border-right: 1px solid var(--surface-border);
-  width: 250px;
-  transition: width 0.3s;
+  overflow-y: auto;
+  background: #ffffff;
 }
 
-.sidebar-content {
+.sidebar-menu {
   padding: 1rem 0;
 }
 
-.menu-item a {
-  color: var(--text-color);
+.menu-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.menu-item {
+  margin: 0;
+}
+
+.menu-link {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  color: #374151;
   text-decoration: none;
-  display: block;
-  transition: background-color 0.2s;
-  border-radius: 4px;
-  margin: 0.25rem 0.5rem;
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
 }
 
-.menu-item a:hover {
-  background-color: var(--surface-hover);
+.menu-link:hover {
+  background: #f3f4f6;
+  color: #1f2937;
 }
 
-.menu-item .menu-header {
+.menu-link.active {
+  background: #3b82f6;
+  color: white;
+  border-left-color: #1d4ed8;
+}
+
+.menu-header {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  color: #6b7280;
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   cursor: pointer;
-  color: var(--text-color);
-  border-radius: 4px;
-  margin: 0.25rem 0.5rem;
-  transition: background-color 0.2s;
 }
 
-.menu-item .menu-header:hover {
-  background-color: var(--surface-hover);
+.menu-header:hover {
+  background: #f9fafb;
+}
+
+.menu-link i,
+.menu-header i {
+  margin-right: 0.75rem;
+  width: 1rem;
+}
+
+.toggle-icon {
+  margin-left: auto !important;
+  margin-right: 0 !important;
+  transition: transform 0.2s;
+  font-size: 0.75rem;
+}
+
+.toggle-icon.rotated {
+  transform: rotate(180deg);
 }
 
 .submenu {
-  overflow: hidden;
-  transition: max-height 0.3s ease-in-out;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: #f9fafb;
 }
 
-.active-route {
-  background-color: var(--primary-color);
-  color: white !important;
+.submenu-link {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem 0.5rem 2.5rem;
+  color: #4b5563;
+  text-decoration: none;
+  font-size: 0.875rem;
+  transition: all 0.2s;
 }
 
-.active-route:hover {
-  background-color: var(--primary-600) !important;
+.submenu-link:hover {
+  background: #f3f4f6;
+  color: #1f2937;
+}
+
+.submenu-link.active {
+  background: #dbeafe;
+  color: #1d4ed8;
+  border-left: 3px solid #3b82f6;
+}
+
+.submenu-link i {
+  margin-right: 0.5rem;
+  width: 0.875rem;
+  font-size: 0.875rem;
 }
 </style>

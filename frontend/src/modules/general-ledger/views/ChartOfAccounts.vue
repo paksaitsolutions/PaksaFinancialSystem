@@ -1,74 +1,564 @@
 <template>
   <div class="chart-of-accounts">
-    <h1>Chart of Accounts</h1>
-    <p>Manage your chart of accounts structure</p>
-    
-    <div class="accounts-table">
-      <table>
-        <thead>
-          <tr>
-            <th>Code</th>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Balance</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="account in accounts" :key="account.id">
-            <td>{{ account.code }}</td>
-            <td>{{ account.name }}</td>
-            <td>{{ account.type }}</td>
-            <td>{{ formatCurrency(account.balance) }}</td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="page-header">
+      <div class="header-content">
+        <div class="header-left">
+          <Button icon="pi pi-arrow-left" class="p-button-text" @click="$router.go(-1)" />
+          <div>
+            <h1>Chart of Accounts</h1>
+            <p class="subtitle">Manage your account structure and balances</p>
+          </div>
+        </div>
+        <div class="header-actions">
+          <Button label="Import Accounts" icon="pi pi-upload" class="p-button-outlined" />
+          <Button label="New Account" icon="pi pi-plus" class="p-button-success" @click="showDialog = true" />
+        </div>
+      </div>
     </div>
+
+    <div class="content-container">
+      <Card>
+        <template #content>
+          <DataTable 
+            :value="accounts" 
+            :paginator="true" 
+            :rows="20"
+            :loading="loading"
+            filterDisplay="menu"
+            :globalFilterFields="['code', 'name', 'type']"
+            responsiveLayout="scroll"
+          >
+            <template #header>
+              <div class="flex justify-content-between align-items-center">
+                <span class="p-input-icon-left">
+                  <i class="pi pi-search" />
+                  <InputText v-model="globalFilter" placeholder="Search accounts..." />
+                </span>
+                <div class="flex gap-2">
+                  <Dropdown v-model="typeFilter" :options="accountTypes" optionLabel="label" optionValue="value" placeholder="Filter by Type" showClear />
+                  <Button icon="pi pi-refresh" class="p-button-outlined" @click="loadAccounts" />
+                </div>
+              </div>
+            </template>
+
+            <Column field="code" header="Account Code" sortable style="width: 120px">
+              <template #body="{ data }">
+                <span class="font-mono">{{ data.code }}</span>
+              </template>
+            </Column>
+
+            <Column field="name" header="Account Name" sortable>
+              <template #body="{ data }">
+                <div class="flex align-items-center gap-2">
+                  <div class="account-type-indicator" :class="getTypeColor(data.type)"></div>
+                  <span>{{ data.name }}</span>
+                </div>
+              </template>
+            </Column>
+
+            <Column field="type" header="Type" sortable style="width: 150px">
+              <template #body="{ data }">
+                <Tag :value="data.type" :severity="getTypeSeverity(data.type)" />
+              </template>
+            </Column>
+
+            <Column field="balance" header="Balance" sortable style="width: 150px" class="text-right">
+              <template #body="{ data }">
+                <span :class="data.balance >= 0 ? 'text-green-600' : 'text-red-600'" class="font-medium">
+                  {{ formatCurrency(data.balance) }}
+                </span>
+              </template>
+            </Column>
+
+            <Column field="status" header="Status" sortable style="width: 100px">
+              <template #body="{ data }">
+                <Tag :value="data.status" :severity="data.status === 'Active' ? 'success' : 'warning'" />
+              </template>
+            </Column>
+
+            <Column header="Actions" style="width: 120px">
+              <template #body="{ data }">
+                <div class="flex gap-1">
+                  <Button icon="pi pi-eye" class="p-button-rounded p-button-text p-button-sm" @click="viewAccount(data)" />
+                  <Button icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-sm" @click="editAccount(data)" />
+                  <Button icon="pi pi-trash" class="p-button-rounded p-button-text p-button-sm p-button-danger" @click="deleteAccount(data)" />
+                </div>
+              </template>
+            </Column>
+          </DataTable>
+        </template>
+      </Card>
+    </div>
+
+    <!-- Floating Action Button -->
+    <Button 
+      icon="pi pi-plus" 
+      class="floating-add-btn"
+      @click="showDialog = true"
+      v-tooltip="'Add New Account'"
+    />
+
+    <!-- Account Dialog -->
+    <Dialog v-model:visible="showDialog" modal :header="editingAccount ? 'Edit Account' : 'New Account'" :style="{width: '500px'}">
+      <div class="p-fluid">
+        <div class="field">
+          <label for="code" class="required">Account Code *</label>
+          <InputText id="code" v-model="form.code" :class="{ 'p-invalid': errors.code }" />
+          <small v-if="errors.code" class="p-error">{{ errors.code }}</small>
+        </div>
+
+        <div class="field">
+          <label for="name" class="required">Account Name *</label>
+          <InputText id="name" v-model="form.name" :class="{ 'p-invalid': errors.name }" />
+          <small v-if="errors.name" class="p-error">{{ errors.name }}</small>
+        </div>
+
+        <div class="field">
+          <label for="type" class="required">Account Type *</label>
+          <div class="flex gap-2">
+            <Dropdown 
+              id="type" 
+              v-model="form.type" 
+              :options="accountTypes" 
+              optionLabel="label" 
+              optionValue="value" 
+              :class="{ 'p-invalid': errors.type }"
+              placeholder="Select Account Type"
+              class="flex-1"
+            />
+            <Button 
+              icon="pi pi-plus" 
+              class="p-button-outlined p-button-sm" 
+              @click="showTypeDialog = true"
+              v-tooltip="'Add Custom Type'"
+            />
+          </div>
+          <small v-if="errors.type" class="p-error">{{ errors.type }}</small>
+        </div>
+
+        <div class="field">
+          <label for="description">Description</label>
+          <Textarea id="description" v-model="form.description" rows="3" />
+        </div>
+
+        <div class="field">
+          <div class="flex align-items-center gap-2">
+            <Checkbox v-model="form.active" inputId="active" />
+            <label for="active">Active</label>
+          </div>
+        </div>
+      </div>
+
+      <template #footer>
+        <Button label="Cancel" class="p-button-text" @click="closeDialog" />
+        <Button label="Save" :loading="saving" @click="saveAccount" />
+      </template>
+    </Dialog>
+
+    <!-- Custom Account Type Dialog -->
+    <Dialog v-model:visible="showTypeDialog" modal header="Add Custom Account Type" :style="{width: '400px'}">
+      <div class="p-fluid">
+        <div class="field">
+          <label for="newType" class="required">Account Type Name *</label>
+          <InputText 
+            id="newType" 
+            v-model="newTypeName" 
+            placeholder="Enter account type name"
+            @keyup.enter="addCustomType"
+          />
+        </div>
+      </div>
+      <template #footer>
+        <Button label="Cancel" class="p-button-text" @click="closeTypeDialog" />
+        <Button label="Save" @click="addCustomType" :disabled="!newTypeName.trim()" />
+      </template>
+    </Dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, reactive, onMounted } from 'vue'
+import { useToast } from 'primevue/usetoast'
 
-interface Account {
-  id: string;
-  code: string;
-  name: string;
-  type: string;
-  balance: number;
+const toast = useToast()
+const loading = ref(false)
+const saving = ref(false)
+const showDialog = ref(false)
+const showTypeDialog = ref(false)
+const editingAccount = ref(null)
+const globalFilter = ref('')
+const typeFilter = ref(null)
+const newTypeName = ref('')
+
+const form = reactive({
+  code: '',
+  name: '',
+  type: '',
+  description: '',
+  active: true
+})
+
+const errors = reactive({
+  code: '',
+  name: '',
+  type: ''
+})
+
+const accounts = ref([
+  { id: 1, code: '1000', name: 'Cash', type: 'Asset', balance: 50000, status: 'Active' },
+  { id: 2, code: '1100', name: 'Accounts Receivable', type: 'Asset', balance: 25000, status: 'Active' },
+  { id: 3, code: '1200', name: 'Inventory', type: 'Asset', balance: 75000, status: 'Active' },
+  { id: 4, code: '1500', name: 'Equipment', type: 'Asset', balance: 100000, status: 'Active' },
+  { id: 5, code: '2000', name: 'Accounts Payable', type: 'Liability', balance: 15000, status: 'Active' },
+  { id: 6, code: '2100', name: 'Notes Payable', type: 'Liability', balance: 50000, status: 'Active' },
+  { id: 7, code: '3000', name: 'Owner Equity', type: 'Equity', balance: 100000, status: 'Active' },
+  { id: 8, code: '4000', name: 'Sales Revenue', type: 'Revenue', balance: 45000, status: 'Active' },
+  { id: 9, code: '5000', name: 'Cost of Goods Sold', type: 'Expense', balance: 20000, status: 'Active' },
+  { id: 10, code: '6000', name: 'Office Expenses', type: 'Expense', balance: 8000, status: 'Active' }
+])
+
+const accountTypes = ref([
+  { label: 'Asset', value: 'Asset' },
+  { label: 'Liability', value: 'Liability' },
+  { label: 'Equity', value: 'Equity' },
+  { label: 'Revenue', value: 'Revenue' },
+  { label: 'Expense', value: 'Expense' },
+  { label: 'Cost of Goods Sold', value: 'COGS' },
+  { label: 'Other Income', value: 'Other Income' },
+  { label: 'Other Expense', value: 'Other Expense' },
+  { label: 'Bank', value: 'Bank' },
+  { label: 'Credit Card', value: 'Credit Card' },
+  { label: 'Accounts Receivable', value: 'Accounts Receivable' },
+  { label: 'Accounts Payable', value: 'Accounts Payable' },
+  { label: 'Fixed Asset', value: 'Fixed Asset' },
+  { label: 'Accumulated Depreciation', value: 'Accumulated Depreciation' },
+  { label: 'Inventory', value: 'Inventory' },
+  { label: 'Prepaid Expense', value: 'Prepaid Expense' },
+  { label: 'Accrued Expense', value: 'Accrued Expense' },
+  { label: 'Deferred Revenue', value: 'Deferred Revenue' },
+  { label: 'Long Term Liability', value: 'Long Term Liability' },
+  { label: 'Retained Earnings', value: 'Retained Earnings' }
+])
+
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value)
 }
 
-const accounts = ref<Account[]>([
-  { id: '1', code: '1000', name: 'Cash', type: 'Asset', balance: 10000 },
-  { id: '2', code: '1100', name: 'Accounts Receivable', type: 'Asset', balance: 5000 }
-]);
+const getTypeColor = (type: string) => {
+  const colors = {
+    Asset: 'bg-blue-500',
+    Bank: 'bg-blue-600',
+    'Accounts Receivable': 'bg-blue-400',
+    Inventory: 'bg-indigo-500',
+    'Fixed Asset': 'bg-purple-500',
+    'Prepaid Expense': 'bg-blue-300',
+    Liability: 'bg-red-500',
+    'Accounts Payable': 'bg-red-600',
+    'Credit Card': 'bg-red-400',
+    'Accrued Expense': 'bg-red-300',
+    'Deferred Revenue': 'bg-pink-500',
+    'Long Term Liability': 'bg-red-700',
+    Equity: 'bg-green-500',
+    'Retained Earnings': 'bg-green-600',
+    Revenue: 'bg-teal-500',
+    'Other Income': 'bg-teal-400',
+    Expense: 'bg-amber-500',
+    COGS: 'bg-orange-500',
+    'Other Expense': 'bg-amber-400',
+    'Accumulated Depreciation': 'bg-gray-500'
+  }
+  return colors[type] || 'bg-gray-500'
+}
 
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD'
-  }).format(amount);
-};
+const getTypeSeverity = (type: string) => {
+  const severities = {
+    Asset: 'info',
+    Bank: 'info',
+    'Accounts Receivable': 'info',
+    Inventory: 'info',
+    'Fixed Asset': 'info',
+    'Prepaid Expense': 'info',
+    Liability: 'danger',
+    'Accounts Payable': 'danger',
+    'Credit Card': 'danger',
+    'Accrued Expense': 'danger',
+    'Deferred Revenue': 'danger',
+    'Long Term Liability': 'danger',
+    Equity: 'success',
+    'Retained Earnings': 'success',
+    Revenue: 'success',
+    'Other Income': 'success',
+    Expense: 'warning',
+    COGS: 'warning',
+    'Other Expense': 'warning',
+    'Accumulated Depreciation': 'secondary'
+  }
+  return severities[type] || 'secondary'
+}
+
+const loadAccounts = async () => {
+  loading.value = true
+  try {
+    await new Promise(resolve => setTimeout(resolve, 500))
+    // Mock data is already loaded
+  } finally {
+    loading.value = false
+  }
+}
+
+const viewAccount = (account: any) => {
+  toast.add({ severity: 'info', summary: 'Account Details', detail: `Viewing ${account.name}` })
+}
+
+const editAccount = (account: any) => {
+  editingAccount.value = account
+  form.code = account.code
+  form.name = account.name
+  form.type = account.type
+  form.description = account.description || ''
+  form.active = account.status === 'Active'
+  showDialog.value = true
+}
+
+const deleteAccount = (account: any) => {
+  toast.add({ severity: 'warn', summary: 'Delete Account', detail: `Delete ${account.name}?` })
+}
+
+const closeDialog = () => {
+  showDialog.value = false
+  editingAccount.value = null
+  // Reset form
+  form.code = ''
+  form.name = ''
+  form.type = ''
+  form.description = ''
+  form.active = true
+  // Clear errors
+  Object.keys(errors).forEach(key => errors[key] = '')
+}
+
+const saveAccount = async () => {
+  // Clear errors
+  Object.keys(errors).forEach(key => errors[key] = '')
+  
+  // Validate
+  if (!form.code) errors.code = 'Account code is required'
+  if (!form.name) errors.name = 'Account name is required'
+  if (!form.type) errors.type = 'Account type is required'
+  
+  // Check for duplicate account code
+  const existingAccount = accounts.value.find(a => 
+    a.code === form.code && (!editingAccount.value || a.id !== editingAccount.value.id)
+  )
+  if (existingAccount) {
+    errors.code = 'Account code already exists'
+  }
+  
+  if (Object.values(errors).some(error => error)) return
+  
+  saving.value = true
+  try {
+    await new Promise(resolve => setTimeout(resolve, 500))
+    
+    if (editingAccount.value) {
+      // Update existing account
+      const index = accounts.value.findIndex(a => a.id === editingAccount.value.id)
+      if (index !== -1) {
+        accounts.value[index] = {
+          ...accounts.value[index],
+          code: form.code,
+          name: form.name,
+          type: form.type,
+          description: form.description,
+          status: form.active ? 'Active' : 'Inactive'
+        }
+      }
+      toast.add({ severity: 'success', summary: 'Success', detail: 'Account updated successfully' })
+    } else {
+      // Add new account
+      const newAccount = {
+        id: Math.max(...accounts.value.map(a => a.id)) + 1,
+        code: form.code,
+        name: form.name,
+        type: form.type,
+        description: form.description,
+        balance: 0,
+        status: form.active ? 'Active' : 'Inactive'
+      }
+      accounts.value.unshift(newAccount) // Add to beginning for visibility
+      toast.add({ severity: 'success', summary: 'Success', detail: 'Account created successfully' })
+    }
+    
+    closeDialog()
+  } catch (error) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to save account' })
+  } finally {
+    saving.value = false
+  }
+}
+
+const closeTypeDialog = () => {
+  showTypeDialog.value = false
+  newTypeName.value = ''
+}
+
+const addCustomType = () => {
+  if (!newTypeName.value.trim()) return
+  
+  const newType = {
+    label: newTypeName.value.trim(),
+    value: newTypeName.value.trim()
+  }
+  
+  // Check if type already exists
+  if (!accountTypes.value.find(type => type.value === newType.value)) {
+    accountTypes.value.push(newType)
+    form.type = newType.value
+    toast.add({ 
+      severity: 'success', 
+      summary: 'Success', 
+      detail: `Account type '${newType.label}' added successfully` 
+    })
+  } else {
+    toast.add({ 
+      severity: 'warn', 
+      summary: 'Warning', 
+      detail: 'Account type already exists' 
+    })
+  }
+  
+  closeTypeDialog()
+}
+
+onMounted(() => {
+  loadAccounts()
+})
 </script>
 
 <style scoped>
 .chart-of-accounts {
-  padding: 20px;
+  padding: 0;
 }
 
-.accounts-table table {
-  width: 100%;
-  border-collapse: collapse;
+.page-header {
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 1.5rem 2rem;
+  margin-bottom: 2rem;
 }
 
-.accounts-table th,
-.accounts-table td {
-  padding: 12px;
-  text-align: left;
-  border-bottom: 1px solid #ddd;
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
-.accounts-table th {
-  background-color: #f5f5f5;
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.header-left h1 {
+  margin: 0;
+  font-size: 1.75rem;
   font-weight: 600;
+  color: #1f2937;
+}
+
+.subtitle {
+  margin: 0.25rem 0 0 0;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.header-actions .p-button {
+  font-weight: 500;
+  padding: 0.75rem 1.5rem;
+}
+
+.header-actions .p-button-success {
+  background: #10b981;
+  border-color: #10b981;
+}
+
+.header-actions .p-button-success:hover {
+  background: #059669;
+  border-color: #059669;
+}
+
+.content-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem 2rem;
+}
+
+.account-type-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.required::after {
+  content: ' *';
+  color: #ef4444;
+}
+
+.floating-add-btn {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #10b981;
+  border-color: #10b981;
+  color: white;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.floating-add-btn:hover {
+  background: #059669;
+  border-color: #059669;
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.5);
+}
+
+.floating-add-btn i {
+  font-size: 1.25rem;
+}
+
+@media (max-width: 768px) {
+  .header-content {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  
+  .header-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  
+  .content-container {
+    padding: 0 1rem 2rem;
+  }
+  
+  .floating-add-btn {
+    bottom: 1rem;
+    right: 1rem;
+  }
 }
 </style>

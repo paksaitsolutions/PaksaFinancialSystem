@@ -74,7 +74,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { useToast } from 'vue/usetoast';
+import { useToast } from 'primevue/usetoast';
 import Button from 'vue/button';
 import Card from 'vue/card';
 import Chip from 'vue/chip';

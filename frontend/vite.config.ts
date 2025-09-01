@@ -56,9 +56,8 @@ export default defineConfig(({ mode }: ConfigEnv) => {
           "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; " +
           "style-src 'self' 'unsafe-inline' https:; " +
           "font-src 'self' https: data:; " +
-          // ✅ Allow Unsplash and external CDN images
           "img-src 'self' https://images.unsplash.com https: data: blob:; " +
-          "connect-src 'self' https: ws: wss:;"
+          "connect-src 'self' http://localhost:* https: ws: wss:;"
       },
       proxy: {
         '/api': {
@@ -75,24 +74,29 @@ export default defineConfig(({ mode }: ConfigEnv) => {
       }
     },
 
+    preview: {
+      port: 4173,
+      host: '0.0.0.0',
+      proxy: {
+        '/api': {
+          target: 'http://localhost:8000',
+          changeOrigin: true,
+          secure: false
+        }
+      }
+    },
+
     build: {
       outDir: 'dist',
       assetsDir: 'assets',
       sourcemap: true,
-      minify: 'terser',
-      terserOptions: {
-        compress: {
-          drop_console: mode === 'production',
-          drop_debugger: mode === 'production'
-        }
-      },
+      minify: 'esbuild',
       rollupOptions: {
         output: {
           manualChunks: {
             vue: ['vue', 'vue-router', 'pinia'],
-            primevue: ['primevue'],
-            primeicons: ['primeicons'],
-            primeflex: ['primeflex']
+            charts: ['chart.js'],
+            vendor: ['axios', 'date-fns']
           }
         }
       }
@@ -102,20 +106,9 @@ export default defineConfig(({ mode }: ConfigEnv) => {
       include: [
         'vue',
         'vue-router',
-        'pinia',
-        'primevue/config',
-        'primevue/button',
-        'primevue/inputtext',
-        'primevue/menu',
-        'primevue/sidebar',
-        'primevue/inputswitch',
-        'primeicons/primeicons.css',
-        'primeflex/primeflex.css'
-      ]
-    },
-
-    ssr: {
-      noExternal: ['primevue']
+        'pinia'
+      ],
+      exclude: ['primevue']
     }
   }
 })

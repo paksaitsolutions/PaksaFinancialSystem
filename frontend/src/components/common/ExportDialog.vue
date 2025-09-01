@@ -205,14 +205,14 @@ import { ref, computed, watch, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useExport } from '@/core/utils/export';
 
-// Vue components
-import Dialog from 'vue/dialog';
-import Dropdown from 'vue/dropdown';
-import SelectButton from 'vue/selectbutton';
-import InputText from 'vue/inputtext';
-import Button from 'vue/button';
-import Checkbox from 'vue/checkbox';
-import ProgressBar from 'vue/progressbar';
+// PrimeVue components
+import Dialog from 'primevue/dialog';
+import Dropdown from 'primevue/dropdown';
+import SelectButton from 'primevue/selectbutton';
+import InputText from 'primevue/inputtext';
+import Button from 'primevue/button';
+import Checkbox from 'primevue/checkbox';
+import ProgressBar from 'primevue/progressbar';
 
 const { t } = useI18n();
 const emit = defineEmits(['export', 'error', 'success']);

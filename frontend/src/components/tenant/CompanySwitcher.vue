@@ -1,64 +1,99 @@
 <template>
-  <v-menu>
-    <template v-slot:activator="{ props }">
-      <v-btn v-bind="props" variant="text" class="company-switcher">
-        <v-avatar size="32" class="mr-2">
-          <v-img v-if="currentCompany?.logo" :src="currentCompany.logo"></v-img>
-          <span v-else>{{ currentCompany?.name?.charAt(0) }}</span>
-        </v-avatar>
-        {{ currentCompany?.name }}
-        <v-icon right>mdi-chevron-down</v-icon>
-      </v-btn>
-    </template>
+  <div class="relative">
+    <Button 
+      @click="toggle" 
+      class="p-button-text company-switcher flex align-items-center"
+      :aria-haspopup="true" 
+      :aria-expanded="overlayVisible"
+    >
+      <Avatar 
+        v-if="currentCompany?.logo" 
+        :image="currentCompany.logo" 
+        size="normal"
+        shape="circle"
+        class="mr-2"
+      />
+      <Avatar 
+        v-else 
+        :label="currentCompany?.name?.charAt(0)" 
+        size="normal"
+        shape="circle"
+        class="mr-2"
+      />
+      {{ currentCompany?.name }}
+      <i class="pi pi-chevron-down ml-2"></i>
+    </Button>
     
-    <v-list>
-      <v-list-item
-        v-for="company in availableCompanies"
-        :key="company.id"
-        @click="switchCompany(company.id)"
-        :disabled="company.id === currentCompany?.id"
-      >
-        <template v-slot:prepend>
-          <v-avatar size="24">
-            <v-img v-if="company.logo" :src="company.logo"></v-img>
-            <span v-else>{{ company.name.charAt(0) }}</span>
-          </v-avatar>
-        </template>
-        
-        <v-list-item-title>{{ company.name }}</v-list-item-title>
-        
-        <template v-slot:append v-if="company.id === currentCompany?.id">
-          <v-icon color="success">mdi-check</v-icon>
-        </template>
-      </v-list-item>
-    </v-list>
-  </v-menu>
+    <OverlayPanel ref="op" :showCloseIcon="false">
+      <div class="flex flex-column gap-2" style="min-width: 200px;">
+        <div 
+          v-for="company in availableCompanies"
+          :key="company.id"
+          class="flex align-items-center p-2 hover:surface-100 cursor-pointer border-round transition-colors transition-duration-150"
+          :class="{ 'surface-200': company.id === currentCompany?.id }"
+          @click="switchCompany(company.id)"
+        >
+          <Avatar 
+            v-if="company.logo" 
+            :image="company.logo" 
+            size="small"
+            shape="circle"
+            class="mr-2"
+          />
+          <Avatar 
+            v-else 
+            :label="company.name.charAt(0)" 
+            size="small"
+            shape="circle"
+            class="mr-2"
+          />
+          
+          <span class="flex-1">{{ company.name }}</span>
+          
+          <i v-if="company.id === currentCompany?.id" class="pi pi-check text-green-500"></i>
+        </div>
+      </div>
+    </OverlayPanel>
+  </div>
 </template>
 
 <script>
 import { useTenantStore } from '@/stores/tenant'
 
+import { ref, computed, onMounted } from 'vue'
+import { useTenantStore } from '@/stores/tenant'
+
 export default {
   name: 'CompanySwitcher',
   
-  computed: {
-    currentCompany() {
-      return this.tenantStore.currentCompany
-    },
-    availableCompanies() {
-      return this.tenantStore.availableCompanies
+  setup() {
+    const op = ref()
+    const overlayVisible = ref(false)
+    const tenantStore = useTenantStore()
+    
+    const currentCompany = computed(() => tenantStore.currentCompany)
+    const availableCompanies = computed(() => tenantStore.availableCompanies)
+    
+    const toggle = (event) => {
+      op.value.toggle(event)
+      overlayVisible.value = !overlayVisible.value
     }
-  },
-  
-  mounted() {
-    this.tenantStore = useTenantStore()
-  },
-  
-  methods: {
-    async switchCompany(companyId) {
-      if (companyId !== this.currentCompany?.id) {
-        await this.tenantStore.switchCompany(companyId)
+    
+    const switchCompany = async (companyId) => {
+      if (companyId !== currentCompany.value?.id) {
+        await tenantStore.switchCompany(companyId)
       }
+      op.value.hide()
+      overlayVisible.value = false
+    }
+    
+    return {
+      op,
+      overlayVisible,
+      currentCompany,
+      availableCompanies,
+      toggle,
+      switchCompany
     }
   }
 }

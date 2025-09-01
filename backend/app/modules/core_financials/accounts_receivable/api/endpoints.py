@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_async_db
-from core.security import get_current_active_user
+from core.deps import get_current_active_user
 from .. import exceptions, models, schemas, services
 from ...users.models import User
 

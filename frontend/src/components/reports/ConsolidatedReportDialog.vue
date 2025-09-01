@@ -81,7 +81,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { useToast } from 'vue/usetoast';
+import { useToast } from 'primevue/usetoast';
 import { useEnhancedReports } from '@/composables/useEnhancedReports';
 import enhancedReportsService from '@/services/enhancedReportsService';
 

@@ -3,7 +3,7 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.security import get_current_active_user
+from app.core.deps import get_current_active_user
 from app.models.user import User
 from ..extended_financials.procurement.schemas.purchase_requisition import (
     PurchaseRequisitionCreate,

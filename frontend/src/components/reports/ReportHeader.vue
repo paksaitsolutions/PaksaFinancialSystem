@@ -10,13 +10,13 @@
         <div class="date-range-picker">
           <label>Date Range:</label>
           <Calendar 
-            v-model="dateRange" 
+            :model-value="dateRange" 
+            @update:model-value="handleDateChange"
             selectionMode="range" 
             :showIcon="true"
             dateFormat="yy-mm-dd"
             :maxDate="new Date()"
             :manualInput="false"
-            @date-select="handleDateChange"
             class="date-range-input"
           />
         </div>
@@ -63,11 +63,11 @@
 <script setup lang="ts">
 import { ref, defineProps, defineEmits, watch } from 'vue';
 import { format } from 'date-fns';
-import Calendar from 'vue/calendar';
-import Button from 'vue/button';
-import SplitButton from 'vue/splitbutton';
-import Divider from 'vue/divider';
-import { useToast } from 'vue/usetoast';
+import Calendar from 'primevue/calendar';
+import Button from 'primevue/button';
+import SplitButton from 'primevue/splitbutton';
+import Divider from 'primevue/divider';
+import { useToast } from 'primevue/usetoast';
 
 const props = defineProps({
   title: {
@@ -132,9 +132,9 @@ const formatDateRange = (range: any) => {
   return `${start} - ${end}`;
 };
 
-const handleDateChange = (event: any) => {
-  if (event.value && event.value[1]) {
-    emit('date-range-update', event.value);
+const handleDateChange = (value: any) => {
+  if (value && value[1]) {
+    emit('date-range-update', value);
   }
 };
 

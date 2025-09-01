@@ -6,7 +6,7 @@ from uuid import UUID
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.security import get_current_user
+from app.core.deps import get_current_user
 from app.modules.core_financials.accounting.models.account import Account, AccountType
 from app.modules.core_financials.accounting.models.journal_entry import JournalEntry, JournalEntryStatus, JournalEntryLine
 from app.modules.core_financials.accounting.schemas.financial_statement import (

@@ -1,29 +1,37 @@
 <template>
   <ResponsiveContainer>
-    <v-tabs v-model="activeTab" class="mb-4">
-      <v-tab value="assets">Assets</v-tab>
-      <v-tab value="maintenance">Maintenance</v-tab>
-      <v-tab value="depreciation">Depreciation</v-tab>
-      <v-tab value="reports">Reports</v-tab>
-    </v-tabs>
-
-    <v-window v-model="activeTab">
-      <v-window-item value="assets">
-        <AssetManagement />
-      </v-window-item>
-      
-      <v-window-item value="maintenance">
-        <MaintenanceSchedule />
-      </v-window-item>
-      
-      <v-window-item value="depreciation">
-        <DepreciationSchedule />
-      </v-window-item>
-      
-      <v-window-item value="reports">
-        <AssetReports />
-      </v-window-item>
-    </v-window>
+    <div class="p-4">
+      <h1>Fixed Assets Module</h1>
+      <TabView v-model:activeIndex="activeTabIndex" class="mb-4">
+        <TabPanel header="Assets">
+          <div class="p-4">
+            <h2>Assets Tab Content</h2>
+            <AssetManagement />
+          </div>
+        </TabPanel>
+        
+        <TabPanel header="Maintenance">
+          <div class="p-4">
+            <h2>Maintenance Tab Content</h2>
+            <MaintenanceSchedule />
+          </div>
+        </TabPanel>
+        
+        <TabPanel header="Depreciation">
+          <div class="p-4">
+            <h2>Depreciation Tab Content</h2>
+            <DepreciationSchedule />
+          </div>
+        </TabPanel>
+        
+        <TabPanel header="Reports">
+          <div class="p-4">
+            <h2>Reports Tab Content</h2>
+            <AssetReports />
+          </div>
+        </TabPanel>
+      </TabView>
+    </div>
   </ResponsiveContainer>
 </template>
 
@@ -45,7 +53,11 @@ export default {
   },
   
   data: () => ({
-    activeTab: 'assets'
-  })
+    activeTabIndex: 0
+  }),
+  
+  mounted() {
+    console.log('FixedAssetsView mounted successfully')
+  }
 }
 </script>

@@ -42,14 +42,21 @@ const layout = computed(() => {
 
 <style>
 /* Global styles */
+* {
+  box-sizing: border-box;
+}
+
 html, body {
   margin: 0;
   padding: 0;
   font-family: 'Roboto', sans-serif;
+  height: 100%;
+  overflow-x: hidden;
 }
 
 #app {
   min-height: 100vh;
+  width: 100%;
 }
 
 /* Animation for page transitions */

@@ -1,36 +1,11 @@
-// ============================================
-// Paksa Financial System - Main SCSS Entry Point
-// ============================================
-// This file serves as the main entry point for all styles.
-// It follows a modular architecture with clear separation of concerns.
-
-// 1. Core Theme & Variables
-// -------------------------
-@import 'theme';                // Design tokens and theming
-@import 'utilities';            // Utility classes and mixins
-
-// 2. Base Styles
-// --------------
-// Global resets and base element styles
+@import 'theme';
+@import 'utilities';
 @import 'base/reset';
 @import 'base/typography';
-
-// 3. PrimeVue Component Overrides
-// ------------------------------
-// Custom styles for PrimeVue components to match our design system
+@import 'buttons';
 @import 'primevue-overrides';
-
-// 4. Layout Components
-// -------------------
-// Global layout components
+@import 'primevue-fixes';
+@import 'critical-fixes';
 @import 'layout/app-layout';
-
-// 5. Print Styles
-// ---------------
-// Print-specific styles
 @import 'base/print';
-
-// 6. Dark Mode
-// ------------
-// Dark mode overrides are included in each component's styles
-// using the dark-theme mixin from _utilities.scss
+@import 'layout-fix';

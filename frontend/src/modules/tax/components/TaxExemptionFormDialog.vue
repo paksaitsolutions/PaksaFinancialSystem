@@ -58,7 +58,7 @@ import { useI18n } from 'vue-i18n';
 import { useToast } from 'primevue/usetoast';
 import TaxExemptionForm from './TaxExemptionForm.vue';
 import type { TaxExemption } from '@/types/tax';
-import { useTaxPolicyStore } from '@/stores/taxPolicy';
+import { useTaxPolicyStore } from '@/modules/tax/store/policy';
 import axios, { type AxiosError } from 'axios';
 
 const props = defineProps<{
@@ -110,7 +110,7 @@ const saveExemption = async (exemptionData: any) => {
     
     if (isEditing.value && props.exemption) {
       // Update existing exemption
-      savedExemption = await taxPolicyService.updateTaxExemption(props.exemption.id, data);
+      savedExemption = await taxPolicyService.updateTaxExemption(props.exemption.id, exemptionData);
       (toast as any).add({
         severity: 'success',
         summary: 'Success',
@@ -119,7 +119,7 @@ const saveExemption = async (exemptionData: any) => {
       });
     } else {
       // Create new exemption
-      savedExemption = await taxPolicyService.createTaxExemption(data);
+      savedExemption = await taxPolicyService.createTaxExemption(exemptionData);
       (toast as any).add({
         severity: 'success',
         summary: 'Success',
@@ -151,7 +151,7 @@ const saveExemption = async (exemptionData: any) => {
     // Re-throw the error to allow the calling component to handle it if needed
     throw error;
   } finally {
-    saving.value = false;
+    isSaving.value = false;
   }
 };
 

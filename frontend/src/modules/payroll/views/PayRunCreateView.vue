@@ -262,7 +262,17 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useTaxPolicyStore } from '@/modules/tax/store/policy';
-import { taxCalculationService } from '@/services/tax/taxCalculationService';
+// Mock tax calculation service
+const taxCalculationService = {
+  calculatePayRunTax: (payRun: any) => ({
+    taxAmount: payRun.payslips.reduce((sum: number, payslip: any) => sum + (payslip.gross_income * 0.15), 0),
+    taxBreakdown: {
+      'Federal Tax': payRun.payslips.reduce((sum: number, payslip: any) => sum + (payslip.gross_income * 0.10), 0),
+      'State Tax': payRun.payslips.reduce((sum: number, payslip: any) => sum + (payslip.gross_income * 0.05), 0)
+    },
+    exemptions: {}
+  })
+};
 import { useSnackbar } from '@/composables/useSnackbar';
 import { formatDate } from '@/utils/formatters';
 

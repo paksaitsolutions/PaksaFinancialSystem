@@ -198,7 +198,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useToast } from 'primevue/usetoast'
-import { useExport } from '@/composables/useExport'
+import { useReportExport } from '@/composables/useReportExport'
 import ExportDialog from '@/components/common/ExportDialog.vue'
 
 const showCreateModal = ref(false)
@@ -378,8 +378,8 @@ const handleExport = async (format: string, options: any = {}) => {
   try {
     isExporting.value = true
     
-    // Use the useExport composable
-    const { exportData: exportFn } = useExport()
+    // Use the useReportExport composable
+    const { exportData: exportFn } = useReportExport()
     
     // Prepare export options
     const exportOptions = {

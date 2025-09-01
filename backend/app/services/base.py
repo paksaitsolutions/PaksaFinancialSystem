@@ -1,19 +1,64 @@
 """
-Base service class with common CRUD operations.
+Base service class with common CRUD operations and utilities.
 """
-from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
+from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union, cast
+from uuid import UUID
 from fastapi.encoders import jsonable_encoder
+from fastapi import HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
 from sqlalchemy import select
-from app.core.database import Base
+from app.core.database import Base, SessionLocal
 
 ModelType = TypeVar("ModelType", bound=Base)
 CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
 UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel)
+T = TypeVar('T')
+
 class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
+    """Base service with common CRUD operations and utilities."""
+    
     def __init__(self, model: Type[ModelType]):
+        """Initialize the service with a model class."""
         self.model = model
+    
+    def _get_db(self) -> Session:
+        """Get a database session."""
+        return SessionLocal()
+    
+    def _get_or_404(
+        self, 
+        db: Session, 
+        model: Type[T], 
+        id: UUID,
+        not_found_exception: Exception = None
+    ) -> T:
+        """
+        Get a record by ID or raise an appropriate exception.
+        
+        Args:
+            db: Database session
+            model: SQLAlchemy model class
+            id: Record ID to fetch
+            not_found_exception: Custom exception to raise if not found
+            
+        Returns:
+            The fetched record
+            
+        Raises:
+            HTTPException: If record not found and no custom exception provided
+            Exception: If record not found and custom exception is provided
+        """
+        obj = db.query(model).get(id)
+        if not obj:
+            if not_found_exception:
+                raise not_found_exception
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"{model.__name__} with id {id} not found"
+            )
+        return obj
 
     async def get(self, db: AsyncSession, id: Any) -> Optional[ModelType]:
         result = await db.execute(select(self.model).where(self.model.id == id))

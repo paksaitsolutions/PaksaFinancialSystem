@@ -1,86 +1,82 @@
 """
-Security utilities: password hashing, JWT helpers, and FastAPI dependencies.
+Security utilities for authentication and authorization.
 """
 from datetime import datetime, timedelta
-from typing import Any, Dict, Optional, Union
-
-from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
+from typing import Any, Union, Optional
+from jose import jwt, JWTError
 from passlib.context import CryptContext
+from fastapi import HTTPException, status, Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from app.core.config.settings import settings
 
-from app.core.config import settings
-from app.core.database import get_db
-from app.models.user import User
-
-
+# Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login", auto_error=False)
+
+# JWT settings
+ALGORITHM = "HS256"
+security = HTTPBearer()
+
+
+def create_access_token(
+    subject: Union[str, Any], 
+    expires_delta: timedelta = None,
+    additional_claims: dict = None
+) -> str:
+    """Create access token."""
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(
+            minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
+        )
+    
+    to_encode = {"exp": expire, "sub": str(subject)}
+    if additional_claims:
+        to_encode.update(additional_claims)
+    
+    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Verify password."""
     return pwd_context.verify(plain_password, hashed_password)
 
 
 def get_password_hash(password: str) -> str:
+    """Hash password."""
     return pwd_context.hash(password)
 
 
-def create_access_token(
-    subject: Union[str, Any],
-    expires_delta: Optional[timedelta] = None,
-    additional_claims: Optional[Dict[str, Any]] = None,
-) -> str:
-    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=getattr(settings, "ACCESS_TOKEN_EXPIRE_MINUTES", 30)))
-    to_encode: Dict[str, Any] = {"sub": str(subject), "exp": expire, "iat": datetime.utcnow(), "type": "access"}
-    if additional_claims:
-        to_encode.update(additional_claims)
-    return jwt.encode(to_encode, getattr(settings, "SECRET_KEY", "dev-secret-key"), algorithm=getattr(settings, "ALGORITHM", "HS256"))
-
-
-def decode_token(token: str) -> Dict[str, Any]:
-    return jwt.decode(token, getattr(settings, "SECRET_KEY", "dev-secret-key"), algorithms=[getattr(settings, "ALGORITHM", "HS256")])
-
-
-async def get_current_user(
-    token: Optional[str] = Depends(oauth2_scheme),
-    db=Depends(get_db),
-) -> User:
-    if not token:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated", headers={"WWW-Authenticate": "Bearer"})
+def decode_token(token: str) -> dict:
+    """Decode JWT token."""
     try:
-        payload = decode_token(token)
-        sub = payload.get("sub")
-        if not sub:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token")
-        # Try to fetch user by ID or email
-        user = await User.get(db, id=sub) if hasattr(User, "get") else None
-        if not user and hasattr(User, "get_by_email"):
-            user = await User.get_by_email(db, email=sub)
-        if not user:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-        return user
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
     except JWTError:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Could not validate credentials")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
 
-async def get_current_active_user(current_user: User = Depends(get_current_user)) -> User:
-    if getattr(current_user, "is_active", True) is False:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Inactive user")
-    return current_user
-
-
-def role_required(required_roles: list):
-    def decorator(func):
-        async def wrapper(*args, **kwargs):
-            current_user: Optional[User] = kwargs.get("current_user")
-            roles = []
-            if current_user is not None and hasattr(current_user, "roles"):
-                roles = list(getattr(current_user, "roles", []) or [])
-            if not any(r in roles for r in required_roles):
-                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions")
-            return await func(*args, **kwargs)
-
-        return wrapper
-
-    return decorator
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get current user from token."""
+    token = credentials.credentials
+    payload = decode_token(token)
+    
+    user_id = payload.get("sub")
+    if user_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+        )
+    
+    # Return user info from token
+    return {
+        "id": user_id,
+        "email": payload.get("email", ""),
+        "tenant_id": payload.get("tenant_id", "default"),
+        "roles": payload.get("roles", [])
+    }

@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from core.database import get_db
-from core.security import get_current_active_user
+from core.deps import get_current_active_user
 from modules.core_financials.accounting import (
     AccountBalanceService,
     AccountBalanceNotFoundException,

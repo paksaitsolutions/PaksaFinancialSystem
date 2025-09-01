@@ -1,0 +1,306 @@
+/* ===================================
+   Button Component Styles
+   ===================================
+   Custom button styles that extend and override PrimeVue button components.
+   These styles follow our design system and ensure consistency.
+*/
+
+// Base button styles
+.p-button {
+  // Reset and base styles
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-family-sans);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0.01em;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+  user-select: none;
+  border: 1px solid transparent;
+  padding: 0.5rem 1.25rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  border-radius: var(--border-radius);
+  transition: all 0.2s var(--ease-in-out);
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  
+  // Remove default focus outline (we'll add custom focus styles)
+  &:focus {
+    outline: 0;
+    box-shadow: 0 0 0 3px var(--primary-100);
+  }
+  
+  // Disabled state
+  &:disabled,
+  &.p-disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+  
+  // Button Sizes
+  &-sm {
+    padding: 0.4rem 1rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+  
+  &-md {
+    padding: 0.5rem 1.25rem;
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+  
+  &-lg {
+    padding: 0.75rem 1.5rem;
+    font-size: 1.1rem;
+    line-height: 1.5;
+  }
+  
+  // Button with icon
+  .p-button-icon {
+    display: inline-flex;
+    margin-right: 0.5rem;
+    
+    &.p-button-icon-right {
+      margin-right: 0;
+      margin-left: 0.5rem;
+    }
+    
+    &:only-child {
+      margin: 0;
+    }
+  }
+  
+  // Loading state
+  &.p-button-loading {
+    position: relative;
+    color: transparent !important;
+    pointer-events: none;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      width: 1.25rem;
+      height: 1.25rem;
+      border: 2px solid currentColor;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+  }
+  
+  // Button variants
+  // Primary button
+  &-primary {
+    background-color: var(--primary-600);
+    border-color: var(--primary-600);
+    color: white;
+    
+    &:hover:not(:disabled) {
+      background-color: var(--primary-700);
+      border-color: var(--primary-700);
+    }
+    
+    &:active:not(:disabled) {
+      background-color: var(--primary-800);
+      border-color: var(--primary-800);
+    }
+    
+    &:focus:not(:disabled) {
+      box-shadow: 0 0 0 3px var(--primary-100);
+    }
+    
+    &:disabled {
+      background-color: var(--neutral-200);
+      border-color: var(--neutral-200);
+      color: var(--neutral-400);
+    }
+    
+    // Outlined variant
+    &.p-button-outlined {
+      background-color: transparent;
+      color: var(--primary-600);
+      border-color: var(--primary-600);
+      
+      &:hover:not(:disabled) {
+        background-color: var(--primary-50);
+        color: var(--primary-700);
+        border-color: var(--primary-700);
+      }
+      
+      &:active:not(:disabled) {
+        background-color: var(--primary-100);
+      }
+      
+      &:disabled {
+        background-color: transparent;
+        border-color: var(--neutral-200);
+        color: var(--neutral-400);
+      }
+    }
+    
+    // Text variant
+    &.p-button-text {
+      background-color: transparent;
+      color: var(--primary-600);
+      border-color: transparent;
+      box-shadow: none;
+      
+      &:hover:not(:disabled) {
+        background-color: var(--primary-50);
+        color: var(--primary-700);
+      }
+      
+      &:active:not(:disabled) {
+        background-color: var(--primary-100);
+      }
+      
+      &:disabled {
+        background-color: transparent;
+        color: var(--neutral-400);
+      }
+    }
+  }
+  
+  // Secondary button
+  &-secondary {
+    background-color: white;
+    border-color: var(--neutral-300);
+    color: var(--text-color);
+    
+    &:hover:not(:disabled) {
+      background-color: var(--neutral-50);
+      border-color: var(--neutral-400);
+    }
+    
+    &:active:not(:disabled) {
+      background-color: var(--neutral-100);
+    }
+    
+    &:focus:not(:disabled) {
+      box-shadow: 0 0 0 3px var(--neutral-100);
+    }
+    
+    &:disabled {
+      background-color: var(--neutral-100);
+      border-color: var(--neutral-200);
+      color: var(--neutral-400);
+    }
+  }
+  
+  // Success button
+  &-success {
+    background-color: var(--green-600);
+    border-color: var(--green-600);
+    color: white;
+    
+    &:hover:not(:disabled) {
+      background-color: var(--green-700);
+      border-color: var(--green-700);
+    }
+    
+    &:focus:not(:disabled) {
+      box-shadow: 0 0 0 3px var(--green-100);
+    }
+  }
+  
+  // Danger button
+  &-danger {
+    background-color: var(--red-600);
+    border-color: var(--red-600);
+    color: white;
+    
+    &:hover:not(:disabled) {
+      background-color: var(--red-700);
+      border-color: var(--red-700);
+    }
+    
+    &:focus:not(:disabled) {
+      box-shadow: 0 0 0 3px var(--red-100);
+    }
+  }
+  
+  // Warning button
+  &-warning {
+    background-color: var(--yellow-500);
+    border-color: var(--yellow-500);
+    color: var(--neutral-900);
+    
+    &:hover:not(:disabled) {
+      background-color: var(--yellow-600);
+      border-color: var(--yellow-600);
+    }
+    
+    &:focus:not(:disabled) {
+      box-shadow: 0 0 0 3px var(--yellow-100);
+    }
+  }
+  
+  // Info button
+  &-info {
+    background-color: var(--blue-500);
+    border-color: var(--blue-500);
+    color: white;
+    
+    &:hover:not(:disabled) {
+      background-color: var(--blue-600);
+      border-color: var(--blue-600);
+    }
+    
+    &:focus:not(:disabled) {
+      box-shadow: 0 0 0 3px var(--blue-100);
+    }
+  }
+}
+
+// Button group styles
+.p-buttonset {
+  display: inline-flex;
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  
+  .p-button {
+    border-radius: 0;
+    margin: 0;
+    position: relative;
+    
+    // Remove double borders
+    &:not(:first-child) {
+      margin-left: -1px;
+    }
+    
+    &:first-child {
+      border-top-left-radius: var(--border-radius);
+      border-bottom-left-radius: var(--border-radius);
+    }
+    
+    &:last-child {
+      border-top-right-radius: var(--border-radius);
+      border-bottom-right-radius: var(--border-radius);
+    }
+    
+    // Adjust focus styles for button groups
+    &:focus {
+      z-index: 1;
+    }
+  }
+  
+  // Different variants in button group
+  .p-button-secondary + .p-button-secondary,
+  .p-button-outlined + .p-button-outlined,
+  .p-button-text + .p-button-text {
+    border-left-color: var(--neutral-200);
+  }
+}
+
+// Animation for loading spinner
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

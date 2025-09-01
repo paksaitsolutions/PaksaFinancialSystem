@@ -73,7 +73,7 @@ $heading-scale: (
 
 // Responsive typography
 // --------------------
-@include media-breakpoint-down(md) {
+@media (max-width: 768px) {
   :root {
     --heading-1-size: 2.441rem;  // 39.06px
     --heading-2-size: 1.953rem;  // 31.25px
@@ -82,8 +82,6 @@ $heading-scale: (
     --heading-5-size: 1rem;      // 16.00px
     --heading-6-size: 0.875rem;  // 14.00px
   }
-  
-  // The $heading-scale map will automatically use the updated CSS variables
 }
 
 // Text Styles
@@ -290,27 +288,29 @@ a {
 }
 
 // Responsive text alignment
-@each $breakpoint in map-keys($grid-breakpoints) {
-  @include media-breakpoint-up($breakpoint) {
-    $infix: breakpoint-infix($breakpoint, $grid-breakpoints);
-    
-    .text#{$infix}-left {
-      text-align: left !important;
-    }
-    
-    .text#{$infix}-center {
-      text-align: center !important;
-    }
-    
-    .text#{$infix}-right {
-      text-align: right !important;
-    }
-  }
+@media (min-width: 576px) {
+  .text-sm-left { text-align: left !important; }
+  .text-sm-center { text-align: center !important; }
+  .text-sm-right { text-align: right !important; }
+}
+
+@media (min-width: 768px) {
+  .text-md-left { text-align: left !important; }
+  .text-md-center { text-align: center !important; }
+  .text-md-right { text-align: right !important; }
+}
+
+@media (min-width: 992px) {
+  .text-lg-left { text-align: left !important; }
+  .text-lg-center { text-align: center !important; }
+  .text-lg-right { text-align: right !important; }
 }
 
 // Text truncation
 .text-truncate {
-  @include text-truncate();
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 // Text decoration
@@ -375,7 +375,7 @@ text-overflow-clip {
 }
 
 .line-height-base {
-  line-height: $line-height-base !important;
+  line-height: 1.5 !important;
 }
 
 .line-height-lg {
@@ -412,37 +412,37 @@ text-overflow-clip {
 }
 
 // Responsive font sizes
-@each $breakpoint in map-keys($grid-breakpoints) {
-  @include media-breakpoint-up($breakpoint) {
-    $infix: breakpoint-infix($breakpoint, $grid-breakpoints);
-    
-    @for $i from 10 through 72 {
-      .fs#{$infix}-#{$i} {
-        font-size: #{$i}px !important;
-      }
+@media (min-width: 576px) {
+  @for $i from 10 through 72 {
+    .fs-sm-#{$i} {
+      font-size: #{$i}px !important;
+    }
+  }
+}
+
+@media (min-width: 768px) {
+  @for $i from 10 through 72 {
+    .fs-md-#{$i} {
+      font-size: #{$i}px !important;
     }
   }
 }
 
 // Text colors for light/dark themes
-.text-muted {
-  color: $text-secondary !important;
+.text-body {
+  color: var(--text-primary) !important;
 }
 
 .text-light {
-  color: $white !important;
+  color: #ffffff !important;
 }
 
 .text-dark {
-  color: $gray-900 !important;
-}
-
-.text-body {
-  color: $text-primary !important;
+  color: #1a202c !important;
 }
 
 .text-muted-light {
-  color: rgba($white, 0.7) !important;
+  color: rgba(255, 255, 255, 0.7) !important;
 }
 
 // Text shadow
@@ -468,17 +468,17 @@ text-overflow-clip {
 }
 
 .letter-spacing-wide {
-  letter-spacing: $letter-spacing-wide !important;
+  letter-spacing: 0.025em !important;
 }
 
 .letter-spacing-wider {
-  letter-spacing: $letter-spacing-wider !important;
+  letter-spacing: 0.05em !important;
 }
 
 // Text selection
 ::selection {
-  background-color: rgba($primary, 0.15);
-  color: $primary-dark;
+  background-color: rgba(79, 70, 229, 0.15);
+  color: var(--primary-700);
 }
 
 // Print styles

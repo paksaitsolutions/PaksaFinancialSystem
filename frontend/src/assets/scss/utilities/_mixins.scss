@@ -1,0 +1,472 @@
+// ===================================
+// Mixins
+// ===================================
+
+// 1. Media Query Mixins
+// ==========================
+
+// Minimum breakpoint width
+@mixin media-breakpoint-up($name, $breakpoints: $grid-breakpoints) {
+  $min: map-get($breakpoints, $name);
+  @if $min {
+    @media (min-width: $min) {
+      @content;
+    }
+  } @else {
+    @content;
+  }
+}
+
+// Maximum breakpoint width
+@mixin media-breakpoint-down($name, $breakpoints: $grid-breakpoints) {
+  $max: map-get($breakpoints, $name);
+  @if $max {
+    @media (max-width: ($max - 0.02px)) {
+      @content;
+    }
+  } @else {
+    @content;
+  }
+}
+
+// Single breakpoint range
+@mixin media-breakpoint-between($lower, $upper, $breakpoints: $grid-breakpoints) {
+  $min: map-get($breakpoints, $lower);
+  $max: map-get($breakpoints, $upper);
+
+  @if $min != null and $max != null {
+    @media (min-width: $min) and (max-width: ($max - 0.02px)) {
+      @content;
+    }
+  } @else if $min == null {
+    @include media-breakpoint-down($upper, $breakpoints) {
+      @content;
+    }
+  } @else if $max == null {
+    @include media-breakpoint-up($lower, $breakpoints) {
+      @content;
+    }
+  }
+}
+
+// 2. Typography Mixins
+// ==========================
+
+// Font size with responsive adjustments
+@mixin font-size($size, $line-height: null, $weight: null, $letter-spacing: null) {
+  font-size: $size;
+  
+  @if $line-height != null {
+    line-height: $line-height;
+  }
+  
+  @if $weight != null {
+    font-weight: $weight;
+  }
+  
+  @if $letter-spacing != null {
+    letter-spacing: $letter-spacing;
+  }
+}
+
+// Truncate text with ellipsis
+@mixin text-truncate() {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Multi-line text truncation
+@mixin text-truncate-multiline($lines: 2) {
+  display: -webkit-box;
+  -webkit-line-clamp: $lines;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// 3. Layout Mixins
+// ==========================
+
+// Clearfix
+@mixin clearfix() {
+  &::after {
+    display: block;
+    clear: both;
+    content: "";
+  }
+}
+
+// Center block
+@mixin center-block() {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+// Absolute center
+@mixin absolute-center($position: absolute) {
+  position: $position;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+// Fixed aspect ratio container
+@mixin aspect-ratio($width, $height) {
+  position: relative;
+  &::before {
+    display: block;
+    content: "";
+    width: 100%;
+    padding-top: ($height / $width) * 100%;
+  }
+  
+  > .content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+}
+
+// 4. Visual Effects
+// ==========================
+
+// Box shadow
+@mixin box-shadow($shadow...) {
+  @if length($shadow) == 0 {
+    $shadow: $box-shadow;
+  }
+  box-shadow: $shadow;
+}
+
+// Text shadow
+@mixin text-shadow($x: 0, $y: 1px, $blur: 0, $color: rgba(0, 0, 0, 0.25)) {
+  text-shadow: $x $y $blur $color;
+}
+
+// Gradient text
+@mixin text-gradient($gradient) {
+  background: $gradient;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-fill-color: transparent;
+}
+
+// 5. Form Elements
+// ==========================
+
+// Form control focus state
+@mixin form-control-focus() {
+  &:focus {
+    color: $input-focus-color;
+    background-color: $input-focus-bg;
+    border-color: $input-focus-border-color;
+    outline: 0;
+    @if $enable-shadows {
+      @include box-shadow($input-box-shadow, $input-focus-box-shadow);
+    } @else {
+      box-shadow: $input-focus-box-shadow;
+    }
+  }
+}
+
+// Form validation state
+@mixin form-validation-state($state, $data: ()) {
+  .was-validated &:#{$state},
+  &.is-#{$state} {
+    @each $property, $value in $data {
+      #{$property}: $value;
+    }
+    
+    @if $enable-validation-icons {
+      padding-right: $input-height-inner;
+      background-position: right $input-height-inner-quarter center;
+      background-size: $input-height-inner-half $input-height-inner-half;
+    }
+  }
+}
+
+// 6. Buttons
+// ==========================
+
+// Button variants
+@mixin button-variant(
+  $background,
+  $border,
+  $color: color-contrast($background),
+  $hover-background: darken($background, 7.5%),
+  $hover-border: darken($border, 10%),
+  $hover-color: color-contrast($hover-background),
+  $active-background: darken($background, 10%),
+  $active-border: darken($border, 12.5%),
+  $active-color: color-contrast($active-background),
+  $disabled-background: $background,
+  $disabled-border: $border,
+  $disabled-color: color-contrast($disabled-background)
+) {
+  color: $color;
+  @include gradient-bg($background);
+  border-color: $border;
+  @include box-shadow($btn-box-shadow);
+
+  @include hover() {
+    color: $hover-color;
+    @include gradient-bg($hover-background);
+    border-color: $hover-border;
+  }
+
+  &:focus,
+  &.focus {
+    color: $hover-color;
+    @include gradient-bg($hover-background);
+    border-color: $hover-border;
+    @if $enable-shadows {
+      @include box-shadow($btn-box-shadow, 0 0 0 $btn-focus-width rgba(mix(color-yiq($background), $border, 15%), .5));
+    } @else {
+      box-shadow: 0 0 0 $btn-focus-width rgba(mix(color-yiq($background), $border, 15%), .5);
+    }
+  }
+
+  // Disabled comes first so active can properly restyle
+  &.disabled,
+  &:disabled {
+    color: $disabled-color;
+    background-color: $disabled-background;
+    border-color: $disabled-border;
+    // Remove CSS gradients if they're enabled
+    @if $enable-gradients {
+      background-image: none;
+    }
+  }
+
+  &:not(:disabled):not(.disabled):active,
+  &:not(:disabled):not(.disabled).active,
+  .show > &.dropdown-toggle {
+    color: $active-color;
+    background-color: $active-background;
+    @if $enable-gradients {
+      background-image: none; // Remove the gradient for the pressed/active state
+    }
+    border-color: $active-border;
+
+    &:focus {
+      @if $enable-shadows and $btn-active-box-shadow != none {
+        @include box-shadow($btn-active-box-shadow, 0 0 0 $btn-focus-width rgba(mix(color-yiq($background), $border, 15%), .5));
+      } @else {
+        // Avoid using mixin so we can pass custom focus shadow properly
+        box-shadow: 0 0 0 $btn-focus-width rgba(mix(color-yiq($background), $border, 15%), .5);
+      }
+    }
+  }
+}
+
+// 7. Alerts
+// ==========================
+
+@mixin alert-variant($background, $border, $color) {
+  color: $color;
+  @include gradient-bg($background);
+  border-color: $border;
+
+  hr {
+    border-top-color: darken($border, 5%);
+  }
+  
+  .alert-link {
+    color: darken($color, 10%);
+  }
+}
+
+// 8. List Groups
+// ==========================
+
+@mixin list-group-item-variant($state, $background, $color) {
+  .list-group-item-#{$state} {
+    color: $color;
+    background-color: $background;
+
+    &.list-group-item-action {
+      @include hover-focus() {
+        color: $color;
+        background-color: darken($background, 5%);
+      }
+
+      &.active {
+        color: $white;
+        background-color: $color;
+        border-color: $color;
+      }
+    }
+  }
+}
+
+// 9. Tables
+// ==========================
+
+@mixin table-row-variant($state, $background, $border: null) {
+  // Exact selectors below required to override `.table-striped` and prevent
+  // inheritance to nested tables.
+  .table-#{$state} {
+    &,
+    > th,
+    > td {
+      background-color: $background;
+    }
+
+    @if $border != null {
+      th,
+      td,
+      thead th,
+      tbody + tbody {
+        border-color: $border;
+      }
+    }
+  }
+
+  // Hover states for `.table-hover`
+  // Note: this is not available for cells or rows within `thead` or `tfoot`.
+  .table-hover {
+    $hover-background: darken($background, 5%);
+
+    .table-#{$state} {
+      @include hover() {
+        background-color: $hover-background;
+
+        > td,
+        > th {
+          background-color: $hover-background;
+        }
+      }
+    }
+  }
+}
+
+// 10. Animations
+// ==========================
+
+// Keyframes
+@mixin keyframes($animation-name) {
+  @-webkit-keyframes #{$animation-name} {
+    @content;
+  }
+  @-moz-keyframes #{$animation-name} {
+    @content;
+  }
+  @-ms-keyframes #{$animation-name} {
+    @content;
+  }
+  @-o-keyframes #{$animation-name} {
+    @content;
+  }
+  @keyframes #{$animation-name} {
+    @content;
+  }
+}
+
+// Animation
+@mixin animation($str) {
+  -webkit-animation: #{$str};
+  -moz-animation: #{$str};
+  -ms-animation: #{$str};
+  -o-animation: #{$str};
+  animation: #{$str};
+}
+
+// Transition
+@mixin transition($properties...) {
+  @if length($properties) == 0 {
+    $properties: all 0.15s ease-in-out;
+  }
+  -webkit-transition: $properties;
+  -moz-transition: $properties;
+  -ms-transition: $properties;
+  -o-transition: $properties;
+  transition: $properties;
+}
+
+// Transform
+@mixin transform($transforms) {
+  -webkit-transform: $transforms;
+  -moz-transform: $transforms;
+  -ms-transform: $transforms;
+  -o-transform: $transforms;
+  transform: $transforms;
+}
+
+// 11. Responsive Utilities
+// ==========================
+
+// Responsive font size
+@mixin responsive-font-size($min-font-size, $max-font-size, $min-vw: 320px, $max-vw: 1200px) {
+  font-size: $min-font-size;
+  
+  @media (min-width: $min-vw) {
+    font-size: calc(#{$min-font-size} + (#{strip-unit($max-font-size - $min-font-size)}) * ((100vw - #{$min-vw}) / #{strip-unit($max-vw - $min-vw)}));
+  }
+  
+  @media (min-width: $max-vw) {
+    font-size: $max-font-size;
+  }
+}
+
+// 12. SVG Icons
+// ==========================
+
+@mixin svg-icon($width, $height, $viewBox: '0 0 24 24', $fill: currentColor) {
+  display: inline-block;
+  width: $width;
+  height: $height;
+  vertical-align: middle;
+  fill: $fill;
+  
+  svg {
+    width: 100%;
+    height: 100%;
+    fill: inherit;
+    vertical-align: top;
+  }
+}
+
+// 13. Print Styles
+// ==========================
+
+@mixin print-visible() {
+  @media print {
+    display: block !important;
+  }
+}
+
+@mixin print-hidden() {
+  @media print {
+    display: none !important;
+  }
+}
+
+// 14. Helper Functions
+// ==========================
+
+// Strip unit from a value (e.g., 16px -> 16)
+@function strip-unit($number) {
+  @if type-of($number) == 'number' and not unitless($number) {
+    @return $number / ($number * 0 + 1);
+  }
+  @return $number;
+}
+
+// Color contrast
+@function color-contrast($background, $dark: $dark, $light: $light, $threshold: 128) {
+  $r: red($background);
+  $g: green($background);
+  $b: blue($background);
+  $yiq: (($r * 299) + ($g * 587) + ($b * 114)) / 1000;
+  
+  @if ($yiq >= $threshold) {
+    @return $dark;
+  } @else {
+    @return $light;
+  }
+}

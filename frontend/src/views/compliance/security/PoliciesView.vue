@@ -80,16 +80,16 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { useToast } from 'vue/usetoast';
-import DataTable from 'vue/datatable';
-import Column from 'vue/column';
-import Button from 'vue/button';
-import Dialog from 'vue/dialog';
-import InputText from 'vue/inputtext';
-import Textarea from 'vue/textarea';
-import Checkbox from 'vue/checkbox';
-import Toolbar from 'vue/toolbar';
-import Tag from 'vue/tag';
+import { useToast } from 'primevue/usetoast';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+import Button from 'primevue/button';
+import Dialog from 'primevue/dialog';
+import InputText from 'primevue/inputtext';
+import Textarea from 'primevue/textarea';
+import Checkbox from 'primevue/checkbox';
+import Toolbar from 'primevue/toolbar';
+import Tag from 'primevue/tag';
 import { format } from 'date-fns';
 
 // MOCK DATA AND API
@@ -447,7 +447,7 @@ const deletePolicy = async () => {
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { useToast } from 'vue/usetoast';
+import { useToast } from 'primevue/usetoast';
 import { format } from 'date-fns';
 
 type PolicyStatus = 'active' | 'inactive' | 'draft';

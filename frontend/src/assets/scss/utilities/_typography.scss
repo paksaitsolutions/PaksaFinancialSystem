@@ -1,0 +1,205 @@
+// ===================================
+// Typography Variables
+// ===================================
+
+// 1. Font Families
+// ==========================
+$font-family-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+$font-family-mono: 'Roboto Mono', 'Courier New', monospace;
+$font-family-serif: 'Georgia', serif;
+
+// 2. Font Sizes (Base: 16px)
+// ==========================
+$font-size-xs: 0.75rem;   // 12px
+$font-size-sm: 0.875rem;  // 14px
+$font-size-base: 1rem;    // 16px
+$font-size-lg: 1.125rem;  // 18px
+$font-size-xl: 1.25rem;   // 20px
+$font-size-2xl: 1.5rem;   // 24px
+$font-size-3xl: 1.875rem; // 30px
+$font-size-4xl: 2.25rem;  // 36px
+$font-size-5xl: 3rem;     // 48px
+$font-size-6xl: 3.75rem;  // 60px
+
+// 3. Font Weights
+// ==========================
+$font-weight-light: 300;
+$font-weight-normal: 400;
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+$font-weight-extrabold: 800;
+$font-weight-black: 900;
+
+// 4. Line Heights
+// ==========================
+$line-height-none: 1;
+$line-height-tight: 1.25;
+$line-height-snug: 1.375;
+$line-height-normal: 1.5;
+$line-height-relaxed: 1.625;
+$line-height-loose: 2;
+
+// 5. Letter Spacing
+// ==========================
+$letter-spacing-tighter: -0.05em;
+$letter-spacing-tight: -0.025em;
+$letter-spacing-normal: 0;
+$letter-spacing-wide: 0.025em;
+$letter-spacing-wider: 0.05em;
+$letter-spacing-widest: 0.1em;
+
+// 6. Typography Scale (for headings and display text)
+// ==========================
+$text-xs: 0.75rem;      // 12px
+$text-sm: 0.875rem;     // 14px
+$text-base: 1rem;       // 16px
+$text-lg: 1.125rem;     // 18px
+$text-xl: 1.25rem;      // 20px
+$text-2xl: 1.5rem;      // 24px
+$text-3xl: 1.875rem;    // 30px
+$text-4xl: 2.25rem;     // 36px
+$text-5xl: 3rem;        // 48px
+$text-6xl: 3.75rem;     // 60px
+$text-7xl: 4.5rem;      // 72px
+$text-8xl: 6rem;        // 96px
+$text-9xl: 8rem;        // 128px
+
+// 7. Heading Sizes
+// ==========================
+$h1-font-size: $text-5xl;      // 48px
+$h2-font-size: $text-4xl;      // 36px
+$h3-font-size: $text-3xl;      // 30px
+$h4-font-size: $text-2xl;      // 24px
+$h5-font-size: $text-xl;       // 20px
+$h6-font-size: $text-base;     // 16px
+
+// 8. Display Sizes
+// ==========================
+$display-1-size: $text-7xl;    // 72px
+$display-2-size: $text-6xl;    // 60px
+$display-3-size: $text-5xl;    // 48px
+$display-4-size: $text-4xl;    // 36px
+
+// 9. Font Weights for Headings
+// ==========================
+$headings-font-weight: $font-weight-bold;
+$headings-line-height: $line-height-tight;
+$headings-margin-bottom: $spacing-4;
+
+// 10. Paragraphs
+// ==========================
+$paragraph-margin-bottom: $spacing-4;
+$lead-font-size: $text-xl;
+$lead-font-weight: $font-weight-normal;
+$small-font-size: $text-sm;
+
+// 11. Blockquotes
+// ==========================
+$blockquote-font-size: $text-xl;
+$blockquote-margin-y: $spacing-6;
+$blockquote-footer-color: $neutral-600;
+$blockquote-footer-font-size: $text-sm;
+
+// 12. Code
+// ==========================
+$code-font-size: $text-sm;
+$code-color: $danger-600;
+$code-bg: $neutral-100;
+$code-padding-y: 0.2em;
+$code-padding-x: 0.4em;
+$code-border-radius: $border-radius;
+
+// 13. Preformatted Text
+// ==========================
+$pre-color: $neutral-800;
+$pre-bg: $neutral-50;
+$pre-padding: $spacing-4;
+$pre-margin-y: $spacing-6;
+$pre-border-radius: $border-radius-lg;
+$pre-border: 1px solid $neutral-200;
+
+// 14. KBD (Keyboard Input)
+// ==========================
+$kbd-padding-y: 0.2em;
+$kbd-padding-x: 0.4em;
+$kbd-font-size: $text-sm;
+$kbd-color: $neutral-800;
+$kbd-bg: $neutral-100;
+$kbd-border-radius: $border-radius-sm;
+$kbd-box-shadow: inset 0 -0.1rem 0 rgba(0, 0, 0, 0.25);
+
+// 15. Variables for CSS Custom Properties
+// ==========================
+:root {
+  // Font Families
+  --font-family-sans: #{$font-family-sans};
+  --font-family-mono: #{$font-family-mono};
+  --font-family-serif: #{$font-family-serif};
+
+  // Font Sizes
+  --font-size-xs: #{$font-size-xs};
+  --font-size-sm: #{$font-size-sm};
+  --font-size-base: #{$font-size-base};
+  --font-size-lg: #{$font-size-lg};
+  --font-size-xl: #{$font-size-xl};
+  --font-size-2xl: #{$font-size-2xl};
+  --font-size-3xl: #{$font-size-3xl};
+  --font-size-4xl: #{$font-size-4xl};
+  --font-size-5xl: #{$font-size-5xl};
+  --font-size-6xl: #{$font-size-6xl};
+
+  // Font Weights
+  --font-weight-light: #{$font-weight-light};
+  --font-weight-normal: #{$font-weight-normal};
+  --font-weight-medium: #{$font-weight-medium};
+  --font-weight-semibold: #{$font-weight-semibold};
+  --font-weight-bold: #{$font-weight-bold};
+  --font-weight-extrabold: #{$font-weight-extrabold};
+  --font-weight-black: #{$font-weight-black};
+
+  // Line Heights
+  --line-height-none: #{$line-height-none};
+  --line-height-tight: #{$line-height-tight};
+  --line-height-snug: #{$line-height-snug};
+  --line-height-normal: #{$line-height-normal};
+  --line-height-relaxed: #{$line-height-relaxed};
+  --line-height-loose: #{$line-height-loose};
+
+  // Letter Spacing
+  --letter-spacing-tighter: #{$letter-spacing-tighter};
+  --letter-spacing-tight: #{$letter-spacing-tight};
+  --letter-spacing-normal: #{$letter-spacing-normal};
+  --letter-spacing-wide: #{$letter-spacing-wide};
+  --letter-spacing-wider: #{$letter-spacing-wider};
+  --letter-spacing-widest: #{$letter-spacing-widest};
+
+  // Text Sizes
+  --text-xs: #{$text-xs};
+  --text-sm: #{$text-sm};
+  --text-base: #{$text-base};
+  --text-lg: #{$text-lg};
+  --text-xl: #{$text-xl};
+  --text-2xl: #{$text-2xl};
+  --text-3xl: #{$text-3xl};
+  --text-4xl: #{$text-4xl};
+  --text-5xl: #{$text-5xl};
+  --text-6xl: #{$text-6xl};
+  --text-7xl: #{$text-7xl};
+  --text-8xl: #{$text-8xl};
+  --text-9xl: #{$text-9xl};
+
+  // Heading Sizes
+  --h1-font-size: #{$h1-font-size};
+  --h2-font-size: #{$h2-font-size};
+  --h3-font-size: #{$h3-font-size};
+  --h4-font-size: #{$h4-font-size};
+  --h5-font-size: #{$h5-font-size};
+  --h6-font-size: #{$h6-font-size};
+
+  // Display Sizes
+  --display-1-size: #{$display-1-size};
+  --display-2-size: #{$display-2-size};
+  --display-3-size: #{$display-3-size};
+  --display-4-size: #{$display-4-size};
+}

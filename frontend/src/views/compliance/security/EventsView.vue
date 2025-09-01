@@ -106,7 +106,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { useToast } from 'vue/usetoast';
+import { useToast } from 'primevue/usetoast';
 import { FilterMatchMode } from 'vue/api';
 import DataTable from 'vue/datatable';
 import Column from 'vue/column';

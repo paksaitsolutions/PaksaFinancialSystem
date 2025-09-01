@@ -1,0 +1,269 @@
+// ===================================
+// Color System
+// ===================================
+
+// 1. Primary Colors
+// ==========================
+$primary-50: #f0f9ff;
+$primary-100: #e0f2fe;
+$primary-200: #bae6fd;
+$primary-300: #7dd3fc;
+$primary-400: #38bdf8;
+$primary-500: #0ea5e9;
+$primary-600: #0284c7;
+$primary-700: #0369a1;
+$primary-800: #075985;
+$primary-900: #0c4a6e;
+$primary-950: #082f49;
+
+// 2. Neutral Colors
+// ==========================
+$neutral-50: #f8fafc;
+$neutral-100: #f1f5f9;
+$neutral-200: #e2e8f0;
+$neutral-300: #cbd5e1;
+$neutral-400: #94a3b8;
+$neutral-500: #64748b;
+$neutral-600: #475569;
+$neutral-700: #334155;
+$neutral-800: #1e293b;
+$neutral-900: #0f172a;
+$neutral-950: #020617;
+
+// 3. Success Colors
+// ==========================
+$success-50: #f0fdf4;
+$success-100: #dcfce7;
+$success-200: #bbf7d0;
+$success-300: #86efac;
+$success-400: #4ade80;
+$success-500: #22c55e;
+$success-600: #16a34a;
+$success-700: #15803d;
+$success-800: #166534;
+$success-900: #14532d;
+$success-950: #052e16;
+
+// 4. Warning Colors
+// ==========================
+$warning-50: #fffbeb;
+$warning-100: #fef3c7;
+$warning-200: #fde68a;
+$warning-300: #fcd34d;
+$warning-400: #fbbf24;
+$warning-500: #f59e0b;
+$warning-600: #d97706;
+$warning-700: #b45309;
+$warning-800: #92400e;
+$warning-900: #78350f;
+$warning-950: #451a03;
+
+// 5. Danger/Error Colors
+// ==========================
+$danger-50: #fef2f2;
+$danger-100: #fee2e2;
+$danger-200: #fecaca;
+$danger-300: #fca5a5;
+$danger-400: #f87171;
+$danger-500: #ef4444;
+$danger-600: #dc2626;
+$danger-700: #b91c1c;
+$danger-800: #991b1b;
+$danger-900: #7f1d1d;
+$danger-950: #450a0a;
+
+// 6. Info Colors
+// ==========================
+$info-50: #eff6ff;
+$info-100: #dbeafe;
+$info-200: #bfdbfe;
+$info-300: #93c5fd;
+$info-400: #60a5fa;
+$info-500: #3b82f6;
+$info-600: #2563eb;
+$info-700: #1d4ed8;
+$info-800: #1e40af;
+$info-900: #1e3a8a;
+$info-950: #172554;
+
+// 7. Accent Colors
+// ==========================
+$accent-1-500: #8b5cf6; // Violet
+$accent-2-500: #ec4899; // Pink
+$accent-3-500: #10b981; // Emerald
+
+// 8. Background Colors
+// ==========================
+$bg-primary: #ffffff;
+$bg-secondary: #f8fafc;
+$bg-tertiary: #f1f5f9;
+$bg-inverse: #0f172a;
+
+// 9. Text Colors
+// ==========================
+$text-primary: #1e293b;
+$text-secondary: #475569;
+$text-tertiary: #64748b;
+$text-muted: #94a3b8;
+$text-inverse: #ffffff;
+$text-on-primary: #ffffff;
+$text-on-secondary: #1e293b;
+
+// 10. Border Colors
+// ==========================
+$border-light: #e2e8f0;
+$border-default: #cbd5e1;
+$border-dark: #94a3b8;
+
+// 11. Functional Colors
+// ==========================
+$link-color: $primary-600;
+$link-hover-color: $primary-700;
+$focus-ring-color: rgba(14, 165, 233, 0.5);
+$selection-bg: $primary-100;
+$selection-color: $primary-900;
+
+// 12. Social Media Colors
+// ==========================
+$facebook: #1877f2;
+$twitter: #1da1f2;
+$linkedin: #0a66c2;
+$youtube: #ff0000;
+$instagram: #e4405f;
+$pinterest: #e60023;
+$whatsapp: #25d366;
+
+// 13. Chart Colors
+// ==========================
+$chart-1: $primary-500;
+$chart-2: $info-500;
+$chart-3: $success-500;
+$chart-4: $warning-500;
+$chart-5: $danger-500;
+$chart-6: $accent-1-500;
+$chart-7: $accent-2-500;
+$chart-8: $accent-3-500;
+
+// 14. Status Colors
+// ==========================
+$status-active: $success-500;
+$status-pending: $warning-500;
+$status-inactive: $neutral-400;
+$status-draft: $neutral-300;
+$status-archived: $neutral-500;
+$status-declined: $danger-500;
+
+// 15. Semantic UI Colors (for PrimeVue components)
+// ==========================
+$primary-color: $primary-500;
+$primary-color-light: $primary-400;
+$primary-color-dark: $primary-700;
+$primary-color-text: $text-on-primary;
+
+$secondary-color: $neutral-600;
+$secondary-color-light: $neutral-500;
+$secondary-color-dark: $neutral-700;
+$secondary-color-text: $text-on-primary;
+
+$success-color: $success-500;
+$success-color-light: $success-400;
+$success-color-dark: $success-700;
+$success-color-text: $text-on-primary;
+
+$info-color: $info-500;
+$info-color-light: $info-400;
+$info-color-dark: $info-700;
+$info-color-text: $text-on-primary;
+
+$warning-color: $warning-500;
+$warning-color-light: $warning-400;
+$warning-color-dark: $warning-700;
+$warning-color-text: $text-on-primary;
+
+$danger-color: $danger-500;
+$danger-color-light: $danger-400;
+$danger-color-dark: $danger-700;
+$danger-color-text: $text-on-primary;
+
+// 16. Theme Variables
+// ==========================
+:root {
+  // Primary Colors
+  --primary-50: #{$primary-50};
+  --primary-100: #{$primary-100};
+  --primary-200: #{$primary-200};
+  --primary-300: #{$primary-300};
+  --primary-400: #{$primary-400};
+  --primary-500: #{$primary-500};
+  --primary-600: #{$primary-600};
+  --primary-700: #{$primary-700};
+  --primary-800: #{$primary-800};
+  --primary-900: #{$primary-900};
+  --primary-950: #{$primary-950};
+
+  // Background Colors
+  --bg-primary: #{$bg-primary};
+  --bg-secondary: #{$bg-secondary};
+  --bg-tertiary: #{$bg-tertiary};
+  --bg-inverse: #{$bg-inverse};
+
+  // Text Colors
+  --text-primary: #{$text-primary};
+  --text-secondary: #{$text-secondary};
+  --text-tertiary: #{$text-tertiary};
+  --text-muted: #{$text-muted};
+  --text-inverse: #{$text-inverse};
+  --text-on-primary: #{$text-on-primary};
+  --text-on-secondary: #{$text-on-secondary};
+
+  // Border Colors
+  --border-light: #{$border-light};
+  --border-default: #{$border-default};
+  --border-dark: #{$border-dark};
+
+  // Functional Colors
+  --link-color: #{$link-color};
+  --link-hover-color: #{$link-hover-color};
+  --focus-ring-color: #{$focus-ring-color};
+  --selection-bg: #{$selection-bg};
+  --selection-color: #{$selection-color};
+
+  // Status Colors
+  --status-active: #{$status-active};
+  --status-pending: #{$status-pending};
+  --status-inactive: #{$status-inactive};
+  --status-draft: #{$status-draft};
+  --status-archived: #{$status-archived};
+  --status-declined: #{$status-declined};
+
+  // Semantic UI Colors
+  --primary-color: #{$primary-color};
+  --primary-color-light: #{$primary-color-light};
+  --primary-color-dark: #{$primary-color-dark};
+  --primary-color-text: #{$primary-color-text};
+  
+  --secondary-color: #{$secondary-color};
+  --secondary-color-light: #{$secondary-color-light};
+  --secondary-color-dark: #{$secondary-color-dark};
+  --secondary-color-text: #{$secondary-color-text};
+  
+  --success-color: #{$success-color};
+  --success-color-light: #{$success-color-light};
+  --success-color-dark: #{$success-color-dark};
+  --success-color-text: #{$success-color-text};
+  
+  --info-color: #{$info-color};
+  --info-color-light: #{$info-color-light};
+  --info-color-dark: #{$info-color-dark};
+  --info-color-text: #{$info-color-text};
+  
+  --warning-color: #{$warning-color};
+  --warning-color-light: #{$warning-color-light};
+  --warning-color-dark: #{$warning-color-dark};
+  --warning-color-text: #{$warning-color-text};
+  
+  --danger-color: #{$danger-color};
+  --danger-color-light: #{$danger-color-light};
+  --danger-color-dark: #{$danger-color-dark};
+  --danger-color-text: #{$danger-color-text};
+}

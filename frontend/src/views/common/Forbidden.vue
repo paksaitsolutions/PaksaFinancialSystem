@@ -1,53 +1,54 @@
 <template>
-  <div class="error-container">
-    <Card class="error-card">
-      <template #content>
-        <div class="text-center p-4">
-          <i class="pi pi-ban" style="font-size: 6rem; color: var(--orange-500)"></i>
-          <h1 class="text-6xl font-bold my-4">403</h1>
-          <h2 class="text-2xl font-medium mb-4">Access Denied</h2>
-          <p class="text-color-secondary mb-6">You don't have permission to access this page.</p>
-          <Button 
-            label="Go to Dashboard" 
-            icon="pi pi-home" 
-            @click="goToDashboard"
-            class="p-button-primary"
-          />
-        </div>
-      </template>
-    </Card>
+  <div class="error-page">
+    <div class="error-content">
+      <h1 class="error-code">403</h1>
+      <h2 class="error-title">Access Denied</h2>
+      <p class="error-message">
+        You don't have permission to access this resource.
+      </p>
+      <Button 
+        label="Go to Dashboard" 
+        icon="pi pi-home"
+        @click="$router.push('/')"
+      />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { useRouter } from 'vue-router';
-import Card from 'primevue/card';
-import Button from 'primevue/button';
-
-const router = useRouter();
-
-const goToDashboard = () => {
-  router.push('/dashboard');
-};
+// No script needed
 </script>
 
 <style scoped>
-.error-container {
-  background: var(--surface-ground);
-  min-height: 100vh;
-  padding: 1rem;
+.error-page {
   display: flex;
   align-items: center;
   justify-content: center;
+  min-height: 50vh;
+  text-align: center;
 }
 
-.error-card {
-  border-radius: 12px;
+.error-content {
   max-width: 500px;
-  width: 100%;
 }
 
-:deep(.p-card-content) {
-  padding: 0;
+.error-code {
+  font-size: 6rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin: 0;
+  line-height: 1;
+}
+
+.error-title {
+  font-size: 2rem;
+  color: var(--text-color);
+  margin: 1rem 0;
+}
+
+.error-message {
+  color: var(--text-color-secondary);
+  margin-bottom: 2rem;
+  line-height: 1.6;
 }
 </style>

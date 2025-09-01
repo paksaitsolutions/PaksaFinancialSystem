@@ -15,10 +15,10 @@
               class="p-button-outlined"
               :loading="exportInProgress"
               :disabled="!filteredInvoices.length"
-              v-tooltip="filteredInvoices.length ? 'Export AP invoices' : 'No data to export'"
+v-tooltip.top="{ value: filteredInvoices.length ? 'Export AP invoices' : 'No data to export', showDelay: 500 }"
             />
             <Button 
-              label="Create Invoice" 
+              label="Create Bill" 
               icon="pi pi-plus" 
               @click="showCreateModal = true"
               class="p-button-primary"
@@ -30,26 +30,39 @@
 
     <div class="container">
       <!-- Export Dialog -->
-      <ExportDialog
-        v-model:visible="showExportDialog"
-        title="Export AP Invoices"
-        :file-name="exportFileName"
-        :columns="exportColumns"
-        :data="exportData"
-        :meta="{
-          title: 'AP Invoices Report',
-          description: 'List of accounts payable invoices',
-          generatedOn: new Date().toLocaleString(),
-          generatedBy: 'System',
-          includeSummary: true,
-          filters: {
-            status: selectedStatus || 'All',
-            vendor: searchQuery || 'All',
-            dateRange: 'All dates'
-          }
-        }"
-        @export="handleExport"
-      />
+      <Dialog 
+        v-model:visible="showExportDialog" 
+        header="Export AP Invoices"
+        :modal="true"
+        class="p-fluid"
+        :style="{ width: '50vw' }"
+      >
+        <div class="field">
+          <label for="exportFormat">Format</label>
+          <Dropdown 
+            v-model="exportFormat" 
+            :options="['CSV', 'XLSX', 'PDF']" 
+            optionLabel=""
+            placeholder="Select Format"
+            class="w-full"
+          />
+        </div>
+        <template #footer>
+          <Button 
+            label="Cancel" 
+            icon="pi pi-times" 
+            @click="showExportDialog = false" 
+            class="p-button-text"
+          />
+          <Button 
+            label="Export" 
+            icon="pi pi-download" 
+            @click="handleExport({ format: exportFormat, data: exportData })" 
+            class="p-button-primary"
+            :loading="exportInProgress"
+          />
+        </template>
+      </Dialog>
 
       <!-- Summary Cards -->
       <div class="summary-section">
@@ -151,7 +164,7 @@
     <div v-if="showCreateModal" class="modal-overlay" @click="closeModal">
       <div class="modal-content large" @click.stop>
         <div class="modal-header">
-          <h3>{{ editingInvoice ? 'Edit' : 'Create' }} Invoice</h3>
+          <h3>{{ editingInvoice ? 'Edit' : 'Create' }} Bill</h3>
           <button class="modal-close" @click="closeModal">×</button>
         </div>
         
@@ -222,92 +235,215 @@
 
           <div class="form-actions">
             <button type="button" @click="closeModal" class="btn btn-secondary">Cancel</button>
-            <button type="submit" class="btn btn-primary">Save Invoice</button>
+            <button type="submit" class="btn btn-primary">Save Bill</button>
           </div>
         </form>
       </div>
     </div>
   </div>
   
-  <!-- Export Dialog Component -->
-  <ExportDialog
-    v-model:visible="showExportDialog"
-    :data="filteredInvoices"
-    :columns="exportColumns"
-    :file-name="exportFileName"
-  />
+  <!-- Removed duplicate ExportDialog component since we're using PrimeVue Dialog -->
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { useToast } from 'primevue/usetoast'
-import { FilterMatchMode } from 'primevue/api'
-import ExportDialog from '@/components/common/ExportDialog.vue'
-import { useExport } from '@/composables/useExport'
 
+// Types
+interface Vendor {
+  id: string
+  name: string
+  email?: string
+}
+
+interface InvoiceLine {
+  id?: number | string
+  description: string
+  quantity: number
+  unitPrice: number
+  amount: number
+  taxRate?: number
+  accountId?: string
+}
+
+interface Invoice {
+  id: number
+  invoiceNumber: string
+  vendorId: string
+  vendorName: string
+  invoiceDate: string
+  dueDate: string
+  status: 'draft' | 'pending' | 'approved' | 'paid' | 'overdue' | 'void'
+  reference?: string
+  description?: string
+  amount: number
+  totalAmount?: number
+  taxAmount: number
+  lines: InvoiceLine[]
+  createdAt?: string
+  updatedAt?: string
+}
+
+// Removed unused ExportOptions interface
+
+// State
+const toast = useToast()
+const showExportDialog = ref(false)
 const showCreateModal = ref(false)
-const editingInvoice = ref(null)
+const exportInProgress = ref(false)
 const searchQuery = ref('')
 const selectedStatus = ref('')
-const showExportDialog = ref(false)
-const exportInProgress = ref(false)
+const selectedVendor = ref('')
+const dateFilter = ref('')
+const editingInvoice = ref<Invoice | null>(null)
+const exportFormat = ref('CSV')
 
-// Export configuration
-const exportColumns = [
-  { field: 'invoiceNumber', header: 'Invoice #' },
-  { field: 'vendorName', header: 'Vendor' },
-  { field: 'invoiceDate', header: 'Date', format: (val) => formatDate(val) },
-  { field: 'dueDate', header: 'Due Date', format: (val) => formatDate(val) },
-  { field: 'totalAmount', header: 'Amount', format: (val) => formatCurrency(val) },
-  { field: 'status', header: 'Status' },
-  { field: 'reference', header: 'Reference' }
+// Mock data - replace with API calls
+const vendors = ref<Vendor[]>([
+  { id: '1', name: 'ABC Supplies Inc.' },
+  { id: '2', name: 'Tech Solutions LLC' },
+  { id: '3', name: 'Construction Pro' }
+])
+
+// Initialize with mock data
+const initializeMockInvoices = (): Invoice[] => [
+  {
+    id: 1,
+    invoiceNumber: 'INV-2024-001',
+    vendorId: '1',
+    vendorName: 'ABC Supplies Inc.',
+    invoiceDate: '2024-01-15',
+    dueDate: '2024-02-14',
+    amount: 15000,
+    taxAmount: 1500,
+    status: 'approved',
+    reference: 'PO-123',
+    lines: [
+      { 
+        id: 1, 
+        description: 'Office Supplies', 
+        quantity: 10, 
+        unitPrice: 1000, 
+        amount: 10000,
+        taxRate: 0,
+        accountId: 'expense-office'
+      },
+      { 
+        id: 2, 
+        description: 'Shipping', 
+        quantity: 1, 
+        unitPrice: 500, 
+        amount: 500,
+        taxRate: 0,
+        accountId: 'expense-shipping'
+      }
+    ],
+    createdAt: '2024-01-15T10:00:00Z',
+    updatedAt: '2024-01-15T10:00:00Z'
+  },
+  {
+    id: 2,
+    invoiceNumber: 'INV-2024-002',
+    vendorId: '2',
+    vendorName: 'Tech Solutions LLC',
+    invoiceDate: '2024-01-10',
+    dueDate: '2024-01-25',
+    amount: 8500,
+    taxAmount: 850,
+    status: 'overdue',
+    reference: 'PO-124',
+    lines: [
+      { 
+        id: 3, 
+        description: 'Software License', 
+        quantity: 1, 
+        unitPrice: 8500, 
+        amount: 8500,
+        taxRate: 0,
+        accountId: 'expense-software'
+      }
+    ],
+    createdAt: '2024-01-10T09:30:00Z',
+    updatedAt: '2024-01-10T09:30:00Z'
+  },
+  {
+    id: 3,
+    invoiceNumber: 'INV-2024-003',
+    vendorId: '3',
+    vendorName: 'Construction Pro',
+    invoiceDate: '2024-01-20',
+    dueDate: '2024-02-19',
+    amount: 25000,
+    taxAmount: 2500,
+    status: 'pending',
+    reference: 'PO-125',
+    lines: [
+      { 
+        id: 4, 
+        description: 'Construction Materials', 
+        quantity: 50, 
+        unitPrice: 500, 
+        amount: 25000,
+        taxRate: 0,
+        accountId: 'expense-construction'
+      }
+    ],
+    createdAt: '2024-01-20T14:15:00Z',
+    updatedAt: '2024-01-20T14:15:00Z'
+  }
 ]
 
+const invoices = ref<Invoice[]>(initializeMockInvoices())
+
+// Filtered invoices - removed duplicate declaration
+
 const exportFileName = computed(() => {
-  return `AP-Invoices-${new Date().toISOString().split('T')[0]}`
+  return `ap-invoices-${new Date().toISOString().slice(0, 10)}`
 })
 
 const exportData = computed(() => {
   return filteredInvoices.value.map(invoice => ({
-    ...invoice,
-    vendorName: invoice.vendor?.name || 'N/A',
-    totalAmount: invoice.totalAmount || 0
+    'Invoice #': invoice.invoiceNumber,
+    'Vendor': invoice.vendorName || '',
+    'Date': formatDate(invoice.invoiceDate),
+    'Due Date': formatDate(invoice.dueDate),
+    'Amount': formatCurrency(invoice.totalAmount),
+    'Status': invoice.status,
+    'Reference': invoice.reference || ''
   }))
 })
 
 // Handle export
-const handleExport = async ({ format, options }) => {
-  exportInProgress.value = true
+const handleExport = async ({ format, data }: { format: string; data: any[] }) => {
   try {
-    // Simulate API call for export
+    exportInProgress.value = true
+    
+    // This would be replaced with actual export logic
+    console.log(`Exporting ${data.length} invoices as ${format}`)
+    
+    // Simulate export delay
     await new Promise(resolve => setTimeout(resolve, 1000))
     
-    // In a real app, this would call an API endpoint to generate the export
-    console.log(`Exporting ${exportData.value.length} invoices as ${format}`, options)
-    
-    // Show success message
-    useToast().add({
+    toast.add({
       severity: 'success',
-      summary: 'Export Successful',
-      detail: `Exported ${exportData.value.length} invoices as ${format.toUpperCase()}`,
+      summary: 'Export Complete',
+      detail: `Exported ${data.length} invoices to ${format}`,
       life: 3000
     })
+    
+    showExportDialog.value = false
   } catch (error) {
     console.error('Export failed:', error)
-    useToast().add({
+    toast.add({
       severity: 'error',
       summary: 'Export Failed',
       detail: 'Failed to export invoices. Please try again.',
-      life: 5000
+      life: 3000
     })
   } finally {
     exportInProgress.value = false
-    showExportDialog.value = false
   }
 }
-const selectedVendor = ref('')
-const dateFilter = ref('')
-
 const summaryData = ref({
   totalOutstanding: 48500,
   overdueAmount: 12000,
@@ -315,74 +451,73 @@ const summaryData = ref({
   pendingApproval: 8500
 })
 
-const invoiceForm = ref({
+interface InvoiceForm {
+  vendorId: string
+  invoiceNumber: string
+  invoiceDate: string
+  dueDate: string
+  description: string
+  reference: string
+  taxAmount: number
+  lines: Array<{
+    id: number | string
+    description: string
+    quantity: number
+    unitPrice: number
+    amount: number
+  }>
+}
+
+const invoiceForm = ref<Omit<InvoiceForm, 'lines'> & { lines: Array<Omit<InvoiceLine, 'id'> & { id?: number | string }> }>({
   vendorId: '',
   invoiceNumber: '',
   invoiceDate: new Date().toISOString().split('T')[0],
-  dueDate: '',
+  dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
   description: '',
+  reference: '',
   taxAmount: 0,
   lines: [
-    { description: '', quantity: 1, unitPrice: 0 }
+    { 
+      id: Date.now(), 
+      description: '', 
+      quantity: 1, 
+      unitPrice: 0, 
+      amount: 0,
+      taxRate: 0,
+      accountId: ''
+    }
   ]
 })
 
-const vendors = ref([
-  { id: 1, name: 'ABC Supplies Inc.' },
-  { id: 2, name: 'Tech Solutions LLC' },
-  { id: 3, name: 'Construction Pro' }
-])
 
-const invoices = ref([
-  {
-    id: 1,
-    invoiceNumber: 'INV-2024-001',
-    vendorName: 'ABC Supplies Inc.',
-    invoiceDate: '2024-01-15',
-    dueDate: '2024-02-14',
-    amount: 15000,
-    status: 'approved'
-  },
-  {
-    id: 2,
-    invoiceNumber: 'INV-2024-002',
-    vendorName: 'Tech Solutions LLC',
-    invoiceDate: '2024-01-10',
-    dueDate: '2024-01-25',
-    amount: 8500,
-    status: 'overdue'
-  },
-  {
-    id: 3,
-    invoiceNumber: 'INV-2024-003',
-    vendorName: 'Construction Pro',
-    invoiceDate: '2024-01-20',
-    dueDate: '2024-02-19',
-    amount: 25000,
-    status: 'pending'
-  }
-])
-
-const filteredInvoices = computed(() => {
-  let filtered = invoices.value
-  
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase()
-    filtered = filtered.filter(invoice => 
-      invoice.invoiceNumber.toLowerCase().includes(query) ||
-      invoice.vendorName.toLowerCase().includes(query)
-    )
-  }
-  
-  if (selectedStatus.value) {
-    filtered = filtered.filter(invoice => invoice.status === selectedStatus.value)
-  }
-  
-  if (selectedVendor.value) {
-    filtered = filtered.filter(invoice => invoice.vendorId === selectedVendor.value)
-  }
-  
-  return filtered
+// Filter invoices based on search query, status, and vendor
+// Filter invoices based on search query, status, and vendor
+const filteredInvoices = computed<Invoice[]>(() => {
+  return invoices.value.filter(invoice => {
+    // Filter by search query
+    if (searchQuery.value) {
+      const query = searchQuery.value.toLowerCase()
+      const matchesNumber = invoice.invoiceNumber.toLowerCase().includes(query)
+      const matchesVendor = invoice.vendorName.toLowerCase().includes(query)
+      const matchesReference = invoice.reference?.toLowerCase().includes(query) || false
+      
+      if (!matchesNumber && !matchesVendor && !matchesReference) {
+        return false
+      }
+    }
+    
+    // Filter by status
+    if (selectedStatus.value && invoice.status !== selectedStatus.value) {
+      return false
+    }
+    
+    // Filter by vendor
+    if (selectedVendor.value && invoice.vendorId !== selectedVendor.value) {
+      return false
+    }
+    
+    return true
+  })
 })
 
 const formatCurrency = (amount: number) => {
@@ -409,7 +544,14 @@ const calculateTotal = () => {
 }
 
 const addLine = () => {
-  invoiceForm.value.lines.push({ description: '', quantity: 1, unitPrice: 0 })
+  const newLine: InvoiceLine = {
+    id: Date.now(),
+    description: '',
+    quantity: 1,
+    unitPrice: 0,
+    amount: 0
+  }
+  invoiceForm.value.lines.push(newLine)
 }
 
 const removeLine = (index: number) => {
@@ -418,28 +560,32 @@ const removeLine = (index: number) => {
   }
 }
 
-const viewInvoice = (invoice: any) => {
+const viewInvoice = (invoice: Invoice) => {
   window.open(`/ap/invoices/${invoice.id}`, '_blank')
 }
 
-const editInvoice = (invoice: any) => {
-  editingInvoice.value = invoice
+const editInvoice = (invoice: Invoice) => {
+  editingInvoice.value = { ...invoice }
   invoiceForm.value = {
     vendorId: invoice.vendorId,
     invoiceNumber: invoice.invoiceNumber,
     invoiceDate: invoice.invoiceDate,
     dueDate: invoice.dueDate,
-    description: invoice.description,
-    taxAmount: invoice.taxAmount || 0,
-    lines: invoice.lines || [{ description: '', quantity: 1, unitPrice: 0 }]
+    description: invoice.description || '',
+    reference: invoice.reference || '',
+    taxAmount: invoice.taxAmount,
+    lines: invoice.lines.map(line => ({
+      ...line,
+      id: line.id || Date.now()
+    }))
   }
   showCreateModal.value = true
 }
 
-const approveInvoice = (invoice: any) => {
+const approveInvoice = (invoice: Invoice) => {
   if (confirm(`Approve invoice ${invoice.invoiceNumber}?`)) {
     invoice.status = 'approved'
-    alert('Invoice approved successfully')
+    alert('Bill approved successfully')
   }
 }
 
@@ -451,33 +597,61 @@ const payInvoice = (invoice: any) => {
 }
 
 const saveInvoice = () => {
-  if (!invoiceForm.value.vendorId || !invoiceForm.value.invoiceNumber) {
-    alert('Please fill in required fields')
+  if (!invoiceForm.value.vendorId || !invoiceForm.value.invoiceNumber || !invoiceForm.value.invoiceDate || !invoiceForm.value.dueDate) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Please fill in all required fields', life: 3000 })
     return
   }
-  
-  if (editingInvoice.value) {
-    const index = invoices.value.findIndex(inv => inv.id === editingInvoice.value.id)
-    if (index > -1) {
-      invoices.value[index] = {
-        ...invoices.value[index],
-        ...invoiceForm.value,
-        totalAmount: calculateTotal()
-      }
-    }
-    alert('Invoice updated successfully')
-  } else {
-    const newInvoice = {
-      id: Math.max(...invoices.value.map(i => i.id)) + 1,
-      ...invoiceForm.value,
-      totalAmount: calculateTotal(),
-      status: 'draft'
-    }
-    invoices.value.push(newInvoice)
-    alert('Invoice created successfully')
+
+  // Calculate line amounts if not set
+  const lines = invoiceForm.value.lines.map(line => ({
+    ...line,
+    amount: line.quantity * line.unitPrice,
+    taxRate: line.taxRate || 0,
+    accountId: line.accountId || ''
+  }))
+
+  const subtotal = lines.reduce((sum, line) => sum + line.amount, 0)
+  const taxAmount = invoiceForm.value.taxAmount || 0
+  const total = subtotal + taxAmount
+
+  const invoiceData: Invoice = {
+    id: editingInvoice.value?.id || Date.now(),
+    invoiceNumber: invoiceForm.value.invoiceNumber,
+    vendorId: invoiceForm.value.vendorId,
+    vendorName: vendors.value.find(v => v.id === invoiceForm.value.vendorId)?.name || '',
+    invoiceDate: invoiceForm.value.invoiceDate,
+    dueDate: invoiceForm.value.dueDate,
+    description: invoiceForm.value.description || '',
+    reference: invoiceForm.value.reference || '',
+    amount: total,
+    taxAmount,
+    status: editingInvoice.value?.status || 'pending',
+    lines,
+    createdAt: editingInvoice.value?.createdAt || new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   }
-  
+
+  if (editingInvoice.value) {
+    // Update existing invoice
+    const index = invoices.value.findIndex(i => i.id === editingInvoice.value?.id)
+    if (index !== -1) {
+      invoices.value[index] = invoiceData
+      toast.add({ severity: 'success', summary: 'Success', detail: 'Invoice updated successfully', life: 3000 })
+    }
+  } else {
+    // Add new invoice
+    invoices.value.push(invoiceData)
+    toast.add({ severity: 'success', summary: 'Success', detail: 'Invoice created successfully', life: 3000 })
+  }
+
+  // Reset form and close modal
   closeModal()
+  toast.add({
+    severity: 'success',
+    summary: 'Success',
+    detail: `Invoice ${editingInvoice.value ? 'updated' : 'created'} successfully`,
+    life: 3000
+  })
 }
 
 const closeModal = () => {

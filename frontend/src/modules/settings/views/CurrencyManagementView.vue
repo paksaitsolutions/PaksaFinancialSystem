@@ -1,250 +1,262 @@
 <template>
-  <AppLayout title="Settings - Currency Management">
-    <div class="currency-management">
-      <v-row>
-        <v-col cols="12">
-          <v-card>
-            <v-card-title class="d-flex align-center">
-              <h2>Currency Management</h2>
-              <v-spacer></v-spacer>
-              <v-btn color="primary" @click="openCurrencyDialog">
-                <v-icon left>mdi-plus</v-icon>
-                Add Currency
-              </v-btn>
-            </v-card-title>
+  <div class="p-4">
+    <Card>
+      <template #header>
+        <div class="flex justify-content-between align-items-center p-4">
+          <h2 class="m-0">Currency Management</h2>
+          <Button 
+            label="Add Currency" 
+            icon="pi pi-plus" 
+            @click="openCurrencyDialog"
+          />
+        </div>
+      </template>
 
-            <v-card-text>
-              <v-tabs v-model="activeTab">
-                <v-tab value="currencies">Currencies</v-tab>
-                <v-tab value="rates">Exchange Rates</v-tab>
-              </v-tabs>
+      <template #content>
+        <TabView v-model:activeIndex="activeTabIndex">
+          <!-- Currencies Tab -->
+          <TabPanel header="Currencies">
+            <DataTable
+              :value="currencies"
+              :loading="loading"
+              :paginator="true"
+              :rows="10"
+              responsiveLayout="scroll"
+            >
+              <Column field="code" header="Code"></Column>
+              <Column field="name" header="Name"></Column>
+              <Column field="symbol" header="Symbol"></Column>
+              <Column field="decimal_places" header="Decimal Places"></Column>
+              <Column field="is_base" header="Type">
+                <template #body="{ data }">
+                  <Tag :value="data.is_base ? 'Base' : 'Foreign'" :severity="data.is_base ? 'success' : 'secondary'" />
+                </template>
+              </Column>
+              <Column field="is_active" header="Status">
+                <template #body="{ data }">
+                  <Tag :value="data.is_active ? 'Active' : 'Inactive'" :severity="data.is_active ? 'success' : 'danger'" />
+                </template>
+              </Column>
+              <Column header="Actions">
+                <template #body="{ data }">
+                  <Button 
+                    icon="pi pi-pencil" 
+                    class="p-button-text p-button-sm mr-2" 
+                    @click="editCurrency(data)"
+                  />
+                  <Button 
+                    :icon="data.is_active ? 'pi pi-pause' : 'pi pi-play'" 
+                    class="p-button-text p-button-sm" 
+                    @click="toggleCurrencyStatus(data)"
+                    :disabled="data.is_base"
+                  />
+                </template>
+              </Column>
+            </DataTable>
+          </TabPanel>
 
-              <v-window v-model="activeTab" class="mt-4">
-                <!-- Currencies Tab -->
-                <v-window-item value="currencies">
-                  <v-data-table
-                    :headers="currencyHeaders"
-                    :items="currencies"
-                    :loading="loading"
-                    :items-per-page="10"
-                  >
-                    <template v-slot:item.is_base="{ item }">
-                      <v-chip :color="item.is_base ? 'success' : 'grey'" small>
-                        {{ item.is_base ? 'Base' : 'Foreign' }}
-                      </v-chip>
-                    </template>
-                    
-                    <template v-slot:item.is_active="{ item }">
-                      <v-chip :color="item.is_active ? 'success' : 'error'" small>
-                        {{ item.is_active ? 'Active' : 'Inactive' }}
-                      </v-chip>
-                    </template>
-                    
-                    <template v-slot:item.actions="{ item }">
-                      <v-btn icon small @click="editCurrency(item)">
-                        <v-icon small>mdi-pencil</v-icon>
-                      </v-btn>
-                      <v-btn
-                        icon
-                        small
-                        @click="toggleCurrencyStatus(item)"
-                        :disabled="item.is_base"
-                      >
-                        <v-icon small>
-                          {{ item.is_active ? 'mdi-pause' : 'mdi-play' }}
-                        </v-icon>
-                      </v-btn>
-                    </template>
-                  </v-data-table>
-                </v-window-item>
+          <!-- Exchange Rates Tab -->
+          <TabPanel header="Exchange Rates">
+            <div class="grid mb-4">
+              <div class="col-12 md:col-4">
+                <Dropdown
+                  v-model="selectedCurrency"
+                  :options="activeCurrencies"
+                  optionLabel="name"
+                  optionValue="code"
+                  placeholder="Select Currency"
+                  @change="loadExchangeRates"
+                  class="w-full"
+                />
+              </div>
+              <div class="col-12 md:col-4">
+                <Button 
+                  label="Add Rate" 
+                  icon="pi pi-plus" 
+                  @click="openRateDialog" 
+                  :disabled="!selectedCurrency"
+                />
+              </div>
+              <div class="col-12 md:col-4">
+                <Button 
+                  label="Update from API" 
+                  icon="pi pi-refresh" 
+                  @click="updateRatesFromAPI" 
+                  :loading="updatingRates"
+                  severity="info"
+                />
+              </div>
+            </div>
 
-                <!-- Exchange Rates Tab -->
-                <v-window-item value="rates">
-                  <v-row class="mb-4">
-                    <v-col cols="12" md="4">
-                      <v-select
-                        v-model="selectedCurrency"
-                        :items="activeCurrencies"
-                        item-title="name"
-                        item-value="code"
-                        label="Select Currency"
-                        @update:modelValue="loadExchangeRates"
-                      ></v-select>
-                    </v-col>
-                    <v-col cols="12" md="4">
-                      <v-btn color="primary" @click="openRateDialog" :disabled="!selectedCurrency">
-                        <v-icon left>mdi-plus</v-icon>
-                        Add Rate
-                      </v-btn>
-                    </v-col>
-                    <v-col cols="12" md="4">
-                      <v-btn color="info" @click="updateRatesFromAPI" :loading="updatingRates">
-                        <v-icon left>mdi-refresh</v-icon>
-                        Update from API
-                      </v-btn>
-                    </v-col>
-                  </v-row>
-
-                  <v-data-table
-                    :headers="rateHeaders"
-                    :items="exchangeRates"
-                    :loading="ratesLoading"
-                    :items-per-page="10"
-                  >
-                    <template v-slot:item.effective_date="{ item }">
-                      {{ formatDate(item.effective_date) }}
-                    </template>
-                    
-                    <template v-slot:item.rate="{ item }">
-                      {{ formatRate(item.rate) }}
-                    </template>
-                    
-                    <template v-slot:item.is_current="{ item }">
-                      <v-chip :color="item.is_current ? 'success' : 'grey'" small>
-                        {{ item.is_current ? 'Current' : 'Historical' }}
-                      </v-chip>
-                    </template>
-                    
-                    <template v-slot:item.actions="{ item }">
-                      <v-btn icon small @click="editRate(item)">
-                        <v-icon small>mdi-pencil</v-icon>
-                      </v-btn>
-                      <v-btn
-                        icon
-                        small
-                        @click="setCurrentRate(item)"
-                        :disabled="item.is_current"
-                      >
-                        <v-icon small>mdi-check</v-icon>
-                      </v-btn>
-                    </template>
-                  </v-data-table>
-                </v-window-item>
-              </v-window>
-            </v-card-text>
-          </v-card>
-        </v-col>
-      </v-row>
+            <DataTable
+              :value="exchangeRates"
+              :loading="ratesLoading"
+              :paginator="true"
+              :rows="10"
+              responsiveLayout="scroll"
+            >
+              <Column field="effective_date" header="Effective Date">
+                <template #body="{ data }">
+                  {{ formatDate(data.effective_date) }}
+                </template>
+              </Column>
+              <Column field="rate" header="Rate">
+                <template #body="{ data }">
+                  {{ formatRate(data.rate) }}
+                </template>
+              </Column>
+              <Column field="is_current" header="Status">
+                <template #body="{ data }">
+                  <Tag :value="data.is_current ? 'Current' : 'Historical'" :severity="data.is_current ? 'success' : 'secondary'" />
+                </template>
+              </Column>
+              <Column field="notes" header="Notes"></Column>
+              <Column header="Actions">
+                <template #body="{ data }">
+                  <Button 
+                    icon="pi pi-pencil" 
+                    class="p-button-text p-button-sm mr-2" 
+                    @click="editRate(data)"
+                  />
+                  <Button 
+                    icon="pi pi-check" 
+                    class="p-button-text p-button-sm" 
+                    @click="setCurrentRate(data)"
+                    :disabled="data.is_current"
+                  />
+                </template>
+              </Column>
+            </DataTable>
+          </TabPanel>
+        </TabView>
+      </template>
+    </Card>
     <!-- Currency Dialog -->
-    <v-dialog v-model="currencyDialog" max-width="500px">
-      <v-card>
-        <v-card-title>{{ editingCurrency ? 'Edit Currency' : 'Add Currency' }}</v-card-title>
-        <v-card-text>
-          <v-form ref="currencyForm" v-model="currencyFormValid">
-            <v-row>
-              <v-col cols="12">
-                <v-text-field
-                  v-model="editedCurrency.code"
-                  label="Currency Code"
-                  :rules="[v => !!v || 'Code is required', v => v.length === 3 || 'Code must be 3 characters']"
-                  maxlength="3"
-                  :disabled="editingCurrency"
-                ></v-text-field>
-              </v-col>
-              <v-col cols="12">
-                <v-text-field
-                  v-model="editedCurrency.name"
-                  label="Currency Name"
-                  :rules="[v => !!v || 'Name is required']"
-                ></v-text-field>
-              </v-col>
-              <v-col cols="12">
-                <v-text-field
-                  v-model="editedCurrency.symbol"
-                  label="Symbol"
-                  :rules="[v => !!v || 'Symbol is required']"
-                ></v-text-field>
-              </v-col>
-              <v-col cols="12">
-                <v-text-field
-                  v-model="editedCurrency.decimal_places"
-                  label="Decimal Places"
-                  type="number"
-                  min="0"
-                  max="4"
-                  :rules="[v => v >= 0 && v <= 4 || 'Must be between 0 and 4']"
-                ></v-text-field>
-              </v-col>
-              <v-col cols="12">
-                <v-checkbox
-                  v-model="editedCurrency.is_active"
-                  label="Active"
-                ></v-checkbox>
-              </v-col>
-            </v-row>
-          </v-form>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn text @click="currencyDialog = false">Cancel</v-btn>
-          <v-btn
-            color="primary"
-            @click="saveCurrency"
-            :disabled="!currencyFormValid"
-            :loading="saving"
-          >
-            Save
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <Dialog v-model:visible="currencyDialog" :header="editingCurrency ? 'Edit Currency' : 'Add Currency'" :style="{ width: '500px' }" :modal="true">
+      <div class="grid">
+        <div class="col-12">
+          <div class="field">
+            <label for="currencyCode">Currency Code</label>
+            <InputText 
+              id="currencyCode"
+              v-model="editedCurrency.code"
+              :class="{ 'p-invalid': errors.code }"
+              :disabled="editingCurrency"
+              maxlength="3"
+              class="w-full"
+            />
+            <small v-if="errors.code" class="p-error">{{ errors.code }}</small>
+          </div>
+        </div>
+        <div class="col-12">
+          <div class="field">
+            <label for="currencyName">Currency Name</label>
+            <InputText 
+              id="currencyName"
+              v-model="editedCurrency.name"
+              :class="{ 'p-invalid': errors.name }"
+              class="w-full"
+            />
+            <small v-if="errors.name" class="p-error">{{ errors.name }}</small>
+          </div>
+        </div>
+        <div class="col-12">
+          <div class="field">
+            <label for="currencySymbol">Symbol</label>
+            <InputText 
+              id="currencySymbol"
+              v-model="editedCurrency.symbol"
+              :class="{ 'p-invalid': errors.symbol }"
+              class="w-full"
+            />
+            <small v-if="errors.symbol" class="p-error">{{ errors.symbol }}</small>
+          </div>
+        </div>
+        <div class="col-12">
+          <div class="field">
+            <label for="decimalPlaces">Decimal Places</label>
+            <InputNumber 
+              id="decimalPlaces"
+              v-model="editedCurrency.decimal_places"
+              :min="0"
+              :max="4"
+              class="w-full"
+            />
+          </div>
+        </div>
+        <div class="col-12">
+          <div class="field-checkbox">
+            <Checkbox id="isActive" v-model="editedCurrency.is_active" :binary="true" />
+            <label for="isActive">Active</label>
+          </div>
+        </div>
+      </div>
+      
+      <template #footer>
+        <Button label="Cancel" @click="currencyDialog = false" class="p-button-text" />
+        <Button 
+          label="Save" 
+          @click="saveCurrency" 
+          :loading="saving"
+        />
+      </template>
+    </Dialog>
 
     <!-- Exchange Rate Dialog -->
-    <v-dialog v-model="rateDialog" max-width="500px">
-      <v-card>
-        <v-card-title>{{ editingRate ? 'Edit Exchange Rate' : 'Add Exchange Rate' }}</v-card-title>
-        <v-card-text>
-          <v-form ref="rateForm" v-model="rateFormValid">
-            <v-row>
-              <v-col cols="12">
-                <v-text-field
-                  v-model="editedRate.rate"
-                  label="Exchange Rate"
-                  type="number"
-                  step="0.000001"
-                  :rules="[v => !!v || 'Rate is required', v => v > 0 || 'Rate must be positive']"
-                ></v-text-field>
-              </v-col>
-              <v-col cols="12">
-                <v-text-field
-                  v-model="editedRate.effective_date"
-                  label="Effective Date"
-                  type="date"
-                  :rules="[v => !!v || 'Date is required']"
-                ></v-text-field>
-              </v-col>
-              <v-col cols="12">
-                <v-textarea
-                  v-model="editedRate.notes"
-                  label="Notes"
-                  rows="2"
-                ></v-textarea>
-              </v-col>
-              <v-col cols="12">
-                <v-checkbox
-                  v-model="editedRate.is_current"
-                  label="Set as current rate"
-                ></v-checkbox>
-              </v-col>
-            </v-row>
-          </v-form>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn text @click="rateDialog = false">Cancel</v-btn>
-          <v-btn
-            color="primary"
-            @click="saveRate"
-            :disabled="!rateFormValid"
-            :loading="saving"
-          >
-            Save
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-    </div>
-  </AppLayout>
+    <Dialog v-model:visible="rateDialog" :header="editingRate ? 'Edit Exchange Rate' : 'Add Exchange Rate'" :style="{ width: '500px' }" :modal="true">
+      <div class="grid">
+        <div class="col-12">
+          <div class="field">
+            <label for="exchangeRate">Exchange Rate</label>
+            <InputNumber 
+              id="exchangeRate"
+              v-model="editedRate.rate"
+              :minFractionDigits="6"
+              :maxFractionDigits="6"
+              class="w-full"
+            />
+          </div>
+        </div>
+        <div class="col-12">
+          <div class="field">
+            <label for="effectiveDate">Effective Date</label>
+            <Calendar 
+              id="effectiveDate"
+              v-model="editedRate.effective_date"
+              dateFormat="yy-mm-dd"
+              class="w-full"
+            />
+          </div>
+        </div>
+        <div class="col-12">
+          <div class="field">
+            <label for="rateNotes">Notes</label>
+            <Textarea 
+              id="rateNotes"
+              v-model="editedRate.notes"
+              rows="2"
+              class="w-full"
+            />
+          </div>
+        </div>
+        <div class="col-12">
+          <div class="field-checkbox">
+            <Checkbox id="isCurrent" v-model="editedRate.is_current" :binary="true" />
+            <label for="isCurrent">Set as current rate</label>
+          </div>
+        </div>
+      </div>
+      
+      <template #footer>
+        <Button label="Cancel" @click="rateDialog = false" class="p-button-text" />
+        <Button 
+          label="Save" 
+          @click="saveRate" 
+          :loading="saving"
+        />
+      </template>
+    </Dialog>
+  </div>
 </template>
 
 <script>
@@ -256,7 +268,8 @@ export default {
   },
   name: 'CurrencyManagementView',
   data: () => ({
-    activeTab: 'currencies',
+    activeTabIndex: 0,
+    errors: {},
     loading: false,
     ratesLoading: false,
     saving: false,
@@ -364,8 +377,28 @@ export default {
       this.currencyDialog = true
     },
 
+    validateCurrency() {
+      this.errors = {}
+      
+      if (!this.editedCurrency.code) {
+        this.errors.code = 'Code is required'
+      } else if (this.editedCurrency.code.length !== 3) {
+        this.errors.code = 'Code must be 3 characters'
+      }
+      
+      if (!this.editedCurrency.name) {
+        this.errors.name = 'Name is required'
+      }
+      
+      if (!this.editedCurrency.symbol) {
+        this.errors.symbol = 'Symbol is required'
+      }
+      
+      return Object.keys(this.errors).length === 0
+    },
+
     async saveCurrency() {
-      if (!this.$refs.currencyForm.validate()) return
+      if (!this.validateCurrency()) return
 
       this.saving = true
       try {
@@ -449,8 +482,6 @@ export default {
     },
 
     async saveRate() {
-      if (!this.$refs.rateForm.validate()) return
-
       this.saving = true
       try {
         // Simulate API call

@@ -1,185 +1,148 @@
 <template>
-  <v-container fluid class="pa-6">
+  <div class="ap-dashboard">
     <!-- Header -->
-    <v-row class="mb-6">
-      <v-col>
-        <div class="d-flex align-center mb-4">
-          <v-icon size="48" color="blue" class="mr-4">mdi-credit-card</v-icon>
+    <div class="dashboard-header">
+      <div class="header-content">
+        <div class="header-info">
+          <i class="pi pi-credit-card header-icon"></i>
           <div>
-            <h1 class="text-h3 font-weight-bold">Accounts Payable</h1>
-            <p class="text-subtitle-1 text-medium-emphasis">Vendor management and invoice processing</p>
+            <h1>Accounts Payable</h1>
+            <p>Vendor management and invoice processing</p>
           </div>
         </div>
-      </v-col>
-      <v-col cols="auto">
-        <v-btn color="primary" prepend-icon="mdi-plus" class="mr-2">
-          New Bill
-        </v-btn>
-        <v-btn color="success" prepend-icon="mdi-cash">
-          Make Payment
-        </v-btn>
-      </v-col>
-    </v-row>
+        <div class="header-actions">
+          <Button label="New Bill" icon="pi pi-plus" class="p-button-primary mr-2" @click="$router.push('/ap/create-bill')" />
+          <Button label="Make Payment" icon="pi pi-dollar" class="p-button-success" @click="$router.push('/ap/record-payment')" />
+        </div>
+      </div>
+    </div>
 
     <!-- Stats Cards -->
-    <v-row class="mb-6">
-      <v-col cols="12" md="3">
-        <v-card>
-          <v-card-text>
-            <div class="d-flex justify-space-between align-center">
-              <div>
-                <div class="text-h4 font-weight-bold text-error">$125,430</div>
-                <div class="text-subtitle-2 text-medium-emphasis">Outstanding Bills</div>
-              </div>
-              <v-icon size="40" color="error">mdi-file-document-alert</v-icon>
+    <div class="stats-grid">
+      <Card class="stat-card">
+        <template #content>
+          <div class="stat-content">
+            <div class="stat-info">
+              <div class="stat-value error">$125,430</div>
+              <div class="stat-label">Outstanding Bills</div>
             </div>
-            <v-progress-linear color="error" :model-value="75" height="4" rounded class="mt-3" />
-            <div class="text-caption mt-1">75% of credit limit used</div>
-          </v-card-text>
-        </v-card>
-      </v-col>
+            <i class="pi pi-file stat-icon error"></i>
+          </div>
+          <ProgressBar :value="75" class="mt-3" />
+          <div class="stat-note">75% of credit limit used</div>
+        </template>
+      </Card>
 
-      <v-col cols="12" md="3">
-        <v-card>
-          <v-card-text>
-            <div class="d-flex justify-space-between align-center">
-              <div>
-                <div class="text-h4 font-weight-bold text-warning">$45,200</div>
-                <div class="text-subtitle-2 text-medium-emphasis">Overdue Bills</div>
-              </div>
-              <v-icon size="40" color="warning">mdi-clock-alert</v-icon>
+      <Card class="stat-card">
+        <template #content>
+          <div class="stat-content">
+            <div class="stat-info">
+              <div class="stat-value warning">$45,200</div>
+              <div class="stat-label">Overdue Bills</div>
             </div>
-            <div class="text-caption mt-3 text-warning">12 bills overdue</div>
-          </v-card-text>
-        </v-card>
-      </v-col>
+            <i class="pi pi-clock stat-icon warning"></i>
+          </div>
+          <div class="stat-note warning">12 bills overdue</div>
+        </template>
+      </Card>
 
-      <v-col cols="12" md="3">
-        <v-card>
-          <v-card-text>
-            <div class="d-flex justify-space-between align-center">
-              <div>
-                <div class="text-h4 font-weight-bold text-success">$89,750</div>
-                <div class="text-subtitle-2 text-medium-emphasis">Paid This Month</div>
-              </div>
-              <v-icon size="40" color="success">mdi-check-circle</v-icon>
+      <Card class="stat-card">
+        <template #content>
+          <div class="stat-content">
+            <div class="stat-info">
+              <div class="stat-value success">$89,750</div>
+              <div class="stat-label">Paid This Month</div>
             </div>
-            <div class="text-caption mt-3 text-success">+15% vs last month</div>
-          </v-card-text>
-        </v-card>
-      </v-col>
+            <i class="pi pi-check-circle stat-icon success"></i>
+          </div>
+          <div class="stat-note success">+15% vs last month</div>
+        </template>
+      </Card>
 
-      <v-col cols="12" md="3">
-        <v-card>
-          <v-card-text>
-            <div class="d-flex justify-space-between align-center">
-              <div>
-                <div class="text-h4 font-weight-bold text-info">156</div>
-                <div class="text-subtitle-2 text-medium-emphasis">Active Vendors</div>
-              </div>
-              <v-icon size="40" color="info">mdi-account-group</v-icon>
+      <Card class="stat-card">
+        <template #content>
+          <div class="stat-content">
+            <div class="stat-info">
+              <div class="stat-value info">156</div>
+              <div class="stat-label">Active Vendors</div>
             </div>
-            <div class="text-caption mt-3">8 new this month</div>
-          </v-card-text>
-        </v-card>
-      </v-col>
-    </v-row>
+            <i class="pi pi-users stat-icon info"></i>
+          </div>
+          <div class="stat-note">8 new this month</div>
+        </template>
+      </Card>
+    </div>
 
     <!-- Quick Actions & Recent Bills -->
-    <v-row>
+    <div class="content-grid">
       <!-- Quick Actions -->
-      <v-col cols="12" md="4">
-        <v-card>
-          <v-card-title>Quick Actions</v-card-title>
-          <v-card-text>
-            <v-list>
-              <v-list-item prepend-icon="mdi-plus" title="Create New Bill" to="/ap/bills/new" />
-              <v-list-item prepend-icon="mdi-account-plus" title="Add Vendor" to="/ap/vendors/new" />
-              <v-list-item prepend-icon="mdi-cash" title="Record Payment" to="/ap/payments/new" />
-              <v-list-item prepend-icon="mdi-file-import" title="Import Bills" to="/ap/import" />
-              <v-list-item prepend-icon="mdi-chart-line" title="AP Reports" to="/ap/reports" />
-            </v-list>
-          </v-card-text>
-        </v-card>
-      </v-col>
+      <Card class="quick-actions-card">
+        <template #title>Quick Actions</template>
+        <template #content>
+          <div class="quick-actions">
+            <Button label="Create New Bill" icon="pi pi-plus" class="p-button-outlined action-btn" @click="$router.push('/ap/create-bill')" />
+            <Button label="Add Vendor" icon="pi pi-user-plus" class="p-button-outlined action-btn" @click="$router.push('/ap/add-vendor')" />
+            <Button label="Record Payment" icon="pi pi-dollar" class="p-button-outlined action-btn" @click="$router.push('/ap/record-payment')" />
+            <Button label="Import Bills" icon="pi pi-upload" class="p-button-outlined action-btn" @click="$router.push('/ap/import-bills')" />
+            <Button label="AP Reports" icon="pi pi-chart-line" class="p-button-outlined action-btn" @click="$router.push('/ap/reports')" />
+          </div>
+        </template>
+      </Card>
 
       <!-- Recent Bills -->
-      <v-col cols="12" md="8">
-        <v-card>
-          <v-card-title class="d-flex justify-space-between align-center">
+      <Card class="recent-bills-card">
+        <template #title>
+          <div class="card-header">
             <span>Recent Bills</span>
-            <v-btn variant="text" to="/ap/bills">View All</v-btn>
-          </v-card-title>
-          <v-card-text>
-            <v-data-table
-              :items="recentBills"
-              :headers="billHeaders"
-              hide-default-footer
-              :items-per-page="5"
-            >
-              <template #item.vendor="{ item }">
-                <div class="font-weight-medium">{{ item.vendor }}</div>
+            <Button label="View All" class="p-button-text" />
+          </div>
+        </template>
+        <template #content>
+          <DataTable :value="recentBills" responsiveLayout="scroll">
+            <Column field="billNumber" header="Bill #"></Column>
+            <Column field="vendor" header="Vendor"></Column>
+            <Column field="amount" header="Amount">
+              <template #body="slotProps">
+                <span class="font-bold">${{ slotProps.data.amount.toLocaleString() }}</span>
               </template>
-              
-              <template #item.amount="{ item }">
-                <div class="font-weight-bold">${{ item.amount.toLocaleString() }}</div>
+            </Column>
+            <Column field="dueDate" header="Due Date">
+              <template #body="slotProps">
+                <span :class="getDueDateClass(slotProps.data.dueDate)">
+                  {{ formatDate(slotProps.data.dueDate) }}
+                </span>
               </template>
-              
-              <template #item.status="{ item }">
-                <v-chip
-                  :color="getStatusColor(item.status)"
-                  size="small"
-                  variant="tonal"
-                >
-                  {{ item.status }}
-                </v-chip>
+            </Column>
+            <Column field="status" header="Status">
+              <template #body="slotProps">
+                <Tag :value="slotProps.data.status" :severity="getStatusSeverity(slotProps.data.status)" />
               </template>
-              
-              <template #item.dueDate="{ item }">
-                <div :class="getDueDateClass(item.dueDate)">
-                  {{ formatDate(item.dueDate) }}
-                </div>
-              </template>
-            </v-data-table>
-          </v-card-text>
-        </v-card>
-      </v-col>
-    </v-row>
+            </Column>
+          </DataTable>
+        </template>
+      </Card>
+    </div>
 
     <!-- Aging Report -->
-    <v-row class="mt-6">
-      <v-col>
-        <v-card>
-          <v-card-title>Aging Report</v-card-title>
-          <v-card-text>
-            <v-row>
-              <v-col cols="12" md="2" v-for="aging in agingData" :key="aging.period">
-                <div class="text-center">
-                  <div class="text-h5 font-weight-bold" :class="aging.color">
-                    ${{ aging.amount.toLocaleString() }}
-                  </div>
-                  <div class="text-caption">{{ aging.period }}</div>
-                  <div class="text-caption text-medium-emphasis">{{ aging.count }} bills</div>
-                </div>
-              </v-col>
-            </v-row>
-          </v-card-text>
-        </v-card>
-      </v-col>
-    </v-row>
-  </v-container>
+    <Card class="aging-report">
+      <template #title>Aging Report</template>
+      <template #content>
+        <div class="aging-grid">
+          <div v-for="aging in agingData" :key="aging.period" class="aging-item">
+            <div class="aging-amount" :class="aging.color">
+              ${{ aging.amount.toLocaleString() }}
+            </div>
+            <div class="aging-period">{{ aging.period }}</div>
+            <div class="aging-count">{{ aging.count }} bills</div>
+          </div>
+        </div>
+      </template>
+    </Card>
+  </div>
 </template>
 
 <script setup>
 import { ref } from 'vue'
-
-const billHeaders = [
-  { title: 'Bill #', key: 'billNumber' },
-  { title: 'Vendor', key: 'vendor' },
-  { title: 'Amount', key: 'amount' },
-  { title: 'Due Date', key: 'dueDate' },
-  { title: 'Status', key: 'status' }
-]
 
 const recentBills = ref([
   {
@@ -220,20 +183,20 @@ const recentBills = ref([
 ])
 
 const agingData = ref([
-  { period: 'Current', amount: 45200, count: 23, color: 'text-success' },
-  { period: '1-30 Days', amount: 28500, count: 15, color: 'text-info' },
-  { period: '31-60 Days', amount: 18200, count: 8, color: 'text-warning' },
-  { period: '61-90 Days', amount: 12800, count: 5, color: 'text-error' },
-  { period: '90+ Days', amount: 8900, count: 3, color: 'text-error' }
+  { period: 'Current', amount: 45200, count: 23, color: 'success' },
+  { period: '1-30 Days', amount: 28500, count: 15, color: 'info' },
+  { period: '31-60 Days', amount: 18200, count: 8, color: 'warning' },
+  { period: '61-90 Days', amount: 12800, count: 5, color: 'error' },
+  { period: '90+ Days', amount: 8900, count: 3, color: 'error' }
 ])
 
-const getStatusColor = (status) => {
+const getStatusSeverity = (status) => {
   switch (status) {
     case 'Paid': return 'success'
     case 'Approved': return 'info'
     case 'Pending': return 'warning'
-    case 'Overdue': return 'error'
-    default: return 'grey'
+    case 'Overdue': return 'danger'
+    default: return null
   }
 }
 
@@ -241,8 +204,8 @@ const getDueDateClass = (dueDate) => {
   const today = new Date()
   const due = new Date(dueDate)
   
-  if (due < today) return 'text-error font-weight-bold'
-  if (due <= new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)) return 'text-warning'
+  if (due < today) return 'text-red-500 font-bold'
+  if (due <= new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)) return 'text-orange-500'
   return ''
 }
 
@@ -250,3 +213,157 @@ const formatDate = (date) => {
   return new Date(date).toLocaleDateString()
 }
 </script>
+
+<style scoped>
+.ap-dashboard {
+  padding: 0;
+}
+
+.dashboard-header {
+  margin-bottom: 2rem;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.header-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.header-icon {
+  font-size: 3rem;
+  color: #007bff;
+}
+
+.header-info h1 {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.header-info p {
+  margin: 0;
+  color: #6c757d;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  border-radius: 8px;
+}
+
+.stat-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.stat-value {
+  font-size: 1.75rem;
+  font-weight: bold;
+  margin-bottom: 0.25rem;
+}
+
+.stat-label {
+  color: #6c757d;
+  font-size: 0.875rem;
+}
+
+.stat-icon {
+  font-size: 2.5rem;
+}
+
+.stat-note {
+  font-size: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.error { color: #dc3545; }
+.warning { color: #ffc107; }
+.success { color: #28a745; }
+.info { color: #17a2b8; }
+
+.content-grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.quick-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.action-btn {
+  justify-content: flex-start;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.aging-report {
+  margin-top: 2rem;
+}
+
+.aging-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  text-align: center;
+}
+
+.aging-amount {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 0.25rem;
+}
+
+.aging-period {
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+}
+
+.aging-count {
+  font-size: 0.75rem;
+  color: #6c757d;
+}
+
+@media (max-width: 768px) {
+  .header-content {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .content-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .quick-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+}
+</style>

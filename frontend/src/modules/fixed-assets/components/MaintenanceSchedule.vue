@@ -1,100 +1,118 @@
 <template>
   <ResponsiveContainer>
-    <v-card>
-      <v-card-title class="d-flex align-center">
-        <h2>Maintenance Schedule</h2>
-        <v-spacer></v-spacer>
-        <v-btn color="primary" @click="openMaintenanceDialog">
-          <v-icon left>mdi-plus</v-icon>
-          Schedule Maintenance
-        </v-btn>
-      </v-card-title>
-
-      <v-card-text>
-        <v-row class="mb-4">
-          <v-col cols="12" md="4">
-            <v-select
-              v-model="filterStatus"
-              :items="maintenanceStatuses"
-              label="Status Filter"
-              clearable
-            ></v-select>
-          </v-col>
-          <v-col cols="12" md="4">
-            <v-select
-              v-model="filterType"
-              :items="maintenanceTypes"
-              label="Type Filter"
-              clearable
-            ></v-select>
-          </v-col>
-          <v-col cols="12" md="4">
-            <v-btn @click="loadUpcomingMaintenance" variant="outlined" block>
-              Show Upcoming (30 days)
-            </v-btn>
-          </v-col>
-        </v-row>
-
-        <v-data-table
-          :headers="headers"
-          :items="filteredMaintenanceRecords"
-          :loading="loading"
-          :items-per-page="10"
-        >
-          <template v-slot:item.asset_name="{ item }">
-            {{ getAssetName(item.asset_id) }}
-          </template>
-          
-          <template v-slot:item.scheduled_date="{ item }">
-            {{ formatDate(item.scheduled_date) }}
-          </template>
-          
-          <template v-slot:item.status="{ item }">
-            <v-chip :color="getStatusColor(item.status)" small>
-              {{ item.status.replace('_', ' ').toUpperCase() }}
-            </v-chip>
-          </template>
-          
-          <template v-slot:item.estimated_cost="{ item }">
-            {{ item.estimated_cost ? formatCurrency(item.estimated_cost) : '-' }}
-          </template>
-          
-          <template v-slot:item.actual_cost="{ item }">
-            {{ item.actual_cost ? formatCurrency(item.actual_cost) : '-' }}
-          </template>
-          
-          <template v-slot:item.actions="{ item }">
-            <v-btn icon small @click="openMaintenanceDialog(item)">
-              <v-icon small>mdi-pencil</v-icon>
-            </v-btn>
-            <v-btn 
-              v-if="item.status === 'scheduled'"
-              icon 
-              small 
-              color="success"
-              @click="markCompleted(item)"
-            >
-              <v-icon small>mdi-check</v-icon>
-            </v-btn>
-          </template>
-        </v-data-table>
-      </v-card-text>
-    </v-card>
-
-    <v-dialog v-model="maintenanceDialog" max-width="600px">
-      <v-card>
-        <v-card-title>{{ editMode ? 'Edit Maintenance' : 'Schedule Maintenance' }}</v-card-title>
-        <v-card-text>
-          <MaintenanceForm 
-            :maintenance="selectedMaintenance"
-            :assets="assets"
-            :loading="formLoading"
-            @submit="handleMaintenanceSave"
-            @cancel="maintenanceDialog = false"
+    <Card>
+      <template #header>
+        <div class="flex justify-content-between align-items-center p-4">
+          <h2 class="m-0">Maintenance Schedule</h2>
+          <Button 
+            label="Schedule Maintenance" 
+            icon="pi pi-plus" 
+            @click="openMaintenanceDialog"
           />
-        </v-card-text>
-      </v-card>
-    </v-dialog>
+        </div>
+      </template>
+      
+      <template #content>
+        <div class="grid mb-4">
+          <div class="col-12 md:col-4">
+            <Dropdown
+              v-model="filterStatus"
+              :options="maintenanceStatuses"
+              placeholder="Status Filter"
+              :showClear="true"
+            />
+          </div>
+          <div class="col-12 md:col-4">
+            <Dropdown
+              v-model="filterType"
+              :options="maintenanceTypes"
+              placeholder="Type Filter"
+              :showClear="true"
+            />
+          </div>
+          <div class="col-12 md:col-4">
+            <Button 
+              label="Show Upcoming (30 days)" 
+              @click="loadUpcomingMaintenance" 
+              outlined 
+              class="w-full"
+            />
+          </div>
+        </div>
+
+        <DataTable
+          :value="filteredMaintenanceRecords"
+          :loading="loading"
+          :paginator="true"
+          :rows="10"
+          responsiveLayout="scroll"
+        >
+          <Column field="asset_name" header="Asset">
+            <template #body="{ data }">
+              {{ getAssetName(data.asset_id) }}
+            </template>
+          </Column>
+          
+          <Column field="maintenance_type" header="Type"></Column>
+          <Column field="description" header="Description"></Column>
+          
+          <Column field="scheduled_date" header="Scheduled Date">
+            <template #body="{ data }">
+              {{ formatDate(data.scheduled_date) }}
+            </template>
+          </Column>
+          
+          <Column field="status" header="Status">
+            <template #body="{ data }">
+              <Tag :value="data.status.replace('_', ' ').toUpperCase()" :severity="getStatusSeverity(data.status)" />
+            </template>
+          </Column>
+          
+          <Column field="estimated_cost" header="Estimated Cost">
+            <template #body="{ data }">
+              {{ data.estimated_cost ? formatCurrency(data.estimated_cost) : '-' }}
+            </template>
+          </Column>
+          
+          <Column field="actual_cost" header="Actual Cost">
+            <template #body="{ data }">
+              {{ data.actual_cost ? formatCurrency(data.actual_cost) : '-' }}
+            </template>
+          </Column>
+          
+          <Column header="Actions">
+            <template #body="{ data }">
+              <Button 
+                icon="pi pi-pencil" 
+                class="p-button-text p-button-sm mr-2" 
+                @click="openMaintenanceDialog(data)"
+              />
+              <Button 
+                v-if="data.status === 'scheduled'"
+                icon="pi pi-check" 
+                class="p-button-text p-button-sm p-button-success" 
+                @click="markCompleted(data)"
+              />
+            </template>
+          </Column>
+        </DataTable>
+      </template>
+    </Card>
+
+    <Dialog 
+      v-model:visible="maintenanceDialog" 
+      :header="editMode ? 'Edit Maintenance' : 'Schedule Maintenance'"
+      :style="{ width: '600px' }"
+      :modal="true"
+    >
+      <MaintenanceForm 
+        :maintenance="selectedMaintenance"
+        :assets="assets"
+        :loading="formLoading"
+        @submit="handleMaintenanceSave"
+        @cancel="maintenanceDialog = false"
+      />
+    </Dialog>
   </ResponsiveContainer>
 </template>
 
@@ -110,39 +128,41 @@ export default {
     MaintenanceForm
   },
   
-  data: () => ({
-    loading: false,
-    formLoading: false,
-    maintenanceDialog: false,
-    editMode: false,
-    selectedMaintenance: null,
-    maintenanceRecords: [],
-    assets: [],
-    filterStatus: null,
-    filterType: null,
-    maintenanceStatuses: [
-      'scheduled',
-      'in_progress',
-      'completed',
-      'cancelled'
-    ],
-    maintenanceTypes: [
-      'Preventive',
-      'Corrective',
-      'Emergency',
-      'Routine'
-    ],
-    headers: [
-      { title: 'Asset', key: 'asset_name' },
-      { title: 'Type', key: 'maintenance_type' },
-      { title: 'Description', key: 'description' },
-      { title: 'Scheduled Date', key: 'scheduled_date' },
-      { title: 'Status', key: 'status' },
-      { title: 'Estimated Cost', key: 'estimated_cost' },
-      { title: 'Actual Cost', key: 'actual_cost' },
-      { title: 'Actions', key: 'actions', sortable: false }
-    ]
-  }),
+  data() {
+    return {
+      loading: false,
+      formLoading: false,
+      maintenanceDialog: false,
+      editMode: false,
+      selectedMaintenance: null,
+      maintenanceRecords: [],
+      assets: [],
+      filterStatus: null,
+      filterType: null,
+      maintenanceStatuses: [
+        'scheduled',
+        'in_progress',
+        'completed',
+        'cancelled'
+      ],
+      maintenanceTypes: [
+        'Preventive',
+        'Corrective',
+        'Emergency',
+        'Routine'
+      ],
+      headers: [
+        { title: 'Asset', key: 'asset_name' },
+        { title: 'Type', key: 'maintenance_type' },
+        { title: 'Description', key: 'description' },
+        { title: 'Scheduled Date', key: 'scheduled_date' },
+        { title: 'Status', key: 'status' },
+        { title: 'Estimated Cost', key: 'estimated_cost' },
+        { title: 'Actual Cost', key: 'actual_cost' },
+        { title: 'Actions', key: 'actions', sortable: false }
+      ]
+    }
+  },
   
   computed: {
     filteredMaintenanceRecords() {
@@ -160,12 +180,43 @@ export default {
     }
   },
   
-  async mounted() {
-    await this.loadMaintenanceRecords()
-    await this.loadAssets()
+  mounted() {
+    console.log('MaintenanceSchedule mounted')
+    this.loadMaintenanceRecords()
+    this.loadAssets()
   },
   
   methods: {
+    loadMockData() {
+      this.assets = [
+        { id: 1, name: 'Office Computer' },
+        { id: 2, name: 'Printer' },
+        { id: 3, name: 'Company Vehicle' }
+      ]
+      
+      this.maintenanceRecords = [
+        {
+          id: 1,
+          asset_id: 1,
+          maintenance_type: 'Preventive',
+          description: 'Regular system maintenance',
+          scheduled_date: '2024-02-15',
+          status: 'scheduled',
+          estimated_cost: 150,
+          actual_cost: null
+        },
+        {
+          id: 2,
+          asset_id: 3,
+          maintenance_type: 'Corrective',
+          description: 'Oil change and inspection',
+          scheduled_date: '2024-01-20',
+          status: 'completed',
+          estimated_cost: 200,
+          actual_cost: 185
+        }
+      ]
+    },
     async loadMaintenanceRecords() {
       try {
         this.loading = true
@@ -246,14 +297,14 @@ export default {
       return asset ? asset.name : 'Unknown Asset'
     },
     
-    getStatusColor(status) {
-      const colors = {
+    getStatusSeverity(status) {
+      const severities = {
         scheduled: 'info',
         in_progress: 'warning',
         completed: 'success',
-        cancelled: 'error'
+        cancelled: 'danger'
       }
-      return colors[status] || 'grey'
+      return severities[status] || 'secondary'
     },
     
     formatCurrency(amount) {

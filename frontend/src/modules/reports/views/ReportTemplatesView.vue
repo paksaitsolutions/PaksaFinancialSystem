@@ -60,7 +60,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { useToast } from 'vue/usetoast';
+import { useToast } from 'primevue/usetoast';
 import { useEnhancedReportsStore } from '@/stores/enhancedReports';
 import enhancedReportsService from '@/services/enhancedReportsService';
 

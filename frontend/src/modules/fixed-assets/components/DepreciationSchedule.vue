@@ -1,114 +1,123 @@
 <template>
   <ResponsiveContainer>
-    <v-card>
-      <v-card-title>Depreciation Schedule</v-card-title>
+    <Card>
+      <template #header>
+        <h2 class="p-4 m-0">Depreciation Schedule</h2>
+      </template>
       
-      <v-card-text>
-        <v-row class="mb-4">
-          <v-col cols="12" md="4">
-            <v-select
+      <template #content>
+        <div class="grid mb-4">
+          <div class="col-12 md:col-4">
+            <Dropdown
               v-model="selectedAsset"
-              :items="assets"
-              item-title="name"
-              item-value="id"
-              label="Select Asset"
-              @update:modelValue="loadDepreciationSchedule"
-            ></v-select>
-          </v-col>
+              :options="assets"
+              optionLabel="name"
+              optionValue="id"
+              placeholder="Select Asset"
+              @change="loadDepreciationSchedule"
+              class="w-full"
+            />
+          </div>
           
-          <v-col cols="12" md="4">
-            <v-text-field
+          <div class="col-12 md:col-4">
+            <Calendar
               v-model="periodDate"
-              label="Period Date"
-              type="date"
-            ></v-text-field>
-          </v-col>
+              placeholder="Period Date"
+              dateFormat="yy-mm-dd"
+              class="w-full"
+            />
+          </div>
           
-          <v-col cols="12" md="4">
-            <v-btn 
-              color="primary" 
+          <div class="col-12 md:col-4">
+            <Button 
+              label="Calculate Depreciation"
               @click="calculateDepreciation" 
               :loading="calculating"
-              block
-            >
-              Calculate Depreciation
-            </v-btn>
-          </v-col>
-        </v-row>
+              class="w-full"
+            />
+          </div>
+        </div>
         
         <div v-if="selectedAssetData">
           <!-- Asset Summary -->
-          <v-row class="mb-4">
-            <v-col cols="12" md="3">
-              <v-card variant="outlined">
-                <v-card-text class="text-center">
-                  <div class="text-h6">{{ formatCurrency(selectedAssetData.purchase_cost) }}</div>
-                  <div class="text-caption">Purchase Cost</div>
-                </v-card-text>
-              </v-card>
-            </v-col>
+          <div class="grid mb-4">
+            <div class="col-12 md:col-3">
+              <Card class="text-center">
+                <template #content>
+                  <div class="text-2xl font-semibold">{{ formatCurrency(selectedAssetData.purchase_cost) }}</div>
+                  <div class="text-sm text-500">Purchase Cost</div>
+                </template>
+              </Card>
+            </div>
             
-            <v-col cols="12" md="3">
-              <v-card variant="outlined">
-                <v-card-text class="text-center">
-                  <div class="text-h6">{{ formatCurrency(selectedAssetData.accumulated_depreciation) }}</div>
-                  <div class="text-caption">Accumulated Depreciation</div>
-                </v-card-text>
-              </v-card>
-            </v-col>
+            <div class="col-12 md:col-3">
+              <Card class="text-center">
+                <template #content>
+                  <div class="text-2xl font-semibold">{{ formatCurrency(selectedAssetData.accumulated_depreciation) }}</div>
+                  <div class="text-sm text-500">Accumulated Depreciation</div>
+                </template>
+              </Card>
+            </div>
             
-            <v-col cols="12" md="3">
-              <v-card variant="outlined">
-                <v-card-text class="text-center">
-                  <div class="text-h6">{{ formatCurrency(bookValue) }}</div>
-                  <div class="text-caption">Book Value</div>
-                </v-card-text>
-              </v-card>
-            </v-col>
+            <div class="col-12 md:col-3">
+              <Card class="text-center">
+                <template #content>
+                  <div class="text-2xl font-semibold">{{ formatCurrency(bookValue) }}</div>
+                  <div class="text-sm text-500">Book Value</div>
+                </template>
+              </Card>
+            </div>
             
-            <v-col cols="12" md="3">
-              <v-card variant="outlined">
-                <v-card-text class="text-center">
-                  <div class="text-h6">{{ selectedAssetData.useful_life_years }} years</div>
-                  <div class="text-caption">Useful Life</div>
-                </v-card-text>
-              </v-card>
-            </v-col>
-          </v-row>
+            <div class="col-12 md:col-3">
+              <Card class="text-center">
+                <template #content>
+                  <div class="text-2xl font-semibold">{{ selectedAssetData.useful_life_years }} years</div>
+                  <div class="text-sm text-500">Useful Life</div>
+                </template>
+              </Card>
+            </div>
+          </div>
           
           <!-- Depreciation Method Info -->
-          <v-alert type="info" class="mb-4">
+          <Message severity="info" class="mb-4">
             <strong>Depreciation Method:</strong> {{ formatDepreciationMethod(selectedAssetData.depreciation_method) }}
             <br>
             <strong>Monthly Depreciation:</strong> {{ formatCurrency(monthlyDepreciation) }}
-          </v-alert>
+          </Message>
         </div>
         
         <!-- Depreciation Entries Table -->
-        <v-data-table
-          :headers="depreciationHeaders"
-          :items="depreciationEntries"
+        <DataTable
+          :value="depreciationEntries"
           :loading="loading"
-          class="elevation-1"
+          responsiveLayout="scroll"
         >
-          <template v-slot:item.period_date="{ item }">
-            {{ formatDate(item.period_date) }}
-          </template>
+          <Column field="period_date" header="Period Date">
+            <template #body="{ data }">
+              {{ formatDate(data.period_date) }}
+            </template>
+          </Column>
           
-          <template v-slot:item.depreciation_amount="{ item }">
-            {{ formatCurrency(item.depreciation_amount) }}
-          </template>
+          <Column field="depreciation_amount" header="Depreciation Amount">
+            <template #body="{ data }">
+              {{ formatCurrency(data.depreciation_amount) }}
+            </template>
+          </Column>
           
-          <template v-slot:item.accumulated_depreciation="{ item }">
-            {{ formatCurrency(item.accumulated_depreciation) }}
-          </template>
+          <Column field="accumulated_depreciation" header="Accumulated Depreciation">
+            <template #body="{ data }">
+              {{ formatCurrency(data.accumulated_depreciation) }}
+            </template>
+          </Column>
           
-          <template v-slot:item.book_value="{ item }">
-            {{ formatCurrency(item.book_value) }}
-          </template>
-        </v-data-table>
-      </v-card-text>
-    </v-card>
+          <Column field="book_value" header="Book Value">
+            <template #body="{ data }">
+              {{ formatCurrency(data.book_value) }}
+            </template>
+          </Column>
+        </DataTable>
+      </template>
+    </Card>
   </ResponsiveContainer>
 </template>
 
@@ -120,21 +129,23 @@ export default {
   name: 'DepreciationSchedule',
   components: { ResponsiveContainer },
   
-  data: () => ({
-    loading: false,
-    calculating: false,
-    assets: [],
-    selectedAsset: null,
-    selectedAssetData: null,
-    periodDate: new Date().toISOString().substr(0, 10),
-    depreciationEntries: [],
-    depreciationHeaders: [
-      { title: 'Period Date', key: 'period_date' },
-      { title: 'Depreciation Amount', key: 'depreciation_amount' },
-      { title: 'Accumulated Depreciation', key: 'accumulated_depreciation' },
-      { title: 'Book Value', key: 'book_value' }
-    ]
-  }),
+  data() {
+    return {
+      loading: false,
+      calculating: false,
+      assets: [],
+      selectedAsset: null,
+      selectedAssetData: null,
+      periodDate: new Date().toISOString().substr(0, 10),
+      depreciationEntries: [],
+      depreciationHeaders: [
+        { title: 'Period Date', key: 'period_date' },
+        { title: 'Depreciation Amount', key: 'depreciation_amount' },
+        { title: 'Accumulated Depreciation', key: 'accumulated_depreciation' },
+        { title: 'Book Value', key: 'book_value' }
+      ]
+    }
+  },
   
   computed: {
     bookValue() {
@@ -149,11 +160,20 @@ export default {
     }
   },
   
-  async mounted() {
-    await this.loadAssets()
+  mounted() {
+    console.log('DepreciationSchedule mounted')
+    this.loadAssets()
   },
   
   methods: {
+    loadMockData() {
+      this.assets = [
+        { id: 1, name: 'Office Computer', purchase_cost: 1500, accumulated_depreciation: 300 },
+        { id: 2, name: 'Office Printer', purchase_cost: 500, accumulated_depreciation: 100 },
+        { id: 3, name: 'Company Car', purchase_cost: 25000, accumulated_depreciation: 5000 }
+      ]
+    },
+    
     async loadAssets() {
       try {
         this.loading = true

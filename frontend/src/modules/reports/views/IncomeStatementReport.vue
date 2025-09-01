@@ -2,7 +2,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useStore } from 'vuex';
-import { useToast } from 'vue/usetoast';
+import { useToast } from 'primevue/usetoast';
 import enhancedReportsService from '@/services/enhancedReportsService';
 import { formatCurrency, formatPercentage, formatDate } from '@/utils/formatters';
 import ReportHeader from '@/components/reports/ReportHeader.vue';

@@ -2,7 +2,7 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
-from ...core.security import get_current_user
+from ...core.deps import get_current_user
 from ...models.user import User
 from ...core.database import SessionLocal
 from ..extended_financials.procurement.models.purchase_requisition import (

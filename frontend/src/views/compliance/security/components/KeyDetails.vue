@@ -137,7 +137,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useToast } from 'vue/usetoast';
+import { useToast } from 'primevue/usetoast';
 import { format, isBefore, addDays, parseISO } from 'date-fns';
 
 const props = defineProps({

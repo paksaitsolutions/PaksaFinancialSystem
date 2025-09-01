@@ -1,130 +1,142 @@
 <template>
-  <v-form ref="form" v-model="valid">
-    <v-row>
-      <v-col cols="12" md="6">
-        <v-text-field
+  <form @submit.prevent="submit">
+    <div class="grid">
+      <div class="col-12 md:col-6">
+        <InputText
           v-model="assetData.asset_number"
-          label="Asset Number"
-          :rules="[v => !!v || 'Asset number is required']"
-          required
-        ></v-text-field>
-      </v-col>
+          placeholder="Asset Number"
+          :class="{ 'p-invalid': errors.asset_number }"
+          class="w-full"
+        />
+        <small v-if="errors.asset_number" class="p-error">{{ errors.asset_number }}</small>
+      </div>
       
-      <v-col cols="12" md="6">
-        <v-text-field
+      <div class="col-12 md:col-6">
+        <InputText
           v-model="assetData.name"
-          label="Asset Name"
-          :rules="[v => !!v || 'Name is required']"
-          required
-        ></v-text-field>
-      </v-col>
-    </v-row>
+          placeholder="Asset Name"
+          :class="{ 'p-invalid': errors.name }"
+          class="w-full"
+        />
+        <small v-if="errors.name" class="p-error">{{ errors.name }}</small>
+      </div>
+    </div>
     
-    <v-row>
-      <v-col cols="12" md="6">
-        <v-select
+    <div class="grid">
+      <div class="col-12 md:col-6">
+        <Dropdown
           v-model="assetData.category"
-          :items="categories"
-          label="Category"
-          :rules="[v => !!v || 'Category is required']"
-          required
-        ></v-select>
-      </v-col>
+          :options="categories"
+          placeholder="Category"
+          :class="{ 'p-invalid': errors.category }"
+          class="w-full"
+        />
+        <small v-if="errors.category" class="p-error">{{ errors.category }}</small>
+      </div>
       
-      <v-col cols="12" md="6">
-        <v-text-field
+      <div class="col-12 md:col-6">
+        <InputText
           v-model="assetData.location"
-          label="Location"
-        ></v-text-field>
-      </v-col>
-    </v-row>
+          placeholder="Location"
+          class="w-full"
+        />
+      </div>
+    </div>
     
-    <v-row>
-      <v-col cols="12" md="6">
-        <v-text-field
+    <div class="grid">
+      <div class="col-12 md:col-6">
+        <Calendar
           v-model="assetData.purchase_date"
-          label="Purchase Date"
-          type="date"
-          :rules="[v => !!v || 'Purchase date is required']"
-          required
-        ></v-text-field>
-      </v-col>
+          placeholder="Purchase Date"
+          dateFormat="yy-mm-dd"
+          :class="{ 'p-invalid': errors.purchase_date }"
+          class="w-full"
+        />
+        <small v-if="errors.purchase_date" class="p-error">{{ errors.purchase_date }}</small>
+      </div>
       
-      <v-col cols="12" md="6">
-        <v-text-field
+      <div class="col-12 md:col-6">
+        <InputNumber
           v-model="assetData.purchase_cost"
-          label="Purchase Cost"
-          type="number"
-          prefix="$"
-          :rules="[v => !!v || 'Cost is required', v => v > 0 || 'Cost must be positive']"
-          required
-        ></v-text-field>
-      </v-col>
-    </v-row>
+          placeholder="Purchase Cost"
+          mode="currency"
+          currency="USD"
+          :class="{ 'p-invalid': errors.purchase_cost }"
+          class="w-full"
+        />
+        <small v-if="errors.purchase_cost" class="p-error">{{ errors.purchase_cost }}</small>
+      </div>
+    </div>
     
-    <v-row>
-      <v-col cols="12" md="6">
-        <v-text-field
+    <div class="grid">
+      <div class="col-12 md:col-6">
+        <InputNumber
           v-model="assetData.useful_life_years"
-          label="Useful Life (Years)"
-          type="number"
-          :rules="[v => !!v || 'Useful life is required', v => v > 0 || 'Must be positive']"
-          required
-        ></v-text-field>
-      </v-col>
+          placeholder="Useful Life (Years)"
+          :class="{ 'p-invalid': errors.useful_life_years }"
+          class="w-full"
+        />
+        <small v-if="errors.useful_life_years" class="p-error">{{ errors.useful_life_years }}</small>
+      </div>
       
-      <v-col cols="12" md="6">
-        <v-text-field
+      <div class="col-12 md:col-6">
+        <InputNumber
           v-model="assetData.salvage_value"
-          label="Salvage Value"
-          type="number"
-          prefix="$"
-        ></v-text-field>
-      </v-col>
-    </v-row>
+          placeholder="Salvage Value"
+          mode="currency"
+          currency="USD"
+          class="w-full"
+        />
+      </div>
+    </div>
     
-    <v-row>
-      <v-col cols="12" md="6">
-        <v-select
+    <div class="grid">
+      <div class="col-12 md:col-6">
+        <Dropdown
           v-model="assetData.depreciation_method"
-          :items="depreciationMethods"
-          label="Depreciation Method"
-          required
-        ></v-select>
-      </v-col>
+          :options="depreciationMethods"
+          optionLabel="title"
+          optionValue="value"
+          placeholder="Depreciation Method"
+          class="w-full"
+        />
+      </div>
       
-      <v-col cols="12" md="6">
-        <v-text-field
+      <div class="col-12 md:col-6">
+        <InputText
           v-model="assetData.vendor_name"
-          label="Vendor Name"
-        ></v-text-field>
-      </v-col>
-    </v-row>
+          placeholder="Vendor Name"
+          class="w-full"
+        />
+      </div>
+    </div>
     
-    <v-row>
-      <v-col cols="12">
-        <v-textarea
+    <div class="grid">
+      <div class="col-12">
+        <Textarea
           v-model="assetData.description"
-          label="Description"
+          placeholder="Description"
           rows="3"
-        ></v-textarea>
-      </v-col>
-    </v-row>
+          class="w-full"
+        />
+      </div>
+    </div>
     
-    <v-row>
-      <v-col cols="12" class="d-flex justify-end">
-        <v-btn @click="$emit('cancel')" class="mr-2">Cancel</v-btn>
-        <v-btn 
-          color="primary" 
-          @click="submit" 
-          :disabled="!valid || loading"
-          :loading="loading"
-        >
-          Save Asset
-        </v-btn>
-      </v-col>
-    </v-row>
-  </v-form>
+    <div class="flex justify-content-end mt-4">
+      <Button 
+        label="Cancel" 
+        @click="$emit('cancel')" 
+        class="mr-2" 
+        outlined
+      />
+      <Button 
+        label="Save Asset"
+        type="submit"
+        :disabled="loading"
+        :loading="loading"
+      />
+    </div>
+  </form>
 </template>
 
 <script>
@@ -145,14 +157,14 @@ export default {
   emits: ['submit', 'cancel'],
   
   data: () => ({
-    valid: false,
+    errors: {},
     assetData: {
       asset_number: '',
       name: '',
       description: '',
       category: '',
       location: '',
-      purchase_date: '',
+      purchase_date: null,
       purchase_cost: 0,
       salvage_value: 0,
       useful_life_years: 5,
@@ -187,9 +199,38 @@ export default {
   },
   
   methods: {
-    async submit() {
-      const { valid } = await this.$refs.form.validate()
-      if (valid) {
+    validateForm() {
+      this.errors = {}
+      
+      if (!this.assetData.asset_number) {
+        this.errors.asset_number = 'Asset number is required'
+      }
+      
+      if (!this.assetData.name) {
+        this.errors.name = 'Name is required'
+      }
+      
+      if (!this.assetData.category) {
+        this.errors.category = 'Category is required'
+      }
+      
+      if (!this.assetData.purchase_date) {
+        this.errors.purchase_date = 'Purchase date is required'
+      }
+      
+      if (!this.assetData.purchase_cost || this.assetData.purchase_cost <= 0) {
+        this.errors.purchase_cost = 'Cost is required and must be positive'
+      }
+      
+      if (!this.assetData.useful_life_years || this.assetData.useful_life_years <= 0) {
+        this.errors.useful_life_years = 'Useful life is required and must be positive'
+      }
+      
+      return Object.keys(this.errors).length === 0
+    },
+    
+    submit() {
+      if (this.validateForm()) {
         this.$emit('submit', { ...this.assetData })
       }
     }

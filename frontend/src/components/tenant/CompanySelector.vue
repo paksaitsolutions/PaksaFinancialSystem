@@ -1,41 +1,47 @@
 <template>
-  <v-dialog v-model="dialog" max-width="500px" persistent>
-    <v-card>
-      <v-card-title>Select Company</v-card-title>
-      
-      <v-card-text>
-        <v-list v-if="!loading">
-          <v-list-item
-            v-for="company in availableCompanies"
-            :key="company.id"
-            @click="selectCompany(company.id)"
-          >
-            <template v-slot:prepend>
-              <v-avatar v-if="company.logo">
-                <v-img :src="company.logo"></v-img>
-              </v-avatar>
-              <v-avatar v-else color="primary">
-                {{ company.name.charAt(0) }}
-              </v-avatar>
-            </template>
-            
-            <v-list-item-title>{{ company.name }}</v-list-item-title>
-            <v-list-item-subtitle>{{ company.email }}</v-list-item-subtitle>
-            
-            <template v-slot:append>
-              <v-chip :color="company.status === 'active' ? 'success' : 'warning'" small>
-                {{ company.status }}
-              </v-chip>
-            </template>
-          </v-list-item>
-        </v-list>
+  <Dialog v-model:visible="dialog" :style="{ width: '500px' }" :modal="true" :closable="false">
+    <template #header>
+      <h3>Select Company</h3>
+    </template>
+    
+    <div v-if="!loading">
+      <div 
+        v-for="company in availableCompanies"
+        :key="company.id"
+        class="flex align-items-center p-3 hover:surface-100 cursor-pointer border-round transition-colors transition-duration-150"
+        @click="selectCompany(company.id)"
+      >
+        <Avatar 
+          v-if="company.logo" 
+          :image="company.logo" 
+          size="large"
+          shape="circle"
+          class="mr-3"
+        />
+        <Avatar 
+          v-else 
+          :label="company.name.charAt(0)" 
+          size="large"
+          shape="circle"
+          class="mr-3 bg-primary"
+        />
         
-        <div v-else class="text-center py-4">
-          <v-progress-circular indeterminate></v-progress-circular>
+        <div class="flex flex-column flex-1">
+          <span class="font-medium">{{ company.name }}</span>
+          <span class="text-color-secondary text-sm">{{ company.email }}</span>
         </div>
-      </v-card-text>
-    </v-card>
-  </v-dialog>
+        
+        <Tag 
+          :value="company.status" 
+          :severity="company.status === 'active' ? 'success' : 'warning'"
+        />
+      </div>
+    </div>
+    
+    <div v-else class="text-center p-4">
+      <ProgressSpinner />
+    </div>
+  </Dialog>
 </template>
 
 <script>

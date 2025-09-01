@@ -1,7 +1,7 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse, type AxiosError } from 'axios';
 import { useAuthStore } from '@/stores/auth';
 import { API_CONFIG, HTTP_STATUS } from '@/constants';
-import { useNotification } from '@/composables/useNotification';
+import { useNotifications } from '@/composables/useNotifications';
 
 type RequestConfig = AxiosRequestConfig & {
   /**
@@ -69,7 +69,7 @@ function createApiClient(baseURL: string): AxiosInstance {
     (response: AxiosResponse) => {
       const config = response.config as RequestConfig;
       const { showSuccess, successMessage } = config;
-      const { showSuccess: showSuccessNotification } = useNotification();
+      const { showSuccess: showSuccessNotification } = useNotifications();
       
       // Show success message if enabled
       if (showSuccess) {
@@ -82,7 +82,7 @@ function createApiClient(baseURL: string): AxiosInstance {
     async (error: AxiosError) => {
       const config = error.config as RequestConfig;
       const { showError = true, errorMessage } = config || {};
-      const { showError: showErrorNotification } = useNotification();
+      const { showError: showErrorNotification } = useNotifications();
       const authStore = useAuthStore();
       
       // Default error message

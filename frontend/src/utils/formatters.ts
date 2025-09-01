@@ -27,6 +27,11 @@ export const formatDate = (date: Date | string, format: string = 'PPpp'): string
   return dateObj.toLocaleDateString();
 };
 
+export const formatDateTime = (date: Date | string): string => {
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  return dateObj.toLocaleString();
+};
+
 export const formatNumber = (value: number, decimals: number = 2): string => {
   return new Intl.NumberFormat('en-US', {
     minimumFractionDigits: decimals,

@@ -1,12 +1,19 @@
 import axios from 'axios'
+import { useAuthStore } from '@/stores/auth'
 
-// Set the base URL for API requests
-axios.defaults.baseURL = 'http://localhost:8000'
+// Create axios instance
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000',
+  timeout: 5000,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+})
 
-// Add request interceptor to include auth token
-axios.interceptors.request.use(
+// Request interceptor to add auth token
+api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token')
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token')
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -17,25 +24,17 @@ axios.interceptors.request.use(
   }
 )
 
-// Add response interceptor to handle auth errors
-axios.interceptors.response.use(
+// Response interceptor to handle auth errors
+api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Clear auth data and redirect to login
-      localStorage.removeItem('auth_token')
-      localStorage.removeItem('refresh_token')
-      localStorage.removeItem('user')
-      sessionStorage.removeItem('auth_token')
-      sessionStorage.removeItem('refresh_token')
-      sessionStorage.removeItem('user')
-      
-      if (window.location.pathname !== '/auth/login') {
-        window.location.href = '/auth/login'
-      }
+      const authStore = useAuthStore()
+      authStore.logout()
+      window.location.href = '/auth/login'
     }
     return Promise.reject(error)
   }
 )
 
-export default axios
+export default api
