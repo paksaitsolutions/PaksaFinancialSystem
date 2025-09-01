@@ -1,35 +1,29 @@
-<<<<<<< HEAD
 """
 Accounts Receivable models for tracking customer invoices and payments.
 """
 from datetime import date, datetime
 from decimal import Decimal
-from enum import Enum, auto
-from typing import List, Optional, Dict, Any
+from enum import Enum
+from typing import List, Optional
 from uuid import UUID, uuid4
 
 from sqlalchemy import (
-    Boolean, 
-    CheckConstraint, 
-    Column, 
-    Date, 
-    DateTime, 
-    Enum as SQLEnum, 
-    ForeignKey, 
-    Integer,
-    Numeric, 
-    String, 
+    Boolean,
+    CheckConstraint,
+    Column,
+    Date,
+    DateTime,
+    Enum as SQLEnum,
+    ForeignKey,
+    Numeric,
+    String,
     Text,
-    UniqueConstraint,
     func,
-    and_,
-    or_,
-    select,
 )
-from sqlalchemy.dialects.postgresql import UUID as PG_UUID, JSONB
-from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from core.database import Base
+from app.core.database import Base
 
 
 class InvoiceStatus(str, Enum):
@@ -256,108 +250,6 @@ class CreditNote(Base):
     
     def __repr__(self) -> str:
         return f'<CreditNote {self.credit_note_number} ({self.total_amount})>'
-=======
-import enum
-from sqlalchemy import (
-    Column, Integer, String, Text, Numeric, Date, DateTime, Boolean, ForeignKey, Index, 
-    Enum as SQLEnum, JSON as JSONB, func, CheckConstraint, UniqueConstraint
-)
-from sqlalchemy.orm import relationship
-from sqlalchemy.ext.declarative import declared_attr
-from datetime import datetime, timedelta
-from enum import Enum as PyEnum
-from typing import Optional
-from decimal import Decimal
-
-from app.core.base import Base
-
-class CustomerStatus(str, enum.Enum):
-    ACTIVE = "active"
-    INACTIVE = "inactive"
-    SUSPENDED = "suspended"
-    CREDIT_HOLD = "credit_hold"
-    PENDING_APPROVAL = "pending_approval"
-
-class CustomerType(str, enum.Enum):
-    INDIVIDUAL = "individual"
-    BUSINESS = "business"
-    GOVERNMENT = "government"
-    NON_PROFIT = "non_profit"
-
-class InvoiceStatus(str, enum.Enum):
-    DRAFT = "draft"
-    SENT = "sent"
-    VIEWED = "viewed"
-    PARTIALLY_PAID = "partially_paid"
-    PAID = "paid"
-    OVERDUE = "overdue"
-    CANCELLED = "cancelled"
-    VOID = "void"
-
-class PaymentStatus(str, enum.Enum):
-    PENDING = "pending"
-    PROCESSED = "processed"
-    FAILED = "failed"
-    REFUNDED = "refunded"
-
-class CollectionStatus(str, enum.Enum):
-    CURRENT = "current"
-    FIRST_NOTICE = "first_notice"
-    SECOND_NOTICE = "second_notice"
-    FINAL_NOTICE = "final_notice"
-    COLLECTIONS = "collections"
-    WRITE_OFF = "write_off"
-
-class Customer(Base):
-    __tablename__ = "ar_customers"
-
-    id = Column(Integer, primary_key=True, index=True)
-    customer_id = Column(String(20), unique=True, nullable=False, index=True)
-    name = Column(String(255), nullable=False, index=True)
-    legal_name = Column(String(255))
-    customer_type = Column(SQLEnum(CustomerType, name="customer_type_enum"), nullable=False)
-    
-    # Contact Information
-    email = Column(String(255), index=True)
-    phone = Column(String(50))
-    website = Column(String(255))
-    
-    # Primary Contact
-    contact_person = Column(String(100))
-    contact_title = Column(String(100))
-    contact_email = Column(String(100))
-    contact_phone = Column(String(50))
-    
-    # Billing Address
-    billing_address_line1 = Column(String(255))
-    billing_address_line2 = Column(String(255))
-    billing_city = Column(String(100))
-    billing_state = Column(String(100))
-    billing_postal_code = Column(String(20))
-    billing_country = Column(String(100))
-    
-    # Shipping Address
-    shipping_same_as_billing = Column(Boolean, default=True)
-    shipping_address_line1 = Column(String(255))
-    shipping_address_line2 = Column(String(255))
-    shipping_city = Column(String(100))
-    shipping_state = Column(String(100))
-    shipping_postal_code = Column(String(20))
-    shipping_country = Column(String(100))
-    
-    # Credit Information
-    credit_limit = Column(Numeric(15, 2), default=0)
-    current_balance = Column(Numeric(15, 2), default=0)
-    credit_rating = Column(String(10), index=True)
-    payment_terms = Column(String(50), default="NET30")
-    credit_hold = Column(Boolean, default=False, index=True)
-    
-    # Status and Categories
-    status = Column(SQLEnum(CustomerStatus, name="customer_status_enum"), default=CustomerStatus.ACTIVE, index=True)
-    customer_since = Column(Date, default=func.current_date())
-    last_order_date = Column(Date)
-    
-    # Financial Information
     total_sales_ytd = Column(Numeric(15, 2), default=0)
     total_payments_ytd = Column(Numeric(15, 2), default=0)
     average_days_to_pay = Column(Integer, default=0)

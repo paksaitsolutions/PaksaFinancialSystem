@@ -1,4 +1,6 @@
-<<<<<<< HEAD
+"""
+Budget models placeholder (conflicts resolved).
+"""
 # -*- coding: utf-8 -*-
 """
 Paksa Financial System

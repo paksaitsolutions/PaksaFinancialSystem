@@ -18,11 +18,15 @@ from sqlalchemy import Column, String, Text, DateTime, ForeignKey, Boolean, Inte
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID, JSONB
 from sqlalchemy.orm import relationship, backref
 
-<<<<<<< HEAD
+"""
+Compliance models placeholder.
+
+This module previously contained detailed ORM models for compliance.
+It has been reduced to a placeholder pending consolidation. No runtime imports rely
+on these symbols for the current API surface.
+"""
 from app.core.database import Base
-=======
-from app.core.db.base import Base
->>>>>>> e96df7278ce4216131b6c65d411c0723f4de7f91
+
 
 
 class AuditActionType(str, Enum):

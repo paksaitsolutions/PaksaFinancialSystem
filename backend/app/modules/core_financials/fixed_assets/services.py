@@ -1,4 +1,6 @@
-<<<<<<< HEAD
+"""
+Fixed assets services placeholder (conflicts resolved).
+"""
 """
 Fixed Assets Module - Services
 """

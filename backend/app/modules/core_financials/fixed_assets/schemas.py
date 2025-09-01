@@ -1,4 +1,6 @@
-<<<<<<< HEAD
+"""
+Fixed assets schemas placeholder (conflicts resolved).
+"""
 """
 Fixed Assets Module - Pydantic Schemas
 """

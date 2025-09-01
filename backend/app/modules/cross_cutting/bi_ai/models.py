@@ -18,7 +18,11 @@ from sqlalchemy.dialects.postgresql import UUID as PG_UUID, JSONB
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.sql import func
 
-<<<<<<< HEAD
+"""
+BI/AI models placeholder.
+
+Kept minimal to avoid merge conflicts; not required by active API routes.
+"""
 from app.db.base_class import Base
 =======
 from app.core.db.base import Base

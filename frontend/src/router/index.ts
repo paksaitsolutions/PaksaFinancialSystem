@@ -1,5 +1,4 @@
-import { createRouter, createWebHistory, type RouteRecordRaw, type RouteMeta, type RouteLocationNormalized } from 'vue-router';
-import { useAuthStore } from '@/modules/auth/store/auth.store';
+import { createRouter, createWebHistory, type RouteRecordRaw, type RouteMeta } from 'vue-router';
 
 // Type for route query parameters
 type RouteQuery = {
@@ -783,7 +782,7 @@ const appRoutes: RouteRecordRaw[] = [
       {
         path: ':pathMatch(.*)*',
         name: 'NotFound',
-        component: () => import('@/views/errors/NotFound.vue'),
+        component: () => import('@/views/common/NotFound.vue'),
         meta: { requiresAuth: false }
       }
     ]
@@ -801,19 +800,19 @@ const router = createRouter({
 });
 
 // Router guard for authentication
-router.beforeEach(async (to, from, next) => {
-  const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
-  const requiresGuest = to.matched.some(record => record.meta.requiresGuest)
-  const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token')
-  
+router.beforeEach((to, _from, next) => {
+  const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
+  const requiresGuest = to.matched.some(record => record.meta.requiresGuest);
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+
   if (requiresAuth && !token) {
     // Redirect to login if authentication is required but user is not logged in
-    next('/auth/login')
+    next('/auth/login');
   } else if (requiresGuest && token) {
     // Redirect to dashboard if user is already logged in and trying to access guest pages
-    next('/')
+    next('/');
   } else {
-    next()
+    next();
   }
 });
 

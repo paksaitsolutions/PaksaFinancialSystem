@@ -17,11 +17,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID, JSONB
 from sqlalchemy.orm import relationship, validates
 
-<<<<<<< HEAD:backend/app/modules/core_financials/accounting/models/gl_period.py
-from app.db.base_class import Base
-=======
-from app.core.db.base import Base
->>>>>>> e96df7278ce4216131b6c65d411c0723f4de7f91:backend/app/models/gl_period.py
+from app.core.database import Base
 
 
 class GLPeriodStatus(str, Enum):

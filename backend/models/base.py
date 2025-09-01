@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Any, Dict, Optional
 from uuid import uuid4, UUID
 
-from sqlalchemy import Column, DateTime, func
+from sqlalchemy import Boolean, Column, DateTime, func
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import declarative_base, declared_attr
 from sqlalchemy.sql import expression
@@ -55,9 +55,12 @@ class BaseModel(Base):
     
     @declared_attr
     def __tablename__(cls) -> str:
-        ""
-        Generate __tablename__ automatically.
-        Convert CamelCase class name to snake_case table name.
+        """Generate __tablename__ automatically.
+        
+        Converts CamelCase class name to snake_case table name.
+        
+        Returns:
+            str: The generated table name in snake_case.
         """
         name = cls.__name__
         return ''.join(['_' + i.lower() if i.isupper() else i for i in name]).lstrip('_')

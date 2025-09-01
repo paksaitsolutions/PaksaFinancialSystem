@@ -16,7 +16,7 @@ load_dotenv()
 
 from app.core.config import settings
 # Import after loading env vars
-from app.core.db.session import get_db, init_db
+from app.core.database import get_db, init_db
 from app.services.ap_service import APService
 from app.services.ar_service import ARService
 from app.services.budget_service import BudgetService
@@ -27,6 +27,12 @@ from app.services.inventory_service import InventoryService
 from app.services.payroll_service import PayrollService
 from app.services.reports_service import ReportsService
 from app.services.tax_service import TaxService
+from app.api.api_v1.api import api_router as api_v1_router
+from pydantic import BaseModel
+from fastapi import Body
+from app.models.user import User
+from app.core.security import create_access_token
+from sqlalchemy.ext.asyncio import AsyncSession
 
 security = HTTPBearer()
 
@@ -67,6 +73,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Mount versioned API under /api/v1
+app.include_router(api_v1_router, prefix="/api/v1")
 
 # Default tenant for demo
 DEFAULT_TENANT_ID = "12345678-1234-5678-9012-123456789012"
@@ -133,7 +142,7 @@ async def health_check():
     }
 
 
-# Authentication endpoints
+# Authentication endpoints (token for OAuth2 form)
 @app.post("/auth/token")
 async def login(username: str = Form(), password: str = Form()):
     # Simple hardcoded authentication for demo
@@ -143,6 +152,65 @@ async def login(username: str = Form(), password: str = Form()):
             "token_type": "bearer",
             "expires_in": 3600,
             "refresh_token": "demo-refresh-token-12345",
+        }
+
+    raise HTTPException(status_code=401, detail="Invalid credentials")
+
+
+# Authentication endpoints to support frontend login (JSON body)
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+
+@app.post("/auth/login")
+async def api_login(
+    payload: LoginRequest | None = Body(None),
+    email: str = Form(None),
+    password: str = Form(None),
+    db: AsyncSession = Depends(get_db),
+):
+    # Accept either form URL-encoded or JSON; fallback for JSON body
+    # If called with JSON, FastAPI will treat missing form fields as None; handle manually below
+    # Simple demo authentication
+    if payload is not None:
+        email = payload.email
+        password = payload.password
+
+    email = email or ""
+    password = password or ""
+
+    # First try DB-backed authentication
+    user = await User.authenticate(db, email=email, password=password)
+    if user:
+        token = create_access_token(subject=str(user.id), additional_claims={"email": user.email, "roles": ["admin"] if getattr(user, "is_superuser", False) else []})
+        return {
+            "access_token": token,
+            "user": {
+                "id": str(user.id),
+                "email": user.email,
+                "firstName": getattr(user, "first_name", "") or "",
+                "lastName": getattr(user, "last_name", "") or "",
+                "roles": ["admin"] if getattr(user, "is_superuser", False) else [],
+                "permissions": [],
+                "isAdmin": bool(getattr(user, "is_superuser", False)),
+            },
+        }
+
+    # Fallback to demo credentials for development convenience
+    if email == "admin@paksa.com" and password == "admin123":
+        token = create_access_token(subject="demo-admin")
+        return {
+            "access_token": token,
+            "user": {
+                "id": "demo-admin",
+                "email": email,
+                "firstName": "System",
+                "lastName": "Administrator",
+                "roles": ["admin"],
+                "permissions": ["*"],
+                "isAdmin": True,
+            },
         }
 
     raise HTTPException(status_code=401, detail="Invalid credentials")

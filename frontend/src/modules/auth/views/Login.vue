@@ -171,7 +171,7 @@ const handleLogin = async (): Promise<void> => {
   
   try {
     const response = await axios.post<LoginResponse>(
-      '/api/auth/login',
+      '/api/v1/auth/login',
       {
         email: formData.value.email,
         password: formData.value.password

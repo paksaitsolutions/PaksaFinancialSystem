@@ -13,11 +13,7 @@ from app import crud, models, schemas
 from app.api import deps
 from app.core.config import settings
 from app.core.security import get_current_active_user
-<<<<<<< HEAD
-from app.db.session import get_db
-=======
-from app.core.db.session import get_db
->>>>>>> e96df7278ce4216131b6c65d411c0723f4de7f91
+from app.core.database import get_db
 from app.services.gl import account_service, journal_service, period_service, financial_statement_service
 
 router = APIRouter()

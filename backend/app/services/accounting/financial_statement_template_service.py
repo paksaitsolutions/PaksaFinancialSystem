@@ -11,7 +11,9 @@ from uuid import UUID, uuid4
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
-<<<<<<< HEAD:backend/app/modules/core_financials/accounting/services/financial_statement_template_service.py
+"""
+Financial statement template service placeholder.
+"""
 from app.db.session import SessionLocal
 =======
 from app.core.db.session import SessionLocal

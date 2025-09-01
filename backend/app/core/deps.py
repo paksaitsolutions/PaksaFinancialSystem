@@ -9,10 +9,10 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 from jose import JWTError, jwt
 
-from app.core.db.session import get_db as _get_db
+from app.core.database import get_db as _get_db
 from app.core.config import settings
 from app.models.user import User
-from app.services.auth.auth_service import AuthService
+from app.core.security import decode_token
 
 security = HTTPBearer()
 
@@ -36,19 +36,15 @@ async def get_current_user(
     )
     
     try:
-        payload = jwt.decode(
-            credentials.credentials, 
-            settings.SECRET_KEY, 
-            algorithms=[settings.ALGORITHM]
-        )
+        payload = decode_token(credentials.credentials)
         user_id: str = payload.get("sub")
-        if user_id is None:
+        if not user_id:
             raise credentials_exception
     except JWTError:
         raise credentials_exception
-    
-    auth_service = AuthService(db)
-    user = await auth_service.get_user_by_id(user_id)
+
+    # Fetch user directly
+    user = await User.get(db, id=user_id) if hasattr(User, "get") else None
     if user is None:
         raise credentials_exception
     

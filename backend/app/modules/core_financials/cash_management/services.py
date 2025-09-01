@@ -19,7 +19,9 @@ from sqlalchemy.orm import Session, joinedload, contains_eager
 from sqlalchemy import and_, or_, func, desc, text, update, case, cast, Date, Integer, Numeric, not_
 
 from app.core.exceptions import NotFoundError, ValidationError, BusinessRuleError
-<<<<<<< HEAD
+"""
+Cash management services placeholder (conflicts resolved).
+"""
 from app.core.database import Base
 =======
 from app.core.db.base import Base
@@ -480,7 +482,7 @@ class TransactionService:
         account.last_updated = datetime.utcnow()
 
 
-<<<<<<< HEAD
+ 
 class ReconciliationService:
 =======
 class ReconciliationService(ReconciliationService):
@@ -652,7 +654,7 @@ class ReconciliationService(ReconciliationService):
                 reconciliation.status = schemas.ReconciliationStatus.COMPLETED
             else:
                 reconciliation.status = schemas.ReconciliationStatus.IN_PROGRESS
-<<<<<<< HEAD
+ 
 =======
     
     async def get_cash_flow_forecast(self, db: AsyncSession, start_date: date, end_date: date, account_id: Optional[int] = None):

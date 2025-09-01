@@ -8,11 +8,10 @@ from fastapi import HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-<<<<<<< HEAD:backend/app/modules/core_financials/payroll/services/base.py
+"""
+Base service classes for Payroll module.
+"""
 from app.core.database import Base
-=======
-from app.core.db.base import Base
->>>>>>> e96df7278ce4216131b6c65d411c0723f4de7f91:backend/app/services/payroll/base.py
 from app.core.logging import logger
 from app.core.security import get_password_hash, verify_password
 

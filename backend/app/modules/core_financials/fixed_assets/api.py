@@ -1,4 +1,6 @@
-<<<<<<< HEAD
+"""
+Fixed assets API placeholder (conflicts resolved).
+"""
 """
 Fixed Assets Module - API Endpoints
 """

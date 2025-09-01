@@ -3,7 +3,7 @@
  */
 
 // Base API URL - can be overridden by environment variables
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
 
 /**
  * API endpoints for different modules
@@ -14,14 +14,14 @@ export const API_ENDPOINTS = {
     LOGIN: `${API_BASE_URL}/auth/login`,
     LOGOUT: `${API_BASE_URL}/auth/logout`,
     REFRESH_TOKEN: `${API_BASE_URL}/auth/refresh-token`,
-    PROFILE: `${API_BASE_URL}/auth/profile`,
+    PROFILE: `${API_BASE_URL}/auth/me`,
   },
   
   // General Ledger
   GL_ACCOUNTS: `${API_BASE_URL}/gl/accounts`,
   GL_JOURNALS: `${API_BASE_URL}/gl/journals`,
-  GL_TRIAL_BALANCE: `${API_BASE_URL}/gl/trial-balance`,
-  GL_FINANCIAL_STATEMENTS: `${API_BASE_URL}/gl/financial-statements`,
+  GL_TRIAL_BALANCE: `${API_BASE_URL}/financial-statements/trial-balance`,
+  GL_FINANCIAL_STATEMENTS: `${API_BASE_URL}/financial-statements`,
   
   // Accounts Payable
   AP_VENDORS: `${API_BASE_URL}/ap/vendors`,
@@ -31,7 +31,8 @@ export const API_ENDPOINTS = {
   // Accounts Receivable
   AR_CUSTOMERS: `${API_BASE_URL}/ar/customers`,
   AR_INVOICES: `${API_BASE_URL}/ar/invoices`,
-  AR_RECEIPTS: `${API_BASE_URL}/ar/receipts`,
+  AR_COLLECTIONS: `${API_BASE_URL}/ar/collections`,
+  AR_RECEIPTS: `${API_BASE_URL}/ar/collections`,
   
   // Payroll
   PAYROLL_EMPLOYEES: `${API_BASE_URL}/payroll/employees`,

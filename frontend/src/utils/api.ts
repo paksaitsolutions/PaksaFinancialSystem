@@ -54,7 +54,7 @@ function createApiClient(baseURL: string): AxiosInstance {
       // Add auth token if required and available
       if (config.requireAuth !== false && authStore.isAuthenticated) {
         config.headers = config.headers || {};
-        config.headers.Authorization = `Bearer ${authStore.accessToken}`;
+        config.headers.Authorization = `Bearer ${authStore.token}`;
       }
       
       return config;

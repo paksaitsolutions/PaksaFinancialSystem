@@ -1,21 +1,38 @@
-# Production Requirements - Paksa Financial System
-fastapi==0.109.2
-uvicorn[standard]==0.27.1
-gunicorn==21.2.0
-asyncpg==0.30.0
+# Core Dependencies
+fastapi>=0.95.0,<0.96.0
+uvicorn[standard]>=0.21.0,<0.22.0
+gunicorn>=20.1.0,<21.0.0
+
+# Database
+asyncpg==0.29.0
 sqlalchemy==2.0.25
 alembic==1.13.1
-psycopg2-binary==2.9.9
+psycopg2-binary
+sqlalchemy-utils==0.41.1
+
+# Authentication & Security
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 python-multipart==0.0.6
 python-dotenv==1.0.1
-pydantic==2.5.3
+
+# Data Validation
+pydantic>=1.10.0
 pydantic-settings==2.1.0
-python-dateutil==2.8.2
-sqlalchemy-utils==0.41.1
 email-validator==2.1.0.post1
+
+# Utilities
+python-dateutil==2.8.2
 python-slugify==8.0.1
+
+# Development
+pytest==7.4.3
+pytest-asyncio==0.21.1
+
+# Linting
+black==23.9.1
+isort==5.12.0
+mypy==1.5.1
 pandas==2.2.0
 openpyxl==3.1.2
 xlsxwriter==3.1.9

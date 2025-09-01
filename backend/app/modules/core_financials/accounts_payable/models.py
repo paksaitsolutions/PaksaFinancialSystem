@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import uuid
 from datetime import datetime, date
 from decimal import Decimal
@@ -6,12 +5,12 @@ from enum import Enum
 from typing import List, Optional
 
 from sqlalchemy import (
-    Column, DateTime, Enum as SQLEnum, ForeignKey, Numeric, String, Text, Date, func, CheckConstraint
+    Column, DateTime, Enum as SQLEnum, ForeignKey, Numeric, String, Text, Date, func
 )
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
-from core.database import Base
+from app.core.database import Base
 
 # Enum for Bill Status
 class BillStatus(str, Enum):
@@ -70,14 +69,14 @@ class BillLineItem(Base):
     __tablename__ = 'ap_bill_line_items'
     id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     bill_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('ap_bills.id'), nullable=False)
-    account_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('account.id'), nullable=False) # FK to GL Account
+    account_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('account.id'), nullable=False)  # FK to GL Account
     description: Mapped[str] = mapped_column(Text, nullable=False)
     quantity: Mapped[Decimal] = mapped_column(Numeric(19, 4), default=1)
     unit_price: Mapped[Decimal] = mapped_column(Numeric(19, 4), nullable=False)
     total_price: Mapped[Decimal] = mapped_column(Numeric(19, 4), nullable=False)
 
     bill: Mapped["Bill"] = relationship(back_populates="line_items")
-    account: Mapped["Account"] = relationship(lazy="joined") # From accounting module
+    account = relationship("Account", lazy="joined")
 
 class Payment(Base):
     __tablename__ = 'ap_payments'
@@ -86,7 +85,7 @@ class Payment(Base):
     payment_date: Mapped[date] = mapped_column(Date, nullable=False)
     amount: Mapped[Decimal] = mapped_column(Numeric(19, 4), nullable=False)
     currency: Mapped[str] = mapped_column(String(3), nullable=False, default='USD')
-    payment_method: Mapped[Optional[str]] = mapped_column(String(100)) # e.g., 'Bank Transfer', 'Credit Card'
+    payment_method: Mapped[Optional[str]] = mapped_column(String(100))
     reference_number: Mapped[Optional[str]] = mapped_column(String(255))
     status: Mapped[PaymentStatus] = mapped_column(SQLEnum(PaymentStatus), nullable=False, default=PaymentStatus.DRAFT)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
@@ -104,7 +103,6 @@ class PaymentAllocation(Base):
 
     payment: Mapped["Payment"] = relationship(back_populates="allocations")
     bill: Mapped["Bill"] = relationship(back_populates="payment_allocations")
-=======
 import enum  # Python standard library enum
 from sqlalchemy import (
     Column, Integer, String, Text, Numeric, Date, DateTime, Boolean, ForeignKey, Index, 

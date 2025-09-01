@@ -1,4 +1,6 @@
-<<<<<<< HEAD:backend/app/modules/core_financials/accounting/services/account_balance_service.py
+"""
+Account balance service placeholder.
+"""
 """
 Paksa Financial System 
 Account Balance Service

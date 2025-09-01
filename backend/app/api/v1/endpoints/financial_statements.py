@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field
 
 from app.core.database import get_db
 from app.modules.core_financials.accounting.services.financial_statement_service import FinancialStatementService
-from app.modules.core_financials.accounting.models.gl_period import GLPeriod
+from app.models.gl_period import GLPeriod
 from app.core.security import get_current_active_user
 from app.models.user import User
 

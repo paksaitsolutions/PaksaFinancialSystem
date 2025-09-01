@@ -1,4 +1,7 @@
-<<<<<<< HEAD
+"""
+Accounting models aggregator placeholder (conflicts resolved).
+Use concrete models under app/modules/core_financials/accounting/models/*
+"""
 """
 Accounting models for the financial system.
 """

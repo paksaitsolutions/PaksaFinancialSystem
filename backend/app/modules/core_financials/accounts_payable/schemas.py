@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import uuid
 from datetime import date, datetime
 from decimal import Decimal
@@ -79,7 +78,7 @@ class BillUpdate(BaseModel):
     issue_date: Optional[date] = None
     due_date: Optional[date] = None
     notes: Optional[str] = None
-    status: Optional[BillStatus] = None # Allow status changes, e.g., to VOID
+    status: Optional[BillStatus] = None
 
 class Bill(BillBase):
     id: uuid.UUID
@@ -89,7 +88,7 @@ class Bill(BillBase):
     created_at: datetime
     updated_at: datetime
     line_items: List[BillLineItem]
-    vendor: Vendor # Include vendor details
+    vendor: Vendor
 
     class Config:
         orm_mode = True
@@ -135,7 +134,6 @@ class Payment(PaymentBase):
 
     class Config:
         orm_mode = True
-=======
 from pydantic import BaseModel, Field, EmailStr, validator
 from typing import Optional, List, Dict, Any
 from datetime import date, datetime

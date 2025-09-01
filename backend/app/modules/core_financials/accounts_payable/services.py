@@ -1,4 +1,19 @@
-<<<<<<< HEAD
+import uuid
+from decimal import Decimal
+from typing import List
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
+
+from . import models, schemas
+from .exceptions import (
+    BillNotFoundException,
+    InvalidBillOperationException,
+    InvalidPaymentOperationException,
+    VendorNotFoundException,
+)
+from ..accounting.services import AccountService  # For validating expense accounts
 import uuid
 from decimal import Decimal
 from typing import List
@@ -119,85 +134,6 @@ class PaymentService:
         await self.db.commit()
         await self.db.refresh(new_payment)
         return new_payment
-=======
-from typing import List, Optional, Dict, Any
-from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_, func, case, extract
-from datetime import date, datetime, timedelta
-from decimal import Decimal
-
-from app.modules.core_financials.accounts_payable.models import (
-    Vendor, Invoice, InvoiceLine, Payment, PaymentInvoice
-)
-from app.modules.core_financials.accounts_payable.schemas import (
-    VendorCreate, VendorUpdate, InvoiceCreate, InvoiceUpdate,
-    PaymentCreate, PaymentUpdate, APSummaryResponse, AgingReportResponse,
-    AgingReportItem, VendorSummaryResponse
-)
-from app.core.exceptions import NotFoundError, ValidationError
-
-class VendorService:
-    def __init__(self, db: Session):
-        self.db = db
-
-    def create_vendor(self, vendor_data: VendorCreate) -> Vendor:
-        # Generate vendor ID
-        last_vendor = self.db.query(Vendor).order_by(Vendor.id.desc()).first()
-        vendor_id = f"V{str((last_vendor.id if last_vendor else 0) + 1).zfill(3)}"
-        
-        vendor = Vendor(
-            vendor_id=vendor_id,
-            **vendor_data.dict()
-        )
-        self.db.add(vendor)
-        self.db.commit()
-        self.db.refresh(vendor)
-        return vendor
-
-    def get_vendor(self, vendor_id: int) -> Vendor:
-        vendor = self.db.query(Vendor).filter(Vendor.id == vendor_id).first()
-        if not vendor:
-            raise NotFoundError(f"Vendor with id {vendor_id} not found")
-        return vendor
-
-    def get_vendors(
-        self, 
-        skip: int = 0, 
-        limit: int = 100,
-        search: Optional[str] = None,
-        status: Optional[str] = None,
-        category: Optional[str] = None
-    ) -> List[Vendor]:
-        query = self.db.query(Vendor)
-        
-        if search:
-            query = query.filter(
-                or_(
-                    Vendor.name.ilike(f"%{search}%"),
-                    Vendor.vendor_id.ilike(f"%{search}%"),
-                    Vendor.contact_person.ilike(f"%{search}%")
-                )
-            )
-        
-        if status:
-            query = query.filter(Vendor.status == status)
-        
-        if category:
-            query = query.filter(Vendor.category == category)
-        
-        return query.offset(skip).limit(limit).all()
-
-    def update_vendor(self, vendor_id: int, vendor_data: VendorUpdate) -> Vendor:
-        vendor = self.get_vendor(vendor_id)
-        
-        for field, value in vendor_data.dict(exclude_unset=True).items():
-            setattr(vendor, field, value)
-        
-        self.db.commit()
-        self.db.refresh(vendor)
-        return vendor
-
-    def delete_vendor(self, vendor_id: int) -> bool:
         vendor = self.get_vendor(vendor_id)
         
         # Check if vendor has outstanding invoices

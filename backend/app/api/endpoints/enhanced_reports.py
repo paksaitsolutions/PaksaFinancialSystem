@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app import models
 from app.api import deps
-from app.core.db.session import get_db
+from app.core.database import get_db
 from app.schemas.enhanced_reports_schemas import (
     CompanyReportResponse,
     ReportTemplateRequest,

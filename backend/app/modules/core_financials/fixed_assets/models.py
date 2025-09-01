@@ -1,4 +1,6 @@
-<<<<<<< HEAD
+"""
+Fixed assets models placeholder (conflicts resolved).
+"""
 """
 Fixed Assets models for the financial system.
 """

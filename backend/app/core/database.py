@@ -56,8 +56,9 @@ def create_database_engine() -> AsyncEngine:
         "pool_pre_ping": True,  # Enable connection health checks
     }
     
-    # Check if using SQLite by examining the database URL
-    db_uri = str(getattr(settings, 'DATABASE_URI', ''))
+    # Resolve database URI, ensuring it's populated via settings
+    # Prefer the computed SQLALCHEMY_DATABASE_URI which sets DATABASE_URI on demand
+    db_uri = str(getattr(settings, 'DATABASE_URI', '') or getattr(settings, 'SQLALCHEMY_DATABASE_URI', ''))
     is_sqlite = 'sqlite' in db_uri.lower()
     
     if is_sqlite:
@@ -81,8 +82,8 @@ def create_database_engine() -> AsyncEngine:
             "pool_use_lifo": True,  # Use LIFO for better connection reuse
         })
     
-    # Convert DATABASE_URI to string if it's a Pydantic object
-    database_uri = str(settings.DATABASE_URI)
+    # Final database URI
+    database_uri = str(db_uri)
     return create_async_engine(database_uri, **engine_options)
 
 # Create async database engine
@@ -281,9 +282,15 @@ async def init_db() -> None:
             await conn.execute(text('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"'))
             await conn.execute(text('CREATE EXTENSION IF NOT EXISTS "pg_trgm"'))
         
-        # Import all models to ensure they are registered with SQLAlchemy
-        # This is necessary for create_all to detect all tables
+        # Import models to ensure they're registered with SQLAlchemy metadata
+        # Core models
         from .. import models  # noqa: F401
+        # Application models
+        try:
+            import app.models  # noqa: F401
+        except Exception:
+            # Avoid hard-failing if some optional models are not importable
+            pass
         
         # Create all tables
         await conn.run_sync(Base.metadata.create_all)
