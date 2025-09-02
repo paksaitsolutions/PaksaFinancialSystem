@@ -1,124 +1,314 @@
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, text
-from typing import List, Optional
-from app.core.db.tenant_base import Company
-from app.core.db.tenant_migration import migration_manager
-from app.core.db.tenant_security import TenantSecurityManager
-import uuid
+from sqlalchemy.orm import Session
+from typing import Optional, List, Dict, Any
+from datetime import datetime, timedelta
 import logging
+
+from app.models.tenant_company import TenantCompany, CompanyAdmin, CompanyModule
+from app.models.user import User
+from app.models.company_settings import CompanySettings
+from app.schemas.tenant_company import TenantCompanyCreate, TenantCompanyUpdate
 
 logger = logging.getLogger(__name__)
 
 class TenantService:
-    async def create_tenant(self, db: AsyncSession, company_data: dict) -> Company:
-        """Create a new tenant with isolated data"""
-        
-        # Generate unique tenant_id
-        tenant_id = str(uuid.uuid4())[:8]
-        
-        # Create company record
-        company = Company(
-            tenant_id=tenant_id,
-            name=company_data['name'],
-            email=company_data['email'],
-            phone=company_data.get('phone'),
-            address=company_data.get('address'),
-            industry=company_data.get('industry'),
-            status='active'
-        )
-        
-        db.add(company)
-        await db.commit()
-        await db.refresh(company)
-        
-        # Setup tenant database structure
-        await self._setup_tenant_database(tenant_id)
-        
-        logger.info(f"Created new tenant: {tenant_id} for company: {company_data['name']}")
-        return company
+    def __init__(self, db: Session):
+        self.db = db
     
-    async def get_tenant_by_id(self, db: AsyncSession, tenant_id: str) -> Optional[Company]:
-        """Get tenant by ID"""
-        result = await db.execute(select(Company).where(Company.tenant_id == tenant_id))
-        return result.scalar_one_or_none()
+    def get_company_by_id(self, company_id: int) -> Optional[TenantCompany]:
+        """Get company by ID"""
+        return self.db.query(TenantCompany).filter(TenantCompany.id == company_id).first()
     
-    async def list_tenants(self, db: AsyncSession) -> List[Company]:
-        """List all tenants (admin only)"""
-        result = await db.execute(select(Company).where(Company.is_active == True))
-        return result.scalars().all()
+    def get_company_by_code(self, code: str) -> Optional[TenantCompany]:
+        """Get company by code"""
+        return self.db.query(TenantCompany).filter(TenantCompany.code == code).first()
     
-    async def suspend_tenant(self, db: AsyncSession, tenant_id: str) -> bool:
-        """Suspend a tenant"""
-        company = await self.get_tenant_by_id(db, tenant_id)
-        if company:
-            company.status = 'suspended'
-            await db.commit()
-            logger.info(f"Suspended tenant: {tenant_id}")
-            return True
-        return False
+    def get_company_by_subdomain(self, subdomain: str) -> Optional[TenantCompany]:
+        """Get company by subdomain"""
+        return self.db.query(TenantCompany).filter(TenantCompany.subdomain == subdomain).first()
     
-    async def delete_tenant(self, db: AsyncSession, tenant_id: str) -> bool:
-        """Delete a tenant and all its data"""
-        company = await self.get_tenant_by_id(db, tenant_id)
-        if company:
-            # Backup tenant data before deletion
-            await migration_manager.backup_tenant_data(tenant_id, f"/backups/{tenant_id}")
-            
-            # Delete tenant data
-            await self._delete_tenant_data(db, tenant_id)
-            
-            # Mark company as deleted
-            company.is_active = False
-            company.status = 'deleted'
-            await db.commit()
-            
-            logger.info(f"Deleted tenant: {tenant_id}")
-            return True
-        return False
+    def get_user_companies(self, user_id: int) -> List[TenantCompany]:
+        """Get all companies a user has access to"""
+        return self.db.query(TenantCompany).join(CompanyAdmin).filter(
+            CompanyAdmin.user_id == user_id,
+            TenantCompany.is_active == True
+        ).all()
     
-    async def get_tenant_stats(self, db: AsyncSession, tenant_id: str) -> dict:
-        """Get statistics for a tenant"""
-        stats = {}
-        
-        # Count records in each table
-        tables = ['fixed_assets', 'budgets', 'tax_transactions', 'accounts', 'journal_entries']
-        
-        for table in tables:
-            result = await db.execute(text(f"SELECT COUNT(*) FROM {table} WHERE tenant_id = :tenant_id"), 
-                                    {"tenant_id": tenant_id})
-            stats[table] = result.scalar()
-        
-        return stats
+    def check_user_company_access(self, user_id: int, company_id: int) -> bool:
+        """Check if user has access to a company"""
+        access = self.db.query(CompanyAdmin).filter(
+            CompanyAdmin.user_id == user_id,
+            CompanyAdmin.company_id == company_id
+        ).first()
+        return access is not None
     
-    async def _setup_tenant_database(self, tenant_id: str):
-        """Setup database structure for new tenant"""
+    def get_company_admin_role(self, user_id: int, company_id: int) -> Optional[str]:
+        """Get user's role in a company"""
+        admin = self.db.query(CompanyAdmin).filter(
+            CompanyAdmin.user_id == user_id,
+            CompanyAdmin.company_id == company_id
+        ).first()
+        return admin.role if admin else None
+    
+    def is_company_owner(self, user_id: int, company_id: int) -> bool:
+        """Check if user is the owner of a company"""
+        admin = self.db.query(CompanyAdmin).filter(
+            CompanyAdmin.user_id == user_id,
+            CompanyAdmin.company_id == company_id,
+            CompanyAdmin.role == 'owner'
+        ).first()
+        return admin is not None
+    
+    def get_company_modules(self, company_id: int) -> List[CompanyModule]:
+        """Get all enabled modules for a company"""
+        return self.db.query(CompanyModule).filter(
+            CompanyModule.company_id == company_id,
+            CompanyModule.is_enabled == True
+        ).all()
+    
+    def is_module_enabled(self, company_id: int, module_name: str) -> bool:
+        """Check if a module is enabled for a company"""
+        module = self.db.query(CompanyModule).filter(
+            CompanyModule.company_id == company_id,
+            CompanyModule.module_name == module_name,
+            CompanyModule.is_enabled == True
+        ).first()
+        return module is not None
+    
+    def get_company_settings(self, company_id: int) -> Optional[CompanySettings]:
+        """Get company settings"""
+        return self.db.query(CompanySettings).filter(
+            CompanySettings.company_id == company_id
+        ).first()
+    
+    def update_company_branding(self, company_id: int, branding_data: Dict[str, Any]) -> bool:
+        """Update company branding settings"""
         try:
-            # Create tenant schema if using schema isolation
-            await migration_manager.create_tenant_schema(tenant_id)
+            company = self.get_company_by_id(company_id)
+            if not company:
+                return False
             
-            # Run migrations for tenant
-            migration_manager.run_tenant_migrations(tenant_id)
+            if 'primary_color' in branding_data:
+                company.primary_color = branding_data['primary_color']
+            if 'secondary_color' in branding_data:
+                company.secondary_color = branding_data['secondary_color']
+            if 'logo_url' in branding_data:
+                company.logo_url = branding_data['logo_url']
             
-            # Setup security policies
-            await migration_manager.setup_row_level_security()
-            
+            company.updated_at = datetime.utcnow()
+            self.db.commit()
+            return True
         except Exception as e:
-            logger.error(f"Failed to setup database for tenant {tenant_id}: {e}")
-            raise
+            logger.error(f"Error updating company branding: {str(e)}")
+            self.db.rollback()
+            return False
     
-    async def _delete_tenant_data(self, db: AsyncSession, tenant_id: str):
-        """Delete all data for a tenant"""
-        tables = [
-            'maintenance_records', 'depreciation_entries', 'fixed_assets',
-            'budget_line_items', 'budgets', 'tax_transaction_components',
-            'tax_transactions', 'tax_exemptions', 'journal_entry_lines',
-            'journal_entries', 'accounts'
-        ]
+    def check_company_limits(self, company_id: int) -> Dict[str, Any]:
+        """Check company usage against limits"""
+        company = self.get_company_by_id(company_id)
+        if not company:
+            return {}
         
-        for table in tables:
-            await db.execute(text(f"DELETE FROM {table} WHERE tenant_id = :tenant_id"), 
-                           {"tenant_id": tenant_id})
+        # Check user limit
+        current_users = self.db.query(User).filter(
+            User.company_id == company_id,
+            User.is_active == True
+        ).count()
         
-        await db.commit()
-
-tenant_service = TenantService()
+        # TODO: Check storage usage, API usage, etc.
+        
+        return {
+            'users': {
+                'current': current_users,
+                'limit': company.max_users,
+                'percentage': (current_users / company.max_users * 100) if company.max_users > 0 else 0,
+                'exceeded': current_users >= company.max_users
+            },
+            'storage': {
+                'current_gb': 0,  # TODO: Calculate actual storage usage
+                'limit_gb': company.storage_limit_gb,
+                'percentage': 0,
+                'exceeded': False
+            }
+        }
+    
+    def can_add_user(self, company_id: int) -> bool:
+        """Check if company can add more users"""
+        limits = self.check_company_limits(company_id)
+        return not limits.get('users', {}).get('exceeded', True)
+    
+    def get_company_subscription_status(self, company_id: int) -> Dict[str, Any]:
+        """Get company subscription status"""
+        company = self.get_company_by_id(company_id)
+        if not company:
+            return {}
+        
+        now = datetime.utcnow()
+        
+        # Check trial status
+        if company.status == 'Trial' and company.trial_ends_at:
+            days_remaining = (company.trial_ends_at - now).days
+            return {
+                'type': 'trial',
+                'status': 'active' if days_remaining > 0 else 'expired',
+                'days_remaining': max(0, days_remaining),
+                'expires_at': company.trial_ends_at
+            }
+        
+        # Check subscription status
+        if company.subscription_ends_at:
+            days_remaining = (company.subscription_ends_at - now).days
+            return {
+                'type': 'subscription',
+                'status': 'active' if days_remaining > 0 else 'expired',
+                'days_remaining': max(0, days_remaining),
+                'expires_at': company.subscription_ends_at,
+                'plan': company.plan
+            }
+        
+        return {
+            'type': 'active',
+            'status': 'active',
+            'plan': company.plan
+        }
+    
+    def extend_trial(self, company_id: int, days: int) -> bool:
+        """Extend company trial period"""
+        try:
+            company = self.get_company_by_id(company_id)
+            if not company:
+                return False
+            
+            if company.trial_ends_at:
+                company.trial_ends_at += timedelta(days=days)
+            else:
+                company.trial_ends_at = datetime.utcnow() + timedelta(days=days)
+            
+            company.status = 'Trial'
+            company.updated_at = datetime.utcnow()
+            self.db.commit()
+            return True
+        except Exception as e:
+            logger.error(f"Error extending trial for company {company_id}: {str(e)}")
+            self.db.rollback()
+            return False
+    
+    def suspend_company(self, company_id: int, reason: str = None) -> bool:
+        """Suspend a company"""
+        try:
+            company = self.get_company_by_id(company_id)
+            if not company:
+                return False
+            
+            company.status = 'Suspended'
+            company.is_active = False
+            company.updated_at = datetime.utcnow()
+            
+            # Deactivate all users
+            self.db.query(User).filter(User.company_id == company_id).update(
+                {User.is_active: False}
+            )
+            
+            self.db.commit()
+            logger.info(f"Company {company.name} suspended. Reason: {reason}")
+            return True
+        except Exception as e:
+            logger.error(f"Error suspending company {company_id}: {str(e)}")
+            self.db.rollback()
+            return False
+    
+    def reactivate_company(self, company_id: int) -> bool:
+        """Reactivate a suspended company"""
+        try:
+            company = self.get_company_by_id(company_id)
+            if not company:
+                return False
+            
+            company.status = 'Active'
+            company.is_active = True
+            company.updated_at = datetime.utcnow()
+            
+            # Reactivate all users
+            self.db.query(User).filter(User.company_id == company_id).update(
+                {User.is_active: True}
+            )
+            
+            self.db.commit()
+            logger.info(f"Company {company.name} reactivated")
+            return True
+        except Exception as e:
+            logger.error(f"Error reactivating company {company_id}: {str(e)}")
+            self.db.rollback()
+            return False
+    
+    def get_company_analytics(self, company_id: int) -> Dict[str, Any]:
+        """Get company analytics data"""
+        company = self.get_company_by_id(company_id)
+        if not company:
+            return {}
+        
+        # Get user statistics
+        total_users = self.db.query(User).filter(User.company_id == company_id).count()
+        active_users = self.db.query(User).filter(
+            User.company_id == company_id,
+            User.is_active == True
+        ).count()
+        
+        # Get module usage
+        enabled_modules = self.db.query(CompanyModule).filter(
+            CompanyModule.company_id == company_id,
+            CompanyModule.is_enabled == True
+        ).count()
+        
+        # TODO: Add more analytics like transaction counts, storage usage, etc.
+        
+        return {
+            'users': {
+                'total': total_users,
+                'active': active_users,
+                'inactive': total_users - active_users
+            },
+            'modules': {
+                'enabled': enabled_modules
+            },
+            'subscription': self.get_company_subscription_status(company_id),
+            'limits': self.check_company_limits(company_id)
+        }
+    
+    def validate_company_access(self, user: User, company_id: int) -> bool:
+        """Validate if user can access company resources"""
+        # Super admin can access any company
+        if user.is_superuser:
+            return True
+        
+        # Check if user belongs to the company or has admin access
+        if user.company_id == company_id:
+            return True
+        
+        return self.check_user_company_access(user.id, company_id)
+    
+    def get_company_context(self, company_id: int) -> Dict[str, Any]:
+        """Get complete company context for frontend"""
+        company = self.get_company_by_id(company_id)
+        if not company:
+            return {}
+        
+        settings = self.get_company_settings(company_id)
+        modules = self.get_company_modules(company_id)
+        analytics = self.get_company_analytics(company_id)
+        
+        return {
+            'company': {
+                'id': company.id,
+                'name': company.name,
+                'code': company.code,
+                'domain': company.domain,
+                'logo_url': company.logo_url,
+                'primary_color': company.primary_color,
+                'secondary_color': company.secondary_color,
+                'plan': company.plan,
+                'status': company.status
+            },
+            'settings': settings.__dict__ if settings else {},
+            'modules': [{'name': m.module_name, 'enabled': m.is_enabled} for m in modules],
+            'analytics': analytics
+        }

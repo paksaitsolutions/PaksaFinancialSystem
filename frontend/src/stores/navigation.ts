@@ -58,6 +58,36 @@ export const useNavigationStore = defineStore('navigation', {
         ]
       },
       {
+        title: 'Tax Management',
+        icon: 'mdi-percent',
+        children: [
+          { title: 'Dashboard', icon: 'mdi-view-dashboard', to: '/tax' },
+          { title: 'Tax Codes', icon: 'mdi-code-tags', to: '/tax/codes' },
+          { title: 'Tax Rates', icon: 'mdi-percent', to: '/tax/rates' },
+          { title: 'Jurisdictions', icon: 'mdi-map-marker', to: '/tax/jurisdictions' },
+          { title: 'Exemptions', icon: 'mdi-shield-check', to: '/tax/exemptions' },
+          { title: 'Tax Returns', icon: 'mdi-file-document-outline', to: '/tax/returns' },
+          { title: 'Compliance', icon: 'mdi-check-circle', to: '/tax/compliance' },
+          { title: 'Reports', icon: 'mdi-chart-line', to: '/tax/reports' }
+        ]
+      },
+      {
+        title: 'HRM',
+        icon: 'mdi-account-tie',
+        to: '/hrm',
+        children: [
+          { title: 'Dashboard', icon: 'mdi-view-dashboard', to: '/hrm' },
+          { title: 'Employees', icon: 'mdi-account-group', to: '/hrm/employees' },
+          { title: 'Departments', icon: 'mdi-office-building', to: '/hrm/departments' },
+          { title: 'Positions', icon: 'mdi-briefcase-account', to: '/hrm/positions' },
+          { title: 'Attendance', icon: 'mdi-calendar-check', to: '/hrm/attendance' },
+          { title: 'Leave', icon: 'mdi-calendar-remove', to: '/hrm/leave' },
+          { title: 'Recruitment', icon: 'mdi-account-multiple-plus', to: '/hrm/recruitment' },
+          { title: 'Performance', icon: 'mdi-chart-line', to: '/hrm/performance' },
+          { title: 'Reports', icon: 'mdi-file-chart', to: '/hrm/reports' }
+        ]
+      },
+      {
         title: 'Reports',
         icon: 'mdi-chart-box',
         to: '/reports'

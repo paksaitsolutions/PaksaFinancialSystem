@@ -1,192 +1,221 @@
 <template>
-  <ResponsiveContainer>
-    <v-card>
-      <v-card-title class="d-flex align-center">
-        <h2>Budget Management</h2>
-        <v-spacer></v-spacer>
-        <v-btn color="primary" @click="openCreateDialog">
-          <v-icon left>mdi-plus</v-icon>
-          New Budget
-        </v-btn>
-      </v-card-title>
-
-      <v-card-text>
+  <div class="p-4">
+    <Card>
+      <template #header>
+        <div class="flex justify-content-between align-items-center p-4">
+          <h2 class="m-0">Budget Management</h2>
+          <Button 
+            label="New Budget" 
+            icon="pi pi-plus" 
+            @click="openCreateDialog"
+          />
+        </div>
+      </template>
+      <template #content>
         <!-- Filters -->
-        <v-row class="mb-4">
-          <v-col cols="12" md="3">
-            <v-text-field
+        <div class="grid mb-4">
+          <div class="col-12 md:col-3">
+            <InputText
               v-model="filters.search"
-              label="Search"
-              prepend-inner-icon="mdi-magnify"
-              clearable
-            ></v-text-field>
-          </v-col>
-          <v-col cols="12" md="3">
-            <v-select
+              placeholder="Search budgets..."
+              class="w-full"
+            />
+          </div>
+          <div class="col-12 md:col-3">
+            <Dropdown
               v-model="filters.status"
-              :items="budgetStatuses"
-              label="Status"
-              clearable
-            ></v-select>
-          </v-col>
-          <v-col cols="12" md="3">
-            <v-select
+              :options="budgetStatuses"
+              placeholder="Select Status"
+              class="w-full"
+              showClear
+            />
+          </div>
+          <div class="col-12 md:col-3">
+            <Dropdown
               v-model="filters.type"
-              :items="budgetTypes"
-              label="Type"
-              clearable
-            ></v-select>
-          </v-col>
-          <v-col cols="12" md="3">
-            <v-btn variant="outlined" @click="clearFilters" block>
-              Clear Filters
-            </v-btn>
-          </v-col>
-        </v-row>
+              :options="budgetTypes"
+              placeholder="Select Type"
+              class="w-full"
+              showClear
+            />
+          </div>
+          <div class="col-12 md:col-3">
+            <Button 
+              label="Clear Filters" 
+              severity="secondary" 
+              outlined 
+              @click="clearFilters" 
+              class="w-full"
+            />
+          </div>
+        </div>
 
         <!-- Budget Table -->
-        <v-data-table
-          :headers="headers"
-          :items="filteredBudgets"
+        <DataTable
+          :value="filteredBudgets"
           :loading="loading"
-          :items-per-page="10"
+          :paginator="true"
+          :rows="10"
+          responsiveLayout="scroll"
         >
-          <template v-slot:item.name="{ item }">
-            <a href="#" @click.prevent="openEditDialog(item)" class="text-primary">
-              {{ item.name }}
-            </a>
-          </template>
+          <Column field="name" header="Name">
+            <template #body="{ data }">
+              <a href="#" @click.prevent="openEditDialog(data)" class="text-primary cursor-pointer">
+                {{ data.name }}
+              </a>
+            </template>
+          </Column>
           
-          <template v-slot:item.amount="{ item }">
-            {{ formatCurrency(item.amount) }}
-          </template>
+          <Column field="amount" header="Amount">
+            <template #body="{ data }">
+              {{ formatCurrency(data.amount) }}
+            </template>
+          </Column>
           
-          <template v-slot:item.status="{ item }">
-            <v-chip :color="getStatusColor(item.status)" small>
-              {{ item.status }}
-            </v-chip>
-          </template>
+          <Column field="status" header="Status">
+            <template #body="{ data }">
+              <Tag :value="data.status" :severity="getStatusSeverity(data.status)" />
+            </template>
+          </Column>
           
-          <template v-slot:item.type="{ item }">
-            <v-chip variant="outlined" small>
-              {{ item.type }}
-            </v-chip>
-          </template>
+          <Column field="type" header="Type">
+            <template #body="{ data }">
+              <Tag :value="data.type" severity="info" />
+            </template>
+          </Column>
           
-          <template v-slot:item.startDate="{ item }">
-            {{ formatDate(item.startDate) }}
-          </template>
+          <Column field="startDate" header="Start Date">
+            <template #body="{ data }">
+              {{ formatDate(data.startDate) }}
+            </template>
+          </Column>
           
-          <template v-slot:item.endDate="{ item }">
-            {{ formatDate(item.endDate) }}
-          </template>
+          <Column field="endDate" header="End Date">
+            <template #body="{ data }">
+              {{ formatDate(data.endDate) }}
+            </template>
+          </Column>
           
-          <template v-slot:item.actions="{ item }">
-            <v-btn icon small @click="openEditDialog(item)">
-              <v-icon small>mdi-pencil</v-icon>
-            </v-btn>
-            <v-btn 
-              v-if="item.status === 'PENDING_APPROVAL'" 
-              icon 
-              small 
-              color="success"
-              @click="openApprovalDialog(item)"
-            >
-              <v-icon small>mdi-check</v-icon>
-            </v-btn>
-            <v-btn 
-              v-if="item.status === 'PENDING_APPROVAL'" 
-              icon 
-              small 
-              color="warning"
-              @click="openRejectDialog(item)"
-            >
-              <v-icon small>mdi-close</v-icon>
-            </v-btn>
-            <v-btn icon small color="error" @click="confirmDelete(item.id)">
-              <v-icon small>mdi-delete</v-icon>
-            </v-btn>
-          </template>
-        </v-data-table>
-      </v-card-text>
-    </v-card>
+          <Column header="Actions">
+            <template #body="{ data }">
+              <div class="flex gap-2">
+                <Button 
+                  icon="pi pi-pencil" 
+                  size="small" 
+                  severity="info" 
+                  @click="openEditDialog(data)"
+                />
+                <Button 
+                  v-if="data.status === 'PENDING_APPROVAL'" 
+                  icon="pi pi-check" 
+                  size="small" 
+                  severity="success" 
+                  @click="openApprovalDialog(data)"
+                />
+                <Button 
+                  v-if="data.status === 'PENDING_APPROVAL'" 
+                  icon="pi pi-times" 
+                  size="small" 
+                  severity="warning" 
+                  @click="openRejectDialog(data)"
+                />
+                <Button 
+                  icon="pi pi-trash" 
+                  size="small" 
+                  severity="danger" 
+                  @click="confirmDelete(data.id)"
+                />
+              </div>
+            </template>
+          </Column>
+        </DataTable>
+      </template>
+    </Card>
 
     <!-- Budget Form Dialog -->
-    <v-dialog v-model="dialog.visible" max-width="800px">
-      <v-card>
-        <v-card-title>{{ dialog.mode === 'create' ? 'New Budget' : 'Edit Budget' }}</v-card-title>
-        <v-card-text>
-          <BudgetForm 
-            v-if="dialog.visible"
-            :budget="dialog.budget"
-            :loading="dialog.loading"
-            @submit="handleSave"
-            @cancel="dialog.visible = false"
-          />
-        </v-card-text>
-      </v-card>
-    </v-dialog>
+    <Dialog 
+      v-model:visible="dialog.visible" 
+      modal 
+      :header="dialog.mode === 'create' ? 'New Budget' : 'Edit Budget'"
+      :style="{ width: '50rem' }"
+    >
+      <BudgetForm 
+        v-if="dialog.visible"
+        :budget="dialog.budget"
+        :loading="dialog.loading"
+        @submit="handleSave"
+        @cancel="dialog.visible = false"
+      />
+    </Dialog>
 
     <!-- Approval Dialog -->
-    <v-dialog v-model="approvalDialog.visible" max-width="500px">
-      <v-card>
-        <v-card-title>Approve Budget</v-card-title>
-        <v-card-text>
-          <p>Are you sure you want to approve this budget?</p>
-          <v-textarea
-            v-model="approvalNotes"
-            label="Approval Notes (Optional)"
-            rows="3"
-          ></v-textarea>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn @click="approvalDialog.visible = false" :disabled="approvalDialog.loading">
-            Cancel
-          </v-btn>
-          <v-btn color="success" @click="handleApproval" :loading="approvalDialog.loading">
-            Approve
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <Dialog 
+      v-model:visible="approvalDialog.visible" 
+      modal 
+      header="Approve Budget"
+      :style="{ width: '30rem' }"
+    >
+      <p class="mb-3">Are you sure you want to approve this budget?</p>
+      <Textarea
+        v-model="approvalNotes"
+        placeholder="Approval Notes (Optional)"
+        rows="3"
+        class="w-full"
+      />
+      <template #footer>
+        <Button 
+          label="Cancel" 
+          severity="secondary" 
+          @click="approvalDialog.visible = false" 
+          :disabled="approvalDialog.loading"
+        />
+        <Button 
+          label="Approve" 
+          severity="success" 
+          @click="handleApproval" 
+          :loading="approvalDialog.loading"
+        />
+      </template>
+    </Dialog>
 
     <!-- Reject Dialog -->
-    <v-dialog v-model="rejectDialog.visible" max-width="500px">
-      <v-card>
-        <v-card-title>Reject Budget</v-card-title>
-        <v-card-text>
-          <v-textarea
-            v-model="rejectNotes"
-            label="Reason for rejection"
-            rows="3"
-            :rules="[v => !!v || 'Reason is required']"
-            required
-          ></v-textarea>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn @click="rejectDialog.visible = false" :disabled="rejectDialog.loading">
-            Cancel
-          </v-btn>
-          <v-btn color="error" @click="handleReject" :loading="rejectDialog.loading">
-            Reject
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-  </ResponsiveContainer>
+    <Dialog 
+      v-model:visible="rejectDialog.visible" 
+      modal 
+      header="Reject Budget"
+      :style="{ width: '30rem' }"
+    >
+      <Textarea
+        v-model="rejectNotes"
+        placeholder="Reason for rejection"
+        rows="3"
+        class="w-full"
+      />
+      <template #footer>
+        <Button 
+          label="Cancel" 
+          severity="secondary" 
+          @click="rejectDialog.visible = false" 
+          :disabled="rejectDialog.loading"
+        />
+        <Button 
+          label="Reject" 
+          severity="danger" 
+          @click="handleReject" 
+          :loading="rejectDialog.loading"
+        />
+      </template>
+    </Dialog>
+  </div>
 </template>
 
 <script>
-import ResponsiveContainer from '@/components/layout/ResponsiveContainer.vue'
 import BudgetForm from '../components/BudgetForm.vue'
 import { useBudgetStore } from '../store/budget'
 
 export default {
   name: 'BudgetView',
   components: {
-    ResponsiveContainer,
     BudgetForm
   },
   
@@ -385,15 +414,15 @@ export default {
       }
     },
     
-    getStatusColor(status) {
-      const colors = {
-        DRAFT: 'grey',
-        PENDING_APPROVAL: 'orange',
+    getStatusSeverity(status) {
+      const severities = {
+        DRAFT: 'info',
+        PENDING_APPROVAL: 'warning',
         APPROVED: 'success',
-        REJECTED: 'error',
+        REJECTED: 'danger',
         ARCHIVED: 'secondary'
       }
-      return colors[status] || 'grey'
+      return severities[status] || 'info'
     },
     
     formatCurrency(amount) {

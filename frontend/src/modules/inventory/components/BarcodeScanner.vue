@@ -1,48 +1,45 @@
 <template>
   <div class="barcode-scanner">
-    <v-card>
-      <v-card-title class="d-flex align-center justify-space-between">
-        <h3>Barcode Scanner</h3>
-        <v-btn
-          icon
-          variant="text"
-          @click="$emit('close')"
-        >
-          <v-icon>mdi-close</v-icon>
-        </v-btn>
-      </v-card-title>
+    <Card>
+      <template #title>
+        <div class="flex justify-content-between align-items-center">
+          <h3 class="m-0">Barcode Scanner</h3>
+          <Button icon="pi pi-times" text @click="$emit('close')" />
+        </div>
+      </template>
       
-      <v-card-text>
+      <template #content>
         <!-- Manual Input -->
-        <v-text-field
-          v-model="barcodeInput"
-          label="Scan or Enter Barcode/SKU"
-          prepend-inner-icon="mdi-barcode-scan"
-          autofocus
-          @keyup.enter="lookupItem"
-          @input="handleInput"
-        >
-          <template v-slot:append>
-            <v-btn
-              color="primary"
+        <div class="field">
+          <label class="font-semibold">Scan or Enter Barcode/SKU</label>
+          <div class="p-inputgroup">
+            <span class="p-inputgroup-addon">
+              <i class="pi pi-qrcode"></i>
+            </span>
+            <InputText
+              v-model="barcodeInput"
+              placeholder="Enter barcode or SKU"
+              autofocus
+              @keyup.enter="lookupItem"
+              @input="handleInput"
+            />
+            <Button
+              label="Lookup"
               :loading="loading"
               @click="lookupItem"
-            >
-              Lookup
-            </v-btn>
-          </template>
-        </v-text-field>
+            />
+          </div>
+        </div>
         
         <!-- Camera Scanner (if supported) -->
         <div v-if="cameraSupported" class="mt-4">
-          <v-btn
+          <Button
             v-if="!showCamera"
-            color="secondary"
-            prepend-icon="mdi-camera"
+            icon="pi pi-camera"
+            label="Use Camera Scanner"
+            severity="secondary"
             @click="startCamera"
-          >
-            Use Camera Scanner
-          </v-btn>
+          />
           
           <div v-else>
             <video
@@ -54,68 +51,70 @@
             <canvas ref="canvasElement" style="display: none;"></canvas>
             
             <div class="mt-2">
-              <v-btn
-                color="error"
-                prepend-icon="mdi-camera-off"
+              <Button
+                icon="pi pi-camera"
+                label="Stop Camera"
+                severity="danger"
                 @click="stopCamera"
-              >
-                Stop Camera
-              </v-btn>
+              />
             </div>
           </div>
         </div>
         
         <!-- Results -->
         <div v-if="foundItem" class="mt-4">
-          <v-card variant="outlined" color="success">
-            <v-card-title class="text-success">Item Found</v-card-title>
-            <v-card-text>
-              <v-row>
-                <v-col cols="12" md="6">
+          <Card class="border-green-500">
+            <template #title>
+              <span class="text-green-600">Item Found</span>
+            </template>
+            <template #content>
+              <div class="grid">
+                <div class="col-12 md:col-6">
                   <div><strong>SKU:</strong> {{ foundItem.sku }}</div>
                   <div><strong>Name:</strong> {{ foundItem.name }}</div>
                   <div v-if="foundItem.barcode"><strong>Barcode:</strong> {{ foundItem.barcode }}</div>
-                </v-col>
-                <v-col cols="12" md="6">
+                </div>
+                <div class="col-12 md:col-6">
                   <div><strong>On Hand:</strong> {{ formatQuantity(foundItem.quantity_on_hand) }}</div>
                   <div><strong>Available:</strong> {{ formatQuantity(foundItem.quantity_available) }}</div>
                   <div><strong>Unit Cost:</strong> {{ formatCurrency(foundItem.unit_cost) }}</div>
-                </v-col>
-              </v-row>
-            </v-card-text>
-            <v-card-actions>
-              <v-spacer></v-spacer>
-              <v-btn
-                color="primary"
-                @click="selectItem"
-              >
-                Select Item
-              </v-btn>
-            </v-card-actions>
-          </v-card>
+                </div>
+              </div>
+              <div class="flex justify-content-end mt-3">
+                <Button
+                  label="Select Item"
+                  @click="selectItem"
+                />
+              </div>
+            </template>
+          </Card>
         </div>
         
         <div v-if="error" class="mt-4">
-          <v-alert type="error" dismissible @click:close="error = ''">
+          <Message severity="error" :closable="true" @close="error = ''">
             {{ error }}
-          </v-alert>
+          </Message>
         </div>
-      </v-card-text>
-    </v-card>
+      </template>
+    </Card>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
-import { useSnackbar } from '@/composables/useSnackbar';
-import { formatCurrency } from '@/utils/formatters';
-import { apiClient } from '@/utils/apiClient';
+import { ref, onMounted, onUnmounted } from 'vue'
+import { useToast } from 'primevue/usetoast'
+import { formatCurrency } from '@/utils/formatters'
+import { apiClient } from '@/utils/apiClient'
+import Card from 'primevue/card'
+import Button from 'primevue/button'
+import InputText from 'primevue/inputtext'
+import Message from 'primevue/message'
 
 // Emits
 const emit = defineEmits(['close', 'item-selected']);
 
 // Composables
-const { showSnackbar } = useSnackbar();
+const toast = useToast()
 
 // Refs
 const videoElement = ref(null);
@@ -151,11 +150,11 @@ const lookupItem = async () => {
     foundItem.value = response.data;
   } catch (err) {
     if (err.response?.status === 404) {
-      error.value = 'Item not found. Please check the barcode/SKU and try again.';
+      error.value = 'Item not found. Please check the barcode/SKU and try again.'
     } else {
-      error.value = 'Failed to lookup item. Please try again.';
+      error.value = 'Failed to lookup item. Please try again.'
     }
-    console.error('Error looking up item:', err);
+    console.error('Error looking up item:', err)
   } finally {
     loading.value = false;
   }
@@ -191,8 +190,8 @@ const startCamera = async () => {
       startBarcodeDetection();
     }
   } catch (err) {
-    error.value = 'Failed to access camera. Please ensure camera permissions are granted.';
-    console.error('Camera error:', err);
+    error.value = 'Failed to access camera. Please ensure camera permissions are granted.'
+    console.error('Camera error:', err)
   }
 };
 

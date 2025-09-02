@@ -118,6 +118,94 @@ const menuItems = [
     ]
   },
   {
+    label: 'Tax Management',
+    icon: 'pi pi-percentage',
+    items: [
+      {
+        label: 'Dashboard',
+        icon: 'pi pi-home',
+        to: '/tax'
+      },
+      {
+        label: 'Tax Codes',
+        icon: 'pi pi-tags',
+        to: '/tax/codes'
+      },
+      {
+        label: 'Tax Rates',
+        icon: 'pi pi-percentage',
+        to: '/tax/rates'
+      },
+      {
+        label: 'Tax Returns',
+        icon: 'pi pi-file',
+        to: '/tax/returns'
+      },
+      {
+        label: 'Compliance',
+        icon: 'pi pi-check-circle',
+        to: '/tax/compliance'
+      }
+    ]
+  },
+  {
+    label: 'Reports',
+    icon: 'pi pi-file-pdf',
+    items: [
+      {
+        label: 'All Reports',
+        icon: 'pi pi-list',
+        to: '/reports'
+      },
+      {
+        label: 'Financial Reports',
+        icon: 'pi pi-chart-line',
+        to: '/reports/financial'
+      },
+      {
+        label: 'Operational Reports',
+        icon: 'pi pi-cog',
+        to: '/reports/operational'
+      },
+      {
+        label: 'Compliance Reports',
+        icon: 'pi pi-shield',
+        to: '/reports/compliance'
+      },
+      {
+        label: 'Custom Reports',
+        icon: 'pi pi-wrench',
+        to: '/reports/custom'
+      }
+    ]
+  },
+  {
+    label: 'AI & Business Intelligence',
+    icon: 'pi pi-chart-line',
+    items: [
+      {
+        label: 'AI Dashboard',
+        icon: 'pi pi-chart-bar',
+        to: '/ai-bi'
+      },
+      {
+        label: 'AI Assistant',
+        icon: 'pi pi-comments',
+        to: '/ai-bi/assistant'
+      },
+      {
+        label: 'Business Intelligence',
+        icon: 'pi pi-chart-pie',
+        to: '/ai-bi/intelligence'
+      },
+      {
+        label: 'Analytics Reports',
+        icon: 'pi pi-file-pdf',
+        to: '/ai-bi/reports'
+      }
+    ]
+  },
+  {
     label: 'Settings',
     icon: 'pi pi-cog',
     items: [

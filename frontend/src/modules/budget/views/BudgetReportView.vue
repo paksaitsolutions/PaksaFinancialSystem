@@ -1,121 +1,156 @@
 <template>
-  <ResponsiveContainer>
-    <v-card>
-      <v-card-title>Budget vs Actual Report</v-card-title>
+  <div class="p-4">
+    <Card>
+      <template #header>
+        <h2 class="p-4 m-0">Budget vs Actual Report</h2>
+      </template>
       
-      <v-card-text>
-        <v-row class="mb-4">
-          <v-col cols="12" md="4">
-            <v-select
-              v-model="selectedBudget"
-              :items="budgets"
-              item-title="name"
-              item-value="id"
-              label="Select Budget"
-              @update:modelValue="loadReport"
-            ></v-select>
-          </v-col>
+      <template #content>
+        <div class="grid mb-4">
+          <div class="col-12 md:col-4">
+            <div class="field">
+              <label class="block text-900 font-medium mb-2">Select Budget</label>
+              <Dropdown
+                v-model="selectedBudget"
+                :options="budgets"
+                optionLabel="name"
+                optionValue="id"
+                placeholder="Select Budget"
+                class="w-full"
+                @change="loadReport"
+              />
+            </div>
+          </div>
           
-          <v-col cols="12" md="4">
-            <v-select
-              v-model="selectedPeriod"
-              :items="periods"
-              label="Period"
-              @update:modelValue="loadReport"
-            ></v-select>
-          </v-col>
+          <div class="col-12 md:col-4">
+            <div class="field">
+              <label class="block text-900 font-medium mb-2">Period</label>
+              <Dropdown
+                v-model="selectedPeriod"
+                :options="periods"
+                optionLabel="title"
+                optionValue="value"
+                placeholder="Select Period"
+                class="w-full"
+                @change="loadReport"
+              />
+            </div>
+          </div>
           
-          <v-col cols="12" md="4">
-            <v-btn color="primary" @click="loadReport" :loading="loading" block>
-              Generate Report
-            </v-btn>
-          </v-col>
-        </v-row>
+          <div class="col-12 md:col-4">
+            <div class="field">
+              <label class="block text-900 font-medium mb-2">&nbsp;</label>
+              <Button 
+                label="Generate Report" 
+                @click="loadReport" 
+                :loading="loading" 
+                class="w-full"
+              />
+            </div>
+          </div>
+        </div>
         
         <div v-if="reportData">
           <!-- Summary Cards -->
-          <v-row class="mb-6">
-            <v-col cols="12" md="3">
-              <v-card color="primary" dark>
-                <v-card-text class="text-center">
-                  <div class="text-h6">{{ formatCurrency(reportData.budgetAmount) }}</div>
-                  <div class="text-caption">Budget Amount</div>
-                </v-card-text>
-              </v-card>
-            </v-col>
+          <div class="grid mb-6">
+            <div class="col-12 md:col-3">
+              <Card class="bg-blue-500 text-white">
+                <template #content>
+                  <div class="text-center">
+                    <div class="text-2xl font-bold">{{ formatCurrency(reportData.budgetAmount) }}</div>
+                    <div class="text-sm opacity-90">Budget Amount</div>
+                  </div>
+                </template>
+              </Card>
+            </div>
             
-            <v-col cols="12" md="3">
-              <v-card color="info" dark>
-                <v-card-text class="text-center">
-                  <div class="text-h6">{{ formatCurrency(reportData.actualAmount) }}</div>
-                  <div class="text-caption">Actual Amount</div>
-                </v-card-text>
-              </v-card>
-            </v-col>
+            <div class="col-12 md:col-3">
+              <Card class="bg-cyan-500 text-white">
+                <template #content>
+                  <div class="text-center">
+                    <div class="text-2xl font-bold">{{ formatCurrency(reportData.actualAmount) }}</div>
+                    <div class="text-sm opacity-90">Actual Amount</div>
+                  </div>
+                </template>
+              </Card>
+            </div>
             
-            <v-col cols="12" md="3">
-              <v-card :color="reportData.variance >= 0 ? 'success' : 'error'" dark>
-                <v-card-text class="text-center">
-                  <div class="text-h6">{{ formatCurrency(reportData.variance) }}</div>
-                  <div class="text-caption">Variance</div>
-                </v-card-text>
-              </v-card>
-            </v-col>
+            <div class="col-12 md:col-3">
+              <Card :class="reportData.variance >= 0 ? 'bg-green-500 text-white' : 'bg-red-500 text-white'">
+                <template #content>
+                  <div class="text-center">
+                    <div class="text-2xl font-bold">{{ formatCurrency(reportData.variance) }}</div>
+                    <div class="text-sm opacity-90">Variance</div>
+                  </div>
+                </template>
+              </Card>
+            </div>
             
-            <v-col cols="12" md="3">
-              <v-card :color="reportData.variancePercent >= 0 ? 'success' : 'warning'" dark>
-                <v-card-text class="text-center">
-                  <div class="text-h6">{{ reportData.variancePercent.toFixed(1) }}%</div>
-                  <div class="text-caption">Variance %</div>
-                </v-card-text>
-              </v-card>
-            </v-col>
-          </v-row>
+            <div class="col-12 md:col-3">
+              <Card :class="reportData.variancePercent >= 0 ? 'bg-green-500 text-white' : 'bg-orange-500 text-white'">
+                <template #content>
+                  <div class="text-center">
+                    <div class="text-2xl font-bold">{{ reportData.variancePercent.toFixed(1) }}%</div>
+                    <div class="text-sm opacity-90">Variance %</div>
+                  </div>
+                </template>
+              </Card>
+            </div>
+          </div>
           
           <!-- Line Items Table -->
-          <v-data-table
-            :headers="lineItemHeaders"
-            :items="reportData.lineItems"
-            class="elevation-1"
+          <DataTable
+            :value="reportData.lineItems"
+            :paginator="true"
+            :rows="10"
+            responsiveLayout="scroll"
           >
-            <template v-slot:item.budgetAmount="{ item }">
-              {{ formatCurrency(item.budgetAmount) }}
-            </template>
+            <Column field="category" header="Category"></Column>
             
-            <template v-slot:item.actualAmount="{ item }">
-              {{ formatCurrency(item.actualAmount) }}
-            </template>
+            <Column field="budgetAmount" header="Budget Amount">
+              <template #body="{ data }">
+                {{ formatCurrency(data.budgetAmount) }}
+              </template>
+            </Column>
             
-            <template v-slot:item.variance="{ item }">
-              <span :class="item.variance >= 0 ? 'text-success' : 'text-error'">
-                {{ formatCurrency(item.variance) }}
-              </span>
-            </template>
+            <Column field="actualAmount" header="Actual Amount">
+              <template #body="{ data }">
+                {{ formatCurrency(data.actualAmount) }}
+              </template>
+            </Column>
             
-            <template v-slot:item.variancePercent="{ item }">
-              <span :class="getVariancePercentClass(item)">
-                {{ calculateVariancePercent(item).toFixed(1) }}%
-              </span>
-            </template>
-          </v-data-table>
+            <Column field="variance" header="Variance">
+              <template #body="{ data }">
+                <span :class="data.variance >= 0 ? 'text-green-600' : 'text-red-600'">
+                  {{ formatCurrency(data.variance) }}
+                </span>
+              </template>
+            </Column>
+            
+            <Column field="variancePercent" header="Variance %">
+              <template #body="{ data }">
+                <span :class="getVariancePercentClass(data)">
+                  {{ calculateVariancePercent(data).toFixed(1) }}%
+                </span>
+              </template>
+            </Column>
+          </DataTable>
         </div>
         
         <div v-else-if="!loading" class="text-center py-8">
-          <v-icon size="64" color="grey">mdi-chart-line</v-icon>
-          <p class="text-h6 mt-4">Select a budget and period to generate report</p>
+          <i class="pi pi-chart-line text-6xl text-500"></i>
+          <p class="text-xl mt-4">Select a budget and period to generate report</p>
         </div>
-      </v-card-text>
-    </v-card>
-  </ResponsiveContainer>
+      </template>
+    </Card>
+  </div>
 </template>
 
 <script>
-import ResponsiveContainer from '@/components/layout/ResponsiveContainer.vue'
 import { useBudgetStore } from '../store/budget'
 
 export default {
   name: 'BudgetReportView',
-  components: { ResponsiveContainer },
   
   data: () => ({
     loading: false,
@@ -173,7 +208,7 @@ export default {
     
     getVariancePercentClass(item) {
       const percent = this.calculateVariancePercent(item)
-      return percent >= 0 ? 'text-success' : 'text-error'
+      return percent >= 0 ? 'text-green-600' : 'text-red-600'
     },
     
     formatCurrency(amount) {

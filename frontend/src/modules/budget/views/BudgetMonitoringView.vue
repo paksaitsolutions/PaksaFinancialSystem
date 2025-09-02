@@ -1,31 +1,21 @@
 <template>
-  <v-container fluid>
-    <v-row>
-      <v-col cols="12">
-        <h1 class="text-h4 mb-4">Budget Monitoring</h1>
-        
-        <v-tabs v-model="activeTab">
-          <v-tab value="realtime">Real-time Monitoring</v-tab>
-          <v-tab value="alerts">Alert Management</v-tab>
-          <v-tab value="variance">Variance Analysis</v-tab>
-        </v-tabs>
-        
-        <v-window v-model="activeTab" class="mt-4">
-          <v-window-item value="realtime">
-            <realtime-monitoring-dashboard />
-          </v-window-item>
-          
-          <v-window-item value="alerts">
-            <alert-management-interface @create="createAlert" />
-          </v-window-item>
-          
-          <v-window-item value="variance">
-            <variance-analysis-reports />
-          </v-window-item>
-        </v-window>
-      </v-col>
-    </v-row>
-  </v-container>
+  <div class="p-4">
+    <h1 class="text-3xl font-bold mb-4">Budget Monitoring</h1>
+    
+    <TabView v-model:activeIndex="activeTabIndex">
+      <TabPanel header="Real-time Monitoring">
+        <realtime-monitoring-dashboard />
+      </TabPanel>
+      
+      <TabPanel header="Alert Management">
+        <alert-management-interface @create="createAlert" />
+      </TabPanel>
+      
+      <TabPanel header="Variance Analysis">
+        <variance-analysis-reports />
+      </TabPanel>
+    </TabView>
+  </div>
 </template>
 
 <script setup>
@@ -36,7 +26,7 @@ import VarianceAnalysisReports from '../components/VarianceAnalysisReports.vue'
 import { useBudgetStore } from '../store/budget'
 
 const budgetStore = useBudgetStore()
-const activeTab = ref('realtime')
+const activeTabIndex = ref(0)
 
 const createAlert = async (alertData) => {
   await budgetStore.createBudgetAlert(alertData)

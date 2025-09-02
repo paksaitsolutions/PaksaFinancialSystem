@@ -10,46 +10,22 @@
       
       <template #content>
         <!-- Summary Cards -->
-        <div class="grid mb-6">
-          <div class="col-12 md:col-3">
-            <Card class="bg-green-500 text-white">
-              <template #content>
-                <div class="text-center">
-                  <div class="text-2xl font-bold">{{ formatCurrency(summary.current) }}</div>
-                  <div class="text-sm">Current (0-30 days)</div>
-                </div>
-              </template>
-            </Card>
+        <div class="flex flex-wrap gap-3 mb-6">
+          <div class="aging-card flex-1 min-w-12rem p-4 border-round bg-green-500 text-white text-center">
+            <div class="text-2xl font-bold mb-2">{{ formatCurrency(summary.current) }}</div>
+            <div class="text-sm opacity-90">Current (0-30 days)</div>
           </div>
-          <div class="col-12 md:col-3">
-            <Card class="bg-yellow-500 text-white">
-              <template #content>
-                <div class="text-center">
-                  <div class="text-2xl font-bold">{{ formatCurrency(summary.days31to60) }}</div>
-                  <div class="text-sm">31-60 days</div>
-                </div>
-              </template>
-            </Card>
+          <div class="aging-card flex-1 min-w-12rem p-4 border-round bg-yellow-500 text-white text-center">
+            <div class="text-2xl font-bold mb-2">{{ formatCurrency(summary.days31to60) }}</div>
+            <div class="text-sm opacity-90">31-60 days</div>
           </div>
-          <div class="col-12 md:col-3">
-            <Card class="bg-orange-500 text-white">
-              <template #content>
-                <div class="text-center">
-                  <div class="text-2xl font-bold">{{ formatCurrency(summary.days61to90) }}</div>
-                  <div class="text-sm">61-90 days</div>
-                </div>
-              </template>
-            </Card>
+          <div class="aging-card flex-1 min-w-12rem p-4 border-round bg-orange-500 text-white text-center">
+            <div class="text-2xl font-bold mb-2">{{ formatCurrency(summary.days61to90) }}</div>
+            <div class="text-sm opacity-90">61-90 days</div>
           </div>
-          <div class="col-12 md:col-3">
-            <Card class="bg-red-500 text-white">
-              <template #content>
-                <div class="text-center">
-                  <div class="text-2xl font-bold">{{ formatCurrency(summary.over90) }}</div>
-                  <div class="text-sm">Over 90 days</div>
-                </div>
-              </template>
-            </Card>
+          <div class="aging-card flex-1 min-w-12rem p-4 border-round bg-red-500 text-white text-center">
+            <div class="text-2xl font-bold mb-2">{{ formatCurrency(summary.over90) }}</div>
+            <div class="text-sm opacity-90">Over 90 days</div>
           </div>
         </div>
 
@@ -230,3 +206,14 @@ const formatCurrency = (amount: number) => {
   }).format(amount)
 }
 </script>
+
+<style scoped>
+.aging-card {
+  transition: all 0.2s ease;
+}
+
+.aging-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+</style>

@@ -1,48 +1,38 @@
 <template>
-  <v-container fluid>
-    <v-row>
-      <v-col cols="12">
-        <div class="d-flex justify-space-between align-center mb-4">
-          <h1 class="text-h4">Budget Planning</h1>
-          <v-btn color="primary" @click="showCreateBudget = true">
-            <v-icon left>mdi-plus</v-icon>
-            Create Budget
-          </v-btn>
-        </div>
-        
-        <v-tabs v-model="activeTab">
-          <v-tab value="budgets">Budgets</v-tab>
-          <v-tab value="approvals">Approvals</v-tab>
-          <v-tab value="versions">Version Control</v-tab>
-          <v-tab value="consolidation">Consolidation</v-tab>
-        </v-tabs>
-        
-        <v-window v-model="activeTab" class="mt-4">
-          <v-window-item value="budgets">
-            <budget-list @edit="editBudget" @submit="submitBudget" />
-          </v-window-item>
-          
-          <v-window-item value="approvals">
-            <budget-approval-interface @approve="approveBudget" @reject="rejectBudget" />
-          </v-window-item>
-          
-          <v-window-item value="versions">
-            <budget-version-comparison @create-version="createVersion" />
-          </v-window-item>
-          
-          <v-window-item value="consolidation">
-            <budget-consolidation-dashboard @consolidate="consolidateBudgets" />
-          </v-window-item>
-        </v-window>
-      </v-col>
-    </v-row>
+  <div class="p-4">
+    <div class="flex justify-content-between align-items-center mb-4">
+      <h1 class="text-3xl font-bold m-0">Budget Planning</h1>
+      <Button 
+        label="Create Budget" 
+        icon="pi pi-plus" 
+        @click="showCreateBudget = true"
+      />
+    </div>
+    
+    <TabView v-model:activeIndex="activeTabIndex">
+      <TabPanel header="Budgets">
+        <budget-list @edit="editBudget" @submit="submitBudget" />
+      </TabPanel>
+      
+      <TabPanel header="Approvals">
+        <budget-approval-interface @approve="approveBudget" @reject="rejectBudget" />
+      </TabPanel>
+      
+      <TabPanel header="Version Control">
+        <budget-version-comparison @create-version="createVersion" />
+      </TabPanel>
+      
+      <TabPanel header="Consolidation">
+        <budget-consolidation-dashboard @consolidate="consolidateBudgets" />
+      </TabPanel>
+    </TabView>
     
     <budget-form-dialog 
       v-model="showCreateBudget" 
       :budget="selectedBudget"
       @save="saveBudget"
     />
-  </v-container>
+  </div>
 </template>
 
 <script setup>
@@ -55,7 +45,7 @@ import BudgetFormDialog from '../components/BudgetFormDialog.vue'
 import { useBudgetStore } from '../store/budget'
 
 const budgetStore = useBudgetStore()
-const activeTab = ref('budgets')
+const activeTabIndex = ref(0)
 const showCreateBudget = ref(false)
 const selectedBudget = ref(null)
 

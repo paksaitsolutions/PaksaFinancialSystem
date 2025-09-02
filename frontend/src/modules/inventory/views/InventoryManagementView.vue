@@ -1,214 +1,326 @@
 <template>
   <div class="inventory-management">
-    <v-container fluid>
-      <v-row>
-        <v-col cols="12">
-          <h1 class="text-h4 mb-4">Inventory Management</h1>
-          
-          <v-card v-if="selectedItem">
-            <v-card-text class="pa-0">
-              <div class="d-flex align-center px-4 py-2 bg-grey-lighten-4">
-                <v-btn
-                  variant="text"
-                  prepend-icon="mdi-arrow-left"
-                  @click="clearSelection"
-                >
-                  Back to List
-                </v-btn>
-                <v-spacer></v-spacer>
-                <div class="text-h6">{{ selectedItem.name }} ({{ selectedItem.sku }})</div>
+    <!-- Item Detail View -->
+    <div v-if="selectedItem">
+      <Card>
+        <template #content>
+          <div class="flex align-items-center justify-content-between p-3 bg-primary-50 border-round mb-4">
+            <div class="flex align-items-center gap-3">
+              <Button icon="pi pi-arrow-left" text @click="clearSelection" />
+              <div>
+                <h3 class="m-0 text-900">{{ selectedItem.name }}</h3>
+                <p class="text-600 m-0">SKU: {{ selectedItem.sku }}</p>
               </div>
-              
-              <!-- Item detail view would go here -->
-              <div class="pa-4">
-                <p>Inventory item detail view will be implemented here.</p>
-              </div>
-            </v-card-text>
-          </v-card>
-          
-          <v-card v-else-if="isCreating">
-            <v-card-text class="pa-0">
-              <div class="d-flex align-center px-4 py-2 bg-grey-lighten-4">
-                <v-btn
-                  variant="text"
-                  prepend-icon="mdi-arrow-left"
-                  @click="clearSelection"
-                >
-                  Back to List
-                </v-btn>
-                <v-spacer></v-spacer>
-                <div class="text-h6">Add New Inventory Item</div>
-              </div>
-              
-              <!-- Item creation form would go here -->
-              <div class="pa-4">
-                <p>Inventory item creation form will be implemented here.</p>
-              </div>
-            </v-card-text>
-          </v-card>
-          
-          <div v-else>
-            <v-tabs v-model="activeTab" bg-color="primary">
-              <v-tab value="items">Items</v-tab>
-              <v-tab value="reports">Reports & Analytics</v-tab>
-              <v-tab value="forecast">Forecasting</v-tab>
-              <v-tab value="purchase-orders">Purchase Orders</v-tab>
-              <v-tab value="cycle-counts">Cycle Counting</v-tab>
-              <v-tab value="adjustments">Stock Adjustments</v-tab>
-              <v-tab value="categories">Categories</v-tab>
-              <v-tab value="locations">Locations</v-tab>
-              <v-tab value="transactions">Transactions</v-tab>
-            </v-tabs>
-            
-            <v-window v-model="activeTab" class="mt-4">
-              <v-window-item value="items">
-                <inventory-list
-                  @view="viewItem"
-                  @create="createItem"
-                />
-              </v-window-item>
-              
-              <v-window-item value="reports">
-                <inventory-reports />
-              </v-window-item>
-              
-              <v-window-item value="forecast">
-                <inventory-forecast />
-              </v-window-item>
-              
-              <v-window-item value="purchase-orders">
-                <v-card>
-                  <v-card-title class="d-flex align-center justify-space-between">
-                    <h3>Purchase Orders</h3>
-                    <v-btn color="primary" prepend-icon="mdi-plus" @click="showPurchaseOrderForm = true">
-                      New Purchase Order
-                    </v-btn>
-                  </v-card-title>
-                  <v-card-text>
-                    <purchase-order-form
-                      v-if="showPurchaseOrderForm"
-                      @saved="handlePurchaseOrderSaved"
-                      @cancelled="showPurchaseOrderForm = false"
-                    />
-                    <div v-else>
-                      <p>Purchase order list will be displayed here.</p>
-                    </div>
-                  </v-card-text>
-                </v-card>
-              </v-window-item>
-              
-              <v-window-item value="cycle-counts">
-                <v-card>
-                  <v-card-title class="d-flex align-center justify-space-between">
-                    <h3>Cycle Counting</h3>
-                    <v-btn color="primary" prepend-icon="mdi-plus" @click="showCycleCountForm = true">
-                      New Cycle Count
-                    </v-btn>
-                  </v-card-title>
-                  <v-card-text>
-                    <cycle-count-form
-                      v-if="showCycleCountForm"
-                      @saved="handleCycleCountSaved"
-                      @cancelled="showCycleCountForm = false"
-                    />
-                    <div v-else>
-                      <p>Cycle count list will be displayed here.</p>
-                    </div>
-                  </v-card-text>
-                </v-card>
-              </v-window-item>
-              
-              <v-window-item value="adjustments">
-                <v-card>
-                  <v-card-title class="d-flex align-center justify-space-between">
-                    <h3>Stock Adjustments</h3>
-                    <v-btn color="primary" prepend-icon="mdi-plus" @click="showAdjustmentForm = true">
-                      New Adjustment
-                    </v-btn>
-                  </v-card-title>
-                  <v-card-text>
-                    <stock-adjustment-form
-                      v-if="showAdjustmentForm"
-                      @saved="handleAdjustmentSaved"
-                      @cancelled="showAdjustmentForm = false"
-                    />
-                    <div v-else>
-                      <p>Stock adjustment history will be displayed here.</p>
-                    </div>
-                  </v-card-text>
-                </v-card>
-              </v-window-item>
-              
-              <v-window-item value="categories">
-                <category-management />
-              </v-window-item>
-              
-              <v-window-item value="locations">
-                <location-management />
-              </v-window-item>
-              
-              <v-window-item value="transactions">
-                <transaction-history />
-              </v-window-item>
-            </v-window>
+            </div>
+            <div class="flex gap-2">
+              <Button icon="pi pi-pencil" label="Edit" @click="editItem(selectedItem)" />
+              <Button icon="pi pi-plus" label="Adjust Stock" severity="success" @click="adjustStock(selectedItem)" />
+            </div>
           </div>
-        </v-col>
-      </v-row>
-    </v-container>
+          
+          <!-- Item details content -->
+          <div class="grid">
+            <div class="col-12 md:col-8">
+              <h4>Item Information</h4>
+              <div class="grid">
+                <div class="col-6">
+                  <div class="field">
+                    <label class="font-semibold text-900">Status</label>
+                    <div class="mt-1">
+                      <Tag :value="formatStatus(selectedItem.status)" :severity="getStatusSeverity(selectedItem.status)" />
+                    </div>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="field">
+                    <label class="font-semibold text-900">Unit of Measure</label>
+                    <p class="mt-1 mb-0">{{ selectedItem.unit_of_measure }}</p>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="field">
+                    <label class="font-semibold text-900">Unit Cost</label>
+                    <p class="mt-1 mb-0">{{ formatCurrency(selectedItem.unit_cost) }}</p>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="field">
+                    <label class="font-semibold text-900">Total Value</label>
+                    <p class="mt-1 mb-0">{{ formatCurrency(selectedItem.unit_cost * selectedItem.quantity_on_hand) }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-12 md:col-4">
+              <h4>Stock Levels</h4>
+              <div class="grid">
+                <div class="col-12">
+                  <div class="field">
+                    <label class="font-semibold text-900">On Hand</label>
+                    <p class="mt-1 mb-0 text-2xl font-bold">{{ selectedItem.quantity_on_hand.toLocaleString() }}</p>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="field">
+                    <label class="font-semibold text-900">Reorder Point</label>
+                    <p class="mt-1 mb-0">{{ selectedItem.reorder_point || 0 }}</p>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="field">
+                    <label class="font-semibold text-900">Reorder Qty</label>
+                    <p class="mt-1 mb-0">{{ selectedItem.reorder_quantity || 0 }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </template>
+      </Card>
+    </div>
+    
+    <!-- Item Form View -->
+    <div v-else-if="isCreating || isEditing">
+      <ItemForm
+        :item="editingItem"
+        @save="handleItemSaved"
+        @cancel="clearSelection"
+      />
+    </div>
+    
+    <!-- Main Inventory Management View -->
+    <div v-else>
+      <!-- Header -->
+      <div class="flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="text-3xl font-bold text-900 m-0">Inventory Management</h1>
+          <p class="text-600 mt-1 mb-0">Comprehensive inventory control and management</p>
+        </div>
+      </div>
+      
+      <!-- Navigation Tabs -->
+      <TabView v-model:activeIndex="activeTabIndex">
+        <TabPanel header="Items">
+          <InventoryList @view="viewItem" @create="createItem" />
+        </TabPanel>
+        
+        <TabPanel header="Reports & Analytics">
+          <InventoryReports />
+        </TabPanel>
+        
+        <TabPanel header="Forecasting">
+          <InventoryForecast />
+        </TabPanel>
+        
+        <TabPanel header="Purchase Orders">
+          <Card>
+            <template #title>
+              <div class="flex justify-content-between align-items-center">
+                <span>Purchase Orders</span>
+                <Button icon="pi pi-plus" label="New Purchase Order" @click="showPurchaseOrderForm = true" />
+              </div>
+            </template>
+            <template #content>
+              <PurchaseOrderForm
+                v-if="showPurchaseOrderForm"
+                @saved="handlePurchaseOrderSaved"
+                @cancelled="showPurchaseOrderForm = false"
+              />
+              <div v-else class="text-center py-6">
+                <i class="pi pi-file-o text-4xl text-400 mb-3"></i>
+                <p class="text-500">Purchase order management will be implemented here</p>
+              </div>
+            </template>
+          </Card>
+        </TabPanel>
+        
+        <TabPanel header="Cycle Counting">
+          <Card>
+            <template #title>
+              <div class="flex justify-content-between align-items-center">
+                <span>Cycle Counting</span>
+                <Button icon="pi pi-plus" label="New Cycle Count" @click="showCycleCountForm = true" />
+              </div>
+            </template>
+            <template #content>
+              <CycleCountForm
+                v-if="showCycleCountForm"
+                @saved="handleCycleCountSaved"
+                @cancelled="showCycleCountForm = false"
+              />
+              <div v-else class="text-center py-6">
+                <i class="pi pi-calculator text-4xl text-400 mb-3"></i>
+                <p class="text-500">Cycle counting management will be implemented here</p>
+              </div>
+            </template>
+          </Card>
+        </TabPanel>
+        
+        <TabPanel header="Stock Adjustments">
+          <Card>
+            <template #title>
+              <div class="flex justify-content-between align-items-center">
+                <span>Stock Adjustments</span>
+                <Button icon="pi pi-plus" label="New Adjustment" @click="showAdjustmentForm = true" />
+              </div>
+            </template>
+            <template #content>
+              <StockAdjustmentForm
+                v-if="showAdjustmentForm"
+                @saved="handleAdjustmentSaved"
+                @cancelled="showAdjustmentForm = false"
+              />
+              <div v-else class="text-center py-6">
+                <i class="pi pi-sliders-h text-4xl text-400 mb-3"></i>
+                <p class="text-500">Stock adjustment history will be displayed here</p>
+              </div>
+            </template>
+          </Card>
+        </TabPanel>
+        
+        <TabPanel header="Categories">
+          <CategoryManagement />
+        </TabPanel>
+        
+        <TabPanel header="Locations">
+          <LocationManagement />
+        </TabPanel>
+        
+        <TabPanel header="Transactions">
+          <TransactionHistory />
+        </TabPanel>
+      </TabView>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import InventoryList from '../components/InventoryList.vue';
-import StockAdjustmentForm from '../components/StockAdjustmentForm.vue';
-import CategoryManagement from '../components/CategoryManagement.vue';
-import PurchaseOrderForm from '../components/PurchaseOrderForm.vue';
-import InventoryReports from '../components/InventoryReports.vue';
-import CycleCountForm from '../components/CycleCountForm.vue';
-import InventoryForecast from '../components/InventoryForecast.vue';
-import LocationManagement from '../components/LocationManagement.vue';
-import TransactionHistory from '../components/TransactionHistory.vue';
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useToast } from 'primevue/usetoast'
+import { formatCurrency } from '@/utils/formatters'
+import Card from 'primevue/card'
+import TabView from 'primevue/tabview'
+import TabPanel from 'primevue/tabpanel'
+import Button from 'primevue/button'
+import Tag from 'primevue/tag'
+import InventoryList from '../components/InventoryList.vue'
+import ItemForm from '../components/ItemForm.vue'
+import StockAdjustmentForm from '../components/StockAdjustmentForm.vue'
+import CategoryManagement from '../components/CategoryManagement.vue'
+import PurchaseOrderForm from '../components/PurchaseOrderForm.vue'
+import InventoryReports from '../components/InventoryReports.vue'
+import CycleCountForm from '../components/CycleCountForm.vue'
+import InventoryForecast from '../components/InventoryForecast.vue'
+import LocationManagement from '../components/LocationManagement.vue'
+import TransactionHistory from '../components/TransactionHistory.vue'
+
+// Composables
+const router = useRouter()
+const toast = useToast()
 
 // Data
-const activeTab = ref('items');
-const selectedItem = ref(null);
-const isCreating = ref(false);
-const showAdjustmentForm = ref(false);
-const showPurchaseOrderForm = ref(false);
-const showCycleCountForm = ref(false);
+const activeTabIndex = ref(0)
+const selectedItem = ref(null)
+const editingItem = ref(null)
+const isCreating = ref(false)
+const isEditing = ref(false)
+const showAdjustmentForm = ref(false)
+const showPurchaseOrderForm = ref(false)
+const showCycleCountForm = ref(false)
 
 // Methods
 const viewItem = (item) => {
-  selectedItem.value = item;
-  isCreating.value = false;
-};
+  selectedItem.value = item
+  isCreating.value = false
+  isEditing.value = false
+}
 
 const createItem = () => {
-  selectedItem.value = null;
-  isCreating.value = true;
-};
+  selectedItem.value = null
+  editingItem.value = null
+  isCreating.value = true
+  isEditing.value = false
+}
+
+const editItem = (item) => {
+  selectedItem.value = null
+  editingItem.value = item
+  isCreating.value = false
+  isEditing.value = true
+}
+
+const adjustStock = (item) => {
+  router.push({ name: 'inventory-adjust', params: { id: item.id } })
+}
 
 const clearSelection = () => {
-  selectedItem.value = null;
-  isCreating.value = false;
-};
+  selectedItem.value = null
+  editingItem.value = null
+  isCreating.value = false
+  isEditing.value = false
+}
+
+const handleItemSaved = (itemData) => {
+  toast.add({ 
+    severity: 'success', 
+    summary: 'Success', 
+    detail: `Item ${isEditing.value ? 'updated' : 'created'} successfully` 
+  })
+  clearSelection()
+}
 
 const handleAdjustmentSaved = () => {
-  showAdjustmentForm.value = false;
-};
+  showAdjustmentForm.value = false
+  toast.add({ severity: 'success', summary: 'Success', detail: 'Stock adjustment saved successfully' })
+}
 
 const handlePurchaseOrderSaved = () => {
-  showPurchaseOrderForm.value = false;
-};
+  showPurchaseOrderForm.value = false
+  toast.add({ severity: 'success', summary: 'Success', detail: 'Purchase order saved successfully' })
+}
 
 const handleCycleCountSaved = () => {
-  showCycleCountForm.value = false;
-};
+  showCycleCountForm.value = false
+  toast.add({ severity: 'success', summary: 'Success', detail: 'Cycle count saved successfully' })
+}
+
+// Helper methods
+const getStatusSeverity = (status) => {
+  const severities = {
+    active: 'success',
+    inactive: 'warning',
+    discontinued: 'danger'
+  }
+  return severities[status] || 'info'
+}
+
+const formatStatus = (status) => {
+  return status.charAt(0).toUpperCase() + status.slice(1)
+}
 </script>
 
 <style scoped>
 .inventory-management {
-  padding: 16px;
+  padding: 1.5rem;
+}
+
+.field {
+  margin-bottom: 1rem;
+}
+
+:deep(.p-tabview-nav) {
+  background: var(--surface-50);
+  border-bottom: 1px solid var(--surface-200);
+}
+
+:deep(.p-tabview-panels) {
+  padding: 1.5rem 0;
+}
+
+:deep(.p-card-title) {
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--surface-200);
 }
 </style>

@@ -1,230 +1,355 @@
 <template>
-  <v-container fluid class="reports-container">
-    <v-card class="reports-card" elevation="2">
-      <v-card-title class="d-flex align-center">
-        <v-icon class="mr-3" size="28" color="primary">mdi-chart-line</v-icon>
-        <h1 class="text-h4 font-weight-bold">Financial Reports</h1>
-        <v-spacer />
-        <v-btn color="primary" @click="showReportBuilder = true">
-          <v-icon start>mdi-plus</v-icon>
-          New Report
-        </v-btn>
-      </v-card-title>
+  <div class="financial-reports">
+    <div class="reports-header">
+      <div class="flex align-items-center">
+        <i class="pi pi-chart-line text-3xl text-primary mr-3"></i>
+        <h1 class="reports-title">Financial Reports</h1>
+      </div>
+      <div class="header-actions">
+        <Button label="Export All" icon="pi pi-download" severity="secondary" @click="exportAll" />
+        <Button label="New Report" icon="pi pi-plus" @click="showCreateDialog = true" />
+      </div>
+    </div>
 
-      <v-card-text>
-        <!-- Quick Actions -->
-        <div class="mb-6">
-          <h2 class="text-h6 mb-3">Quick Actions</h2>
-          <v-row>
-            <v-col v-for="action in quickActions" :key="action.id" cols="12" sm="6" md="3">
-              <v-card class="action-card" elevation="1" @click="navigateToReport(action)">
-                <v-card-text class="text-center pa-4">
-                  <v-icon :color="action.color" size="32" class="mb-2">{{ action.icon }}</v-icon>
-                  <div class="text-subtitle-2 font-weight-bold">{{ action.name }}</div>
-                  <div class="text-caption text-medium-emphasis">{{ action.description }}</div>
-                </v-card-text>
-              </v-card>
-            </v-col>
-          </v-row>
+    <div class="reports-grid">
+      <Card v-for="report in financialReports" :key="report.id" class="report-card">
+        <template #header>
+          <div class="report-header">
+            <i :class="report.icon" :style="{ color: report.color }" class="text-2xl"></i>
+            <Tag :value="report.status" :severity="getStatusSeverity(report.status)" />
+          </div>
+        </template>
+        <template #title>
+          <h3>{{ report.name }}</h3>
+        </template>
+        <template #subtitle>
+          <span>{{ report.category }}</span>
+        </template>
+        <template #content>
+          <p class="report-description">{{ report.description }}</p>
+          <div class="report-meta">
+            <div class="meta-item">
+              <i class="pi pi-clock"></i>
+              <span>Last run: {{ formatDate(report.lastRun) }}</span>
+            </div>
+            <div class="meta-item">
+              <i class="pi pi-calendar"></i>
+              <span>{{ report.frequency }}</span>
+            </div>
+          </div>
+        </template>
+        <template #footer>
+          <div class="report-actions">
+            <Button label="Run" icon="pi pi-play" @click="runReport(report)" :loading="report.running" />
+            <Button label="View" icon="pi pi-eye" severity="info" @click="viewReport(report)" />
+            <Button label="Schedule" icon="pi pi-calendar" severity="secondary" @click="scheduleReport(report)" />
+          </div>
+        </template>
+      </Card>
+    </div>
+
+    <Dialog v-model:visible="showCreateDialog" modal header="Create Financial Report" :style="{ width: '40rem' }">
+      <div class="create-form">
+        <div class="field">
+          <label>Report Name</label>
+          <InputText v-model="newReport.name" class="w-full" />
         </div>
-
-        <!-- Report Categories -->
-        <div v-for="category in reportCategories" :key="category.id" class="mb-6">
-          <h2 class="text-h6 mb-3">{{ category.name }}</h2>
-          <v-row>
-            <v-col v-for="report in category.reports" :key="report.id" cols="12" sm="6" md="4">
-              <v-card class="report-card" elevation="1" @click="navigateToReport(report)">
-                <v-card-text class="pa-4">
-                  <div class="d-flex align-center mb-2">
-                    <v-icon :color="report.color || 'primary'" size="24" class="mr-2">{{ report.icon }}</v-icon>
-                    <div class="text-subtitle-2 font-weight-bold">{{ report.name }}</div>
-                  </div>
-                  <div class="text-caption text-medium-emphasis">{{ report.description }}</div>
-                </v-card-text>
-              </v-card>
-            </v-col>
-          </v-row>
+        <div class="field">
+          <label>Category</label>
+          <Dropdown v-model="newReport.category" :options="categories" class="w-full" />
         </div>
-      </v-card-text>
-    </v-card>
-
-    <!-- Report Builder Dialog -->
-    <v-dialog v-model="showReportBuilder" max-width="800px">
-      <v-card>
-        <v-card-title>
-          <span class="text-h5">Report Builder</span>
-        </v-card-title>
-        <v-card-text>
-          <p>Report builder functionality coming soon...</p>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn text @click="showReportBuilder = false">Close</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-  </v-container>
+        <div class="field">
+          <label>Description</label>
+          <Textarea v-model="newReport.description" rows="3" class="w-full" />
+        </div>
+      </div>
+      <template #footer>
+        <Button label="Cancel" severity="secondary" @click="showCreateDialog = false" />
+        <Button label="Create" @click="createReport" />
+      </template>
+    </Dialog>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import Card from 'primevue/card'
+import Button from 'primevue/button'
+import Dialog from 'primevue/dialog'
+import InputText from 'primevue/inputtext'
+import Dropdown from 'primevue/dropdown'
+import Textarea from 'primevue/textarea'
+import Tag from 'primevue/tag'
+import { useToast } from 'primevue/usetoast'
 
-const router = useRouter()
-const showReportBuilder = ref(false)
+const showCreateDialog = ref(false)
+const toast = useToast()
 
-const quickActions = ref([
+const financialReports = ref([
   {
-    id: 'trial-balance',
-    name: 'Trial Balance',
-    description: 'Account balances summary',
-    icon: 'mdi-scale-balance',
-    color: 'primary',
-    route: '/gl/trial-balance'
+    id: 'balance-sheet',
+    name: 'Balance Sheet',
+    category: 'Financial Statements',
+    description: 'Statement of financial position showing assets, liabilities, and equity',
+    icon: 'pi pi-chart-bar',
+    color: '#2196F3',
+    status: 'Active',
+    lastRun: '2023-11-15T10:30:00',
+    frequency: 'Monthly',
+    running: false
   },
   {
     id: 'income-statement',
     name: 'Income Statement',
-    description: 'Profit and loss report',
-    icon: 'mdi-chart-line',
-    color: 'success',
-    route: '/reports/income-statement'
-  },
-  {
-    id: 'balance-sheet',
-    name: 'Balance Sheet',
-    description: 'Financial position',
-    icon: 'mdi-file-document',
-    color: 'info',
-    route: '/reports/balance-sheet'
+    category: 'Financial Statements',
+    description: 'Profit and loss statement showing revenues and expenses',
+    icon: 'pi pi-trending-up',
+    color: '#4CAF50',
+    status: 'Active',
+    lastRun: '2023-11-15T09:15:00',
+    frequency: 'Monthly',
+    running: false
   },
   {
     id: 'cash-flow',
-    name: 'Cash Flow',
-    description: 'Cash movement analysis',
-    icon: 'mdi-cash-flow',
-    color: 'warning',
-    route: '/reports/cash-flow'
+    name: 'Cash Flow Statement',
+    category: 'Financial Statements',
+    description: 'Statement showing cash inflows and outflows',
+    icon: 'pi pi-wallet',
+    color: '#FF9800',
+    status: 'Active',
+    lastRun: '2023-11-14T16:45:00',
+    frequency: 'Monthly',
+    running: false
+  },
+  {
+    id: 'trial-balance',
+    name: 'Trial Balance',
+    category: 'General Ledger',
+    description: 'List of all accounts with their debit and credit balances',
+    icon: 'pi pi-list',
+    color: '#9C27B0',
+    status: 'Active',
+    lastRun: '2023-11-15T08:00:00',
+    frequency: 'Daily',
+    running: false
+  },
+  {
+    id: 'budget-variance',
+    name: 'Budget vs Actual',
+    category: 'Budget Analysis',
+    description: 'Comparison of budgeted amounts with actual results',
+    icon: 'pi pi-chart-pie',
+    color: '#607D8B',
+    status: 'Active',
+    lastRun: '2023-11-13T14:20:00',
+    frequency: 'Weekly',
+    running: false
+  },
+  {
+    id: 'financial-ratios',
+    name: 'Financial Ratios',
+    category: 'Analysis',
+    description: 'Key financial ratios and performance indicators',
+    icon: 'pi pi-calculator',
+    color: '#795548',
+    status: 'Draft',
+    lastRun: '2023-11-10T11:30:00',
+    frequency: 'Monthly',
+    running: false
   }
 ])
 
-const reportCategories = ref([
-  {
-    id: 'financial',
-    name: 'Financial Statements',
-    reports: [
-      {
-        id: 'balance-sheet',
-        name: 'Balance Sheet',
-        description: 'Assets, liabilities, and equity',
-        icon: 'mdi-file-document',
-        color: 'primary',
-        route: '/reports/balance-sheet'
-      },
-      {
-        id: 'income-statement',
-        name: 'Income Statement',
-        description: 'Revenue and expenses',
-        icon: 'mdi-chart-line',
-        color: 'success',
-        route: '/reports/income-statement'
-      },
-      {
-        id: 'cash-flow',
-        name: 'Cash Flow Statement',
-        description: 'Cash receipts and payments',
-        icon: 'mdi-cash-flow',
-        color: 'info',
-        route: '/reports/cash-flow'
-      }
-    ]
-  },
-  {
-    id: 'operational',
-    name: 'Operational Reports',
-    reports: [
-      {
-        id: 'trial-balance',
-        name: 'Trial Balance',
-        description: 'Account balances verification',
-        icon: 'mdi-scale-balance',
-        color: 'primary',
-        route: '/gl/trial-balance'
-      },
-      {
-        id: 'general-ledger',
-        name: 'General Ledger',
-        description: 'Detailed account transactions',
-        icon: 'mdi-book-open',
-        color: 'secondary',
-        route: '/gl/general-ledger'
-      },
-      {
-        id: 'journal-entries',
-        name: 'Journal Entries',
-        description: 'Transaction entries log',
-        icon: 'mdi-notebook',
-        color: 'warning',
-        route: '/gl/journal-entries'
-      }
-    ]
-  },
-  {
-    id: 'analysis',
-    name: 'Analysis Reports',
-    reports: [
-      {
-        id: 'budget-analysis',
-        name: 'Budget vs Actual',
-        description: 'Budget performance analysis',
-        icon: 'mdi-chart-bar',
-        color: 'purple',
-        route: '/budget/analysis'
-      },
-      {
-        id: 'variance-analysis',
-        name: 'Variance Analysis',
-        description: 'Budget variance breakdown',
-        icon: 'mdi-chart-pie',
-        color: 'orange',
-        route: '/budget/variance'
-      }
-    ]
-  }
+const newReport = ref({
+  name: '',
+  category: '',
+  description: ''
+})
+
+const categories = ref([
+  'Financial Statements',
+  'General Ledger',
+  'Budget Analysis',
+  'Analysis',
+  'Compliance'
 ])
 
-const navigateToReport = (report: any) => {
-  console.log('Navigating to report:', report.route)
-  router.push(report.route).catch(err => {
-    console.error('Navigation error:', err)
-    // Fallback to dashboard if route doesn't exist
-    router.push('/dashboard')
+const runReport = async (report: any) => {
+  report.running = true
+  try {
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    report.lastRun = new Date().toISOString()
+    toast.add({
+      severity: 'success',
+      summary: 'Report Generated',
+      detail: `${report.name} has been generated successfully`,
+      life: 3000
+    })
+  } catch (error) {
+    toast.add({
+      severity: 'error',
+      summary: 'Generation Failed',
+      detail: `Failed to generate ${report.name}`,
+      life: 3000
+    })
+  } finally {
+    report.running = false
+  }
+}
+
+const viewReport = (report: any) => {
+  console.log('Viewing report:', report.name)
+}
+
+const scheduleReport = (report: any) => {
+  console.log('Scheduling report:', report.name)
+}
+
+const createReport = () => {
+  financialReports.value.push({
+    id: `report-${Date.now()}`,
+    name: newReport.value.name,
+    category: newReport.value.category,
+    description: newReport.value.description,
+    icon: 'pi pi-file',
+    color: '#6c757d',
+    status: 'Draft',
+    lastRun: new Date().toISOString(),
+    frequency: 'Manual',
+    running: false
   })
+  
+  newReport.value = { name: '', category: '', description: '' }
+  showCreateDialog.value = false
+}
+
+const exportAll = () => {
+  console.log('Exporting all financial reports')
+}
+
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString()
+}
+
+const getStatusSeverity = (status: string) => {
+  const severities = {
+    Active: 'success',
+    Draft: 'warning',
+    Archived: 'secondary'
+  }
+  return severities[status] || 'info'
 }
 </script>
 
 <style scoped>
-.reports-container {
-  background: #fafafa;
+.financial-reports {
+  padding: 1.5rem;
+  background: var(--surface-ground);
   min-height: 100vh;
-  padding: 16px;
 }
 
-.reports-card {
-  border-radius: 12px;
-}
-
-.action-card,
-.report-card {
-  cursor: pointer;
-  transition: all 0.2s ease;
+.reports-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: var(--surface-card);
   border-radius: 8px;
-  height: 100%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.action-card:hover,
+.reports-title {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.reports-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 1.5rem;
+}
+
+.report-card {
+  transition: transform 0.2s;
+}
+
 .report-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.report-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: var(--surface-50);
+}
+
+.report-description {
+  color: var(--text-color-secondary);
+  margin-bottom: 1rem;
+}
+
+.report-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--text-color-secondary);
+}
+
+.report-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.create-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.field label {
+  font-weight: 600;
+  color: var(--text-color-secondary);
+}
+
+@media (max-width: 768px) {
+  .financial-reports {
+    padding: 1rem;
+  }
+  
+  .reports-header {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .reports-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .report-actions {
+    flex-direction: column;
+  }
 }
 </style>
