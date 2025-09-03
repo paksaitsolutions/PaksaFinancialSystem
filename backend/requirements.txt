@@ -1,7 +1,7 @@
 # Core Dependencies
 fastapi>=0.95.0,<0.96.0
 uvicorn[standard]>=0.21.0,<0.22.0
-gunicorn>=20.1.0,<21.0.0
+gunicorn>=20.1.0,<24.0.0
 
 # Database
 asyncpg==0.29.0
@@ -13,7 +13,7 @@ sqlalchemy-utils==0.41.1
 # Authentication & Security
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
-python-multipart==0.0.18
+python-multipart==0.0.20
 python-dotenv==1.0.1
 
 # Data Validation
@@ -30,7 +30,7 @@ pytest==7.4.3
 pytest-asyncio==0.21.1
 
 # Linting
-black==24.3.0
+black==25.1.0
 isort==5.12.0
 mypy==1.5.1
 pandas==2.2.0
