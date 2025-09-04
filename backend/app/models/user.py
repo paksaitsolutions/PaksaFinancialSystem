@@ -28,19 +28,22 @@ class User(Base):
     last_login = Column(DateTime)
     
     @classmethod
-    def authenticate(cls, db: Session, email: str, password: str):
+    async def authenticate(cls, db: Session, email: str, password: str):
         """Authenticate user by email and password."""
-        user = db.query(cls).filter(
-            cls.email == email, 
-            cls.is_active == True
-        ).first()
-        
+        result = await db.execute(
+            select(cls).filter(
+                cls.email == email,
+                cls.is_active == True
+            )
+        )
+        user = result.scalar_one_or_none()
+
         if user and verify_password(password, user.hashed_password):
             # Update last login
             user.last_login = datetime.utcnow()
-            db.commit()
+            await db.commit()
             return user
-        
+
         return None
     
     @property

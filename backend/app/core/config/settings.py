@@ -27,6 +27,15 @@ class Settings(BaseSettings):
         "DATABASE_URL", 
         "sqlite+aiosqlite:///./paksa_financial.db"
     )
+    SQLALCHEMY_DATABASE_URI: str = os.getenv(
+        "DATABASE_URL", 
+        "sqlite:///./paksa_financial.db"
+    )
+    SQLALCHEMY_POOL_SIZE: int = 5
+    SQLALCHEMY_MAX_OVERFLOW: int = 10
+    SQLALCHEMY_POOL_TIMEOUT: int = 30
+    SQLALCHEMY_POOL_RECYCLE: int = 3600
+    SQLALCHEMY_ECHO: bool = False
     
     # Redis
     REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")

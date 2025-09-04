@@ -117,6 +117,11 @@ export function setupPrimeVue(app: App) {
   app.component('Divider', Divider)
   app.component('Skeleton', Skeleton)
   app.component('ScrollPanel', ScrollPanel)
+  
+  // Register components and directives only if not already registered
+  if (!('tooltip' in app._context.directives)) {
+    app.directive('tooltip', Tooltip);
+  }
   app.component('Splitter', Splitter)
   app.component('SplitterPanel', SplitterPanel)
   app.component('Tree', Tree)

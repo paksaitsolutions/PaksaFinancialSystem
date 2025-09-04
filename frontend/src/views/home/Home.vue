@@ -2,162 +2,260 @@
   <div class="dashboard">
     <div class="dashboard-header">
       <h1>Financial Dashboard</h1>
-      <p>Welcome to Paksa Financial System</p>
+      <p>Welcome to Paksa Financial System - Real-time overview of your financial performance</p>
     </div>
 
-    <div class="dashboard-cards">
-      <Card class="dashboard-card">
-        <template #content>
-          <div class="card-content">
-            <div class="card-icon">
-              <i class="pi pi-dollar"></i>
-            </div>
-            <div class="card-info">
-              <h3>Total Revenue</h3>
-              <p class="card-value">$1,234,567</p>
-              <small class="card-change positive">+12.5% from last month</small>
-            </div>
+    <!-- Summary Cards -->
+    <div class="summary-cards">
+      <Card class="summary-card">
+        <template #title>
+          <div class="card-title">
+            <i class="pi pi-dollar text-blue"></i>
+            <span>Total Revenue</span>
           </div>
         </template>
-      </Card>
-
-      <Card class="dashboard-card">
         <template #content>
-          <div class="card-content">
-            <div class="card-icon">
-              <i class="pi pi-credit-card"></i>
-            </div>
-            <div class="card-info">
-              <h3>Accounts Receivable</h3>
-              <p class="card-value">$456,789</p>
-              <small class="card-change negative">-3.2% from last month</small>
-            </div>
-          </div>
+          <div class="summary-amount text-blue">${{ kpis.revenue.current.toLocaleString() }}</div>
+          <div class="summary-change text-green">+{{ kpis.revenue.change_percent }}%</div>
         </template>
       </Card>
-
-      <Card class="dashboard-card">
-        <template #content>
-          <div class="card-content">
-            <div class="card-icon">
-              <i class="pi pi-money-bill"></i>
-            </div>
-            <div class="card-info">
-              <h3>Accounts Payable</h3>
-              <p class="card-value">$234,567</p>
-              <small class="card-change positive">-8.1% from last month</small>
-            </div>
+      
+      <Card class="summary-card">
+        <template #title>
+          <div class="card-title">
+            <i class="pi pi-credit-card text-green"></i>
+            <span>Accounts Receivable</span>
           </div>
         </template>
-      </Card>
-
-      <Card class="dashboard-card">
         <template #content>
-          <div class="card-content">
-            <div class="card-icon">
-              <i class="pi pi-wallet"></i>
-            </div>
-            <div class="card-info">
-              <h3>Cash Balance</h3>
-              <p class="card-value">$789,123</p>
-              <small class="card-change positive">+5.7% from last month</small>
-            </div>
+          <div class="summary-amount text-green">${{ financialSummary.accounts_receivable.toLocaleString() }}</div>
+          <div class="summary-change text-red">-3.2%</div>
+        </template>
+      </Card>
+      
+      <Card class="summary-card">
+        <template #title>
+          <div class="card-title">
+            <i class="pi pi-money-bill text-orange"></i>
+            <span>Accounts Payable</span>
           </div>
+        </template>
+        <template #content>
+          <div class="summary-amount text-orange">${{ financialSummary.accounts_payable.toLocaleString() }}</div>
+          <div class="summary-change text-green">-8.1%</div>
+        </template>
+      </Card>
+      
+      <Card class="summary-card">
+        <template #title>
+          <div class="card-title">
+            <i class="pi pi-wallet text-purple"></i>
+            <span>Cash Balance</span>
+          </div>
+        </template>
+        <template #content>
+          <div class="summary-amount text-purple">${{ financialSummary.cash_balance.toLocaleString() }}</div>
+          <div class="summary-change text-green">+5.7%</div>
         </template>
       </Card>
     </div>
 
-    <div class="dashboard-content">
-      <div class="dashboard-section">
-        <Card>
-          <template #title>Recent Transactions</template>
-          <template #content>
-            <DataTable :value="recentTransactions" responsiveLayout="scroll">
-              <Column field="date" header="Date"></Column>
-              <Column field="description" header="Description"></Column>
-              <Column field="amount" header="Amount">
-                <template #body="slotProps">
-                  <span :class="{ 'text-green-500': slotProps.data.amount > 0, 'text-red-500': slotProps.data.amount < 0 }">
-                    ${{ Math.abs(slotProps.data.amount).toLocaleString() }}
-                  </span>
-                </template>
-              </Column>
-              <Column field="status" header="Status">
-                <template #body="slotProps">
-                  <Tag :value="slotProps.data.status" :severity="getStatusSeverity(slotProps.data.status)" />
-                </template>
-              </Column>
-            </DataTable>
-          </template>
-        </Card>
-      </div>
-
-      <div class="dashboard-section">
-        <Card>
-          <template #title>Quick Actions</template>
-          <template #content>
-            <div class="quick-actions">
-              <Button 
-                label="Create Invoice" 
-                icon="pi pi-plus" 
-                class="p-button-outlined"
-                @click="$router.push('/ar/invoices')"
-              />
-              <Button 
-                label="Record Payment" 
-                icon="pi pi-credit-card" 
-                class="p-button-outlined"
-                @click="$router.push('/ap/payments')"
-              />
-              <Button 
-                label="Journal Entry" 
-                icon="pi pi-book" 
-                class="p-button-outlined"
-                @click="$router.push('/gl/journal-entries')"
-              />
-              <Button 
-                label="View Reports" 
-                icon="pi pi-chart-bar" 
-                class="p-button-outlined"
-                @click="$router.push('/reports')"
-              />
-            </div>
-          </template>
-        </Card>
-      </div>
+    <!-- Main Content Area -->
+    <div class="main-content">
+      <Card class="content-card">
+        <template #title>
+          <div class="card-title-with-action">
+            <span>Recent Transactions</span>
+            <Button 
+              label="View All" 
+              icon="pi pi-arrow-right" 
+              iconPos="right" 
+              class="p-button-text p-button-sm" 
+              @click="loadRecentTransactions" 
+            />
+          </div>
+        </template>
+        <template #content>
+          <DataTable 
+            :value="recentTransactions" 
+            :rows="5" 
+            :paginator="false"
+            responsiveLayout="scroll"
+          >
+            <Column field="date" header="Date">
+              <template #body="{ data }">
+                <span>{{ formatDate(data.date) }}</span>
+              </template>
+            </Column>
+            <Column field="description" header="Description" />
+            <Column field="amount" header="Amount">
+              <template #body="{ data }">
+                <span :class="data.amount >= 0 ? 'text-green' : 'text-red'">
+                  {{ formatCurrency(data.amount) }}
+                </span>
+              </template>
+            </Column>
+            <Column field="status" header="Status">
+              <template #body="{ data }">
+                <Tag :value="data.status" :severity="getStatusSeverity(data.status)" />
+              </template>
+            </Column>
+          </DataTable>
+        </template>
+      </Card>
+      
+      <Card class="content-card">
+        <template #title>
+          <div class="card-title-with-action">
+            <span>Quick Actions</span>
+          </div>
+        </template>
+        <template #content>
+          <div class="quick-actions-grid">
+            <Button 
+              label="Create Invoice" 
+              icon="pi pi-plus" 
+              class="p-button-outlined action-btn"
+              @click="$router.push('/ar')"
+            />
+            <Button 
+              label="Record Payment" 
+              icon="pi pi-credit-card" 
+              class="p-button-outlined action-btn"
+              @click="$router.push('/ap')"
+            />
+            <Button 
+              label="Journal Entry" 
+              icon="pi pi-book" 
+              class="p-button-outlined action-btn"
+              @click="$router.push('/accounting/journal-entry')"
+            />
+            <Button 
+              label="View Reports" 
+              icon="pi pi-chart-bar" 
+              class="p-button-outlined action-btn"
+              @click="$router.push('/reports')"
+            />
+          </div>
+        </template>
+      </Card>
     </div>
+
+
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { apiClient } from '@/utils/apiClient'
 
-const recentTransactions = ref([
-  {
-    date: '2024-01-15',
-    description: 'Customer Payment - INV-001',
-    amount: 5000,
-    status: 'Completed'
+const loading = ref(false)
+const kpis = ref({
+  revenue: { current: 1234567, change_percent: 12.5 },
+  expenses: { current: 987654, change_percent: 8.3 }
+})
+
+const financialSummary = ref({
+  total_revenue: 1234567,
+  accounts_receivable: 456789,
+  accounts_payable: 234567,
+  cash_balance: 789123,
+  net_income: 246913
+})
+
+const recentTransactions = ref([])
+const systemAlerts = ref([])
+
+const revenueChartData = ref({
+  labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+  datasets: [{
+    label: 'Revenue',
+    data: [85000, 92000, 88000, 95000, 102000, 98000],
+    borderColor: '#3B82F6',
+    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+    tension: 0.4
+  }]
+})
+
+const expenseChartData = ref({
+  labels: ['Salaries', 'Rent', 'Utilities', 'Marketing', 'Travel'],
+  datasets: [{
+    data: [45000, 12000, 3500, 8000, 2500],
+    backgroundColor: ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6']
+  }]
+})
+
+const chartOptions = ref({
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: { display: false }
   },
-  {
-    date: '2024-01-14',
-    description: 'Office Supplies Purchase',
-    amount: -250,
-    status: 'Pending'
-  },
-  {
-    date: '2024-01-13',
-    description: 'Service Revenue',
-    amount: 3500,
-    status: 'Completed'
-  },
-  {
-    date: '2024-01-12',
-    description: 'Utility Bill Payment',
-    amount: -450,
-    status: 'Completed'
+  scales: {
+    y: {
+      beginAtZero: true,
+      ticks: {
+        callback: function(value: any) {
+          return '$' + value.toLocaleString()
+        }
+      }
+    }
   }
-])
+})
+
+const doughnutOptions = ref({
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: {
+      position: 'bottom'
+    }
+  }
+})
+
+const loadDashboardData = async () => {
+  loading.value = true
+  try {
+    const [kpiResponse, summaryResponse, transactionsResponse, alertsResponse] = await Promise.all([
+      apiClient.get('/analytics/kpis'),
+      apiClient.get('/analytics/financial-summary'),
+      apiClient.get('/analytics/recent-transactions'),
+      apiClient.get('/analytics/alerts')
+    ])
+    
+    kpis.value = kpiResponse.data
+    financialSummary.value = summaryResponse.data
+    recentTransactions.value = transactionsResponse.data
+    systemAlerts.value = alertsResponse.data
+  } catch (error) {
+    console.error('Error loading dashboard data:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+const loadRecentTransactions = async () => {
+  loading.value = true
+  try {
+    const response = await apiClient.get('/analytics/recent-transactions')
+    recentTransactions.value = response.data
+  } catch (error) {
+    console.error('Error loading transactions:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString()
+}
+
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD'
+  }).format(value)
+}
 
 const getStatusSeverity = (status: string) => {
   switch (status) {
@@ -167,12 +265,27 @@ const getStatusSeverity = (status: string) => {
     default: return 'info'
   }
 }
+
+const getAlertIcon = (type: string) => {
+  switch (type) {
+    case 'warning': return 'pi pi-exclamation-triangle text-orange-500'
+    case 'error': return 'pi pi-times-circle text-red-500'
+    case 'info': return 'pi pi-info-circle text-blue-500'
+    case 'success': return 'pi pi-check-circle text-green-500'
+    default: return 'pi pi-info-circle text-blue-500'
+  }
+}
+
+onMounted(() => {
+  loadDashboardData()
+})
 </script>
 
 <style scoped>
 .dashboard {
-  padding: 0;
-  background: transparent;
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .dashboard-header {
@@ -180,98 +293,90 @@ const getStatusSeverity = (status: string) => {
 }
 
 .dashboard-header h1 {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #1f2937;
   margin: 0 0 0.5rem 0;
-  color: var(--text-color);
 }
 
 .dashboard-header p {
+  color: #6b7280;
   margin: 0;
-  color: var(--text-color-secondary);
 }
 
-.dashboard-cards {
+.summary-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
 }
 
-.dashboard-card {
-  height: auto;
-  min-height: 120px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.card-content {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
+.summary-card {
   height: 100%;
 }
 
-.card-icon {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  background: #007bff;
+.card-title {
   display: flex;
   align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 1.25rem;
+  gap: 0.5rem;
+  font-weight: 600;
 }
 
-.card-info h3 {
-  margin: 0 0 0.5rem 0;
-  font-size: 0.875rem;
-  color: var(--text-color-secondary);
-  font-weight: 500;
-}
-
-.card-value {
-  margin: 0 0 0.25rem 0;
+.summary-amount {
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--text-color);
+  margin-bottom: 0.5rem;
 }
 
-.card-change {
-  font-size: 0.75rem;
+.summary-change {
+  font-size: 0.875rem;
+  font-weight: 600;
 }
 
-.card-change.positive {
-  color: var(--green-500);
-}
-
-.card-change.negative {
-  color: var(--red-500);
-}
-
-.dashboard-content {
+.main-content {
   display: grid;
   grid-template-columns: 2fr 1fr;
+  gap: 1.5rem;
+}
+
+.content-card {
+  height: fit-content;
+}
+
+.card-title-with-action {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.quick-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 1rem;
 }
 
-.dashboard-section {
-  margin-bottom: 1rem;
+.action-btn {
+  width: 100%;
 }
 
-.quick-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
+.text-blue { color: #3b82f6; }
+.text-green { color: #10b981; }
+.text-orange { color: #f59e0b; }
+.text-purple { color: #8b5cf6; }
+.text-red { color: #ef4444; }
 
 @media (max-width: 768px) {
-  .dashboard-content {
+  .dashboard {
+    padding: 1rem;
+  }
+  
+  .main-content {
     grid-template-columns: 1fr;
   }
   
-  .quick-actions {
-    flex-direction: row;
-    flex-wrap: wrap;
+  .summary-cards {
+    grid-template-columns: 1fr;
   }
 }
 </style>

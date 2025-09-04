@@ -82,20 +82,19 @@
     </div>
 
     <div class="report-footer">
-      <Button icon="pi pi-print" label="Print" class="p-button-text" @click="printReport" />
-      <Button icon="pi pi-download" label="Export PDF" class="p-button-text" @click="exportToPDF" />
-      <Button icon="pi pi-file-excel" label="Export Excel" class="p-button-text" @click="exportToExcel" />
+      <Button icon="pi pi-print" label="Print" @click="printCashFlow" />
+      <SplitButton label="Export" icon="pi pi-download" @click="exportCashFlowToPDF" :model="exportOptions" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { useEnhancedReports } from '@/composables/useEnhancedReports';
+import { useReportExport } from '@/composables/useReportExport';
 import { formatCurrency } from '@/utils/formatters';
-import ReportHeader from '@/components/reports/ReportHeader.vue';
 
-const { loading, exportLoading, generateReport, exportReport } = useEnhancedReports();
+const { exportToCSV, exportToPDF, printReport } = useReportExport();
+const loading = ref(false);
 
 const periodStart = ref(new Date(new Date().getFullYear(), 0, 1));
 const periodEnd = ref(new Date());
@@ -129,9 +128,74 @@ const formatAccountName = (key: string) => {
   return key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 };
 
-const printReport = () => window.print();
-const exportToPDF = () => handleExport('pdf');
-const exportToExcel = () => handleExport('excel');
+const printCashFlow = () => {
+  if (reportData.value) {
+    const data = formatDataForExport()
+    printReport('Cash Flow Statement', data)
+  }
+}
+
+const exportCashFlowToPDF = () => {
+  if (reportData.value) {
+    const data = formatDataForExport()
+    exportToPDF('Cash Flow Statement', data, 'Cash_Flow_Statement')
+  }
+}
+
+const exportCashFlowToExcel = () => {
+  if (reportData.value) {
+    const data = formatDataForExport()
+    exportToCSV(data, 'Cash_Flow_Statement')
+  }
+}
+
+const formatDataForExport = () => {
+  const data = []
+  
+  // Operating Activities
+  data.push({ Section: 'OPERATING ACTIVITIES', Account: '', Amount: '' })
+  Object.entries(reportData.value.operating_activities).forEach(([key, value]) => {
+    if (key !== 'net_operating_cash') {
+      data.push({ Section: '', Account: formatAccountName(key), Amount: formatCurrency(value, currency.value) })
+    }
+  })
+  data.push({ Section: '', Account: 'Net Cash from Operating Activities', Amount: formatCurrency(reportData.value.operating_activities.net_operating_cash, currency.value) })
+  
+  // Investing Activities
+  data.push({ Section: 'INVESTING ACTIVITIES', Account: '', Amount: '' })
+  Object.entries(reportData.value.investing_activities).forEach(([key, value]) => {
+    if (key !== 'net_investing_cash') {
+      data.push({ Section: '', Account: formatAccountName(key), Amount: formatCurrency(value, currency.value) })
+    }
+  })
+  data.push({ Section: '', Account: 'Net Cash from Investing Activities', Amount: formatCurrency(reportData.value.investing_activities.net_investing_cash, currency.value) })
+  
+  // Financing Activities
+  data.push({ Section: 'FINANCING ACTIVITIES', Account: '', Amount: '' })
+  Object.entries(reportData.value.financing_activities).forEach(([key, value]) => {
+    if (key !== 'net_financing_cash') {
+      data.push({ Section: '', Account: formatAccountName(key), Amount: formatCurrency(value, currency.value) })
+    }
+  })
+  data.push({ Section: '', Account: 'Net Cash from Financing Activities', Amount: formatCurrency(reportData.value.financing_activities.net_financing_cash, currency.value) })
+  
+  data.push({ Section: '', Account: 'NET CHANGE IN CASH', Amount: formatCurrency(reportData.value.net_cash_change, currency.value) })
+  
+  return data
+}
+
+const exportOptions = [
+  {
+    label: 'Export to PDF',
+    icon: 'pi pi-file-pdf',
+    command: () => exportCashFlowToPDF()
+  },
+  {
+    label: 'Export to Excel',
+    icon: 'pi pi-file-excel',
+    command: () => exportCashFlowToExcel()
+  }
+]
 
 onMounted(() => {
   fetchReportData();

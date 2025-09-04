@@ -108,6 +108,10 @@ except ImportError as e:
 # Financial Statements
 api_router.include_router(financial_statements.router, prefix="/financial-statements", tags=["financial-statements"])
 
+# HRM endpoints
+from app.api.endpoints import hrm
+api_router.include_router(hrm.router, prefix="/hrm", tags=["hrm"])
+
 # Auth v1
 api_router.include_router(auth_v1.router, prefix="/auth", tags=["auth"])
 
@@ -131,5 +135,12 @@ try:
     api_router.include_router(fixed_assets.router, prefix="/fixed-assets", tags=["fixed-assets"])
 except ImportError as e:
     print(f"Warning: Could not import fixed assets module: {e}")
+
+# AI Assistant
+try:
+    from app.api.endpoints.ai_assistant import router as ai_assistant_router
+    api_router.include_router(ai_assistant_router, prefix="/ai-assistant", tags=["ai-assistant"])
+except ImportError as e:
+    print(f"Warning: Could not import AI assistant module: {e}")
 
 # Add additional routers below as needed, using the same style.

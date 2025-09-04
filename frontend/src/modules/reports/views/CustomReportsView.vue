@@ -37,8 +37,8 @@
         <template #footer>
           <div class="report-actions">
             <Button label="Run" icon="pi pi-play" @click="runReport(report)" :loading="report.running" />
-            <Button label="Edit" icon="pi pi-pencil" severity="warning" />
-            <Button label="Clone" icon="pi pi-copy" severity="secondary" />
+            <Button icon="pi pi-print" @click="printCustomReport(report)" />
+            <SplitButton label="Export" icon="pi pi-download" @click="exportCustomReport(report)" :model="getCustomReportExportOptions(report)" />
           </div>
         </template>
       </Card>
@@ -79,13 +79,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import Card from 'primevue/card'
-import Button from 'primevue/button'
-import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
-import Textarea from 'primevue/textarea'
-import Tag from 'primevue/tag'
-import Checkbox from 'primevue/checkbox'
+import { useReportExport } from '@/composables/useReportExport'
 
 const showBuilder = ref(false)
 const selectedSources = ref([])
@@ -178,6 +172,49 @@ const createCustomReport = () => {
   formErrors.value = { name: '', sources: '' }
   showBuilder.value = false
 }
+
+const { exportToCSV, exportToPDF, printReport } = useReportExport()
+
+const exportCustomReport = (report: any) => {
+  const data = [{
+    'Report Name': report.name,
+    'Type': report.type,
+    'Created By': report.createdBy,
+    'Created Date': formatDate(report.createdDate),
+    'Description': report.description
+  }]
+  exportToPDF(report.name, data, report.name.replace(/\s+/g, '_'))
+}
+
+const printCustomReport = (report: any) => {
+  const data = [{
+    'Report Name': report.name,
+    'Type': report.type,
+    'Created By': report.createdBy,
+    'Created Date': formatDate(report.createdDate),
+    'Description': report.description
+  }]
+  printReport(report.name, data)
+}
+
+const getCustomReportExportOptions = (report: any) => [
+  {
+    label: 'Export to PDF',
+    icon: 'pi pi-file-pdf',
+    command: () => exportCustomReport(report)
+  },
+  {
+    label: 'Export to Excel',
+    icon: 'pi pi-file-excel',
+    command: () => exportToCSV([{
+      'Report Name': report.name,
+      'Type': report.type,
+      'Created By': report.createdBy,
+      'Created Date': formatDate(report.createdDate),
+      'Description': report.description
+    }], report.name.replace(/\s+/g, '_'))
+  }
+]
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString()

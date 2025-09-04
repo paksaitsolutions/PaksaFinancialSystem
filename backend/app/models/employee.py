@@ -7,11 +7,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 
-<<<<<<< HEAD:backend/app/modules/core_financials/payroll/models/employee.py
-from app.core.database import Base
-=======
 from app.core.db.base import Base
->>>>>>> e96df7278ce4216131b6c65d411c0723f4de7f91:backend/app/models/employee.py
 from app.modules.core_financials.payroll.models.base import PayrollBase
 
 
@@ -57,7 +53,8 @@ class Employee(PayrollBase, Base):
         nullable=False
     )
     job_title = Column(String(100), nullable=False)
-    department = Column(String(100), nullable=False)
+    department_id = Column(UUID(as_uuid=True), ForeignKey('departments.id'), nullable=True)
+    department = relationship("Department", back_populates="employees")
     manager_id = Column(UUID(as_uuid=True), ForeignKey('payroll_employees.id'), nullable=True)
     is_active = Column(Boolean, default=True, nullable=False)
     
@@ -82,6 +79,7 @@ class Employee(PayrollBase, Base):
     # Relationships
     manager = relationship("Employee", remote_side=[id], backref="subordinates")
     payslips = relationship("Payslip", back_populates="employee")
+    payroll_items = relationship("PayrollItem", back_populates="employee")
     
     # Audit Fields
     created_at = Column(Date, default=date.today, nullable=False)

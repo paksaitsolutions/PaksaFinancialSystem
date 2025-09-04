@@ -55,8 +55,8 @@ const menuItems = [
     to: '/'
   },
   {
-    label: 'Financial Management',
-    icon: 'pi pi-chart-line',
+    label: 'Accounting',
+    icon: 'pi pi-calculator',
     items: [
       {
         label: 'General Ledger',
@@ -73,6 +73,22 @@ const menuItems = [
         icon: 'pi pi-credit-card',
         to: '/ar'
       },
+      {
+        label: 'Budget Management',
+        icon: 'pi pi-chart-pie',
+        to: '/budget'
+      },
+      {
+        label: 'Tax Management',
+        icon: 'pi pi-percentage',
+        to: '/tax'
+      }
+    ]
+  },
+  {
+    label: 'Financial Management',
+    icon: 'pi pi-chart-line',
+    items: [
       {
         label: 'Cash Management',
         icon: 'pi pi-wallet',
@@ -93,11 +109,6 @@ const menuItems = [
         label: 'Fixed Assets',
         icon: 'pi pi-building',
         to: '/fixed-assets'
-      },
-      {
-        label: 'Budget Management',
-        icon: 'pi pi-calculator',
-        to: '/budget'
       }
     ]
   },
@@ -117,34 +128,15 @@ const menuItems = [
       }
     ]
   },
+
   {
-    label: 'Tax Management',
-    icon: 'pi pi-percentage',
+    label: 'Workflow',
+    icon: 'pi pi-check-circle',
     items: [
       {
-        label: 'Dashboard',
-        icon: 'pi pi-home',
-        to: '/tax'
-      },
-      {
-        label: 'Tax Codes',
-        icon: 'pi pi-tags',
-        to: '/tax/codes'
-      },
-      {
-        label: 'Tax Rates',
-        icon: 'pi pi-percentage',
-        to: '/tax/rates'
-      },
-      {
-        label: 'Tax Returns',
-        icon: 'pi pi-file',
-        to: '/tax/returns'
-      },
-      {
-        label: 'Compliance',
-        icon: 'pi pi-check-circle',
-        to: '/tax/compliance'
+        label: 'Approvals',
+        icon: 'pi pi-check',
+        to: '/approvals'
       }
     ]
   },
@@ -206,9 +198,14 @@ const menuItems = [
     ]
   },
   {
-    label: 'Settings',
+    label: 'Administration',
     icon: 'pi pi-cog',
     items: [
+      {
+        label: 'Super Admin',
+        icon: 'pi pi-crown',
+        to: '/super-admin'
+      },
       {
         label: 'General Settings',
         icon: 'pi pi-sliders-h',

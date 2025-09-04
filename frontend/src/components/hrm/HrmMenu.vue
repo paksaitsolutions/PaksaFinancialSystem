@@ -4,20 +4,20 @@
       <template #start>
         <span class="text-xl font-bold text-primary">HRM</span>
       </template>
-      <template #item="{ item, hasSubmenu, root }">
-        <router-link v-if="item.route" :to="item.route" class="flex align-items-center p-menuitem-link">
-          <span :class="item.icon" class="mr-2"></span>
-          <span class="ml-2">{{ item.label }}</span>
-          <span v-if="item.badge" class="ml-auto border-round" :class="'bg-' + item.badgeClass">
-            {{ item.badge }}
+      <template #item="{ item, hasSubmenu }">
+        <router-link v-if="item['route']" :to="item['route']" class="flex align-items-center p-menuitem-link">
+          <span :class="item['icon']" class="mr-2"></span>
+          <span class="ml-2">{{ item['label'] }}</span>
+          <span v-if="item['badge']" class="ml-auto border-round" :class="'bg-' + item['badgeClass']">
+            {{ item['badge'] }}
           </span>
           <span v-if="hasSubmenu" class="ml-auto pi pi-fw pi-angle-down"></span>
         </router-link>
-        <a v-else :href="item.url" class="flex align-items-center p-menuitem-link" :target="item.target">
-          <span :class="item.icon" class="mr-2"></span>
-          <span class="ml-2">{{ item.label }}</span>
-          <span v-if="item.badge" class="ml-auto border-round" :class="'bg-' + item.badgeClass">
-            {{ item.badge }}
+        <a v-else-if="item.url" :href="item.url" class="flex align-items-center p-menuitem-link" :target="item.target || '_self'">
+          <span :class="item['icon']" class="mr-2"></span>
+          <span class="ml-2">{{ item['label'] }}</span>
+          <span v-if="item['badge']" class="ml-auto border-round" :class="'bg-' + item['badgeClass']">
+            {{ item['badge'] }}
           </span>
           <span v-if="hasSubmenu" class="ml-auto pi pi-fw pi-angle-down"></span>
         </a>
@@ -27,31 +27,77 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed } from 'vue';
+import { defineComponent, ref } from 'vue';
 import { useRoute } from 'vue-router';
+import type { MenuItem } from 'primevue/menuitem';
+
+interface MenuItemRoute {
+  name: string;
+  query?: Record<string, string | number | undefined>;
+  params?: Record<string, string | number>;
+}
+
+interface MenuItemWithRoute extends Omit<MenuItem, 'active' | 'route'> {
+  route?: MenuItemRoute;
+  url?: string;
+  target?: string;
+  badge?: string | number;
+  badgeClass?: string;
+  active?: boolean;
+  items?: MenuItemWithRoute[];
+  command?: (event?: any) => void;
+  disabled?: boolean;
+  visible?: boolean;
+}
 
 export default defineComponent({
   name: 'HrmMenu',
   setup() {
     const route = useRoute();
     
-    const menuItems = ref([
+    const isActive = (routeName: string, exact = true): boolean => {
+      if (exact) return route.name === routeName;
+      return route.name?.toString().startsWith(routeName) || false;
+    };
+
+    const menuItems = ref<MenuItemWithRoute[]>([
       {
         label: 'Dashboard',
         icon: 'pi pi-fw pi-home',
         route: { name: 'HRM' },
-        active: computed(() => route.name === 'HRM')
+        get active() { return isActive('HRM'); }
       },
       {
         label: 'Employees',
         icon: 'pi pi-fw pi-users',
         route: { name: 'HrmEmployees' },
-        active: computed(() => route.name === 'HrmEmployees'),
+        get active() { return isActive('HrmEmployees', false); },
         items: [
-          { label: 'All Employees', route: { name: 'HrmEmployees' } },
-          { label: 'Add New', route: { name: 'HrmEmployees', query: { action: 'new' } } },
-          { label: 'Departments', route: { name: 'HrmDepartments' } },
-          { label: 'Positions', route: { name: 'HrmPositions' } }
+          { 
+            label: 'All Employees', 
+            route: { 
+              name: 'HrmEmployees'
+            }
+          },
+          { 
+            label: 'Add New', 
+            route: { 
+              name: 'HrmEmployees', 
+              query: { action: 'new' } 
+            }
+          },
+          { 
+            label: 'Departments', 
+            route: { 
+              name: 'HrmDepartments'
+            }
+          },
+          { 
+            label: 'Positions', 
+            route: { 
+              name: 'HrmPositions'
+            }
+          }
         ]
       },
       {
@@ -103,9 +149,7 @@ export default defineComponent({
         icon: 'pi pi-fw pi-chart-line',
         items: [
           { label: 'Employee Directory', route: { name: 'HrmReportDirectory' } },
-          { label: 'Turnover', route: { name: 'HrmReportTurnover' } },
-          { label: 'Attendance', route: { name: 'HrmReportAttendance' } },
-          { label: 'Leave', route: { name: 'HrmReportLeave' } }
+          { label: 'Attendance', route: { name: 'HrmReportAttendance' } }
         ]
       },
       {

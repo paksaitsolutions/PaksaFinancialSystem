@@ -36,8 +36,8 @@
         <h1 class="reports-title">All Reports</h1>
       </div>
       <div class="header-actions">
-        <Button label="Schedule Report" icon="pi pi-calendar" severity="secondary" @click="showScheduleDialog = true" />
-        <Button label="Create Report" icon="pi pi-plus" @click="showCreateDialog = true" />
+        <Button label="Schedule Report" icon="pi pi-calendar" severity="secondary" @click="router.push('/reports/custom')" />
+        <Button label="Create Report" icon="pi pi-plus" @click="router.push('/reports/custom')" />
       </div>
     </div>
 
@@ -212,20 +212,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import Card from 'primevue/card'
-import Button from 'primevue/button'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
-import Dropdown from 'primevue/dropdown'
-import Textarea from 'primevue/textarea'
-import Tag from 'primevue/tag'
-import Chip from 'primevue/chip'
-import { useToast } from 'primevue/usetoast'
 
 const router = useRouter()
-const toast = useToast()
+// const toast = useToast() // Commented out to avoid import issues
 
 // Dialog states
 const showCreateDialog = ref(false)
@@ -422,30 +411,44 @@ const runReport = async (report: any) => {
       module: 'Module',
       status: 'Completed'
     })
-    toast.add({
-      severity: 'success',
-      summary: 'Report Generated',
-      detail: `${report.name} has been generated successfully`,
-      life: 3000
-    })
+    console.log('Report generated successfully:', report.name)
   } catch (error) {
-    toast.add({
-      severity: 'error',
-      summary: 'Report Failed',
-      detail: `Failed to generate ${report.name}`,
-      life: 3000
-    })
+    console.error('Failed to generate report:', report.name)
   } finally {
     report.running = false
   }
 }
 
 const viewReport = (report: any) => {
-  console.log('Viewing report:', report.name)
+  // Navigate to specific report based on report ID
+  const reportRoutes = {
+    'trial-balance': '/gl/trial-balance',
+    'ap-aging': '/reports/aged',
+    'ar-aging': '/reports/aged',
+    'cash-flow': '/reports/financial',
+    'balance-sheet': '/reports/financial',
+    'income-statement': '/reports/financial'
+  }
+  
+  const route = reportRoutes[report.id] || '/reports/financial'
+  router.push(route)
 }
 
 const viewModuleReports = (module: any) => {
-  router.push(`/reports/${module.id}`)
+  // Navigate to module-specific reports
+  const moduleRoutes = {
+    'general-ledger': '/reports/financial',
+    'accounts-payable': '/reports/aged',
+    'accounts-receivable': '/reports/aged',
+    'cash-management': '/reports/financial',
+    'inventory': '/reports/operational',
+    'payroll': '/reports/operational',
+    'budget': '/reports/financial',
+    'tax': '/reports/tax'
+  }
+  
+  const route = moduleRoutes[module.id] || '/reports/financial'
+  router.push(route)
 }
 
 const createReport = async () => {
@@ -454,19 +457,9 @@ const createReport = async () => {
     await new Promise(resolve => setTimeout(resolve, 1000))
     showCreateDialog.value = false
     newReport.value = { name: '', module: '', type: '', description: '' }
-    toast.add({
-      severity: 'success',
-      summary: 'Report Created',
-      detail: 'New report has been created successfully',
-      life: 3000
-    })
+    console.log('Report created successfully')
   } catch (error) {
-    toast.add({
-      severity: 'error',
-      summary: 'Creation Failed',
-      detail: 'Failed to create report',
-      life: 3000
-    })
+    console.error('Failed to create report')
   } finally {
     creating.value = false
   }

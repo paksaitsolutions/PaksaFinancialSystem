@@ -1,121 +1,107 @@
 <template>
-  <div class="hrm-dashboard">
-    <!-- Navigation Menu -->
-    <HrmMenu />
-    
+  <div class="p-4">
+    <!-- Header Section -->
+    <div class="flex justify-content-between align-items-center mb-4">
+      <div>
+        <h1 class="text-3xl font-bold m-0">HRM Dashboard</h1>
+        <p class="text-color-secondary m-0 mt-2">Manage your human resources efficiently</p>
+      </div>
+      <div class="flex gap-2">
+        <Button icon="pi pi-cog" severity="secondary" @click="showSettings" />
+        <Button icon="pi pi-question-circle" severity="secondary" @click="showHelp" />
+      </div>
+    </div>
+
+    <!-- Quick Navigation Menu -->
+    <div class="grid mb-4">
+      <div class="col-12 md:col-6 lg:col-2" v-for="(item, index) in quickLinks" :key="index">
+        <Button 
+          :label="item.label" 
+          :icon="item.icon"
+          class="w-full"
+          severity="secondary"
+          @click="navigateTo(item.path)"
+        />
+      </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid mb-4">
+      <div class="col-12 md:col-6 lg:col-3" v-for="(stat, index) in stats" :key="index">
+        <Card>
+          <template #content>
+            <div class="flex align-items-center">
+              <div class="flex align-items-center justify-content-center w-3rem h-3rem border-circle mr-3" 
+                   :class="stat.trend >= 0 ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'">
+                <i :class="stat.icon" class="text-xl"></i>
+              </div>
+              <div>
+                <div class="text-color-secondary text-sm">{{ stat.title }}</div>
+                <div class="text-2xl font-bold">{{ formatNumber(stat.value) || 0 }}</div>
+                <div class="text-sm" :class="stat.trend >= 0 ? 'text-green-600' : 'text-red-600'">
+                  <i :class="getTrendIcon(stat.trend)" class="mr-1"></i>
+                  {{ Math.abs(stat.trend) }}% from last month
+                </div>
+              </div>
+            </div>
+          </template>
+        </Card>
+      </div>
+    </div>
+
     <!-- Main Content -->
     <div class="grid">
-      <div class="col-12">
-        <div class="flex justify-content-between align-items-center">
-          <div>
-            <h1 class="text-3xl font-bold mb-2">HRM Dashboard</h1>
-            <Breadcrumb :home="home" :model="items" class="mb-4" />
-          </div>
-          <div class="flex gap-2">
-            <Button icon="pi pi-cog" class="p-button-text" @click="showSettings" />
-            <Button icon="pi pi-question-circle" class="p-button-text" @click="showHelp" />
-          </div>
-        </div>
-      </div>
-
-      <!-- Stats Cards -->
-      <div class="col-12 md:col-6 lg:col-3">
-        <Card>
-          <template #title>Total Employees</template>
-          <template #content>
-            <div class="text-4xl font-bold mb-3">{{ stats.totalEmployees || 0 }}</div>
-            <div class="flex justify-content-between">
-              <span class="text-green-500 font-medium">+12%</span>
-              <span class="text-500">vs last month</span>
-            </div>
-          </template>
-        </Card>
-      </div>
-
-      <div class="col-12 md:col-6 lg:col-3">
-        <Card>
-          <template #title>On Leave Today</template>
-          <template #content>
-            <div class="text-4xl font-bold mb-3">{{ stats.onLeave || 0 }}</div>
-            <div class="flex justify-content-between">
-              <span class="text-red-500 font-medium">+3%</span>
-              <span class="text-500">vs last month</span>
-            </div>
-          </template>
-        </Card>
-      </div>
-
-      <div class="col-12 md:col-6 lg:col-3">
-        <Card>
-          <template #title>Open Positions</template>
-          <template #content>
-            <div class="text-4xl font-bold mb-3">{{ stats.openPositions || 0 }}</div>
-            <div class="flex justify-content-between">
-              <span class="text-yellow-500 font-medium">+5%</span>
-              <span class="text-500">vs last month</span>
-            </div>
-          </template>
-        </Card>
-      </div>
-
-      <div class="col-12 md:col-6 lg:col-3">
-        <Card>
-          <template #title>Departments</template>
-          <template #content>
-            <div class="text-4xl font-bold mb-3">{{ stats.totalDepartments || 0 }}</div>
-            <div class="flex justify-content-between">
-              <span class="text-green-500 font-medium">+2%</span>
-              <span class="text-500">vs last month</span>
-            </div>
-          </template>
-        </Card>
-      </div>
-
-      <!-- Main Content -->
       <div class="col-12 lg:col-8">
         <Card>
-          <template #title>Employee Distribution</template>
+          <template #title>
+            <div class="flex align-items-center gap-2">
+              <i class="pi pi-chart-bar text-primary"></i>
+              <span>Employee Distribution</span>
+            </div>
+          </template>
           <template #content>
-            <Chart type="bar" :data="departmentChart" :options="chartOptions" />
+            <div class="flex align-items-center justify-content-center" style="height: 300px;">
+              <p class="text-color-secondary">Employee distribution chart will be displayed here</p>
+            </div>
           </template>
         </Card>
       </div>
 
       <div class="col-12 lg:col-4">
         <Card>
-          <template #title>Leave Balance</template>
+          <template #title>
+            <div class="flex align-items-center gap-2">
+              <i class="pi pi-calendar text-primary"></i>
+              <span>Leave Balance</span>
+            </div>
+          </template>
           <template #content>
-            <Chart type="doughnut" :data="leaveChart" :options="chartOptions" />
+            <div class="flex align-items-center justify-content-center" style="height: 300px;">
+              <p class="text-color-secondary">Leave balance chart will be displayed here</p>
+            </div>
           </template>
         </Card>
       </div>
+    </div>
 
-      <!-- Recent Activities -->
+    <!-- Recent Hires -->
+    <div class="grid mt-4">
       <div class="col-12">
         <Card>
-          <template #title>Recent Activities</template>
+          <template #title>Recent Hires</template>
           <template #content>
-            <DataTable :value="recentActivities" :loading="loading" scrollable class="p-datatable-sm" 
-               :paginator="recentActivities.length > 5" :rows="5" 
-               :rowsPerPageOptions="[5,10,25,50]" 
-               paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-               currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
-                      responsiveLayout="scroll">
-              <Column field="date" header="Date" :sortable="true">
-                <template #body="{data}">
-                  {{ formatDate(data.date) }}
-                </template>
-              </Column>
-              <Column field="employee" header="Employee" :sortable="true"></Column>
-              <Column field="activity" header="Activity" :sortable="true"></Column>
-              <Column field="status" header="Status" :sortable="true">
+            <DataTable :value="recentHires" :loading="loading" paginator :rows="5">
+              <Column field="name" header="Name" sortable></Column>
+              <Column field="position" header="Position" sortable></Column>
+              <Column field="department" header="Department" sortable></Column>
+              <Column field="startDate" header="Start Date" sortable>
                 <template #body="{ data }">
-                  <Tag :value="data.status" :severity="getStatusSeverity(data.status) || 'info'" />
+                  {{ formatDate(data.startDate) }}
                 </template>
               </Column>
               <Column header="Actions">
                 <template #body>
-                  <Button icon="pi pi-eye" class="p-button-text p-button-rounded" />
+                  <Button icon="pi pi-eye" size="small" />
                 </template>
               </Column>
             </DataTable>
@@ -126,310 +112,107 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref, onMounted, computed } from 'vue';
-import { useToast } from 'primevue/usetoast';
-import { useRoute } from 'vue-router';
-import HrmMenu from '@/components/hrm/HrmMenu.vue';
+<script setup lang="ts">
+import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { useStandardLayout } from '@/composables/useStandardLayout';
 
-export default defineComponent({
-  name: 'HrmDashboard',
-  components: {
-    HrmMenu
-  },
-  setup() {
-    const route = useRoute();
-    const toast = useToast();
-    const loading = ref(false);
+// Types
+interface StatCard {
+  title: string;
+  value: number;
+  trend: number;
+  icon: string;
+}
+
+interface QuickLink {
+  label: string;
+  icon: string;
+  path: string;
+}
+
+const router = useRouter();
+const loading = ref(true);
+const { getPageHeaderClass, getStatsGridClass, getStatCardClass } = useStandardLayout();
+
+// Quick navigation links
+const quickLinks = ref<QuickLink[]>([
+  { label: 'Employees', icon: 'pi pi-users', path: '/hrm/employees' },
+  { label: 'Attendance', icon: 'pi pi-calendar-check', path: '/hrm/attendance' },
+  { label: 'Leave', icon: 'pi pi-calendar-times', path: '/hrm/leave' },
+  { label: 'Payroll', icon: 'pi pi-money-bill', path: '/hrm/payroll' },
+  { label: 'Recruitment', icon: 'pi pi-briefcase', path: '/hrm/recruitment' },
+  { label: 'Training', icon: 'pi pi-book', path: '/hrm/training' }
+]);
+
+// Stats data
+const stats = ref<StatCard[]>([
+  { title: 'Total Employees', value: 245, trend: 5.2, icon: 'pi pi-users' },
+  { title: 'Active Today', value: 218, trend: 2.8, icon: 'pi pi-user-check' },
+  { title: 'On Leave', value: 15, trend: -1.2, icon: 'pi pi-calendar-times' },
+  { title: 'New Hires', icon: 'pi pi-user-plus', value: 12, trend: 3.5 }
+]);
+
+const recentHires = ref([
+  { id: 1, name: 'John Doe', position: 'Software Engineer', department: 'IT', startDate: '2023-01-15' },
+  { id: 2, name: 'Jane Smith', position: 'HR Manager', department: 'HR', startDate: '2023-01-20' },
+  { id: 3, name: 'Mike Johnson', position: 'Accountant', department: 'Finance', startDate: '2023-01-25' },
+]);
+
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+};
+
+const showSettings = () => {
+  router.push({ name: 'HrmSettings' });
+};
+
+const showHelp = () => {
+  console.log('Help clicked');
+};
+
+// Navigation
+const navigateTo = (path: string) => {
+  router.push(path);
+};
+
+// Helper functions
+const formatNumber = (value: number): string => {
+  return new Intl.NumberFormat().format(value);
+};
+
+
+
+const getTrendIcon = (trend: number): string => {
+  return trend > 0 ? 'pi pi-arrow-up' : trend < 0 ? 'pi pi-arrow-down' : 'pi pi-minus';
+};
+
+// Simulate loading data
+onMounted(async () => {
+  try {
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
-    const pageTitle = computed(() => {
-      // Get the title from the matched route or use default
-      return route.meta.title || 'HRM Dashboard';
-    });
-    interface DashboardStats {
-      totalEmployees: number;
-      onLeave: number;
-      openPositions: number;
-      totalDepartments: number;
-      loading: boolean;
-      error: string | null;
-    }
-
-    const stats = ref<DashboardStats>({
-      totalEmployees: 0,
-      onLeave: 0,
-      openPositions: 0,
-      totalDepartments: 0,
-      loading: false,
-      error: null
-    });
-
-    const home = ref({ icon: 'pi pi-home', to: { name: 'Dashboard' } });
-    interface BreadcrumbItem {
-      label: string;
-      to?: { name: string };
-    }
-
-    const items = computed((): BreadcrumbItem[] => {
-      const breadcrumbs: BreadcrumbItem[] = [{ label: 'HRM', to: { name: 'HRM' } }];
-      
-      // Add dynamic breadcrumbs based on current route
-      if (route.name !== 'HRM') {
-        const routeName = route.name?.toString() || '';
-        const breadcrumb: BreadcrumbItem = {
-          label: (route.meta?.title as string) || routeName
-        };
-        
-        if (routeName) {
-          breadcrumb.to = { name: routeName };
-        }
-        
-        breadcrumbs.push(breadcrumb);
-      } else {
-        breadcrumbs.push({ label: 'Dashboard', to: { name: 'HRM' } });
-      }
-      
-      return breadcrumbs;
-    });
-
-    interface ChartData {
-      labels: string[];
-      datasets: Array<{
-        label: string;
-        backgroundColor: string | string[];
-        data: number[];
-        borderColor?: string;
-        borderWidth?: number;
-      }>;
-    }
-
-    const departmentChart = ref<ChartData>({
-      labels: [],
-      datasets: [
-        {
-          label: 'Employees',
-          backgroundColor: '#42A5F5',
-          data: [],
-          borderColor: '#1E88E5',
-          borderWidth: 1
-        }
-      ]
-    });
-
-    const leaveChart = ref({
-      labels: ['Annual', 'Sick', 'Maternity', 'Unpaid'],
-      datasets: [
-        {
-          data: [300, 50, 100, 30],
-          backgroundColor: [
-            '#42A5F5',
-            '#66BB6A',
-            '#FFA726',
-            '#EF5350'
-          ]
-        }
-      ]
-    });
-
-    interface Activity {
-      id: number;
-      employee: string;
-      type: string;
-      date: string;
-      status: string;
-    }
-
-    const recentActivities = ref<Activity[]>([
-      { id: 1, employee: 'John Doe', type: 'Leave Request', date: '2023-05-15', status: 'Pending' },
-      { id: 2, employee: 'Jane Smith', type: 'New Hire', date: '2023-05-14', status: 'Completed' },
-      { id: 3, employee: 'Robert Johnson', type: 'Promotion', date: '2023-05-13', status: 'Approved' },
-      { id: 4, employee: 'Emily Davis', type: 'Training', date: '2023-05-12', status: 'In Progress' },
-      { id: 5, employee: 'Michael Brown', type: 'Leave Request', date: '2023-05-11', status: 'Rejected' }
-    ]);
-
-    const chartOptions = ref({
-      plugins: {
-        legend: {
-          position: 'bottom',
-          labels: {
-            usePointStyle: true,
-            padding: 20
-          }
-        },
-        tooltip: {
-          mode: 'index',
-          intersect: false
-        }
-      },
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: {
-            precision: 0
-          }
-        }
-      },
-      animation: {
-        duration: 1000,
-        easing: 'easeInOutQuart'
-      }
-    });
-
-    const fetchDashboardData = async () => {
-      loading.value = true;
-      try {
-        // Simulate API calls in parallel
-        const [employeesRes, departmentsRes, leaveRes] = await Promise.all([
-          fetch('/api/hrm/employees').then(res => res.json()),
-          fetch('/api/hrm/departments').then(res => res.json()),
-          fetch('/api/hrm/leave-requests').then(res => res.json())
-        ]);
-        
-        // Update stats with real data
-        stats.value = {
-          totalEmployees: employeesRes?.total || 0,
-          onLeave: leaveRes?.onLeave || 0,
-          openPositions: employeesRes?.openPositions || 0,
-          totalDepartments: departmentsRes?.total || 0,
-          loading: false,
-          error: null
-        };
-        
-        // Update department chart
-        if (departmentsRes?.data) {
-          departmentChart.value.labels = departmentsRes.data.map((d: { name: string }) => d.name);
-          departmentChart.value.datasets[0].data = departmentsRes.data.map((d: { employeeCount?: number }) => d.employeeCount || 0);
-        }
-        stats.value = {
-          totalEmployees: 156,
-          onLeave: 12,
-          openPositions: 8,
-          totalDepartments: 9,
-          loading: false,
-          error: null
-        };
-
-        departmentChart.value = {
-          labels: ['Sales', 'Marketing', 'Development', 'HR', 'Finance', 'Operations'],
-          datasets: [
-            {
-              label: 'Employees',
-              backgroundColor: '#42A5F5',
-              data: [28, 15, 45, 12, 10, 20]
-            }
-          ]
-        };
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-        toast.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Failed to load dashboard data',
-          life: 3000
-        });
-      } finally {
-        loading.value = false;
-      }
-    };
-
-    const formatDate = (dateString: string) => {
-      return new Date(dateString).toLocaleDateString();
-    };
-
-    const getStatusSeverity = (status: string) => {
-      switch (status.toLowerCase()) {
-        case 'approved':
-          return 'success';
-        case 'pending':
-          return 'warning';
-        case 'rejected':
-          return 'danger';
-        case 'completed':
-          return 'info';
-        default:
-          return null;
-      }
-    };
-
-    onMounted(() => {
-      fetchDashboardData().catch(error => {
-        console.error('Failed to load dashboard data:', error);
-        toast.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Failed to load dashboard data',
-          life: 3000
-        });
-      }).finally(() => {
-        loading.value = false;
-      });
-    });
-
-    const showSettings = () => {
-      toast.add({
-        severity: 'info',
-        summary: 'Settings',
-        detail: 'HRM Settings would open here',
-        life: 3000
-      });
-    };
-
-    const showHelp = () => {
-      toast.add({
-        severity: 'info',
-        summary: 'Help',
-        detail: 'HRM Help Center would open here',
-        life: 3000
-      });
-    };
-
-    return {
-      stats,
-      home,
-      items,
-      departmentChart,
-      leaveChart,
-      recentActivities,
-      chartOptions,
-      formatDate,
-      getStatusSeverity,
-      loading,
-      showSettings,
-      showHelp,
-      pageTitle
-    };
+    // Update stats with dummy data
+    stats.value = [
+      { title: 'Total Employees', value: 245, trend: 5.2, icon: 'pi pi-users' },
+      { title: 'Active Employees', value: 218, trend: 2.8, icon: 'pi pi-user-check' },
+      { title: 'On Leave', value: 15, trend: -1.2, icon: 'pi pi-calendar-times' },
+      { title: 'New Hires', value: 12, trend: 3.5, icon: 'pi pi-user-plus' }
+    ];
+  } catch (error) {
+    console.error('Error loading dashboard data:', error);
+    console.error('Failed to load dashboard data');
+  } finally {
+    loading.value = false;
   }
 });
 </script>
 
 <style scoped>
-.hrm-dashboard {
-  padding: 1rem;
-}
-
-:deep(.p-card) {
-  margin-bottom: 1rem;
-  height: 100%;
-}
-
-:deep(.p-card-title) {
-  font-size: 1.2rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
-}
-
-:deep(.p-datatable) {
-  font-size: 0.9rem;
-}
-
-:deep(.p-datatable .p-datatable-thead > tr > th) {
-  background-color: #f5f5f5;
-  font-weight: 600;
-}
-
-:deep(.p-datatable .p-datatable-tbody > tr > td) {
-  padding: 0.5rem 1rem;
-}
+/* Minimal custom styles - using PrimeFlex for layout */
 </style>

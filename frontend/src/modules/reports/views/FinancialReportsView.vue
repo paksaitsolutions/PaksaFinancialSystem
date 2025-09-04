@@ -42,7 +42,8 @@
           <div class="report-actions">
             <Button label="Run" icon="pi pi-play" @click="runReport(report)" :loading="report.running" />
             <Button label="View" icon="pi pi-eye" severity="info" @click="viewReport(report)" />
-            <Button label="Schedule" icon="pi pi-calendar" severity="secondary" @click="scheduleReport(report)" />
+            <SplitButton label="Export" icon="pi pi-download" @click="exportReportToPDF(report)" :model="getReportExportOptions(report)" severity="secondary" />
+            <Button icon="pi pi-print" @click="printReportDetails(report)" severity="secondary" />
           </div>
         </template>
       </Card>
@@ -73,14 +74,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import Card from 'primevue/card'
-import Button from 'primevue/button'
-import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
-import Dropdown from 'primevue/dropdown'
-import Textarea from 'primevue/textarea'
-import Tag from 'primevue/tag'
-import { useToast } from 'primevue/usetoast'
+import { useReportExport } from '@/composables/useReportExport'
 
 const showCreateDialog = ref(false)
 const toast = useToast()
@@ -147,11 +141,47 @@ const financialReports = ref([
     running: false
   },
   {
+    id: 'aged-receivables',
+    name: 'Aged Receivables/Payables',
+    category: 'Accounts Analysis',
+    description: 'Outstanding receivables and payables by aging periods',
+    icon: 'pi pi-clock',
+    color: '#FF5722',
+    status: 'Active',
+    lastRun: '2023-11-14T12:00:00',
+    frequency: 'Weekly',
+    running: false
+  },
+  {
+    id: 'tax-reports',
+    name: 'Tax Reports',
+    category: 'Tax Compliance',
+    description: 'Tax returns and compliance reports',
+    icon: 'pi pi-calculator',
+    color: '#9C27B0',
+    status: 'Active',
+    lastRun: '2023-11-13T15:30:00',
+    frequency: 'Monthly',
+    running: false
+  },
+  {
+    id: 'audit-reports',
+    name: 'Audit Reports',
+    category: 'Compliance',
+    description: 'Audit trails and compliance monitoring',
+    icon: 'pi pi-shield',
+    color: '#607D8B',
+    status: 'Active',
+    lastRun: '2023-11-15T09:00:00',
+    frequency: 'Daily',
+    running: false
+  },
+  {
     id: 'financial-ratios',
     name: 'Financial Ratios',
     category: 'Analysis',
     description: 'Key financial ratios and performance indicators',
-    icon: 'pi pi-calculator',
+    icon: 'pi pi-chart-pie',
     color: '#795548',
     status: 'Draft',
     lastRun: '2023-11-10T11:30:00',
@@ -170,6 +200,8 @@ const categories = ref([
   'Financial Statements',
   'General Ledger',
   'Budget Analysis',
+  'Accounts Analysis',
+  'Tax Compliance',
   'Analysis',
   'Compliance'
 ])
@@ -223,9 +255,62 @@ const createReport = () => {
   showCreateDialog.value = false
 }
 
+const { exportToCSV, exportToPDF, printReport, getExportOptions } = useReportExport()
+
 const exportAll = () => {
-  console.log('Exporting all financial reports')
+  const data = financialReports.value.map(report => ({
+    Name: report.name,
+    Category: report.category,
+    Status: report.status,
+    'Last Run': formatDate(report.lastRun),
+    Frequency: report.frequency
+  }))
+  exportToCSV(data, 'Financial_Reports_Summary')
 }
+
+const exportReportToPDF = (report: any) => {
+  const data = [{
+    Name: report.name,
+    Category: report.category,
+    Description: report.description,
+    Status: report.status,
+    'Last Run': formatDate(report.lastRun),
+    Frequency: report.frequency
+  }]
+  exportToPDF(report.name, data, report.name.replace(/\s+/g, '_'))
+}
+
+const printReportDetails = (report: any) => {
+  const data = [{
+    Name: report.name,
+    Category: report.category,
+    Description: report.description,
+    Status: report.status,
+    'Last Run': formatDate(report.lastRun),
+    Frequency: report.frequency
+  }]
+  printReport(report.name, data)
+}
+
+const getReportExportOptions = (report: any) => [
+  {
+    label: 'Export to PDF',
+    icon: 'pi pi-file-pdf',
+    command: () => exportReportToPDF(report)
+  },
+  {
+    label: 'Export to Excel',
+    icon: 'pi pi-file-excel',
+    command: () => exportToCSV([{
+      Name: report.name,
+      Category: report.category,
+      Description: report.description,
+      Status: report.status,
+      'Last Run': formatDate(report.lastRun),
+      Frequency: report.frequency
+    }], report.name.replace(/\s+/g, '_'))
+  }
+]
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString()

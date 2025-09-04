@@ -17,9 +17,10 @@ from .payroll_codes import (
     PayPeriod
 )
 
-# Import other models as they are created
-# from .employee import Employee
-# from .payroll_run import PayrollRun
+# Import other models
+from .employee import Employee
+from .payroll_processing import PayrollRun, PayrollItem
+from .department import Department
 # from .payslip import Payslip
 # from .tax_filing import TaxFiling
 
@@ -32,5 +33,8 @@ __all__ = [
     'TaxCode',
     'BenefitPlan',
     'PayPeriod',
-    # Add other models as they are implemented
+    'Employee',
+    'PayrollRun',
+    'PayrollItem',
+    'Department'
 ]

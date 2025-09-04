@@ -47,9 +47,15 @@ def init_db():
     """Initialize database tables."""
     # Import all models to ensure they are registered
     from app.models import user  # noqa
+    from app.models.gl_models import (  # Import GL models
+        ChartOfAccounts, JournalEntry, JournalEntryLine, 
+        AccountingPeriod, LedgerBalance, TrialBalance, 
+        TrialBalanceAccount, FinancialStatement
+    )
     
     # Create all tables
     Base.metadata.create_all(bind=engine)
+    print("✅ Database tables created/verified")
     
     # Create first superuser if it doesn't exist
     db = SessionLocal()

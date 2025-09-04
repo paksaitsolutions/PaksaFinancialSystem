@@ -1,460 +1,383 @@
 <template>
-  <v-container fluid>
-    <v-row>
-      <!-- Approval Queue -->
-      <v-col cols="12">
-        <v-card>
-          <v-card-title>
-            <v-row align="center">
-              <v-col cols="8">
-                <h2>Budget Approval Queue</h2>
-              </v-col>
-              <v-col cols="4" class="text-right">
-                <v-btn color="primary" @click="refreshQueue">
-                  <v-icon left>mdi-refresh</v-icon>
-                  Refresh Queue
-                </v-btn>
-              </v-col>
-            </v-row>
-          </v-card-title>
+  <div class="budget-approval">
+    <div class="dashboard-header">
+      <h1>Budget Approval</h1>
+      <p>Review and approve budget submissions from different departments.</p>
+    </div>
 
-          <v-card-text>
-            <!-- Filters -->
-            <v-row class="mb-4">
-              <v-col cols="12" sm="4">
-                <v-text-field
-                  v-model="filters.search"
-                  label="Search"
-                  prepend-icon="mdi-magnify"
-                ></v-text-field>
-              </v-col>
-              <v-col cols="12" sm="4">
-                <v-select
-                  v-model="filters.status"
-                  :items="[BudgetStatus.DRAFT, BudgetStatus.REJECTED]"
-                  label="Status"
-                  clearable
-                ></v-select>
-              </v-col>
-              <v-col cols="12" sm="4">
-                <v-select
-                  v-model="filters.type"
-                  :items="Object.values(BudgetType)"
-                  label="Type"
-                  clearable
-                ></v-select>
-              </v-col>
-            </v-row>
-
-            <!-- Approval Table -->
-            <v-data-table
-              :headers="headers"
-              :items="filteredQueue"
-              :loading="isLoading"
-              :items-per-page="10"
-              class="elevation-1"
-              @click:row="(item) => selectBudget(item)"
-            >
-              <template v-slot:item.status="{ item }">
-                <v-chip
-                  :color="getStatusColor(item.status)"
-                  small
-                >
-                  {{ item.status }}
-                </v-chip>
+    <div class="approval-content">
+      <!-- Pending Approvals -->
+      <Card class="pending-card">
+        <template #title>
+          <div class="card-title">
+            <i class="pi pi-clock"></i>
+            <span>Pending Approvals ({{ pendingBudgets.length }})</span>
+          </div>
+        </template>
+        <template #content>
+          <DataTable :value="pendingBudgets" responsive-layout="scroll">
+            <Column field="name" header="Budget Name" sortable />
+            <Column field="type" header="Type">
+              <template #body="{ data }">
+                <Tag :value="data.type" :severity="getTypeSeverity(data.type)" />
               </template>
-              <template v-slot:item.actions="{ item }">
-                <v-btn icon @click="openApprovalDialog(item)">
-                  <v-icon>mdi-check</v-icon>
-                </v-btn>
-                <v-btn
-                  v-if="item.status === BudgetStatus.DRAFT"
-                  icon
-                  @click="openRejectDialog(item)"
-                >
-                  <v-icon>mdi-close</v-icon>
-                </v-btn>
+            </Column>
+            <Column field="amount" header="Amount" sortable>
+              <template #body="{ data }">
+                <span class="font-medium">{{ formatCurrency(data.amount) }}</span>
               </template>
-            </v-data-table>
-          </v-card-text>
-        </v-card>
-      </v-col>
-    </v-row>
+            </Column>
+            <Column field="submitted_at" header="Submitted" sortable>
+              <template #body="{ data }">
+                {{ formatDate(data.submitted_at) }}
+              </template>
+            </Column>
+            <Column field="submitted_by" header="Submitted By" />
+            <Column header="Actions">
+              <template #body="{ data }">
+                <div class="flex gap-2">
+                  <Button icon="pi pi-eye" size="small" outlined @click="reviewBudget(data)" v-tooltip="'Review'" />
+                  <Button icon="pi pi-check" size="small" severity="success" @click="approveBudget(data.id)" v-tooltip="'Approve'" />
+                  <Button icon="pi pi-times" size="small" severity="danger" @click="rejectBudget(data.id)" v-tooltip="'Reject'" />
+                </div>
+              </template>
+            </Column>
+          </DataTable>
+        </template>
+      </Card>
 
-    <!-- Approval Dialog -->
-    <v-dialog v-model="approvalDialog.visible" max-width="500" :persistent="approvalDialog.loading">
-      <v-card :loading="approvalDialog.loading">
-        <v-card-title>Approve Budget</v-card-title>
-        <v-card-text>
-          <v-textarea
-            v-model="approvalNotes"
-            label="Approval Notes (Optional)"
-            rows="3"
-            :error-messages="approvalDialog.error"
-            :disabled="approvalDialog.loading"
-            @input="approvalDialog.error = ''"
-          ></v-textarea>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn 
-            text 
-            @click="approvalDialog.visible = false"
-            :disabled="approvalDialog.loading"
-          >
-            Cancel
-          </v-btn>
-          <v-btn 
-            color="primary" 
-            @click="handleApproval"
-            :loading="approvalDialog.loading"
-          >
-            Approve
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+      <!-- Approval History -->
+      <Card class="history-card">
+        <template #title>
+          <span>Recent Approval History</span>
+        </template>
+        <template #content>
+          <DataTable :value="approvalHistory" responsive-layout="scroll">
+            <Column field="name" header="Budget Name" />
+            <Column field="action" header="Action">
+              <template #body="{ data }">
+                <Tag :value="data.action" :severity="data.action === 'APPROVED' ? 'success' : 'danger'" />
+              </template>
+            </Column>
+            <Column field="amount" header="Amount">
+              <template #body="{ data }">
+                {{ formatCurrency(data.amount) }}
+              </template>
+            </Column>
+            <Column field="approved_at" header="Date">
+              <template #body="{ data }">
+                {{ formatDate(data.approved_at) }}
+              </template>
+            </Column>
+            <Column field="approved_by" header="Approved By" />
+            <Column field="notes" header="Notes" />
+          </DataTable>
+        </template>
+      </Card>
+    </div>
 
-    <!-- Reject Dialog -->
-    <v-dialog v-model="rejectDialog.visible" max-width="500" :persistent="rejectDialog.loading">
-      <v-card :loading="rejectDialog.loading">
-        <v-card-title>Reject Budget</v-card-title>
-        <v-card-text>
-          <v-textarea
-            v-model="rejectNotes"
-            label="Rejection Notes (Required)"
-            rows="3"
-            :error-messages="rejectDialog.error"
-            :rules="[v => !!v || 'Notes are required']"
-            :disabled="rejectDialog.loading"
-            @input="rejectDialog.error = ''"
-          ></v-textarea>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn 
-            text 
-            @click="rejectDialog.visible = false"
-            :disabled="rejectDialog.loading"
-          >
-            Cancel
-          </v-btn>
-          <v-btn 
-            color="error" 
-            @click="handleReject"
-            :loading="rejectDialog.loading"
-          >
-            Reject
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <!-- Review Dialog -->
+    <Dialog v-model:visible="showReviewDialog" header="Budget Review" :style="{ width: '80vw' }" modal>
+      <div v-if="selectedBudget" class="review-content">
+        <div class="budget-details">
+          <h3>{{ selectedBudget.name }}</h3>
+          <div class="details-grid">
+            <div class="detail-item">
+              <label>Type:</label>
+              <Tag :value="selectedBudget.type" :severity="getTypeSeverity(selectedBudget.type)" />
+            </div>
+            <div class="detail-item">
+              <label>Amount:</label>
+              <span class="amount">{{ formatCurrency(selectedBudget.amount) }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Period:</label>
+              <span>{{ formatDate(selectedBudget.start_date) }} - {{ formatDate(selectedBudget.end_date) }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Submitted By:</label>
+              <span>{{ selectedBudget.submitted_by }}</span>
+            </div>
+          </div>
+          
+          <div class="description-section">
+            <label>Description:</label>
+            <p>{{ selectedBudget.description }}</p>
+          </div>
 
-    <!-- Budget Details Dialog -->
-    <v-dialog v-model="detailsDialog" max-width="900">
-      <v-card>
-        <v-card-title>Review Budget Details</v-card-title>
-        <v-card-text>
-          <v-row>
-            <v-col cols="12">
-              <h3 class="text-h6">Basic Information</h3>
-              <v-list dense>
-                <v-list-item>
-                  <v-list-item-content>
-                    <v-list-item-title>Name</v-list-item-title>
-                    <v-list-item-subtitle>{{ selectedBudget?.name }}</v-list-item-subtitle>
-                  </v-list-item-content>
-                </v-list-item>
-                <v-list-item>
-                  <v-list-item-content>
-                    <v-list-item-title>Type</v-list-item-title>
-                    <v-list-item-subtitle>{{ selectedBudget?.budget_type }}</v-list-item-subtitle>
-                  </v-list-item-content>
-                </v-list-item>
-                <v-list-item>
-                  <v-list-item-content>
-                    <v-list-item-title>Total Amount</v-list-item-title>
-                    <v-list-item-subtitle>${{ formatCurrency(selectedBudget?.total_amount) }}</v-list-item-subtitle>
-                  </v-list-item-content>
-                </v-list-item>
-                <v-list-item>
-                  <v-list-item-content>
-                    <v-list-item-title>Period</v-list-item-title>
-                    <v-list-item-subtitle>
-                      {{ formatDate(selectedBudget?.start_date) }} - {{ formatDate(selectedBudget?.end_date) }}
-                    </v-list-item-subtitle>
-                  </v-list-item-content>
-                </v-list-item>
-              </v-list>
-            </v-col>
-
-            <v-col cols="12">
-              <h3 class="text-h6">Budget Lines</h3>
-              <v-simple-table>
-                <template v-slot:default>
-                  <thead>
-                    <tr>
-                      <th>Account</th>
-                      <th>Department</th>
-                      <th>Project</th>
-                      <th>Amount</th>
-                      <th>Description</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="line in selectedBudget?.lines" :key="line.id">
-                      <td>{{ line.account_id }}</td>
-                      <td>{{ line.department_id }}</td>
-                      <td>{{ line.project_id }}</td>
-                      <td>${{ formatCurrency(line.amount) }}</td>
-                      <td>{{ line.description }}</td>
-                    </tr>
-                  </tbody>
+          <div class="line-items-section">
+            <h4>Budget Line Items</h4>
+            <DataTable :value="selectedBudget.line_items" responsive-layout="scroll">
+              <Column field="category" header="Category" />
+              <Column field="description" header="Description" />
+              <Column field="amount" header="Amount">
+                <template #body="{ data }">
+                  {{ formatCurrency(data.amount) }}
                 </template>
-              </v-simple-table>
-            </v-col>
+              </Column>
+            </DataTable>
+          </div>
+        </div>
 
-            <v-col cols="12">
-              <h3 class="text-h6">Allocations</h3>
-              <v-simple-table>
-                <template v-slot:default>
-                  <thead>
-                    <tr>
-                      <th>Department</th>
-                      <th>Project</th>
-                      <th>Amount</th>
-                      <th>Percentage</th>
-                      <th>Description</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="alloc in selectedBudget?.allocations" :key="alloc.id">
-                      <td>{{ alloc.department_id }}</td>
-                      <td>{{ alloc.project_id }}</td>
-                      <td>${{ formatCurrency(alloc.amount) }}</td>
-                      <td>{{ alloc.percentage }}%</td>
-                      <td>{{ alloc.description }}</td>
-                    </tr>
-                  </tbody>
-                </template>
-              </v-simple-table>
-            </v-col>
-          </v-row>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn text @click="detailsDialog = false">Close</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-  </v-container>
+        <div class="approval-section">
+          <div class="field">
+            <label>Approval Notes</label>
+            <Textarea v-model="approvalNotes" rows="3" placeholder="Enter approval notes..." />
+          </div>
+          
+          <div class="approval-actions">
+            <Button label="Approve" icon="pi pi-check" severity="success" @click="confirmApproval" />
+            <Button label="Reject" icon="pi pi-times" severity="danger" @click="confirmRejection" />
+            <Button label="Cancel" icon="pi pi-times" outlined @click="showReviewDialog = false" />
+          </div>
+        </div>
+      </div>
+    </Dialog>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
-import { useBudgetStore } from '../store/budget'
-import { Budget, BudgetStatus, BudgetType } from '../types/budget'
+import { useBudgetStore } from '../store/budgetStore'
 
+// PrimeVue Components
+import Card from 'primevue/card'
+import DataTable from 'primevue/datatable'
+import Column from 'primevue/column'
+import Button from 'primevue/button'
+import Tag from 'primevue/tag'
+import Dialog from 'primevue/dialog'
+import Textarea from 'primevue/textarea'
+
+const toast = useToast()
 const budgetStore = useBudgetStore()
 
-// State
-const toast = useToast()
-const isLoading = ref(false)
-const approvalDialog = ref({
-  visible: false,
-  loading: false,
-  error: ''
-})
-const rejectDialog = ref({
-  visible: false,
-  loading: false,
-  error: ''
-})
-const detailsDialog = ref(false)
-const selectedBudget = ref<Budget | null>(null)
+const showReviewDialog = ref(false)
+const selectedBudget = ref(null)
 const approvalNotes = ref('')
-const rejectNotes = ref('')
 
-// Filters
-const filters = ref({
-  search: '',
-  status: BudgetStatus.DRAFT,
-  type: null
-})
-
-// Computed
-const filteredQueue = computed(() => {
-  let result = budgetStore.budgets
-
-  if (filters.value.search) {
-    const search = filters.value.search.toLowerCase()
-    result = result.filter(b =>
-      b.name.toLowerCase().includes(search) ||
-      b.description?.toLowerCase().includes(search)
-    )
+const pendingBudgets = ref([
+  {
+    id: 1,
+    name: 'Marketing Q2 Campaign',
+    type: 'OPERATIONAL',
+    amount: 75000,
+    submitted_at: '2024-01-15',
+    submitted_by: 'John Smith',
+    start_date: '2024-04-01',
+    end_date: '2024-06-30',
+    description: 'Budget for Q2 marketing campaigns including digital advertising and events.',
+    line_items: [
+      { category: 'Digital Ads', description: 'Google & Facebook Ads', amount: 40000 },
+      { category: 'Events', description: 'Trade shows and conferences', amount: 25000 },
+      { category: 'Content', description: 'Content creation and design', amount: 10000 }
+    ]
+  },
+  {
+    id: 2,
+    name: 'IT Security Upgrade',
+    type: 'CAPITAL',
+    amount: 120000,
+    submitted_at: '2024-01-14',
+    submitted_by: 'Sarah Johnson',
+    start_date: '2024-02-01',
+    end_date: '2024-12-31',
+    description: 'Upgrade security infrastructure and implement new security tools.',
+    line_items: [
+      { category: 'Hardware', description: 'Firewalls and security appliances', amount: 80000 },
+      { category: 'Software', description: 'Security software licenses', amount: 30000 },
+      { category: 'Training', description: 'Security training for staff', amount: 10000 }
+    ]
   }
+])
 
-  if (filters.value.status) {
-    result = result.filter(b => b.status === filters.value.status)
+const approvalHistory = ref([
+  {
+    id: 3,
+    name: 'HR Training Program',
+    action: 'APPROVED',
+    amount: 25000,
+    approved_at: '2024-01-10',
+    approved_by: 'Admin User',
+    notes: 'Approved with minor adjustments'
+  },
+  {
+    id: 4,
+    name: 'Office Renovation',
+    action: 'REJECTED',
+    amount: 50000,
+    approved_at: '2024-01-08',
+    approved_by: 'Admin User',
+    notes: 'Budget exceeds allocated funds for facilities'
   }
+])
 
-  if (filters.value.type) {
-    result = result.filter(b => b.budget_type === filters.value.type)
+const getTypeSeverity = (type) => {
+  switch (type) {
+    case 'OPERATIONAL': return 'info'
+    case 'CAPITAL': return 'warning'
+    case 'PROJECT': return 'success'
+    case 'DEPARTMENT': return 'secondary'
+    default: return 'info'
   }
-
-  return result
-})
-
-// Headers
-const headers = [
-  { text: 'Name', value: 'name' },
-  { text: 'Type', value: 'budget_type' },
-  { text: 'Status', value: 'status' },
-  { text: 'Total Amount', value: 'total_amount', align: 'right' },
-  { text: 'Created At', value: 'created_at' },
-  { text: 'Actions', value: 'actions', sortable: false, align: 'right' }
-]
-
-// Methods
-const refreshQueue = () => {
-  budgetStore.fetchBudgets()
 }
 
-const selectBudget = (budget: any) => {
-  selectedBudget.value = budget
-  detailsDialog.value = true
-}
+const formatCurrency = (amount) => 
+  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount)
 
-const openApprovalDialog = (budget: Budget) => {
+const formatDate = (dateString) => 
+  new Date(dateString).toLocaleDateString()
+
+const reviewBudget = (budget) => {
   selectedBudget.value = budget
+  showReviewDialog.value = true
   approvalNotes.value = ''
-  approvalDialog.value = {
-    ...approvalDialog.value,
-    visible: true,
-    error: ''
-  }
 }
 
-const openRejectDialog = (budget: Budget) => {
-  selectedBudget.value = budget
-  rejectNotes.value = ''
-  rejectDialog.value = {
-    ...rejectDialog.value,
-    visible: true,
-    error: ''
-  }
-}
-
-const handleApproval = async () => {
-  if (!selectedBudget.value) {
-    toast.add({
-      severity: 'warn',
-      summary: 'No Budget Selected',
-      detail: 'Please select a budget to approve',
-      life: 5000
-    })
-    return
-  }
-
+const approveBudget = async (id) => {
   try {
-    approvalDialog.value.loading = true
-    await budgetStore.approveBudget(selectedBudget.value.id, { notes: approvalNotes.value })
-    
-    approvalDialog.value.visible = false
-    approvalNotes.value = ''
-    await refreshQueue()
-    
-    toast.add({
-      severity: 'success',
-      summary: 'Success',
-      detail: 'Budget approved successfully',
-      life: 3000
-    })
+    await budgetStore.approveBudget(id, 'Quick approval')
+    toast.add({ severity: 'success', summary: 'Success', detail: 'Budget approved successfully' })
+    // Remove from pending list
+    const index = pendingBudgets.value.findIndex(b => b.id === id)
+    if (index > -1) pendingBudgets.value.splice(index, 1)
   } catch (error) {
-    console.error('Error approving budget:', error)
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: error instanceof Error ? error.message : 'Failed to approve budget',
-      life: 5000
-    })
-  } finally {
-    approvalDialog.value.loading = false
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to approve budget' })
   }
 }
 
-const handleReject = async () => {
-  if (!selectedBudget.value) {
-    toast.add({
-      severity: 'warn',
-      summary: 'No Budget Selected',
-      detail: 'Please select a budget to reject',
-      life: 5000
-    })
-    return
-  }
-  
-  if (!rejectNotes.value?.trim()) {
-    rejectDialog.value.error = 'Please provide a reason for rejection'
-    return
-  }
-  
+const rejectBudget = async (id) => {
   try {
-    rejectDialog.value.loading = true
-    await budgetStore.rejectBudget(selectedBudget.value.id, rejectNotes.value)
-    
-    rejectNotes.value = ''
-    rejectDialog.value.visible = false
-    await refreshQueue()
-    
-    toast.add({
-      severity: 'success',
-      summary: 'Success',
-      detail: 'Budget rejected successfully',
-      life: 3000
-    })
+    await budgetStore.rejectBudget(id, 'Budget rejected')
+    toast.add({ severity: 'warn', summary: 'Rejected', detail: 'Budget rejected successfully' })
+    // Remove from pending list
+    const index = pendingBudgets.value.findIndex(b => b.id === id)
+    if (index > -1) pendingBudgets.value.splice(index, 1)
   } catch (error) {
-    console.error('Error in handleReject:', error)
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: error instanceof Error ? error.message : 'Failed to reject budget',
-      life: 5000
-    })
-  } finally {
-    rejectDialog.value.loading = false
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to reject budget' })
   }
 }
 
-const getStatusColor = (status: BudgetStatus) => {
-  switch (status) {
-    case BudgetStatus.DRAFT:
-      return 'primary'
-    case BudgetStatus.APPROVED:
-      return 'success'
-    case BudgetStatus.REJECTED:
-      return 'error'
-    case BudgetStatus.ARCHIVED:
-      return 'grey'
-    default:
-      return 'grey'
+const confirmApproval = async () => {
+  try {
+    await budgetStore.approveBudget(selectedBudget.value.id, approvalNotes.value)
+    toast.add({ severity: 'success', summary: 'Success', detail: 'Budget approved successfully' })
+    showReviewDialog.value = false
+    // Remove from pending list
+    const index = pendingBudgets.value.findIndex(b => b.id === selectedBudget.value.id)
+    if (index > -1) pendingBudgets.value.splice(index, 1)
+  } catch (error) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to approve budget' })
   }
 }
 
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).format(amount)
+const confirmRejection = async () => {
+  try {
+    await budgetStore.rejectBudget(selectedBudget.value.id, approvalNotes.value || 'Budget rejected')
+    toast.add({ severity: 'warn', summary: 'Rejected', detail: 'Budget rejected successfully' })
+    showReviewDialog.value = false
+    // Remove from pending list
+    const index = pendingBudgets.value.findIndex(b => b.id === selectedBudget.value.id)
+    if (index > -1) pendingBudgets.value.splice(index, 1)
+  } catch (error) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to reject budget' })
+  }
 }
 
-const formatDate = (dateStr: string) => {
-  return new Date(dateStr).toLocaleDateString()
-}
-
-// Lifecycle
 onMounted(() => {
-  refreshQueue()
+  // Load pending approvals
 })
 </script>
+
+<style scoped>
+.budget-approval {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.dashboard-header {
+  margin-bottom: 2rem;
+}
+
+.dashboard-header h1 {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 0.5rem 0;
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+
+.pending-card {
+  margin-bottom: 2rem;
+}
+
+.review-content {
+  display: grid;
+  gap: 2rem;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.detail-item label {
+  font-weight: 600;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.amount {
+  font-weight: 600;
+  color: #3b82f6;
+  font-size: 1.125rem;
+}
+
+.description-section,
+.line-items-section {
+  margin: 1rem 0;
+}
+
+.description-section label,
+.line-items-section h4 {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.approval-section {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 1rem;
+}
+
+.field {
+  margin-bottom: 1rem;
+}
+
+.field label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.approval-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+</style>

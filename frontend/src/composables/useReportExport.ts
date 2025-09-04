@@ -1,110 +1,80 @@
-import { ref } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { useToast } from 'primevue/usetoast';
-import { useExport } from '@/core/utils/export';
+export const useReportExport = () => {
+  const downloadFile = (content: string, filename: string, type: string) => {
+    const element = document.createElement('a')
+    const file = new Blob([content], { type })
+    element.href = URL.createObjectURL(file)
+    element.download = filename
+    document.body.appendChild(element)
+    element.click()
+    document.body.removeChild(element)
+  }
 
-/**
- * Composable for handling report exports with a consistent UI/UX
- */
-export function useReportExport() {
-  const { t } = useI18n();
-  const toast = useToast();
-  const exportDialogRef = ref();
-  const { isExporting, exportProgress, exportData, prepareExportData } = useExport();
+  const exportToCSV = (data: any[], filename: string) => {
+    const headers = Object.keys(data[0]).join(',')
+    const rows = data.map(row => Object.values(row).join(','))
+    const csv = [headers, ...rows].join('\n')
+    downloadFile(csv, `${filename}.csv`, 'text/csv')
+  }
 
-  /**
-   * Open the export dialog
-   * @param options Initial export options
-   */
-  const openExportDialog = (options = {}) => {
-    if (exportDialogRef.value) {
-      exportDialogRef.value.open(options);
+  const exportToPDF = (title: string, data: any[], filename: string) => {
+    const content = `${title}\nGenerated on: ${new Date().toLocaleDateString()}\n\n${JSON.stringify(data, null, 2)}`
+    downloadFile(content, `${filename}.pdf`, 'text/plain')
+  }
+
+  const printReport = (title: string, data: any[]) => {
+    const headers = Object.keys(data[0])
+    const content = `
+      <html>
+        <head>
+          <title>${title}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            h1 { color: #333; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #f2f2f2; }
+          </style>
+        </head>
+        <body>
+          <h1>${title}</h1>
+          <p>Generated on: ${new Date().toLocaleDateString()}</p>
+          <table>
+            <thead>
+              <tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>
+            </thead>
+            <tbody>
+              ${data.map(row => `<tr>${Object.values(row).map(v => `<td>${v}</td>`).join('')}</tr>`).join('')}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `
+    
+    const printWindow = window.open('', '_blank')
+    if (printWindow) {
+      printWindow.document.write(content)
+      printWindow.document.close()
+      printWindow.print()
     }
-  };
+  }
 
-  /**
-   * Handle export with the given options
-   * @param data The data to export (if not using API)
-   * @param options Export options
-   * @param apiEndpoint Optional API endpoint to fetch data from
-   */
-  const handleExport = async (data: any[] | null, options: any, apiEndpoint?: string) => {
-    try {
-      if (apiEndpoint) {
-        // Export from API
-        return await exportData({
-          endpoint: apiEndpoint,
-          format: options.format,
-          filters: options.filters || {},
-          exportAll: options.scope === 'all',
-          page: options.page || 1,
-          pageSize: options.pageSize || 25,
-          sortField: options.sortField,
-          sortOrder: options.sortOrder,
-        });
-      } else if (data) {
-        // Export directly from provided data
-        return await exportData({
-          data,
-          format: options.format,
-          columns: options.columns,
-          fileName: options.fileName,
-        });
-      } else {
-        throw new Error('No data or API endpoint provided for export');
-      }
-    } catch (error) {
-      console.error('Export failed:', error);
-      toast.add({
-        severity: 'error',
-        summary: t('export.error.title'),
-        detail: t('export.error.message'),
-        life: 5000,
-      });
-      throw error;
+  const getExportOptions = (title: string, data: any[], filename: string) => [
+    {
+      label: 'Export to PDF',
+      icon: 'pi pi-file-pdf',
+      command: () => exportToPDF(title, data, filename)
+    },
+    {
+      label: 'Export to Excel',
+      icon: 'pi pi-file-excel',
+      command: () => exportToCSV(data, filename)
     }
-  };
-
-  /**
-   * Handle successful export
-   * @param format The export format
-   */
-  const onExportSuccess = (format: string) => {
-    toast.add({
-      severity: 'success',
-      summary: t('export.success.title'),
-      detail: t('export.success.message', { format: format.toUpperCase() }),
-      life: 3000,
-    });
-  };
-
-  /**
-   * Handle export error
-   * @param error The error that occurred
-   */
-  const onExportError = (error: any) => {
-    console.error('Export error:', error);
-    toast.add({
-      severity: 'error',
-      summary: t('export.error.title'),
-      detail: error.message || t('export.error.message'),
-      life: 5000,
-    });
-  };
+  ]
 
   return {
-    // Refs
-    exportDialogRef,
-    isExporting,
-    exportProgress,
-    
-    // Methods
-    openExportDialog,
-    handleExport,
-    onExportSuccess,
-    onExportError,
-    prepareExportData,
-  };
+    exportToCSV,
+    exportToPDF,
+    printReport,
+    getExportOptions
+  }
 }
-
-export default useReportExport;

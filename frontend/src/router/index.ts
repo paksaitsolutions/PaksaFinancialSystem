@@ -6,7 +6,10 @@ import type {
   RouteRecordRedirectOption
 } from 'vue-router';
 
-// Type for route query parameters
+// Import module routes
+import hrmRoutes from './modules/hrm';
+
+// Type for route query parameters (unused but kept for future reference)
 type RouteQuery = {
   [key: string]: string | string[] | undefined;
   redirect?: string;
@@ -30,9 +33,6 @@ declare module 'vue-router' {
   interface RouteMeta extends CustomRouteMeta {}
 
   // Extend RouteLocationNormalized to include our custom query type
-  interface RouteLocationNormalized {
-    query: RouteQuery;
-  }
 }
 
 // Import for functional components (commented out since not currently used)
@@ -104,33 +104,29 @@ const publicRoutes: AppRouteRecordRaw[] = [
     meta: { 
       title: 'Server Error',
       requiresAuth: false,
-      layout: 'ErrorLayout'  // Use a simple layout for error pages
+      layout: 'ErrorLayout'  
     }
   }
 ];
 
-// Helper function to create module routes
-function createModuleRoute(
+// Helper function to create module routes (unused but kept for future reference)
+const createModuleRoute = (
   name: string,
   path: string,
   routes: AppRouteRecordRaw[],
   meta: RouteMeta = {}
-): AppRouteRecordRaw {
-  const route: AppRouteRecordRaw = {
-    path: `/${path}`,
+): AppRouteRecordRaw => {
+  return {
+    path,
     name,
     component: () => import('@/layouts/MainLayout.vue'),
-    meta: {
-      ...meta,
-      module: path,
+    meta: { 
       requiresAuth: true,
-      layout: null  // Set to null since MainLayout is used as component
+      ...meta 
     },
     children: routes
   };
-  
-  return route;
-}
+};
 
 // Note: Module routes are now defined directly in mainAppRoute for simplicity
 
@@ -326,154 +322,44 @@ const mainAppRoute: AppRouteRecordRaw = {
       component: () => import('@/modules/budget/views/BudgetDashboard.vue'),
       meta: { title: 'Budget Management' }
     },
-    // HRM
     {
-      path: 'hrm',
-      component: () => import('@/views/hrm/HrmDashboard.vue'),
-      meta: { title: 'Human Resources' },
-      children: [
-        // Dashboard route with empty path and name 'HRM'
-        {
-          path: '',
-          name: 'HRM',
-          component: () => import('@/views/hrm/HrmDashboard.vue'),
-          meta: { title: 'HRM Dashboard' }
-        },
-        // Employee Management
-        {
-          path: 'employees',
-          name: 'HrmEmployees',
-          component: () => import('@/views/hrm/EmployeesView.vue'),
-          meta: { title: 'Employee Management' }
-        },
-        {
-          path: 'departments',
-          name: 'HrmDepartments',
-          component: () => import('@/views/hrm/DepartmentsView.vue'),
-          meta: { title: 'Department Management' }
-        },
-        {
-          path: 'positions',
-          name: 'HrmPositions',
-          component: () => import('@/views/hrm/EmployeesView.vue'), // Using EmployeesView as a placeholder
-          meta: { title: 'Position Management' }
-        },
-        // Attendance
-        {
-          path: 'attendance',
-          name: 'HrmAttendance',
-          component: () => import('@/views/hrm/EmployeesView.vue'), // Placeholder
-          meta: { title: 'Attendance' }
-        },
-        // Leave Management
-        {
-          path: 'leave',
-          name: 'HrmLeave',
-          component: { render: () => null },
-          meta: { title: 'Leave Management' },
-          children: [
-            {
-              path: 'requests',
-              name: 'HrmLeaveRequests',
-              component: () => import('@/views/hrm/EmployeesView.vue') // Placeholder
-            },
-            {
-              path: 'types',
-              name: 'HrmLeaveTypes',
-              component: () => import('@/views/hrm/EmployeesView.vue') // Placeholder
-            },
-            {
-              path: 'calendar',
-              name: 'HrmLeaveCalendar',
-              component: () => import('@/views/hrm/EmployeesView.vue') // Placeholder
-            },
-            {
-              path: 'balance',
-              name: 'HrmLeaveBalance',
-              component: () => import('@/views/hrm/EmployeesView.vue') // Placeholder
-            }
-          ]
-        },
-        // Recruitment
-        {
-          path: 'recruitment',
-          name: 'HrmRecruitment',
-          component: { render: () => null },
-          meta: { title: 'Recruitment' },
-          children: [
-            {
-              path: 'job-openings',
-              name: 'HrmJobOpenings',
-              component: () => import('@/views/hrm/EmployeesView.vue') // Placeholder
-            },
-            {
-              path: 'candidates',
-              name: 'HrmCandidates',
-              component: () => import('@/views/hrm/EmployeesView.vue') // Placeholder
-            },
-            {
-              path: 'interviews',
-              name: 'HrmInterviews',
-              component: () => import('@/views/hrm/EmployeesView.vue') // Placeholder
-            },
-            {
-              path: 'onboarding',
-              name: 'HrmOnboarding',
-              component: () => import('@/views/hrm/EmployeesView.vue') // Placeholder
-            }
-          ]
-        },
-        // Performance
-        {
-          path: 'performance',
-          name: 'HrmPerformance',
-          component: { render: () => null },
-          meta: { title: 'Performance' },
-          children: [
-            {
-              path: 'appraisals',
-              name: 'HrmAppraisals',
-              component: () => import('@/views/hrm/EmployeesView.vue') // Placeholder
-            },
-            {
-              path: 'goals',
-              name: 'HrmGoals',
-              component: () => import('@/views/hrm/EmployeesView.vue') // Placeholder
-            },
-            {
-              path: 'training',
-              name: 'HrmTraining',
-              component: () => import('@/views/hrm/EmployeesView.vue') // Placeholder
-            },
-            {
-              path: 'skills',
-              name: 'HrmSkills',
-              component: () => import('@/views/hrm/EmployeesView.vue') // Placeholder
-            }
-          ]
-        },
-        // Reports
-        {
-          path: 'reports',
-          name: 'HrmReports',
-          component: { render: () => null },
-          meta: { title: 'Reports' },
-          children: [
-            {
-              path: 'directory',
-              name: 'HrmReportDirectory',
-              component: () => import('@/views/hrm/EmployeesView.vue') // Placeholder - should be replaced with actual report directory component
-            }
-            // Additional report routes can be added here
-          ]
-        },
-        // Catch-all route for HRM
-        {
-          path: ':pathMatch(.*)*',
-          redirect: { name: 'HRM' }
-        }
-      ]
+      path: 'budget/manage',
+      name: 'BudgetManage',
+      component: () => import('@/modules/budget/views/BudgetingView.vue'),
+      meta: { title: 'Budget Management' }
     },
+    {
+      path: 'budget/planning',
+      name: 'BudgetPlanning',
+      component: () => import('@/modules/budget/views/BudgetPlanningView.vue'),
+      meta: { title: 'Budget Planning' }
+    },
+    {
+      path: 'budget/monitoring',
+      name: 'BudgetMonitoring',
+      component: () => import('@/modules/budget/views/BudgetMonitoringView.vue'),
+      meta: { title: 'Budget Monitoring' }
+    },
+    {
+      path: 'budget/approval',
+      name: 'BudgetApproval',
+      component: () => import('@/modules/budget/views/BudgetApprovalView.vue'),
+      meta: { title: 'Budget Approval' }
+    },
+    {
+      path: 'budget/reports',
+      name: 'BudgetReports',
+      component: () => import('@/modules/budget/views/BudgetReportView.vue'),
+      meta: { title: 'Budget Reports' }
+    },
+    {
+      path: 'budget/forecasting',
+      name: 'BudgetForecasting',
+      component: () => import('@/modules/budget/views/Forecasts.vue'),
+      meta: { title: 'Budget Forecasting' }
+    },
+    // HRM Module
+    hrmRoutes,
     // Payroll
     {
       path: 'payroll',
@@ -561,6 +447,31 @@ const mainAppRoute: AppRouteRecordRaw = {
       component: () => import('@/modules/reports/views/CustomReportsView.vue'),
       meta: { title: 'Custom Reports' }
     },
+    {
+      path: 'reports/aged',
+      name: 'AgedReports',
+      component: () => import('@/modules/reports/views/AgedReportsView.vue'),
+      meta: { title: 'Aged Receivables/Payables' }
+    },
+    {
+      path: 'reports/tax',
+      name: 'TaxReports',
+      component: () => import('@/modules/reports/views/TaxReportsView.vue'),
+      meta: { title: 'Tax Reports' }
+    },
+    {
+      path: 'reports/audit',
+      name: 'AuditReports',
+      component: () => import('@/modules/reports/views/AuditReportsView.vue'),
+      meta: { title: 'Audit Reports' }
+    },
+    // Approvals
+    {
+      path: 'approvals',
+      name: 'Approvals',
+      component: () => import('@/views/approvals/ApprovalsView.vue'),
+      meta: { title: 'Approval Workflows' }
+    },
     // AI & Business Intelligence
     {
       path: 'ai-bi',
@@ -586,6 +497,43 @@ const mainAppRoute: AppRouteRecordRaw = {
       component: () => import('@/modules/ai-bi/views/Reports.vue'),
       meta: { title: 'AI/BI Reports' }
     },
+    // Super Admin
+    {
+      path: 'super-admin',
+      name: 'SuperAdmin',
+      component: () => import('@/modules/super-admin/views/SuperAdminView.vue'),
+      meta: { title: 'Super Admin', requiresAdmin: true }
+    },
+    {
+      path: 'super-admin/system-monitoring',
+      name: 'SystemMonitoring',
+      component: () => import('@/modules/super-admin/views/SystemMonitoring.vue'),
+      meta: { title: 'System Monitoring', requiresAdmin: true }
+    },
+    {
+      path: 'super-admin/global-config',
+      name: 'GlobalConfiguration',
+      component: () => import('@/modules/super-admin/views/GlobalConfiguration.vue'),
+      meta: { title: 'Global Configuration', requiresAdmin: true }
+    },
+    {
+      path: 'super-admin/platform-analytics',
+      name: 'PlatformAnalytics',
+      component: () => import('@/modules/super-admin/views/PlatformAnalytics.vue'),
+      meta: { title: 'Platform Analytics', requiresAdmin: true }
+    },
+    {
+      path: 'super-admin/license-management',
+      name: 'LicenseManagement',
+      component: () => import('@/modules/super-admin/views/LicenseManagement.vue'),
+      meta: { title: 'License Management', requiresAdmin: true }
+    },
+    {
+      path: 'super-admin/system-health',
+      name: 'SystemHealthDashboard',
+      component: () => import('@/modules/super-admin/views/SystemHealthDashboard.vue'),
+      meta: { title: 'System Health Dashboard', requiresAdmin: true }
+    },
     // Settings
     {
       path: 'settings',
@@ -601,16 +549,58 @@ const mainAppRoute: AppRouteRecordRaw = {
           meta: { title: 'General Settings' }
         },
         {
+          path: 'company',
+          name: 'CompanyProfile',
+          component: () => import('@/modules/settings/views/CompanyProfileSettings.vue'),
+          meta: { title: 'Company Profile' }
+        },
+        {
+          path: 'chart-of-accounts',
+          name: 'ChartOfAccounts',
+          component: () => import('@/modules/settings/views/ChartOfAccountsSettings.vue'),
+          meta: { title: 'Chart of Accounts' }
+        },
+        {
+          path: 'tax-rates',
+          name: 'TaxRates',
+          component: () => import('@/modules/settings/views/TaxRateSettings.vue'),
+          meta: { title: 'Tax Rate Management' }
+        },
+        {
           path: 'users',
           name: 'UserManagement',
           component: () => import('@/modules/settings/views/UserManagement.vue'),
           meta: { title: 'User Management' }
         },
         {
+          path: 'system',
+          name: 'SystemPreferences',
+          component: () => import('@/modules/settings/views/SystemPreferences.vue'),
+          meta: { title: 'System Preferences' }
+        },
+        {
+          path: 'integrations',
+          name: 'IntegrationSettings',
+          component: () => import('@/modules/settings/views/IntegrationSettings.vue'),
+          meta: { title: 'Integration Settings' }
+        },
+        {
+          path: 'backup',
+          name: 'BackupRestore',
+          component: () => import('@/modules/settings/views/BackupRestoreSettings.vue'),
+          meta: { title: 'Backup & Restore' }
+        },
+        {
+          path: 'currency',
+          name: 'CurrencySettings',
+          component: () => import('@/modules/settings/views/CurrencySettings.vue'),
+          meta: { title: 'Currency Settings' }
+        },
+        {
           path: 'tenant',
-          name: 'TenantSettings',
-          component: () => import('@/modules/tenant/views/TenantManagement.vue'),
-          meta: { title: 'Tenant Management' }
+          name: 'TenantManagement',
+          component: () => import('@/modules/super-admin/views/TenantManagement.vue'),
+          meta: { title: 'Tenant Management', requiresAdmin: true }
         },
         {
           path: 'security',

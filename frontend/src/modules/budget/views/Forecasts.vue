@@ -1,606 +1,470 @@
 <template>
   <div class="budget-forecasts">
-    <div class="card mb-4">
-      <div class="flex justify-content-between align-items-center">
-        <div>
-          <h1 class="text-3xl font-bold mb-2">Budget Forecasts</h1>
-          <p class="text-500">Projected budget performance and variance analysis</p>
-        </div>
-        <Button 
-          label="New Forecast" 
-          icon="pi pi-plus" 
-          class="p-button-outlined"
-          @click="openNewForecastDialog"
-        />
-      </div>
+    <div class="dashboard-header">
+      <h1>Budget Forecasting</h1>
+      <p>Create financial forecasts and scenario planning for future budget periods.</p>
     </div>
 
-    <!-- Forecast Controls -->
-    <div class="card mb-4">
-      <div class="grid">
-        <div class="col-12 md:col-4">
-          <div class="p-fluid">
-            <label for="scenario">Scenario</label>
-            <Dropdown 
-              id="scenario"
-              v-model="selectedScenario" 
-              :options="scenarios" 
-              optionLabel="name" 
-              placeholder="Select Scenario"
-              class="w-full"
-            />
+    <div class="forecasting-content">
+      <!-- Forecast Controls -->
+      <Card class="controls-card">
+        <template #title>
+          <div class="card-title">
+            <i class="pi pi-chart-line"></i>
+            <span>Forecast Parameters</span>
           </div>
-        </div>
-        <div class="col-12 md:col-4">
-          <div class="p-fluid">
-            <label for="timeframe">Timeframe</label>
-            <Dropdown 
-              id="timeframe"
-              v-model="selectedTimeframe" 
-              :options="timeframes" 
-              optionLabel="name" 
-              placeholder="Select Timeframe"
-              class="w-full"
-            />
-          </div>
-        </div>
-        <div class="col-12 md:col-4">
-          <div class="p-fluid">
-            <label for="department">Department</label>
-            <Dropdown 
-              id="department"
-              v-model="selectedDepartment" 
-              :options="departments" 
-              optionLabel="name" 
-              placeholder="All Departments"
-              class="w-full"
-            />
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Forecast Summary -->
-    <div class="grid">
-      <div class="col-12 md:col-4">
-        <div class="card h-full">
-          <h3 class="text-center">Forecast Summary</h3>
-          <div class="text-center mt-4">
-            <h4 class="mb-2">Total Forecast</h4>
-            <div class="text-4xl font-bold text-primary">{{ formatCurrency(forecastSummary.total) }}</div>
-          </div>
-          <Divider />
-          <div class="grid text-center">
-            <div class="col-6">
-              <div class="text-500 mb-1">Budget</div>
-              <div class="font-medium">{{ formatCurrency(forecastSummary.budget) }}</div>
+        </template>
+        <template #content>
+          <div class="grid">
+            <div class="col-12 md:col-3">
+              <div class="field">
+                <label>Forecast Period</label>
+                <Dropdown v-model="forecastPeriod" :options="periodOptions" option-label="label" option-value="value" />
+              </div>
             </div>
-            <div class="col-6">
-              <div class="text-500 mb-1">Variance</div>
-              <div 
-                class="font-medium" 
-                :class="forecastSummary.variance >= 0 ? 'text-green-500' : 'text-red-500'"
-              >
-                {{ formatCurrency(forecastSummary.variance) }} ({{ forecastSummary.variancePercentage }}%)
+            <div class="col-12 md:col-3">
+              <div class="field">
+                <label>Forecast Method</label>
+                <Dropdown v-model="forecastMethod" :options="methodOptions" option-label="label" option-value="value" />
+              </div>
+            </div>
+            <div class="col-12 md:col-3">
+              <div class="field">
+                <label>Growth Rate (%)</label>
+                <InputNumber v-model="growthRate" :min="0" :max="100" suffix="%" />
+              </div>
+            </div>
+            <div class="col-12 md:col-3">
+              <div class="field">
+                <label>&nbsp;</label>
+                <Button label="Generate Forecast" icon="pi pi-refresh" @click="generateForecast" class="w-full" />
               </div>
             </div>
           </div>
-          <Divider />
-          <div class="text-center">
-            <span class="text-500">Last Updated: </span>
-            <span class="font-medium">{{ formatDate(forecastSummary.lastUpdated) }}</span>
-          </div>
-        </div>
-      </div>
-      
-      <div class="col-12 md:col-8">
-        <div class="card h-full">
-          <div class="flex justify-content-between align-items-center mb-4">
-            <h3>Forecast vs Actual</h3>
-            <div class="flex align-items-center">
-              <span class="mr-3">View:</span>
-              <SelectButton 
-                v-model="chartView" 
-                :options="chartViewOptions" 
-                optionLabel="name"
-                optionValue="value"
-                class="p-buttons-sm"
-              />
-            </div>
-          </div>
-          <Chart type="bar" :data="forecastChartData" :options="chartOptions" />
-        </div>
-      </div>
-    </div>
+        </template>
+      </Card>
 
-    <!-- Forecast Details -->
-    <div class="card mt-4">
-      <DataTable 
-        :value="forecastDetails" 
-        :paginator="true" 
-        :rows="10"
-        :rowsPerPageOptions="[5, 10, 20, 50]"
-        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
-        :filters="filters"
-        filterDisplay="menu"
-        :globalFilterFields="['category', 'department', 'status']"
-      >
-        <template #header>
-          <div class="flex justify-content-between align-items-center">
-            <h3>Forecast Details</h3>
-            <span class="p-input-icon-left">
-              <i class="pi pi-search" />
-              <InputText v-model="filters['global'].value" placeholder="Search..." />
-            </span>
+      <!-- Forecast Chart -->
+      <Card class="chart-card">
+        <template #title>
+          <div class="card-title-with-action">
+            <span>Budget Forecast Trend</span>
+            <div class="chart-controls">
+              <Button label="Historical" :class="{ 'p-button-outlined': !showHistorical }" @click="toggleHistorical" size="small" />
+              <Button label="Scenarios" icon="pi pi-sitemap" @click="showScenarios = true" size="small" />
+            </div>
           </div>
         </template>
+        <template #content>
+          <Chart type="line" :data="forecastChartData" :options="forecastChartOptions" />
+        </template>
+      </Card>
 
-        <Column field="category" header="Category" sortable filter filterPlaceholder="Search by category">
-          <template #filter="{ filterModel, filterCallback }">
-            <InputText 
-              v-model="filterModel.value" 
-              @keydown.enter="filterCallback()" 
-              class="p-column-filter"
-              placeholder="Search by category"
-            />
+      <!-- Forecast Details -->
+      <div class="forecast-details">
+        <Card class="forecast-table-card">
+          <template #title>
+            <span>Detailed Forecast Breakdown</span>
           </template>
-        </Column>
-        
-        <Column field="department" header="Department" sortable filter filterPlaceholder="Search by department">
-          <template #filter="{ filterModel, filterCallback }">
-            <Dropdown 
-              v-model="filterModel.value" 
-              :options="departments" 
-              optionLabel="name"
-              placeholder="Select Department"
-              class="p-column-filter"
-              @change="filterCallback()"
-              :showClear="true"
-            >
-              <template #option="slotProps">
-                <div>{{ slotProps.option.name }}</div>
-              </template>
-            </Dropdown>
+          <template #content>
+            <DataTable :value="forecastDetails" responsive-layout="scroll">
+              <Column field="period" header="Period" sortable />
+              <Column field="category" header="Category" sortable />
+              <Column field="historical" header="Historical" sortable>
+                <template #body="{ data }">
+                  <span class="amount historical">{{ formatCurrency(data.historical) }}</span>
+                </template>
+              </Column>
+              <Column field="forecast" header="Forecast" sortable>
+                <template #body="{ data }">
+                  <span class="amount forecast">{{ formatCurrency(data.forecast) }}</span>
+                </template>
+              </Column>
+              <Column field="variance" header="Variance" sortable>
+                <template #body="{ data }">
+                  <span class="amount variance" :class="data.variance >= 0 ? 'positive' : 'negative'">
+                    {{ formatCurrency(data.variance) }}
+                  </span>
+                </template>
+              </Column>
+              <Column field="confidence" header="Confidence" sortable>
+                <template #body="{ data }">
+                  <ProgressBar :value="data.confidence" :class="getConfidenceClass(data.confidence)" />
+                  <span class="confidence-text">{{ data.confidence }}%</span>
+                </template>
+              </Column>
+            </DataTable>
           </template>
-        </Column>
-        
-        <Column field="forecastAmount" header="Forecast" sortable>
-          <template #body="{ data }">
-            {{ formatCurrency(data.forecastAmount) }}
+        </Card>
+
+        <Card class="summary-card">
+          <template #title>
+            <span>Forecast Summary</span>
           </template>
-        </Column>
-        
-        <Column field="actualAmount" header="Actual" sortable>
-          <template #body="{ data }">
-            {{ formatCurrency(data.actualAmount) }}
-          </template>
-        </Column>
-        
-        <Column field="variance" header="Variance" sortable>
-          <template #body="{ data }">
-            <div :class="data.variance >= 0 ? 'text-green-500' : 'text-red-500'">
-              {{ formatCurrency(data.variance) }} ({{ data.variancePercentage }}%)
+          <template #content>
+            <div class="forecast-summary">
+              <div class="summary-item">
+                <label>Total Forecast</label>
+                <span class="amount forecast">{{ formatCurrency(forecastSummary.total) }}</span>
+              </div>
+              <div class="summary-item">
+                <label>Growth Rate</label>
+                <span class="percentage">{{ forecastSummary.growthRate }}%</span>
+              </div>
+              <div class="summary-item">
+                <label>Confidence Level</label>
+                <span class="confidence">{{ forecastSummary.confidence }}%</span>
+              </div>
+              <div class="summary-item">
+                <label>Risk Level</label>
+                <Tag :value="forecastSummary.riskLevel" :severity="getRiskSeverity(forecastSummary.riskLevel)" />
+              </div>
+            </div>
+            
+            <div class="forecast-actions">
+              <Button label="Save Forecast" icon="pi pi-save" @click="saveForecast" />
+              <Button label="Export Report" icon="pi pi-download" outlined @click="exportForecast" />
+              <Button label="Create Budget" icon="pi pi-plus" severity="success" @click="createBudgetFromForecast" />
             </div>
           </template>
-        </Column>
-        
-        <Column field="status" header="Status" sortable filter filterField="status">
-          <template #body="{ data }">
-            <Tag :value="data.status" :severity="getStatusSeverity(data.status)" />
-          </template>
-          <template #filter="{ filterModel, filterCallback }">
-            <Dropdown 
-              v-model="filterModel.value" 
-              :options="statuses" 
-              optionLabel="name"
-              placeholder="Select Status"
-              class="p-column-filter"
-              @change="filterCallback()"
-              :showClear="true"
-            >
-              <template #option="slotProps">
-                <Tag :value="slotProps.option.name" :severity="getStatusSeverity(slotProps.option.name)" />
-              </template>
-            </Dropdown>
-          </template>
-        </Column>
-        
-        <Column header="Actions" :exportable="false" style="min-width: 8rem">
-          <template #body="{ data }">
-            <Button 
-              icon="pi pi-pencil" 
-              class="p-button-rounded p-button-text p-button-sm"
-              @click="editForecast(data)"
-            />
-            <Button 
-              icon="pi pi-trash" 
-              class="p-button-rounded p-button-text p-button-sm p-button-danger"
-              @click="confirmDeleteForecast(data)"
-            />
-          </template>
-        </Column>
-      </DataTable>
+        </Card>
+      </div>
     </div>
 
-    <!-- New Forecast Dialog -->
-    <Dialog 
-      v-model:visible="forecastDialog" 
-      :style="{width: '600px'}" 
-      header="New Budget Forecast" 
-      :modal="true"
-      class="p-fluid"
-    >
-      <div class="field">
-        <label for="forecastName">Forecast Name</label>
-        <InputText 
-          id="forecastName"
-          v-model="forecast.name"
-          required="true"
-          autofocus
-          :class="{'p-invalid': submitted && !forecast.name}"
-        />
-        <small class="p-error" v-if="submitted && !forecast.name">Name is required.</small>
+    <!-- Scenario Planning Dialog -->
+    <Dialog v-model:visible="showScenarios" header="Scenario Planning" :style="{ width: '80vw' }" modal>
+      <div class="scenarios-content">
+        <div class="scenario-tabs">
+          <TabView>
+            <TabPanel header="Optimistic">
+              <div class="scenario-details">
+                <p>Best case scenario with 15% growth rate</p>
+                <Chart type="line" :data="optimisticScenario" :options="scenarioChartOptions" />
+              </div>
+            </TabPanel>
+            <TabPanel header="Realistic">
+              <div class="scenario-details">
+                <p>Most likely scenario with 8% growth rate</p>
+                <Chart type="line" :data="realisticScenario" :options="scenarioChartOptions" />
+              </div>
+            </TabPanel>
+            <TabPanel header="Pessimistic">
+              <div class="scenario-details">
+                <p>Conservative scenario with 3% growth rate</p>
+                <Chart type="line" :data="pessimisticScenario" :options="scenarioChartOptions" />
+              </div>
+            </TabPanel>
+          </TabView>
+        </div>
       </div>
-      
-      <div class="field">
-        <label for="scenario">Scenario</label>
-        <Dropdown 
-          id="scenario"
-          v-model="forecast.scenario" 
-          :options="scenarios" 
-          optionLabel="name"
-          placeholder="Select a Scenario"
-          :class="{'p-invalid': submitted && !forecast.scenario}"
-        />
-        <small class="p-error" v-if="submitted && !forecast.scenario">Scenario is required.</small>
-      </div>
-      
-      <div class="field">
-        <label for="startDate">Start Date</label>
-        <Calendar 
-          id="startDate" 
-          v-model="forecast.startDate" 
-          :showIcon="true" 
-          dateFormat="yy-mm-dd"
-          :class="{'p-invalid': submitted && !forecast.startDate}"
-        />
-        <small class="p-error" v-if="submitted && !forecast.startDate">Start date is required.</small>
-      </div>
-      
-      <div class="field">
-        <label for="endDate">End Date</label>
-        <Calendar 
-          id="endDate" 
-          v-model="forecast.endDate" 
-          :showIcon="true" 
-          dateFormat="yy-mm-dd"
-          :minDate="forecast.startDate"
-          :class="{'p-invalid': submitted && !forecast.endDate}"
-        />
-        <small class="p-error" v-if="submitted && !forecast.endDate">End date is required.</small>
-      </div>
-      
-      <div class="field">
-        <label for="description">Description</label>
-        <Textarea 
-          id="description" 
-          v-model="forecast.description" 
-          :autoResize="true" 
-          rows="3"
-        />
-      </div>
-      
-      <template #footer>
-        <Button 
-          label="Cancel" 
-          icon="pi pi-times" 
-          class="p-button-text" 
-          @click="hideDialog"
-        />
-        <Button 
-          label="Save" 
-          icon="pi pi-check" 
-          class="p-button-text" 
-          @click="saveForecast"
-        />
-      </template>
-    </Dialog>
-    
-    <!-- Delete Confirmation Dialog -->
-    <Dialog 
-      v-model:visible="deleteForecastDialog" 
-      :style="{width: '450px'}" 
-      header="Confirm" 
-      :modal="true"
-    >
-      <div class="confirmation-content">
-        <i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem" />
-        <span v-if="forecast">Are you sure you want to delete <b>{{forecast.name}}</b>?</span>
-      </div>
-      <template #footer>
-        <Button 
-          label="No" 
-          icon="pi pi-times" 
-          class="p-button-text" 
-          @click="deleteForecastDialog = false"
-        />
-        <Button 
-          label="Yes" 
-          icon="pi pi-check" 
-          class="p-button-text" 
-          @click="deleteForecast"
-        />
-      </template>
     </Dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { FilterMatchMode } from 'primevue/api';
-import { useFormatting } from '@/composables/useFormatting';
+import { ref, computed, onMounted } from 'vue'
+import { useToast } from 'primevue/usetoast'
 
-import Chart from 'primevue/chart';
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
-import InputText from 'primevue/inputtext';
-import Dropdown from 'primevue/dropdown';
-import Button from 'primevue/button';
-import Dialog from 'primevue/dialog';
-import Calendar from 'primevue/calendar';
-import Textarea from 'primevue/textarea';
-import Tag from 'primevue/tag';
-import SelectButton from 'primevue/selectbutton';
-import Divider from 'primevue/divider';
+// PrimeVue Components
+import Card from 'primevue/card'
+import DataTable from 'primevue/datatable'
+import Column from 'primevue/column'
+import Button from 'primevue/button'
+import Tag from 'primevue/tag'
+import Dropdown from 'primevue/dropdown'
+import InputNumber from 'primevue/inputnumber'
+import Chart from 'primevue/chart'
+import ProgressBar from 'primevue/progressbar'
+import Dialog from 'primevue/dialog'
+import TabView from 'primevue/tabview'
+import TabPanel from 'primevue/tabpanel'
 
-const { formatCurrency, formatDate } = useFormatting();
+const toast = useToast()
 
-// Data
-const selectedScenario = ref({ name: 'Best Case', code: 'best' });
-const selectedTimeframe = ref({ name: 'This Year', code: 'year' });
-const selectedDepartment = ref({ name: 'All Departments', code: 'all' });
-const chartView = ref('monthly');
+const forecastPeriod = ref('next_year')
+const forecastMethod = ref('linear')
+const growthRate = ref(8)
+const showHistorical = ref(true)
+const showScenarios = ref(false)
 
-const scenarios = [
-  { name: 'Best Case', code: 'best' },
-  { name: 'Most Likely', code: 'likely' },
-  { name: 'Worst Case', code: 'worst' },
-];
+const periodOptions = [
+  { label: 'Next Quarter', value: 'next_quarter' },
+  { label: 'Next Year', value: 'next_year' },
+  { label: 'Next 2 Years', value: 'next_2_years' },
+  { label: 'Next 5 Years', value: 'next_5_years' }
+]
 
-const timeframes = [
-  { name: 'This Month', code: 'month' },
-  { name: 'This Quarter', code: 'quarter' },
-  { name: 'This Year', code: 'year' },
-  { name: 'Custom', code: 'custom' },
-];
+const methodOptions = [
+  { label: 'Linear Regression', value: 'linear' },
+  { label: 'Exponential Smoothing', value: 'exponential' },
+  { label: 'Moving Average', value: 'moving_average' },
+  { label: 'Seasonal Decomposition', value: 'seasonal' }
+]
 
-const departments = [
-  { name: 'All Departments', code: 'all' },
-  { name: 'Sales', code: 'sales' },
-  { name: 'Marketing', code: 'marketing' },
-  { name: 'Operations', code: 'operations' },
-  { name: 'Finance', code: 'finance' },
-  { name: 'HR', code: 'hr' },
-];
-
-const chartViewOptions = [
-  { name: 'Monthly', value: 'monthly' },
-  { name: 'Quarterly', value: 'quarterly' },
-  { name: 'Yearly', value: 'yearly' },
-];
+const forecastDetails = ref([
+  { period: 'Q1 2024', category: 'Marketing', historical: 45000, forecast: 48600, variance: 3600, confidence: 85 },
+  { period: 'Q1 2024', category: 'Operations', historical: 65000, forecast: 70200, variance: 5200, confidence: 90 },
+  { period: 'Q1 2024', category: 'IT', historical: 35000, forecast: 37800, variance: 2800, confidence: 80 },
+  { period: 'Q2 2024', category: 'Marketing', historical: 50000, forecast: 54000, variance: 4000, confidence: 82 },
+  { period: 'Q2 2024', category: 'Operations', historical: 70000, forecast: 75600, variance: 5600, confidence: 88 },
+  { period: 'Q2 2024', category: 'IT', historical: 40000, forecast: 43200, variance: 3200, confidence: 78 }
+])
 
 const forecastSummary = ref({
   total: 1250000,
-  budget: 1000000,
-  variance: 250000,
-  variancePercentage: 25,
-  lastUpdated: new Date(),
-});
+  growthRate: 8.5,
+  confidence: 85,
+  riskLevel: 'Medium'
+})
 
 const forecastChartData = ref({
   labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
   datasets: [
     {
-      label: 'Forecast',
-      backgroundColor: '#42A5F5',
-      data: [100000, 100000, 100000, 100000, 100000, 100000, 100000, 100000, 100000, 100000, 100000, 100000]
+      label: 'Historical',
+      data: [45000, 48000, 52000, 49000, 55000, 58000, 60000, 62000, 59000, 65000, 68000, 70000],
+      borderColor: '#42A5F5',
+      backgroundColor: 'rgba(66, 165, 245, 0.1)',
+      fill: true
     },
     {
-      label: 'Actual',
-      backgroundColor: '#66BB6A',
-      data: [95000, 105000, 98000, 102000, 110000, 95000, 100000, 98000, 105000, 95000, 0, 0]
+      label: 'Forecast',
+      data: [null, null, null, null, null, null, null, null, 64000, 69000, 74000, 79000],
+      borderColor: '#FFA726',
+      backgroundColor: 'rgba(255, 167, 38, 0.1)',
+      borderDash: [5, 5],
+      fill: true
     }
   ]
-});
+})
 
-const chartOptions = ref({
+const forecastChartOptions = ref({
   responsive: true,
-  maintainAspectRatio: false,
-  scales: {
-    x: {
-      stacked: false,
-    },
-    y: {
-      stacked: false,
-      ticks: {
-        callback: function(value: number) {
-          return '₹' + (value / 1000) + 'k';
-        }
-      }
-    }
-  },
   plugins: {
+    legend: { position: 'top' },
     tooltip: {
       callbacks: {
-        label: function(context: any) {
-          let label = context.dataset.label || '';
-          if (label) {
-            label += ': ';
-          }
-          if (context.parsed.y !== null) {
-            label += formatCurrency(context.parsed.y);
-          }
-          return label;
-        }
+        label: (context) => `${context.dataset.label}: $${context.parsed.y.toLocaleString()}`
       }
-    },
-    legend: {
-      position: 'top',
+    }
+  },
+  scales: {
+    y: {
+      beginAtZero: true,
+      ticks: { callback: (value) => '$' + value.toLocaleString() }
     }
   }
-});
+})
 
-const statuses = [
-  { name: 'On Track', code: 'ontrack' },
-  { name: 'At Risk', code: 'atrisk' },
-  { name: 'Off Track', code: 'offtrack' },
-];
+const optimisticScenario = ref({
+  labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+  datasets: [{
+    label: 'Optimistic (15% growth)',
+    data: [575000, 661250, 760438, 874504],
+    borderColor: '#66BB6A',
+    backgroundColor: 'rgba(102, 187, 106, 0.1)',
+    fill: true
+  }]
+})
 
-const forecastDetails = ref([
-  { 
-    id: 1, 
-    category: 'Marketing Campaigns', 
-    department: 'Marketing', 
-    forecastAmount: 250000, 
-    actualAmount: 275000, 
-    variance: 25000, 
-    variancePercentage: 10, 
-    status: 'At Risk' 
-  },
-  { 
-    id: 2, 
-    category: 'Office Rent', 
-    department: 'Operations', 
-    forecastAmount: 300000, 
-    actualAmount: 300000, 
-    variance: 0, 
-    variancePercentage: 0, 
-    status: 'On Track' 
-  },
-  { 
-    id: 3, 
-    category: 'Salaries', 
-    department: 'HR', 
-    forecastAmount: 500000, 
-    actualAmount: 480000, 
-    variance: -20000, 
-    variancePercentage: -4, 
-    status: 'On Track' 
-  },
-  { 
-    id: 4, 
-    category: 'Software Subscriptions', 
-    department: 'IT', 
-    forecastAmount: 50000, 
-    actualAmount: 60000, 
-    variance: 10000, 
-    variancePercentage: 20, 
-    status: 'At Risk' 
-  },
-  { 
-    id: 5, 
-    category: 'Travel', 
-    department: 'Sales', 
-    forecastAmount: 150000, 
-    actualAmount: 200000, 
-    variance: 50000, 
-    variancePercentage: 33, 
-    status: 'Off Track' 
-  },
-]);
+const realisticScenario = ref({
+  labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+  datasets: [{
+    label: 'Realistic (8% growth)',
+    data: [540000, 583200, 629856, 680285],
+    borderColor: '#42A5F5',
+    backgroundColor: 'rgba(66, 165, 245, 0.1)',
+    fill: true
+  }]
+})
 
-// Dialog and Form
-const forecastDialog = ref(false);
-const deleteForecastDialog = ref(false);
-const submitted = ref(false);
-const forecast = ref({});
+const pessimisticScenario = ref({
+  labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+  datasets: [{
+    label: 'Pessimistic (3% growth)',
+    data: [515000, 530450, 546364, 562754],
+    borderColor: '#EF5350',
+    backgroundColor: 'rgba(239, 83, 80, 0.1)',
+    fill: true
+  }]
+})
 
-// Filters
-const filters = ref({
-  'global': { value: null, matchMode: FilterMatchMode.CONTAINS },
-  'category': { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-  'department': { value: null, matchMode: FilterMatchMode.EQUALS },
-  'status': { value: null, matchMode: FilterMatchMode.EQUALS },
-});
+const scenarioChartOptions = ref({
+  responsive: true,
+  plugins: { legend: { position: 'top' } },
+  scales: {
+    y: {
+      beginAtZero: true,
+      ticks: { callback: (value) => '$' + value.toLocaleString() }
+    }
+  }
+})
 
-// Methods
-const openNewForecastDialog = () => {
-  forecast.value = {};
-  submitted.value = false;
-  forecastDialog.value = true;
-};
+const formatCurrency = (amount) => 
+  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount)
 
-const hideDialog = () => {
-  forecastDialog.value = false;
-  submitted.value = false;
-};
+const getConfidenceClass = (confidence) => {
+  if (confidence >= 80) return 'progress-success'
+  if (confidence >= 60) return 'progress-warning'
+  return 'progress-danger'
+}
+
+const getRiskSeverity = (risk) => {
+  switch (risk) {
+    case 'Low': return 'success'
+    case 'Medium': return 'warning'
+    case 'High': return 'danger'
+    default: return 'info'
+  }
+}
+
+const toggleHistorical = () => {
+  showHistorical.value = !showHistorical.value
+}
+
+const generateForecast = () => {
+  toast.add({ severity: 'info', summary: 'Generating Forecast', detail: 'Forecast is being calculated...' })
+}
 
 const saveForecast = () => {
-  submitted.value = true;
-  
-  if (forecast.value.name && forecast.value.scenario) {
-    // Save logic here
-    forecastDialog.value = false;
-    forecast.value = {};
-  }
-};
+  toast.add({ severity: 'success', summary: 'Forecast Saved', detail: 'Forecast has been saved successfully' })
+}
 
-const editForecast = (editForecast) => {
-  forecast.value = { ...editForecast };
-  forecastDialog.value = true;
-};
+const exportForecast = () => {
+  toast.add({ severity: 'info', summary: 'Exporting', detail: 'Forecast report is being exported...' })
+}
 
-const confirmDeleteForecast = (deleteForecast) => {
-  forecast.value = deleteForecast;
-  deleteForecastDialog.value = true;
-};
-
-const deleteForecast = () => {
-  // Delete logic here
-  deleteForecastDialog.value = false;
-  forecast.value = {};
-};
-
-const getStatusSeverity = (status: string) => {
-  switch (status.toLowerCase()) {
-    case 'on track':
-      return 'success';
-    case 'at risk':
-      return 'warning';
-    case 'off track':
-      return 'danger';
-    default:
-      return 'info';
-  }
-};
+const createBudgetFromForecast = () => {
+  toast.add({ severity: 'success', summary: 'Budget Created', detail: 'New budget created from forecast data' })
+}
 
 onMounted(() => {
-  // Fetch forecast data from API
-});
+  generateForecast()
+})
 </script>
 
 <style scoped>
 .budget-forecasts {
-  padding: 1rem;
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
-:deep(.p-datatable) {
-  font-size: 0.9rem;
+.dashboard-header {
+  margin-bottom: 2rem;
 }
 
-:deep(.p-datatable .p-datatable-thead > tr > th) {
-  background-color: #f8f9fa;
+.dashboard-header h1 {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 0.5rem 0;
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   font-weight: 600;
 }
 
-.confirmation-content {
+.card-title-with-action {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
+  width: 100%;
 }
 
-.p-column-filter {
-  width: 100%;
+.chart-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.controls-card {
+  margin-bottom: 2rem;
+}
+
+.chart-card {
+  margin-bottom: 2rem;
+}
+
+.field {
+  margin-bottom: 1rem;
+}
+
+.field label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.forecast-details {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.5rem;
+}
+
+.forecast-summary {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 0.5rem;
+}
+
+.summary-item label {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.amount.historical { color: #3b82f6; }
+.amount.forecast { color: #f59e0b; }
+.amount.variance.positive { color: #10b981; }
+.amount.variance.negative { color: #ef4444; }
+
+.percentage { color: #8b5cf6; font-weight: 600; }
+.confidence { color: #10b981; font-weight: 600; }
+
+.confidence-text {
+  margin-left: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.forecast-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.scenario-details {
+  padding: 1rem 0;
+}
+
+.progress-success :deep(.p-progressbar-value) { background: #10b981; }
+.progress-warning :deep(.p-progressbar-value) { background: #f59e0b; }
+.progress-danger :deep(.p-progressbar-value) { background: #ef4444; }
+
+@media (max-width: 768px) {
+  .forecast-details {
+    grid-template-columns: 1fr;
+  }
+  
+  .forecast-summary {
+    grid-template-columns: 1fr;
+  }
+  
+  .chart-controls {
+    flex-direction: column;
+  }
 }
 </style>

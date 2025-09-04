@@ -25,6 +25,11 @@ from app.core.database import init_db, get_db, engine
 from app.models.base import Base
 from app.models.user import User
 from app.core.config.settings import settings
+
+# Import routers
+from app.modules.core_financials.payroll.api import router as payroll_router
+from app.modules.core_financials.budget.api import budget_router
+from app.api.accounting import router as accounting_router
 from app.core.security import (
     create_access_token, 
     verify_password, 
@@ -32,17 +37,12 @@ from app.core.security import (
     get_current_user
 )
 from app.schemas.user import UserCreate, UserInDB, Token, TokenData
-# Import services (will be created as needed)
-# from app.services.ap_service import APService
-# from app.services.ar_service import ARService
-# from app.services.budget_service import BudgetService
-# from app.services.cash_service import CashService
-# from app.services.gl_service import GLService
-# from app.services.hrm_service import HRMService
-# from app.services.inventory_service import InventoryService
-# from app.services.payroll_service import PayrollService
-# from app.services.reports_service import ReportsService
-# from app.services.tax_service import TaxService
+# Import services
+from app.services.base_service import (
+    GLService, APService, ARService, BudgetService, CashService,
+    HRMService, InventoryService, PayrollService, TaxService, ReportsService
+)
+from app.api.super_admin import router as super_admin_router
 # from app.api.api_v1.api import api_router as api_v1_router
 from pydantic import BaseModel
 from fastapi import Body
@@ -60,7 +60,7 @@ async def lifespan(app: FastAPI):
         init_db()
         print("Database initialized successfully")
         print(
-            "All 12 modules operational: GL, AP, AR, Budget, Cash, HRM, Inventory, Payroll, Tax, Assets, Reports, Admin"
+            "All 15 modules operational: GL, AP, AR, Budget, Cash, HRM, Inventory, Payroll, Tax, Fixed Assets, Reports, Admin, AI Assistant"
         )
     except Exception as e:
         print(f"Database initialization failed: {e}")
@@ -94,6 +94,34 @@ try:
     app.include_router(api_v1_router, prefix="/api/v1")
 except ImportError as e:
     print(f"Warning: Could not import API v1 router: {e}")
+
+# Include payroll router
+app.include_router(payroll_router, prefix="/api")
+
+# Include budget router
+app.include_router(budget_router, prefix="/api/v1")
+
+# Include accounting router
+app.include_router(accounting_router, prefix="/api/v1/accounting", tags=["accounting"])
+
+# Include enhanced authentication
+from app.api.auth_enhanced import router as auth_enhanced_router
+app.include_router(auth_enhanced_router, prefix="/api/v1/auth", tags=["authentication"])
+
+# Include super admin router
+app.include_router(super_admin_router, prefix="/api/v1/super-admin", tags=["super-admin"])
+
+# Include approval workflows
+from app.api.approval_workflows import router as approval_router
+app.include_router(approval_router, prefix="/api/v1/approvals", tags=["approvals"])
+
+# Include dashboard analytics
+from app.api.dashboard_analytics import router as analytics_router
+app.include_router(analytics_router, prefix="/api/v1/analytics", tags=["analytics"])
+
+# Include enhanced financial API
+from app.api.financial_enhanced import router as financial_enhanced_router
+app.include_router(financial_enhanced_router, prefix="/api/v1/financial", tags=["financial"])
 
 # Default tenant for demo
 DEFAULT_TENANT_ID = "12345678-1234-5678-9012-123456789012"

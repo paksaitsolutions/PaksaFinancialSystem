@@ -14,16 +14,46 @@
             @click="$router.push({ name: 'GeneralSettings' })"
           />
           <Button 
+            :class="{ 'p-button-outlined': $route.name !== 'CompanyProfile' }"
+            label="Company" 
+            icon="pi pi-building" 
+            @click="$router.push({ name: 'CompanyProfile' })"
+          />
+          <Button 
+            :class="{ 'p-button-outlined': $route.name !== 'ChartOfAccounts' }"
+            label="Accounts" 
+            icon="pi pi-list" 
+            @click="$router.push({ name: 'ChartOfAccounts' })"
+          />
+          <Button 
+            :class="{ 'p-button-outlined': $route.name !== 'TaxRates' }"
+            label="Tax Rates" 
+            icon="pi pi-calculator" 
+            @click="$router.push({ name: 'TaxRates' })"
+          />
+          <Button 
             :class="{ 'p-button-outlined': $route.name !== 'UserManagement' }"
             label="Users" 
             icon="pi pi-users" 
             @click="$router.push({ name: 'UserManagement' })"
           />
           <Button 
-            :class="{ 'p-button-outlined': $route.name !== 'TenantSettings' }"
-            label="Tenant" 
-            icon="pi pi-building" 
-            @click="$router.push({ name: 'TenantSettings' })"
+            :class="{ 'p-button-outlined': $route.name !== 'SystemPreferences' }"
+            label="System" 
+            icon="pi pi-desktop" 
+            @click="$router.push({ name: 'SystemPreferences' })"
+          />
+          <Button 
+            :class="{ 'p-button-outlined': $route.name !== 'IntegrationSettings' }"
+            label="Integrations" 
+            icon="pi pi-link" 
+            @click="$router.push({ name: 'IntegrationSettings' })"
+          />
+          <Button 
+            :class="{ 'p-button-outlined': $route.name !== 'BackupRestore' }"
+            label="Backup" 
+            icon="pi pi-cloud-upload" 
+            @click="$router.push({ name: 'BackupRestore' })"
           />
           <Button 
             :class="{ 'p-button-outlined': $route.name !== 'SecuritySettings' }"

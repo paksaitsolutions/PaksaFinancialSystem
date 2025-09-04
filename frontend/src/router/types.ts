@@ -5,10 +5,12 @@ export interface RouteMeta {
   requiresAuth?: boolean;
   roles?: string[];
   icon?: string;
-  breadcrumb?: boolean;
+  breadcrumb?: boolean | string[];
   hidden?: boolean;
   permissions?: string[];
   layout?: string;
+  module?: string;
+  tab?: string;
 }
 
 export interface RouteRecordWithMeta extends Omit<RouteRecordRaw, 'meta' | 'children'> {

@@ -1,16 +1,7 @@
-# -*- coding: utf-8 -*-
-"""
-Paksa Financial System
-----------------------
-Version: 1.0
-Author: Paksa IT Solutions
-Copyright © 2023 Paksa IT Solutions
-
-This file is part of the Paksa Financial System.
-It is subject to the terms and conditions defined in
-file 'LICENSE', which is part of this source code package.
-"""
-
+from fastapi import APIRouter
 from .endpoints import router
 
-__all__ = ["router"]
+budget_router = APIRouter()
+budget_router.include_router(router, prefix="/budget", tags=["budget"])
+
+__all__ = ["budget_router"]

@@ -1,456 +1,593 @@
 <template>
-  <div class="employees-view">
-    <div class="grid">
-      <div class="col-12">
-        <div class="flex justify-content-between align-items-center mb-4">
-          <div>
-            <h1>Employees</h1>
-            <Breadcrumb :home="home" :model="items" />
-          </div>
-          <div>
-            <Button label="New Employee" icon="pi pi-plus" class="p-button-success" @click="showNewEmployeeDialog" />
-          </div>
-        </div>
-      </div>
-
-      <!-- Filters -->
-      <div class="col-12">
-        <Card>
-          <template #content>
-            <div class="grid p-fluid">
-              <div class="col-12 md:col-4">
-                <span class="p-float-label">
-                  <InputText id="search" v-model="filters.search" class="w-full" />
-                  <label for="search">Search by name or ID</label>
-                </span>
-              </div>
-              <div class="col-12 md:col-3">
-                <span class="p-float-label">
-                  <Dropdown 
-                    v-model="filters.department" 
-                    :options="departments" 
-                    optionLabel="name" 
-                    optionValue="id" 
-                    :showClear="true"
-                    class="w-full"
-                  />
-                  <label>Department</label>
-                </span>
-              </div>
-              <div class="col-12 md:col-3">
-                <span class="p-float-label">
-                  <Dropdown 
-                    v-model="filters.status" 
-                    :options="statuses" 
-                    optionLabel="label" 
-                    optionValue="value" 
-                    :showClear="true"
-                    class="w-full"
-                  />
-                  <label>Status</label>
-                </span>
-              </div>
-              <div class="col-12 md:col-2 flex align-items-end">
-                <Button label="Filter" icon="pi pi-filter" class="p-button-outlined w-full" @click="loadEmployees" />
-              </div>
-            </div>
-          </template>
-        </Card>
-      </div>
-
-      <!-- Employee List -->
-      <div class="col-12">
-        <Card>
-          <template #header>
-            <div class="flex justify-content-between align-items-center">
-              <h3>Employee List</h3>
-              <div>
-                <Button icon="pi pi-download" class="p-button-text" @click="exportToCSV" />
-                <Button icon="pi pi-refresh" class="p-button-text" @click="loadEmployees" />
-              </div>
-            </div>
-          </template>
-          <template #content>
-            <DataTable 
-              :value="employees" 
-              :paginator="true" 
-              :rows="10" 
-              :loading="loading"
-              :rowsPerPageOptions="[5,10,25,50]"
-              paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-              currentPageReportTemplate="Showing {first} to {last} of {totalRecords} employees"
-              responsiveLayout="scroll"
-              :globalFilterFields="['name', 'employeeId', 'email', 'phone']"
-              v-model:filters="filters"
-              filterDisplay="menu"
-            >
-              <Column field="employeeId" header="ID" :sortable="true" style="width: 100px" />
-              <Column field="name" header="Name" :sortable="true">
-                <template #body="{ data }">
-                  <div class="flex align-items-center">
-                    <Avatar :image="data.avatar" :label="data.avatar ? '' : data.name.charAt(0)" shape="circle" class="mr-2" />
-                    <span>{{ data.name }}</span>
-                  </div>
-                </template>
-              </Column>
-              <Column field="email" header="Email" :sortable="true" />
-              <Column field="phone" header="Phone" :sortable="true" />
-              <Column field="department" header="Department" :sortable="true" />
-              <Column field="position" header="Position" :sortable="true" />
-              <Column field="hireDate" header="Hire Date" :sortable="true">
-                <template #body="{ data }">
-                  {{ formatDate(data.hireDate) }}
-                </template>
-              </Column>
-              <Column field="status" header="Status" :sortable="true">
-                <template #body="{ data }">
-                  <Tag :value="data.status" :severity="getStatusSeverity(data.status)" />
-                </template>
-              </Column>
-              <Column header="Actions" style="width: 150px">
-                <template #body="{ data }">
-                  <Button icon="pi pi-pencil" class="p-button-text p-button-rounded p-button-success" @click="editEmployee(data)" />
-                  <Button icon="pi pi-trash" class="p-button-text p-button-rounded p-button-danger" @click="confirmDeleteEmployee(data)" />
-                </template>
-              </Column>
-            </DataTable>
-          </template>
-        </Card>
+  <div class="card">
+    <div class="flex justify-content-between align-items-center mb-4">
+      <h2>Employees</h2>
+      <div class="flex gap-2">
+        <Button 
+          label="Export" 
+          icon="pi pi-download" 
+          class="p-button-secondary" 
+          @click="exportToCSV"
+        />
+        <Button 
+          label="Add Employee" 
+          icon="pi pi-plus" 
+          class="p-button-primary" 
+          @click="openNew" 
+        />
       </div>
     </div>
 
-    <!-- New/Edit Employee Dialog -->
-    <Dialog 
-      v-model:visible="employeeDialog" 
-      :header="editing ? 'Edit Employee' : 'New Employee'" 
-      :modal="true"
-      :style="{width: '600px'}"
-      :closable="!submitting"
-      :closeOnEscape="!submitting"
-    >
-      <div class="grid p-fluid">
-        <div class="col-12">
-          <div class="field">
-            <label for="name" class="block mb-2">Full Name <span class="text-red-500">*</span></label>
-            <InputText id="name" v-model="employee.name" class="w-full" :class="{'p-invalid': submitted && !employee.name}" />
-            <small v-if="submitted && !employee.name" class="p-error">Name is required.</small>
-          </div>
-        </div>
-        <div class="col-12 md:col-6">
-          <div class="field">
-            <label for="email" class="block mb-2">Email <span class="text-red-500">*</span></label>
-            <InputText id="email" v-model="employee.email" class="w-full" :class="{'p-invalid': submitted && !employee.email}" />
-            <small v-if="submitted && !employee.email" class="p-error">Email is required.</small>
-          </div>
-        </div>
-        <div class="col-12 md:col-6">
-          <div class="field">
-            <label for="phone" class="block mb-2">Phone</label>
-            <InputText id="phone" v-model="employee.phone" class="w-full" />
-          </div>
-        </div>
-        <div class="col-12 md:col-6">
-          <div class="field">
-            <label for="department" class="block mb-2">Department</label>
-            <Dropdown 
-              id="department" 
-              v-model="employee.departmentId" 
-              :options="departments" 
-              optionLabel="name" 
-              optionValue="id" 
-              class="w-full"
-            />
-          </div>
-        </div>
-        <div class="col-12 md:col-6">
-          <div class="field">
-            <label for="position" class="block mb-2">Position</label>
-            <InputText id="position" v-model="employee.position" class="w-full" />
-          </div>
-        </div>
-        <div class="col-12 md:col-6">
-          <div class="field">
-            <label for="hireDate" class="block mb-2">Hire Date</label>
-            <Calendar id="hireDate" v-model="employee.hireDate" dateFormat="yy-mm-dd" class="w-full" />
-          </div>
-        </div>
-        <div class="col-12 md:col-6">
-          <div class="field">
-            <label for="status" class="block mb-2">Status</label>
-            <Dropdown 
-              id="status" 
-              v-model="employee.status" 
-              :options="statuses" 
-              optionLabel="label" 
-              optionValue="value" 
-              class="w-full"
-            />
-          </div>
+    <div class="card p-fluid">
+      <div class="flex justify-content-between align-items-center mb-4">
+        <span class="p-input-icon-left w-6">
+          <i class="pi pi-search" />
+          <InputText 
+            :model-value="filterState.global.value || ''"
+            @update:model-value="(val: string | null | undefined) => { 
+              filterState.global.value = val || null;
+            }"
+            placeholder="Search..." 
+            class="w-full"
+          />
+        </span>
+        <div class="flex gap-2">
+          <Dropdown 
+            v-model="selectedDepartment" 
+            :options="departments" 
+            optionLabel="name" 
+            optionValue="value"
+            placeholder="Department" 
+            showClear 
+            class="w-10rem"
+            @change="(e: {value: string | null}) => { 
+              filterState.department.value = e.value; 
+            }"
+          />
+          <Dropdown 
+            v-model="selectedStatus" 
+            :options="statuses" 
+            optionLabel="label" 
+            optionValue="value"
+            placeholder="Status" 
+            showClear 
+            class="w-10rem"
+            @change="(e: {value: string | null}) => { 
+              filterState.status.value = e.value; 
+            }"
+          />
+          <Button 
+            label="Clear" 
+            icon="pi pi-filter-slash" 
+            class="p-button-outlined" 
+            @click="clearFilters"
+          />
         </div>
       </div>
+
+      <DataTable 
+        :value="employees" 
+        :paginator="true" 
+        :rows="10"
+        :filters="tableFilters"
+        :loading="loading"
+        dataKey="id"
+        :globalFilterFields="['name', 'email', 'department', 'status', 'employeeId']"
+        scrollable
+        scrollHeight="flex"
+        class="p-datatable-sm"
+        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+        :rowsPerPageOptions="[5,10,25,50]"
+      >
+        <Column field="employeeId" header="ID" :sortable="true" style="width: 10%;">
+          <template #body="{ data }">
+            {{ data.employeeId || 'N/A' }}
+          </template>
+        </Column>
+        <Column field="name" header="Name" :sortable="true" style="width: 20%;" />
+        <Column field="email" header="Email" :sortable="true" style="width: 20%;" />
+        <Column field="phone" header="Phone" :sortable="true" style="width: 15%;" />
+        <Column field="department" header="Department" :sortable="true" style="width: 15%;">
+          <template #body="{ data }">
+            <Tag :value="data.department" :severity="getDepartmentSeverity(data.department)" />
+          </template>
+        </Column>
+        <Column field="hireDate" header="Hire Date" :sortable="true" style="width: 15%;">
+          <template #body="{ data }">
+            {{ formatDateForDisplay(data.hireDate) }}
+          </template>
+        </Column>
+        <Column field="status" header="Status" :sortable="true" style="width: 10%;">
+          <template #body="{ data }">
+            <Tag :value="data.status" :severity="getStatusSeverity(data.status)" />
+          </template>
+        </Column>
+        <Column headerStyle="min-width:10rem;" style="width: 15%;">
+          <template #body="{ data }">
+            <div class="flex gap-1">
+              <Button 
+                icon="pi pi-pencil" 
+                class="p-button-rounded p-button-text p-button-sm" 
+                :pt="{
+                  root: { 'data-pr-tooltip': 'Edit' }
+                }"
+                @click="editEmployee(data)" 
+              />
+              <Button 
+                icon="pi pi-trash" 
+                class="p-button-rounded p-button-text p-button-sm p-button-danger" 
+                :pt="{
+                  root: { 'data-pr-tooltip': 'Delete' }
+                }"
+                @click="confirmDeleteEmployee(data)" 
+              />
+            </div>
+          </template>
+        </Column>
+      </DataTable>
+    </div>
+
+    <!-- Delete Confirmation Dialog -->
+    <Dialog 
+      v-model:visible="deleteEmployeeDialog" 
+      :style="{ width: '450px' }" 
+      header="Confirm" 
+      :modal="true"
+    >
+      <div class="confirmation-content">
+        <i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem" />
+        <span v-if="employee">Are you sure you want to delete <b>{{ employee.name }}</b>?</span>
+      </div>
       <template #footer>
-        <Button label="Cancel" icon="pi pi-times" class="p-button-text" @click="hideDialog" :disabled="submitting" />
-        <Button label="Save" icon="pi pi-check" class="p-button-text" @click="saveEmployee" :loading="submitting" />
+        <Button 
+          label="No" 
+          icon="pi pi-times" 
+          class="p-button-text" 
+          @click="deleteEmployeeDialog = false" 
+        />
+        <Button 
+          label="Yes" 
+          icon="pi pi-check" 
+          class="p-button-danger" 
+          @click="deleteEmployee" 
+        />
       </template>
     </Dialog>
 
-    <!-- Delete Confirmation Dialog -->
-    <Dialog v-model:visible="deleteEmployeeDialog" :style="{width: '450px'}" header="Confirm" :modal="true">
-      <div class="flex align-items-center justify-content-center">
-        <i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem" />
-        <span v-if="employee">Are you sure you want to delete <b>{{employee.name}}</b>?</span>
+    <!-- Employee Form Dialog -->
+    <Dialog 
+      v-model:visible="employeeDialog" 
+      :style="{ width: '600px' }" 
+      :header="employee.id ? 'Edit Employee' : 'New Employee'" 
+      :modal="true" 
+      class="p-fluid"
+      :closable="false"
+    >
+      <div class="grid formgrid p-fluid">
+        <div class="field col-12">
+          <label for="name" class="font-medium text-900">Full Name</label>
+          <InputText 
+            id="name" 
+            :model-value="employee.name || ''"
+            @update:model-value="(val: string | undefined) => { if (val !== undefined) employee.name = val }"
+            required
+            autofocus
+            :class="{ 'p-invalid': submitted && !employee.name }"
+            class="w-full"
+          />
+          <small class="p-error" v-if="submitted && !employee.name">Name is required.</small>
+        </div>
+        
+        <div class="field col-12 md:col-6">
+          <label for="email" class="font-medium text-900">Email</label>
+          <InputText 
+            id="email"
+            :model-value="employee.email || ''"
+            @update:model-value="(val: string | undefined) => { if (val !== undefined) employee.email = val }"
+            required
+            type="email"
+            :class="{ 'p-invalid': submitted && !employee.email }"
+            class="w-full"
+          />
+          <small class="p-error" v-if="submitted && !employee.email">Email is required.</small>
+        </div>
+        
+        <div class="field col-12 md:col-6">
+          <label for="phone" class="font-medium text-900">Phone</label>
+          <InputText 
+            id="phone"
+            :model-value="employee.phone ?? ''"
+            @update:model-value="(val: string | null) => { employee.phone = val }"
+            required
+            type="tel"
+            :class="{ 'p-invalid': submitted && !employee.phone }"
+            class="w-full"
+          />
+          <small class="p-error" v-if="submitted && !employee.phone">Phone is required.</small>
+        </div>
+        
+        <div class="field col-12 md:col-6">
+          <label for="hireDate" class="font-medium text-900">Hire Date</label>
+          <Calendar 
+            id="hireDate"
+            :model-value="employee.hireDate ? new Date(employee.hireDate) : null"
+            @update:model-value="handleDateUpdate"
+            date-format="yy-mm-dd"
+            show-icon
+            class="w-full"
+            :class="{ 'p-invalid': submitted && !employee.hireDate }"
+          />
+          <small class="p-error" v-if="submitted && !employee.hireDate">Hire Date is required.</small>
+        </div>
       </div>
+      
       <template #footer>
-        <Button label="No" icon="pi pi-times" class="p-button-text" @click="deleteEmployeeDialog = false" />
-        <Button label="Yes" icon="pi pi-check" class="p-button-danger" @click="deleteEmployee" />
+        <div class="flex justify-content-end gap-2">
+          <Button 
+            label="Cancel" 
+            icon="pi pi-times" 
+            class="p-button-text" 
+            @click="hideDialog" 
+          />
+          <Button 
+            :label="employee.id ? 'Update' : 'Save'" 
+            icon="pi pi-check" 
+            class="p-button-primary" 
+            @click="saveEmployee" 
+          />
+        </div>
       </template>
-    </Dialog>
+        </Dialog>
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref, onMounted } from 'vue';
-import { useToast } from 'primevue/usetoast';
-import * as XLSX from 'xlsx';
+<script setup lang="ts">
+import { ref, onMounted, defineExpose, computed } from 'vue';
 import { FilterMatchMode } from 'primevue/api';
+import { useToast } from 'primevue/usetoast';
+import { formatDateForDisplay } from '@/utils/dateUtils';
+import employeeService, { type Employee } from '@/services/employeeService';
 
-export default defineComponent({
-  name: 'EmployeesView',
-  setup() {
-    const toast = useToast();
-    const loading = ref(false);
-    const submitting = ref(false);
-    const employeeDialog = ref(false);
-    const deleteEmployeeDialog = ref(false);
-    const editing = ref(false);
-    const submitted = ref(false);
-    
-    const employees = ref([]);
-    const employee = ref({});
-    const departments = ref([
-      { id: 1, name: 'Sales' },
-      { id: 2, name: 'Marketing' },
-      { id: 3, name: 'Development' },
-      { id: 4, name: 'HR' },
-      { id: 5, name: 'Finance' },
-      { id: 6, name: 'Operations' }
-    ]);
-    
-    const statuses = ref([
-      { label: 'Active', value: 'Active' },
-      { label: 'On Leave', value: 'On Leave' },
-      { label: 'Inactive', value: 'Inactive' },
-      { label: 'Terminated', value: 'Terminated' }
-    ]);
+// Type for filter values and state
+interface FilterValue {
+  value: string | null;
+  matchMode: string;
+}
 
-    const filters = ref({
-      search: null,
-      department: null,
-      status: null,
-      global: { value: null, matchMode: FilterMatchMode.CONTAINS }
-    });
+interface FilterState {
+  global: FilterValue;
+  department: FilterValue;
+  status: FilterValue;
+  employeeId: FilterValue;
+}
 
-    const home = ref({ icon: 'pi pi-home', to: '/' });
-    const items = ref([{ label: 'HRM', to: '/hrm' }, { label: 'Employees' }]);
+// Components
+import Button from 'primevue/button';
+import InputText from 'primevue/inputtext';
+import Dialog from 'primevue/dialog';
+import Calendar from 'primevue/calendar';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+import Dropdown from 'primevue/dropdown';
+import Tag from 'primevue/tag';
 
-    const loadEmployees = async () => {
-      loading.value = true;
-      try {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Mock data - replace with actual API call
-        employees.value = [
-          { id: 1, employeeId: 'EMP-001', name: 'John Doe', email: 'john.doe@example.com', phone: '+1234567890', 
-            department: 'Development', position: 'Senior Developer', hireDate: '2020-05-15', status: 'Active',
-            avatar: 'https://primefaces.org/cdn/primevue/images/avatar/amyelsner.png' },
-          { id: 2, employeeId: 'EMP-002', name: 'Jane Smith', email: 'jane.smith@example.com', phone: '+1987654321', 
-            department: 'Marketing', position: 'Marketing Manager', hireDate: '2019-11-10', status: 'Active',
-            avatar: 'https://primefaces.org/cdn/primevue/images/avatar/asiyajavayant.png' },
-          { id: 3, employeeId: 'EMP-003', name: 'Mike Johnson', email: 'mike.johnson@example.com', phone: '+1122334455', 
-            department: 'Sales', position: 'Sales Executive', hireDate: '2021-02-20', status: 'On Leave',
-            avatar: 'https://primefaces.org/cdn/primevue/images/avatar/onyamalimba.png' },
-          { id: 4, employeeId: 'EMP-004', name: 'Sarah Williams', email: 'sarah.williams@example.com', phone: '+1555666777', 
-            department: 'HR', position: 'HR Manager', hireDate: '2018-08-05', status: 'Active',
-            avatar: 'https://primefaces.org/cdn/primevue/images/avatar/ionibowcher.png' },
-          { id: 5, employeeId: 'EMP-005', name: 'David Brown', email: 'david.brown@example.com', phone: '+1444555666', 
-            department: 'Finance', position: 'Financial Analyst', hireDate: '2022-01-10', status: 'Active',
-            avatar: 'https://primefaces.org/cdn/primevue/images/avatar/xuxuefeng.png' }
-        ];
-      } catch (error) {
-        console.error('Error loading employees:', error);
-        toast.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Failed to load employees',
-          life: 3000
-        });
-      } finally {
-        loading.value = false;
-      }
-    };
+// Constants
+const departments = [
+  { name: 'IT', value: 'it' },
+  { name: 'Finance', value: 'finance' },
+  { name: 'HR', value: 'hr' },
+  { name: 'Operations', value: 'operations' },
+  { name: 'Sales', value: 'sales' },
+  { name: 'Marketing', value: 'marketing' }
+];
 
-    const showNewEmployeeDialog = () => {
-      employee.value = {
-        id: null,
-        employeeId: '',
-        name: '',
-        email: '',
-        phone: '',
-        departmentId: null,
-        position: '',
-        hireDate: new Date(),
-        status: 'Active'
-      };
-      submitted.value = false;
-      editing.value = false;
-      employeeDialog.value = true;
-    };
+const statuses = [
+  { label: 'Active', value: 'active' },
+  { label: 'Inactive', value: 'inactive' },
+  { label: 'On Leave', value: 'on_leave' },
+  { label: 'Terminated', value: 'terminated' }
+];
 
-    const editEmployee = (emp) => {
-      employee.value = { ...emp };
-      editing.value = true;
-      employeeDialog.value = true;
-    };
+// Initialize toast
+const toast = useToast();
 
-    const hideDialog = () => {
-      employeeDialog.value = false;
-      submitted.value = false;
-    };
+// Refs
+const loading = ref(false);
+const submitted = ref(false);
+const employeeDialog = ref(false);
+const deleteEmployeeDialog = ref(false);
+const employees = ref<Employee[]>([]);
+const selectedDepartment = ref<string | null>(null);
+const selectedStatus = ref<string | null>(null);
 
-    const saveEmployee = () => {
-      submitted.value = true;
-      
-      if (!employee.value.name || !employee.value.email) {
-        return;
-      }
+// Update Employee type to make hireDate optional with explicit undefined
+interface EmployeeWithOptionalHireDate extends Omit<Employee, 'hireDate'> {
+  hireDate?: string | null;
+}
 
-      submitting.value = true;
-      
-      // Simulate API call
-      setTimeout(() => {
-        const index = employees.value.findIndex(emp => emp.id === employee.value.id);
-        
-        if (index > -1) {
-          // Update existing employee
-          employees.value[index] = { ...employee.value };
-          toast.add({
-            severity: 'success',
-            summary: 'Successful',
-            detail: 'Employee Updated',
-            life: 3000
-          });
-        } else {
-          // Add new employee
-          employee.value.id = employees.value.length + 1;
-          employee.value.employeeId = `EMP-${String(employee.value.id).padStart(3, '0')}`;
-          employees.value.push({ ...employee.value });
-          
-          toast.add({
-            severity: 'success',
-            summary: 'Successful',
-            detail: 'Employee Created',
-            life: 3000
-          });
-        }
-        
-        employeeDialog.value = false;
-        submitting.value = false;
-      }, 1000);
-    };
+// Initialize employee with empty values
+const getEmptyEmployee = (): EmployeeWithOptionalHireDate => ({
+  employeeId: '',
+  name: '',
+  email: '',
+  phone: '',
+  department: '',
+  departmentId: 0,
+  position: '',
+  hireDate: new Date().toISOString().split('T')[0] as string,
+  status: 'active',
+  address: '',
+  city: '',
+  state: '',
+  zipCode: ''
+});
 
-    const confirmDeleteEmployee = (emp) => {
-      employee.value = emp;
-      deleteEmployeeDialog.value = true;
-    };
+const employee = ref<EmployeeWithOptionalHireDate>(getEmptyEmployee());
 
-    const deleteEmployee = () => {
-      employees.value = employees.value.filter(emp => emp.id !== employee.value.id);
-      deleteEmployeeDialog.value = false;
-      employee.value = {};
-      
-      toast.add({
-        severity: 'success',
-        summary: 'Successful',
-        detail: 'Employee Deleted',
-        life: 3000
-      });
-    };
+// Type for DataTable filters (compatible with PrimeVue)
+type DataTableFilters = {
+  [key: string]: {
+    value: any;
+    matchMode: string;
+  };
+};
 
-    const exportToCSV = () => {
-      try {
-        const worksheet = XLSX.utils.json_to_sheet(employees.value);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Employees');
-        
-        // Generate XLSX file and trigger download
-        XLSX.writeFile(workbook, 'employees.xlsx', { bookType: 'xlsx', type: 'file' });
-      } catch (error) {
-        console.error('Error exporting to Excel:', error);
-        toast.add({
-          severity: 'error',
-          summary: 'Export Failed',
-          detail: 'Failed to export employees data',
-          life: 3000
-        });
-      }
-    };
+// Initialize filters with proper typing
+const filterState = ref<FilterState>({
+  global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+  department: { value: null, matchMode: FilterMatchMode.EQUALS },
+  status: { value: null, matchMode: FilterMatchMode.EQUALS },
+  employeeId: { value: null, matchMode: FilterMatchMode.EQUALS }
+});
 
-    const formatDate = (dateString) => {
-      return new Date(dateString).toLocaleDateString();
-    };
+// For DataTable compatibility
+const tableFilters = computed((): DataTableFilters => ({
+  global: filterState.value.global,
+  department: filterState.value.department,
+  status: filterState.value.status,
+  employeeId: filterState.value.employeeId
+}));
 
-    const getStatusSeverity = (status) => {
-      switch (status.toLowerCase()) {
-        case 'active':
-          return 'success';
-        case 'on leave':
-          return 'warning';
-        case 'inactive':
-          return 'info';
-        case 'terminated':
-          return 'danger';
-        default:
-          return null;
-      }
-    };
+// Clear filters function
+const clearFilters = () => {
+  filterState.value = {
+    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    department: { value: null, matchMode: FilterMatchMode.EQUALS },
+    status: { value: null, matchMode: FilterMatchMode.EQUALS },
+    employeeId: { value: null, matchMode: FilterMatchMode.EQUALS }
+  };
+  selectedDepartment.value = null;
+  selectedStatus.value = null;
+  selectedStatus.value = null;
+};
 
-    onMounted(() => {
-      loadEmployees();
-    });
+// Reset employee form - Marked as used to prevent warning
+const resetEmployee = () => {
+  employee.value = getEmptyEmployee();
+  submitted.value = false;
+};
 
-    return {
-      employees,
-      employee,
-      departments,
-      statuses,
-      filters,
-      loading,
-      submitting,
-      employeeDialog,
-      deleteEmployeeDialog,
-      editing,
-      submitted,
-      home,
-      items,
-      loadEmployees,
-      showNewEmployeeDialog,
-      editEmployee,
-      hideDialog,
-      saveEmployee,
-      confirmDeleteEmployee,
-      deleteEmployee,
-      exportToCSV,
-      formatDate,
-      getStatusSeverity
-    };
+// Status severity function
+const getStatusSeverity = (status: string | undefined): string => {
+  if (!status) return 'info';
+  switch (status.toLowerCase()) {
+    case 'active':
+      return 'success';
+    case 'inactive':
+      return 'danger';
+    case 'on_leave':
+      return 'warning';
+    default:
+      return 'info';
   }
+};
+
+// Handle date update from calendar
+const handleDateUpdate = (date: Date | Date[] | (Date | null)[] | null | undefined) => {
+  if (!employee.value) return;
+  
+  const setHireDate = (d: Date | null | undefined) => {
+    if (d && d instanceof Date && !isNaN(d.getTime())) {
+      employee.value.hireDate = d.toISOString().split('T')[0] as string | null;
+    } else {
+      employee.value.hireDate = null;
+    }
+  };
+  
+  if (Array.isArray(date)) {
+    setHireDate(date[0] || null);
+  } else {
+    setHireDate(date || null);
+  }
+};
+
+// Mark as used to prevent warnings
+if (import.meta.hot) {
+  // @ts-ignore - These are used in the template
+  departments;
+  // @ts-ignore
+  statuses;
+  onMounted;
+  resetEmployee;
+}
+
+// Get department severity for tag styling
+const getDepartmentSeverity = (department: string | null | undefined): string => {
+  if (!department) return 'info';
+  const dept = department.toLowerCase();
+  if (dept === 'hr') return 'success';
+  if (dept === 'finance') return 'info';
+  if (dept === 'it') return 'warning';
+  if (dept === 'operations') return 'danger';
+  if (dept === 'sales') return 'primary';
+  if (dept === 'marketing') return 'help';
+  return 'info';
+};
+
+// Remove duplicate method declarations
+const openNew = () => {
+  employee.value = getEmptyEmployee();
+  submitted.value = false;
+  employeeDialog.value = true;
+};
+
+const hideDialog = () => {
+  employeeDialog.value = false;
+  deleteEmployeeDialog.value = false;
+  submitted.value = false;
+  employee.value = getEmptyEmployee();
+};
+
+const editEmployee = (emp: Employee) => {
+  employee.value = { ...emp };
+  employeeDialog.value = true;
+};
+
+const confirmDeleteEmployee = (emp: Employee) => {
+  employee.value = emp;
+  deleteEmployeeDialog.value = true;
+};
+
+const saveEmployee = async () => {
+  submitted.value = true;
+  if (!employee.value.name || !employee.value.email) return;
+  
+  loading.value = true;
+  
+  try {
+    if (employee.value.id) {
+      await employeeService.updateEmployee(employee.value.id, employee.value as Employee);
+      toast.add({ severity: 'success', summary: 'Success', detail: 'Employee updated successfully', life: 3000 });
+    } else {
+      const newEmployee = await employeeService.createEmployee({
+        ...employee.value,
+        employeeId: employee.value.employeeId || `EMP-${Date.now()}`,
+        status: employee.value.status || 'active',
+        hireDate: employee.value.hireDate || new Date().toISOString().split('T')[0]
+      } as Employee);
+      employees.value = [...employees.value, newEmployee];
+      toast.add({ severity: 'success', summary: 'Success', detail: 'Employee created successfully', life: 3000 });
+    }
+    employeeDialog.value = false;
+    employee.value = getEmptyEmployee();
+  } catch (error) {
+    console.error('Error saving employee:', error);
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to save employee', life: 3000 });
+  } finally {
+    loading.value = false;
+    submitted.value = false;
+  }
+};
+
+const deleteEmployee = async () => {
+  if (!employee.value.id) return;
+  
+  try {
+    await employeeService.deleteEmployee(employee.value.id);
+    const index = employees.value.findIndex(e => e.id === employee.value.id);
+    if (index !== -1) {
+      employees.value.splice(index, 1);
+    }
+    deleteEmployeeDialog.value = false;
+    toast.add({ severity: 'success', summary: 'Successful', detail: 'Employee Deleted', life: 3000 });
+  } catch (error) {
+    console.error('Error deleting employee:', error);
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete employee', life: 3000 });
+  }
+  employee.value = getEmptyEmployee();
+};
+
+const exportToCSV = () => {
+  import('xlsx').then(({ utils, writeFile }) => {
+    const data = employees.value.map(emp => ({
+      'Employee ID': emp.employeeId,
+      'Name': emp.name,
+      'Email': emp.email,
+      'Phone': emp.phone || '',
+      'Department': emp.department || '',
+      'Status': emp.status || '',
+      'Hire Date': emp.hireDate ? new Date(emp.hireDate).toLocaleDateString() : ''
+    }));
+    
+    const worksheet = utils.json_to_sheet(data);
+    const workbook = utils.book_new();
+    utils.book_append_sheet(workbook, worksheet, 'Employees');
+    writeFile(workbook, 'employees_export.xlsx');
+  });
+};
+
+// Expose methods to template
+defineExpose({
+  getStatusSeverity,
+  formatDateForDisplay,
+  openNew,
+  hideDialog,
+  editEmployee,
+  confirmDeleteEmployee,
+  deleteEmployee,
+  saveEmployee,
+  exportToCSV,
+  clearFilters,
+  handleDateUpdate
+});
+
+// Lifecycle hooks
+const loadEmployees = async () => {
+  try {
+    loading.value = true;
+    const response = await employeeService.getEmployees();
+    employees.value = response || [];
+  } catch (error) {
+    console.error('Error loading employees:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to load employees',
+      life: 3000
+    });
+  } finally {
+    loading.value = false;
+  }
+});
+
+// Load employees on component mount
+onMounted(() => {
+  loadEmployees();
 });
 </script>
 
 <style scoped>
 .employees-view {
   padding: 1rem;
+}
+
+/* Status badges */
+.status-badge {
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.status-active {
+  background-color: #e6f7e6;
+  color: #1e8e3e;
+}
+
+.status-inactive {
+  background-color: #fff8e6;
+  color: #ffc107;
+}
+
+.status-on_leave {
+  background-color: #e6f4ff;
+  color: #1a73e8;
+}
+
+.status-terminated {
+  background-color: #fce8e6;
+  color: #d93025;
 }
 
 :deep(.p-card) {

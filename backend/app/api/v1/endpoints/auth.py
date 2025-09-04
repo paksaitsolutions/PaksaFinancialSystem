@@ -18,7 +18,7 @@ class LoginRequest(BaseModel):
 @router.post("/login")
 async def login(payload: LoginRequest, db: AsyncSession = Depends(get_db)):
     user = await User.authenticate(db, email=payload.email, password=payload.password)
-    if not user:
+    if user is None:
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     token = create_access_token(subject=str(user.id), additional_claims={"email": user.email})

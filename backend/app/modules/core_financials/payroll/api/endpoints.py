@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import date
 
-from app.db.session import get_db
+from app.core.database import get_db
 from app.core.deps import get_current_active_user
 from app.modules.core_financials.payroll import schemas, services
 from app.modules.core_financials.payroll.services.exceptions import (

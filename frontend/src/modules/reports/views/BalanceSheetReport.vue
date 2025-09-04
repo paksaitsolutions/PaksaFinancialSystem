@@ -106,20 +106,19 @@
     </div>
 
     <div class="report-footer">
-      <Button icon="pi pi-print" label="Print" class="p-button-text" @click="printReport" />
-      <Button icon="pi pi-download" label="Export PDF" class="p-button-text" @click="exportToPDF" />
-      <Button icon="pi pi-file-excel" label="Export Excel" class="p-button-text" @click="exportToExcel" />
+      <Button icon="pi pi-print" label="Print" @click="printBalanceSheet" />
+      <SplitButton label="Export" icon="pi pi-download" @click="exportBalanceSheetToPDF" :model="exportOptions" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { useEnhancedReports } from '@/composables/useEnhancedReports';
+import { ref, onMounted, computed } from 'vue';
+import { useReportExport } from '@/composables/useReportExport';
 import { formatCurrency } from '@/utils/formatters';
-import ReportHeader from '@/components/reports/ReportHeader.vue';
 
-const { loading, exportLoading, generateReport, exportReport } = useEnhancedReports();
+const { exportToCSV, exportToPDF, printReport } = useReportExport();
+const loading = ref(false);
 
 const asOfDate = ref(new Date());
 const currency = ref('USD');
@@ -151,9 +150,68 @@ const formatAccountName = (key: string) => {
   return key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 };
 
-const printReport = () => window.print();
-const exportToPDF = () => handleExport('pdf');
-const exportToExcel = () => handleExport('excel');
+const printBalanceSheet = () => {
+  if (reportData.value) {
+    const data = formatDataForExport()
+    printReport('Balance Sheet Report', data)
+  }
+}
+
+const exportBalanceSheetToPDF = () => {
+  if (reportData.value) {
+    const data = formatDataForExport()
+    exportToPDF('Balance Sheet Report', data, 'Balance_Sheet_Report')
+  }
+}
+
+const exportBalanceSheetToExcel = () => {
+  if (reportData.value) {
+    const data = formatDataForExport()
+    exportToCSV(data, 'Balance_Sheet_Report')
+  }
+}
+
+const formatDataForExport = () => {
+  const data = []
+  
+  // Assets
+  data.push({ Section: 'ASSETS', Account: '', Amount: '' })
+  data.push({ Section: 'Current Assets', Account: '', Amount: '' })
+  
+  Object.entries(reportData.value.assets.current_assets).forEach(([key, value]) => {
+    if (key !== 'total_current') {
+      data.push({ Section: '', Account: formatAccountName(key), Amount: formatCurrency(value, currency.value) })
+    }
+  })
+  
+  data.push({ Section: '', Account: 'Total Current Assets', Amount: formatCurrency(reportData.value.assets.current_assets.total_current, currency.value) })
+  
+  // Fixed Assets
+  data.push({ Section: 'Fixed Assets', Account: '', Amount: '' })
+  Object.entries(reportData.value.assets.fixed_assets).forEach(([key, value]) => {
+    if (key !== 'total_fixed') {
+      data.push({ Section: '', Account: formatAccountName(key), Amount: formatCurrency(value, currency.value) })
+    }
+  })
+  
+  data.push({ Section: '', Account: 'Total Fixed Assets', Amount: formatCurrency(reportData.value.assets.fixed_assets.total_fixed, currency.value) })
+  data.push({ Section: '', Account: 'TOTAL ASSETS', Amount: formatCurrency(reportData.value.assets.total_assets, currency.value) })
+  
+  return data
+}
+
+const exportOptions = [
+  {
+    label: 'Export to PDF',
+    icon: 'pi pi-file-pdf',
+    command: () => exportBalanceSheetToPDF()
+  },
+  {
+    label: 'Export to Excel',
+    icon: 'pi pi-file-excel',
+    command: () => exportBalanceSheetToExcel()
+  }
+]
 
 onMounted(() => {
   fetchReportData();
