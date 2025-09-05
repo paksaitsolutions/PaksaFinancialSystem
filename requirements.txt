@@ -8,7 +8,7 @@ passlib[bcrypt]==1.7.4
 python-multipart==0.0.6
 sqlalchemy==2.0.23
 alembic==1.12.1
-pydantic==2.4.2
+pydantic==2.11.7
 pydantic-settings
 python-dateutil==2.8.2
 
