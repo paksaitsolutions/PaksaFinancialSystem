@@ -1,216 +1,199 @@
 <template>
-  <div class="login-form">
-    <form @submit.prevent="handleLogin">
-      <div class="field">
-        <label for="email">Email</label>
-        <InputText 
-          id="email"
-          v-model="form.email" 
-          type="email"
-          placeholder="Enter your email"
-          :class="{ 'p-invalid': errors.email }"
-          required
-        />
-        <small v-if="errors.email" class="p-error">{{ errors.email }}</small>
-      </div>
-
-      <div class="field">
-        <label for="password">Password</label>
-        <Password 
-          id="password"
-          v-model="form.password" 
-          placeholder="Enter your password"
-          :class="{ 'p-invalid': errors.password }"
-          :feedback="false"
-          toggleMask
-          required
-        />
-        <small v-if="errors.password" class="p-error">{{ errors.password }}</small>
-      </div>
-
-      <div class="field-checkbox">
-        <Checkbox id="remember" v-model="form.remember" :binary="true" />
-        <label for="remember">Remember me</label>
-      </div>
-
-      <Button 
-        type="submit" 
-        :label="loading ? 'Signing In...' : 'Sign In'"
-        class="w-full"
-        :loading="loading"
-        :disabled="loading"
-      />
-
-      <!-- MFA Section -->
-      <div v-if="showMFA" class="mfa-section">
-        <Divider />
-        <div class="field">
-          <label for="mfa-code">Two-Factor Authentication</label>
-          <InputText
-            id="mfa-code"
-            v-model="mfaCode"
-            placeholder="Enter 6-digit code"
-            maxlength="6"
-            class="text-center"
-          />
+  <div class="login-container">
+    <Card class="login-card">
+      <template #header>
+        <div class="login-header">
+          <img src="/logo.svg" alt="Paksa Financial" class="logo" />
+          <h2>Welcome Back</h2>
+          <p>Sign in to your account</p>
         </div>
-        <Button
-          label="Verify"
-          @click="verifyMFA"
-          :loading="verifyingMFA"
-          class="w-full"
-        />
-      </div>
-
-      <div class="login-links">
-        <router-link to="/auth/forgot-password" class="text-primary">
-          Forgot your password?
-        </router-link>
-        <router-link to="/auth/register" class="text-primary">
-          Don't have an account? Sign up
-        </router-link>
-      </div>
-    </form>
+      </template>
+      
+      <template #content>
+        <form @submit.prevent="handleLogin" class="login-form">
+          <div class="field">
+            <label for="email">Email</label>
+            <InputText 
+              id="email"
+              v-model="form.email" 
+              type="email"
+              placeholder="Enter your email"
+              class="w-full"
+              :class="{ 'p-invalid': errors.email }"
+              required
+            />
+            <small v-if="errors.email" class="p-error">{{ errors.email }}</small>
+          </div>
+          
+          <div class="field">
+            <label for="password">Password</label>
+            <Password 
+              id="password"
+              v-model="form.password" 
+              placeholder="Enter your password"
+              class="w-full"
+              :class="{ 'p-invalid': errors.password }"
+              :feedback="false"
+              toggleMask
+              required
+            />
+            <small v-if="errors.password" class="p-error">{{ errors.password }}</small>
+          </div>
+          
+          <div class="field-checkbox">
+            <Checkbox v-model="form.rememberMe" inputId="remember" binary />
+            <label for="remember">Remember me</label>
+          </div>
+          
+          <Button 
+            type="submit" 
+            label="Sign In" 
+            class="w-full login-btn"
+            :loading="loading"
+            :disabled="!isFormValid"
+          />
+        </form>
+        
+        <div class="login-footer">
+          <router-link to="/auth/forgot-password" class="forgot-link">
+            Forgot your password?
+          </router-link>
+          <div class="signup-link">
+            Don't have an account? 
+            <router-link to="/auth/register">Sign up</router-link>
+          </div>
+        </div>
+      </template>
+    </Card>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { useToast } from 'primevue/usetoast'
 import { useAuthStore } from '@/stores/auth'
-import { authApi } from '@/api/auth'
+import { useToast } from 'primevue/usetoast'
 
 const router = useRouter()
-const toast = useToast()
 const authStore = useAuthStore()
+const toast = useToast()
 
 const loading = ref(false)
-const showMFA = ref(false)
-const mfaCode = ref('')
-const verifyingMFA = ref(false)
-
-const form = reactive({
-  email: 'admin@paksa.com',
-  password: 'admin123',
-  remember: false
+const form = ref({
+  email: '',
+  password: '',
+  rememberMe: false
 })
 
-const errors = reactive({
+const errors = ref({
   email: '',
   password: ''
 })
 
-const validatePassword = (password: string) => {
-  const errors = []
-  if (password.length < 8) errors.push('At least 8 characters')
-  if (!/[A-Z]/.test(password)) errors.push('One uppercase letter')
-  if (!/[a-z]/.test(password)) errors.push('One lowercase letter')
-  if (!/\d/.test(password)) errors.push('One number')
-  if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) errors.push('One special character')
-  return errors
+const isFormValid = computed(() => {
+  return form.value.email && form.value.password && !errors.value.email && !errors.value.password
+})
+
+const validateForm = () => {
+  errors.value = { email: '', password: '' }
+  
+  if (!form.value.email) {
+    errors.value.email = 'Email is required'
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.value.email)) {
+    errors.value.email = 'Please enter a valid email'
+  }
+  
+  if (!form.value.password) {
+    errors.value.password = 'Password is required'
+  } else if (form.value.password.length < 6) {
+    errors.value.password = 'Password must be at least 6 characters'
+  }
+  
+  return !errors.value.email && !errors.value.password
 }
 
 const handleLogin = async () => {
-  errors.email = ''
-  errors.password = ''
-
-  if (!form.email) {
-    errors.email = 'Email is required'
-    return
-  }
-  if (!form.password) {
-    errors.password = 'Password is required'
-    return
-  }
-
+  if (!validateForm()) return
+  
   loading.value = true
-
   try {
-    const response = await authApi.login({
-      email: form.email,
-      password: form.password,
-      remember_me: form.remember
+    await authStore.login({
+      email: form.value.email,
+      password: form.value.password,
+      remember_me: form.value.rememberMe
     })
-
-    if (response.requiresMFA) {
-      showMFA.value = true
-      loading.value = false
-      return
-    }
-
-    authStore.setToken(response.access_token)
-    authStore.setUser(response.user)
-
-    toast.add({
-      severity: 'success',
-      summary: 'Success',
-      detail: 'Login successful'
+    
+    toast.add({ 
+      severity: 'success', 
+      summary: 'Success', 
+      detail: 'Login successful', 
+      life: 3000 
     })
-
+    
     router.push('/')
   } catch (error: any) {
-    if (error.response?.status === 401) {
-      errors.password = 'Invalid email or password'
-    } else if (error.code === 'ECONNREFUSED') {
-      errors.password = 'Cannot connect to server'
-    } else {
-      errors.password = error.message || 'Login failed'
-    }
+    toast.add({ 
+      severity: 'error', 
+      summary: 'Error', 
+      detail: error.message || 'Login failed', 
+      life: 5000 
+    })
   } finally {
     loading.value = false
-  }
-}
-
-const verifyMFA = async () => {
-  if (!mfaCode.value || mfaCode.value.length !== 6) {
-    toast.add({
-      severity: 'error',
-      summary: 'Invalid Code',
-      detail: 'Please enter a 6-digit code'
-    })
-    return
-  }
-
-  verifyingMFA.value = true
-
-  try {
-    const response = await authApi.verifyMFA(mfaCode.value)
-    authStore.setToken(response.access_token)
-    authStore.setUser(response.user)
-    
-    toast.add({
-      severity: 'success',
-      summary: 'Success',
-      detail: 'Login successful'
-    })
-    
-    router.push('/')
-  } catch (error: any) {
-    toast.add({
-      severity: 'error',
-      summary: 'Verification Failed',
-      detail: 'Invalid code'
-    })
-  } finally {
-    verifyingMFA.value = false
   }
 }
 </script>
 
 <style scoped>
-.login-form {
+.login-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 2rem;
+}
+
+.login-card {
   width: 100%;
+  max-width: 400px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.login-header {
+  text-align: center;
+  padding: 2rem 2rem 0;
+}
+
+.logo {
+  height: 60px;
+  margin-bottom: 1rem;
+}
+
+.login-header h2 {
+  margin: 0 0 0.5rem 0;
+  color: var(--text-color);
+  font-size: 1.75rem;
+  font-weight: 600;
+}
+
+.login-header p {
+  margin: 0;
+  color: var(--text-color-secondary);
+}
+
+.login-form {
+  padding: 2rem;
 }
 
 .field {
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .field label {
   display: block;
   margin-bottom: 0.5rem;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--text-color);
 }
 
@@ -221,30 +204,41 @@ const verifyMFA = async () => {
   margin-bottom: 1.5rem;
 }
 
-.mfa-section {
-  margin-top: 1rem;
+.login-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  padding: 0.75rem;
+  font-weight: 600;
 }
 
-.text-center {
+.login-footer {
   text-align: center;
-  font-size: 1.2rem;
-  letter-spacing: 0.2rem;
+  padding: 0 2rem 2rem;
 }
 
-.login-links {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-top: 1rem;
-  text-align: center;
-}
-
-.login-links a {
+.forgot-link {
+  color: var(--primary-color);
   text-decoration: none;
   font-size: 0.875rem;
 }
 
-.w-full {
-  width: 100%;
+.forgot-link:hover {
+  text-decoration: underline;
+}
+
+.signup-link {
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  color: var(--text-color-secondary);
+}
+
+.signup-link a {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.signup-link a:hover {
+  text-decoration: underline;
 }
 </style>

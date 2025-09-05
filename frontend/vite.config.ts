@@ -1,114 +1,92 @@
-import { defineConfig, loadEnv, type ConfigEnv } from 'vite'
+import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import { fileURLToPath, URL } from 'node:url'
-export default defineConfig(({ mode }: ConfigEnv) => {
-  const env = loadEnv(mode, process.cwd(), '')
+import { resolve } from 'path'
+import { visualizer } from 'rollup-plugin-visualizer'
 
-  return {
-    css: {
-      preprocessorOptions: {
-        scss: {
-          additionalData: `
-            @import "@/assets/scss/_variables.scss";
-            @import "@/assets/scss/_mixins.scss";
-          `
-        }
-      }
-    },
-
-    base: env.VITE_APP_BASE_URL || '/',
-
-    define: {
-      __APP_VERSION__: JSON.stringify(env.VITE_APP_VERSION || '1.0.0'),
-      __APP_ENV__: JSON.stringify(mode)
-    },
-
-    resolve: {
-      alias: [
-        { find: '@', replacement: fileURLToPath(new URL('./src', import.meta.url)) },
-        { find: /^~(.+)/, replacement: fileURLToPath(new URL('./node_modules/$1', import.meta.url)) },
-        { find: 'vue', replacement: 'vue/dist/vue.esm-bundler.js' },
-        { find: '@assets', replacement: fileURLToPath(new URL('./src/assets', import.meta.url)) },
-        { find: '@components', replacement: fileURLToPath(new URL('./src/components', import.meta.url)) },
-        { find: '@views', replacement: fileURLToPath(new URL('./src/views', import.meta.url)) },
-        { find: '@stores', replacement: fileURLToPath(new URL('./src/stores', import.meta.url)) },
-        { find: '@utils', replacement: fileURLToPath(new URL('./src/utils', import.meta.url)) },
-        { find: '@api', replacement: fileURLToPath(new URL('./src/api', import.meta.url)) },
-        { find: '@router', replacement: fileURLToPath(new URL('./src/router', import.meta.url)) }
-      ],
-      extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json', '.vue']
-    },
-
-    plugins: [
-      vue({
-        script: { defineModel: true, propsDestructure: true }
-      })
-    ],
-
-    server: {
-      host: '0.0.0.0',
-      port: 3000,
-      strictPort: true,
+export default defineConfig({
+  plugins: [
+    vue(),
+    // Bundle analyzer
+    visualizer({
+      filename: 'dist/stats.html',
       open: true,
-      headers: {
-        'Content-Security-Policy':
-          "default-src 'self'; " +
-          "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; " +
-          "style-src 'self' 'unsafe-inline' https:; " +
-          "font-src 'self' https: data:; " +
-          "img-src 'self' https://images.unsplash.com https: data: blob:; " +
-          "connect-src 'self' http://localhost:* https: ws: wss:;"
-      },
-      proxy: {
-        '/api': {
-          target: 'http://localhost:8000',
-          changeOrigin: true,
-          secure: false,
-          ws: true
-        },
-        '/auth': {
-          target: 'http://localhost:8000',
-          changeOrigin: true,
-          secure: false
-        }
+      gzipSize: true
+    })
+  ],
+  css: {
+    preprocessorOptions: {
+      scss: {
+        api: 'modern-compiler'
       }
-    },
-
-    preview: {
-      port: 4173,
-      host: '0.0.0.0',
-      proxy: {
-        '/api': {
-          target: 'http://localhost:8000',
-          changeOrigin: true,
-          secure: false
-        }
-      }
-    },
-
-    build: {
-      outDir: 'dist',
-      assetsDir: 'assets',
-      sourcemap: true,
-      minify: 'esbuild',
-      rollupOptions: {
-        output: {
-          manualChunks: {
-            vue: ['vue', 'vue-router', 'pinia'],
-            charts: ['chart.js'],
-            vendor: ['axios', 'date-fns']
-          }
-        }
-      }
-    },
-
-    optimizeDeps: {
-      include: [
-        'vue',
-        'vue-router',
-        'pinia'
-      ],
-      exclude: ['primevue']
     }
-  }
+  },
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, 'src')
+    }
+  },
+  build: {
+    // Code splitting and optimization
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Vendor chunks
+          'vue-vendor': ['vue', 'vue-router', 'pinia'],
+          'primevue-vendor': ['primevue/config', 'primevue/button', 'primevue/inputtext'],
+          'chart-vendor': ['chart.js', 'primevue/chart'],
+          
+          // Module chunks
+          'gl-module': [
+            './src/modules/general-ledger/views/Dashboard.vue',
+            './src/modules/general-ledger/views/ChartOfAccounts.vue'
+          ],
+          'ap-module': [
+            './src/modules/accounts-payable/views/APDashboard.vue'
+          ],
+          'ar-module': [
+            './src/modules/accounts-receivable/views/AccountsReceivableView.vue'
+          ],
+          'hrm-module': [
+            './src/modules/hrm/views/HRMDashboard.vue'
+          ],
+          'payroll-module': [
+            './src/modules/payroll/views/AnalyticsDashboard.vue'
+          ],
+          'tax-module': [
+            './src/modules/tax/views/TaxDashboard.vue'
+          ]
+        }
+      }
+    },
+    // Asset optimization
+    assetsInlineLimit: 4096, // 4kb
+    cssCodeSplit: true,
+    sourcemap: false, // Disable in production
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true
+      }
+    },
+    // Chunk size warnings
+    chunkSizeWarningLimit: 1000
+  },
+  // Asset optimization
+  assetsInclude: ['**/*.woff', '**/*.woff2', '**/*.ttf'],
+  
+  // Development server
+  server: {
+    port: 3003,
+    host: true,
+    cors: true
+  },
+  
+  // Preview server
+  preview: {
+    port: 3003,
+    host: true
+  },
+  
+
 })

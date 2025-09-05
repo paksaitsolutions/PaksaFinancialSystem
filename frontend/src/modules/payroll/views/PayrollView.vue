@@ -1,261 +1,180 @@
 <template>
   <div class="payroll-dashboard">
-    <v-container fluid>
-      <v-row>
-        <v-col cols="12">
-          <v-card class="mb-6">
-            <v-card-title class="d-flex justify-space-between align-center">
-              <span>Payroll Overview</span>
-              <v-btn
-                color="primary"
-                :to="{ name: 'payroll-run-create' }"
-                prepend-icon="mdi-plus"
-              >
-                New Pay Run
-              </v-btn>
-            </v-card-title>
-            
-            <v-card-text>
-              <v-row>
-                <v-col v-for="(stat, index) in stats" :key="index" cols="12" sm="6" md="3">
-                  <v-card variant="flat" class="text-center pa-4">
-                    <div class="text-h6 text-medium-emphasis">{{ stat.title }}</div>
-                    <div class="text-h4 font-weight-bold">{{ stat.value }}</div>
-                    <v-divider class="my-2"></v-divider>
-                    <div class="text-caption" :class="stat.trend > 0 ? 'text-success' : 'text-error'">
-                      <v-icon :icon="stat.trend > 0 ? 'mdi-arrow-up' : 'mdi-arrow-down'" size="small"></v-icon>
-                      {{ Math.abs(stat.trend) }}% from last period
-                    </div>
-                  </v-card>
-                </v-col>
-              </v-row>
-            </v-card-text>
-          </v-card>
+    <div class="flex justify-content-between align-items-center mb-4">
+      <div>
+        <h1>Payroll Overview</h1>
+        <p class="text-color-secondary">Manage payroll processing and employee compensation</p>
+      </div>
+      <Button label="New Pay Run" icon="pi pi-plus" @click="createPayRun" />
+    </div>
 
-          <v-row>
-            <v-col cols="12" md="8">
-              <v-card class="mb-6">
-                <v-card-title>Payroll Summary</v-card-title>
-                <v-card-text>
-                  <div ref="payrollChart" style="height: 300px;"></div>
-                </v-card-text>
-              </v-card>
-            </v-col>
-            
-            <v-col cols="12" md="4">
-              <v-card class="mb-6">
-                <v-card-title>Quick Actions</v-card-title>
-                <v-card-text>
-                  <v-list>
-                    <v-list-item
-                      v-for="(action, i) in quickActions"
-                      :key="i"
-                      :to="action.to"
-                      :prepend-icon="action.icon"
-                      :title="action.title"
-                      :subtitle="action.subtitle"
-                      link
-                      class="mb-2"
-                      variant="tonal"
-                    ></v-list-item>
-                  </v-list>
-                </v-card-text>
-              </v-card>
-              
-              <v-card>
-                <v-card-title>Recent Activity</v-card-title>
-                <v-card-text>
-                  <v-timeline density="compact" align="start">
-                    <v-timeline-item
-                      v-for="(activity, i) in recentActivities"
-                      :key="i"
-                      :dot-color="activity.color"
-                      size="small"
-                    >
-                      <div class="d-flex">
-                        <div>
-                          <div class="text-caption">{{ activity.time }}</div>
-                          <div class="font-weight-bold">{{ activity.title }}</div>
-                          <div class="text-caption">{{ activity.details }}</div>
-                        </div>
-                      </div>
-                    </v-timeline-item>
-                  </v-timeline>
-                </v-card-text>
-              </v-card>
-            </v-col>
-          </v-row>
-        </v-col>
-      </v-row>
-    </v-container>
+    <Card class="mb-4">
+      <template #content>
+        <div class="grid">
+          <div class="col-12 sm:col-6 md:col-3" v-for="(stat, index) in stats" :key="index">
+            <Card class="text-center">
+              <template #content>
+                <div class="text-color-secondary text-sm mb-2">{{ stat.title }}</div>
+                <div class="text-3xl font-bold mb-2">{{ stat.value }}</div>
+                <Divider />
+                <div class="text-sm" :class="stat.trend > 0 ? 'text-green-600' : 'text-red-600'">
+                  <i :class="stat.trend > 0 ? 'pi pi-arrow-up' : 'pi pi-arrow-down'" class="mr-1"></i>
+                  {{ Math.abs(stat.trend) }}% from last period
+                </div>
+              </template>
+            </Card>
+          </div>
+        </div>
+      </template>
+    </Card>
+
+    <div class="grid">
+      <div class="col-12 md:col-8">
+        <Card class="mb-4">
+          <template #title>Payroll Summary</template>
+          <template #content>
+            <div ref="payrollChart" style="height: 300px;" class="flex align-items-center justify-content-center">
+              <div class="text-center">
+                <i class="pi pi-chart-bar text-4xl text-primary mb-3"></i>
+                <p class="text-color-secondary">Payroll chart will be displayed here</p>
+              </div>
+            </div>
+          </template>
+        </Card>
+      </div>
+      
+      <div class="col-12 md:col-4">
+        <Card class="mb-4">
+          <template #title>Quick Actions</template>
+          <template #content>
+            <div class="flex flex-column gap-2">
+              <Button
+                v-for="(action, i) in quickActions"
+                :key="i"
+                :label="action.title"
+                :icon="action.icon"
+                class="w-full p-button-outlined"
+                @click="navigateToAction(action)"
+              />
+            </div>
+          </template>
+        </Card>
+        
+        <Card>
+          <template #title>Recent Activity</template>
+          <template #content>
+            <Timeline :value="recentActivities" class="w-full">
+              <template #content="{ item }">
+                <div>
+                  <div class="text-sm text-color-secondary">{{ item.time }}</div>
+                  <div class="font-bold">{{ item.title }}</div>
+                  <div class="text-sm text-color-secondary">{{ item.details }}</div>
+                </div>
+              </template>
+            </Timeline>
+          </template>
+        </Card>
+      </div>
+    </div>
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref, onMounted } from 'vue';
+<script setup lang="ts">
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import * as echarts from 'echarts';
+import { useToast } from 'primevue/usetoast';
 
-export default defineComponent({
-  name: 'PayrollView',
-  
-  setup() {
-    const router = useRouter();
-    const payrollChart = ref<HTMLElement | null>(null);
-    
-    const stats = ref([
-      { title: 'Total Payroll', value: '$124,560', trend: 5.2 },
-      { title: 'Employees', value: '87', trend: 2.3 },
-      { title: 'This Period', value: '$62,340', trend: -1.8 },
-      { title: 'Pending Approvals', value: '3', trend: 0 },
-    ]);
-    
-    const quickActions = ref([
-      { 
-        title: 'Process Payroll', 
-        subtitle: 'Run payroll for current period',
-        icon: 'mdi-cash-multiple',
-        to: { name: 'payroll-run-create' }
-      },
-      { 
-        title: 'View Pay Runs', 
-        subtitle: 'View all pay run history',
-        icon: 'mdi-calendar-check',
-        to: { name: 'payroll-runs' }
-      },
-      { 
-        title: 'Employee Management', 
-        subtitle: 'Manage employee payroll details',
-        icon: 'mdi-account-group',
-        to: { name: 'payroll-employees' }
-      },
-      { 
-        title: 'Run Reports', 
-        subtitle: 'Generate payroll reports',
-        icon: 'mdi-file-chart',
-        to: { name: 'payroll-reports' }
-      },
-    ]);
-    
-    const recentActivities = ref([
-      {
-        title: 'Payroll Processed',
-        details: 'Bi-weekly payroll for 85 employees',
-        time: '2 hours ago',
-        color: 'primary'
-      },
-      {
-        title: 'New Employee Added',
-        details: 'John Doe (Sales Department)',
-        time: '1 day ago',
-        color: 'success'
-      },
-      {
-        title: 'Tax Update',
-        details: 'Updated tax rates for Q3 2023',
-        time: '3 days ago',
-        color: 'info'
-      },
-      {
-        title: 'Payroll Approved',
-        details: 'Payroll #2023-08-15 approved',
-        time: '1 week ago',
-        color: 'success'
-      },
-    ]);
-    
-    onMounted(() => {
-      if (payrollChart.value) {
-        const chart = echarts.init(payrollChart.value);
-        const option = {
-          tooltip: {
-            trigger: 'axis',
-            axisPointer: {
-              type: 'shadow'
-            }
-          },
-          legend: {
-            data: ['Salary', 'Bonuses', 'Deductions', 'Net Pay']
-          },
-          grid: {
-            left: '3%',
-            right: '4%',
-            bottom: '3%',
-            containLabel: true
-          },
-          xAxis: {
-            type: 'category',
-            data: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul']
-          },
-          yAxis: {
-            type: 'value',
-            axisLabel: {
-              formatter: '${value}K'
-            }
-          },
-          series: [
-            {
-              name: 'Salary',
-              type: 'bar',
-              stack: 'total',
-              emphasis: {
-                focus: 'series'
-              },
-              data: [120, 122, 121, 124, 129, 133, 135]
-            },
-            {
-              name: 'Bonuses',
-              type: 'bar',
-              stack: 'total',
-              emphasis: {
-                focus: 'series'
-              },
-              data: [20, 22, 21, 24, 29, 23, 25]
-            },
-            {
-              name: 'Deductions',
-              type: 'bar',
-              stack: 'total',
-              emphasis: {
-                focus: 'series'
-              },
-              data: [-32, -30, -34, -31, -35, -33, -34]
-            },
-            {
-              name: 'Net Pay',
-              type: 'line',
-              emphasis: {
-                focus: 'series'
-              },
-              data: [108, 114, 108, 117, 123, 123, 126]
-            }
-          ]
-        };
-        
-        chart.setOption(option);
-        
-        // Handle window resize
-        const handleResize = () => {
-          chart.resize();
-        };
-        
-        window.addEventListener('resize', handleResize);
-        
-        // Cleanup
-        return () => {
-          window.removeEventListener('resize', handleResize);
-          chart.dispose();
-        };
-      }
-    });
-    
-    return {
-      stats,
-      quickActions,
-      recentActivities,
-      payrollChart
-    };
+const router = useRouter();
+const toast = useToast();
+const payrollChart = ref<HTMLElement | null>(null);
+
+const stats = ref([
+  { title: 'Total Payroll', value: '$124,560', trend: 5.2 },
+  { title: 'Employees', value: '87', trend: 2.3 },
+  { title: 'This Period', value: '$62,340', trend: -1.8 },
+  { title: 'Pending Approvals', value: '3', trend: 0 },
+]);
+
+const quickActions = ref([
+  { 
+    title: 'Process Payroll', 
+    subtitle: 'Run payroll for current period',
+    icon: 'pi pi-dollar',
+    action: 'process-payroll'
+  },
+  { 
+    title: 'View Pay Runs', 
+    subtitle: 'View all pay run history',
+    icon: 'pi pi-calendar',
+    action: 'view-payruns'
+  },
+  { 
+    title: 'Employee Management', 
+    subtitle: 'Manage employee payroll details',
+    icon: 'pi pi-users',
+    action: 'manage-employees'
+  },
+  { 
+    title: 'Run Reports', 
+    subtitle: 'Generate payroll reports',
+    icon: 'pi pi-file',
+    action: 'run-reports'
+  },
+]);
+
+const recentActivities = ref([
+  {
+    title: 'Payroll Processed',
+    details: 'Bi-weekly payroll for 85 employees',
+    time: '2 hours ago',
+    color: 'primary'
+  },
+  {
+    title: 'New Employee Added',
+    details: 'John Doe (Sales Department)',
+    time: '1 day ago',
+    color: 'success'
+  },
+  {
+    title: 'Tax Update',
+    details: 'Updated tax rates for Q3 2023',
+    time: '3 days ago',
+    color: 'info'
+  },
+  {
+    title: 'Payroll Approved',
+    details: 'Payroll #2023-08-15 approved',
+    time: '1 week ago',
+    color: 'success'
+  },
+]);
+
+const createPayRun = () => {
+  toast.add({ severity: 'info', summary: 'Pay Run', detail: 'Creating new pay run...', life: 3000 })
+  router.push('/payroll/pay-runs/create')
+}
+
+const navigateToAction = (action: any) => {
+  switch (action.action) {
+    case 'process-payroll':
+      toast.add({ severity: 'info', summary: 'Process Payroll', detail: 'Processing payroll...', life: 3000 })
+      break
+    case 'view-payruns':
+      router.push('/payroll/pay-runs')
+      break
+    case 'manage-employees':
+      router.push('/payroll/employees')
+      break
+    case 'run-reports':
+      router.push('/payroll/reports')
+      break
+    default:
+      toast.add({ severity: 'info', summary: 'Action', detail: action.title, life: 3000 })
   }
+}
+
+onMounted(() => {
+  // Initialize component
 });
 </script>
 

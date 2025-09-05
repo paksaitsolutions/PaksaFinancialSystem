@@ -1,41 +1,48 @@
 <template>
-  <div class="verify-email-view">
-    <Card class="text-center">
+  <div class="verify-email-container">
+    <Card class="verify-email-card">
+      <template #header>
+        <div class="verify-email-header">
+          <img src="/logo.svg" alt="Paksa Financial" class="logo" />
+          <h2>Email Verification</h2>
+        </div>
+      </template>
+      
       <template #content>
-        <div v-if="verifying" class="verification-loading">
-          <ProgressSpinner />
-          <h3 class="mt-3">Verifying your email...</h3>
-          <p class="text-500">Please wait while we verify your email address.</p>
-        </div>
-        
-        <div v-else-if="verificationSuccess" class="verification-success">
-          <i class="pi pi-check-circle text-6xl text-green-500 mb-3"></i>
-          <h3 class="text-green-600">Email Verified Successfully!</h3>
-          <p class="text-500 mb-4">Your email address has been verified. You can now access all features of your account.</p>
-          <Button 
-            label="Continue to Login"
-            icon="pi pi-sign-in"
-            @click="$router.push('/auth/login')"
-          />
-        </div>
-        
-        <div v-else class="verification-error">
-          <i class="pi pi-times-circle text-6xl text-red-500 mb-3"></i>
-          <h3 class="text-red-600">Verification Failed</h3>
-          <p class="text-500 mb-4">{{ errorMessage }}</p>
-          <div class="flex gap-2 justify-content-center">
+        <div class="verify-email-content">
+          <div v-if="loading" class="loading-state">
+            <ProgressSpinner />
+            <p>Verifying your email...</p>
+          </div>
+          
+          <div v-else-if="verified" class="success-state">
+            <i class="pi pi-check-circle success-icon"></i>
+            <h3>Email Verified Successfully!</h3>
+            <p>Your email has been verified. You can now access your account.</p>
             <Button 
-              label="Resend Verification"
-              icon="pi pi-refresh"
-              class="p-button-outlined"
-              @click="resendVerification"
-              :loading="resending"
-            />
-            <Button 
-              label="Back to Login"
-              icon="pi pi-arrow-left"
+              label="Continue to Login" 
+              class="w-full verify-btn"
               @click="$router.push('/auth/login')"
             />
+          </div>
+          
+          <div v-else class="error-state">
+            <i class="pi pi-times-circle error-icon"></i>
+            <h3>Verification Failed</h3>
+            <p>{{ errorMessage }}</p>
+            <div class="error-actions">
+              <Button 
+                label="Resend Verification" 
+                class="w-full verify-btn mb-2"
+                @click="resendVerification"
+                :loading="resending"
+              />
+              <Button 
+                label="Back to Login" 
+                class="w-full p-button-text"
+                @click="$router.push('/auth/login')"
+              />
+            </div>
           </div>
         </div>
       </template>
@@ -45,55 +52,59 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
+import { useToast } from 'primevue/usetoast'
 
 const route = useRoute()
-const router = useRouter()
+const toast = useToast()
 
-const verifying = ref(true)
-const verificationSuccess = ref(false)
+const loading = ref(true)
+const verified = ref(false)
 const resending = ref(false)
-const errorMessage = ref('The verification link is invalid or has expired.')
+const errorMessage = ref('')
 
 const verifyEmail = async () => {
-  const token = route.params.token as string
-  
-  if (!token) {
-    verifying.value = false
-    errorMessage.value = 'No verification token provided.'
-    return
-  }
-  
   try {
-    // Mock email verification
+    const token = route.params.token
+    
+    // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 2000))
     
-    // Simulate verification result
-    const isValid = Math.random() > 0.3 // 70% success rate for demo
+    // Simulate random success/failure for demo
+    const success = Math.random() > 0.3
     
-    if (isValid) {
-      verificationSuccess.value = true
+    if (success) {
+      verified.value = true
     } else {
-      errorMessage.value = 'The verification link is invalid or has expired.'
+      throw new Error('Invalid or expired verification token')
     }
-  } catch (error) {
-    console.error('Email verification failed:', error)
-    errorMessage.value = 'An error occurred during verification. Please try again.'
+  } catch (error: any) {
+    verified.value = false
+    errorMessage.value = error.message || 'Verification failed'
   } finally {
-    verifying.value = false
+    loading.value = false
   }
 }
 
 const resendVerification = async () => {
   resending.value = true
   try {
-    // Mock resend verification
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1500))
     
-    // Show success message or redirect
-    router.push('/auth/login?message=verification-resent')
-  } catch (error) {
-    console.error('Failed to resend verification:', error)
+    toast.add({ 
+      severity: 'success', 
+      summary: 'Success', 
+      detail: 'Verification email sent successfully', 
+      life: 5000 
+    })
+  } catch (error: any) {
+    toast.add({ 
+      severity: 'error', 
+      summary: 'Error', 
+      detail: 'Failed to send verification email', 
+      life: 5000 
+    })
   } finally {
     resending.value = false
   }
@@ -105,16 +116,83 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.verify-email-view {
+.verify-email-container {
   display: flex;
-  justify-content: center;
   align-items: center;
-  min-height: 60vh;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 2rem;
 }
 
-.verify-email-view .p-card {
-  max-width: 500px;
+.verify-email-card {
   width: 100%;
+  max-width: 400px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.verify-email-header {
+  text-align: center;
+  padding: 2rem 2rem 0;
+}
+
+.logo {
+  height: 60px;
+  margin-bottom: 1rem;
+}
+
+.verify-email-header h2 {
+  margin: 0;
+  color: var(--text-color);
+  font-size: 1.75rem;
+  font-weight: 600;
+}
+
+.verify-email-content {
+  padding: 2rem;
+  text-align: center;
+}
+
+.loading-state p {
+  margin-top: 1rem;
+  color: var(--text-color-secondary);
+}
+
+.success-icon {
+  font-size: 4rem;
+  color: var(--green-500);
+  margin-bottom: 1rem;
+}
+
+.error-icon {
+  font-size: 4rem;
+  color: var(--red-500);
+  margin-bottom: 1rem;
+}
+
+.success-state h3,
+.error-state h3 {
+  margin: 0 0 1rem 0;
+  color: var(--text-color);
+}
+
+.success-state p,
+.error-state p {
+  margin-bottom: 2rem;
+  color: var(--text-color-secondary);
+  line-height: 1.6;
+}
+
+.verify-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  padding: 0.75rem;
+  font-weight: 600;
+}
+
+.error-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 </style>

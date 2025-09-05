@@ -1,26 +1,32 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import type { BreadcrumbItem } from '@/composables/useBreadcrumbs'
+
+export interface BreadcrumbItem {
+  label: string
+  route?: string
+  icon?: string
+  command?: () => void
+}
 
 export const useBreadcrumbStore = defineStore('breadcrumb', () => {
   const customBreadcrumbs = ref<BreadcrumbItem[]>([])
 
-  const setCustomBreadcrumbs = (items: BreadcrumbItem[]) => {
-    customBreadcrumbs.value = items
+  const setBreadcrumbs = (breadcrumbs: BreadcrumbItem[]) => {
+    customBreadcrumbs.value = breadcrumbs
   }
 
-  const clearCustomBreadcrumbs = () => {
+  const clearBreadcrumbs = () => {
     customBreadcrumbs.value = []
   }
 
-  const addBreadcrumb = (item: BreadcrumbItem) => {
-    customBreadcrumbs.value.push(item)
+  const addBreadcrumb = (breadcrumb: BreadcrumbItem) => {
+    customBreadcrumbs.value.push(breadcrumb)
   }
 
   return {
     customBreadcrumbs,
-    setCustomBreadcrumbs,
-    clearCustomBreadcrumbs,
+    setBreadcrumbs,
+    clearBreadcrumbs,
     addBreadcrumb
   }
 })

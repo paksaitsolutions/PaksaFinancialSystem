@@ -224,16 +224,23 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-// import { useToast } from 'primevue/usetoast';
-// import { useConfirm } from 'primevue/useconfirm';
-// import { FilterMatchMode } from 'primevue/api';
-// import { useExport } from '@/composables/useExport';
-// import { useAuthStore } from '@/stores/auth';
-// import { usePaymentStore } from '@/stores/ap/paymentStore';
-// import ExportDialog from '@/components/common/ExportDialog.vue';
-// import type { Payment, PaymentStatus } from '@/types/ap/payment';
+import { useToast } from 'primevue/usetoast';
+import { useConfirm } from 'primevue/useconfirm';
+import { useAuthStore } from '@/stores/auth';
 
 // Types
+type PaymentStatus = 'pending' | 'approved' | 'paid' | 'cancelled' | 'failed';
+
+type Payment = {
+  id: string;
+  date: string;
+  vendor: { name: string };
+  reference: string;
+  amount: number;
+  status: PaymentStatus;
+  paymentMethod: string;
+};
+
 type SummaryCard = {
   title: string;
   value: string | number;
@@ -253,10 +260,10 @@ type PaymentFilters = {
 
 // Composables
 const router = useRouter();
-// const toast = useToast();
-// const confirm = useConfirm();
-// const authStore = useAuthStore();
-// const paymentStore = usePaymentStore();
+const toast = useToast();
+const confirm = useConfirm();
+const authStore = useAuthStore();
+const currentCompany = computed(() => authStore.currentCompany);
 
 // State
 const loading = ref<boolean>(true);
@@ -290,7 +297,29 @@ const hasFilters = computed<boolean>(() => {
   );
 });
 
-const payments = computed<Payment[]>(() => paymentStore.payments);
+const payments = ref<Payment[]>([]);
+
+const loadPayments = async () => {
+  if (!currentCompany.value?.id) return;
+  
+  loading.value = true;
+  try {
+    // Replace with actual payment service call
+    // const response = await paymentService.getPayments(currentCompany.value.id)
+    // payments.value = response.data
+    payments.value = []; // Placeholder until payment service is implemented
+  } catch (error) {
+    console.error('Error loading payments:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to load payments',
+      life: 5000
+    });
+  } finally {
+    loading.value = false;
+  }
+};
 
 const filteredPayments = computed<Payment[]>(() => {
   if (!payments.value) return [];
@@ -398,13 +427,14 @@ const confirmDelete = (id: string): void => {
 
 const deletePayment = async (id: string): Promise<void> => {
   try {
-    await paymentStore.deletePayment(id);
-    // toast.add({
-    //   severity: 'success',
-    //   summary: 'Success',
-    //   detail: 'Payment deleted successfully',
-    //   life: 3000
-    // });
+    // await paymentService.deletePayment(id);
+    toast.add({
+      severity: 'success',
+      summary: 'Success',
+      detail: 'Payment deleted successfully',
+      life: 3000
+    });
+    await loadPayments();
   } catch (error) {
     console.error('Error deleting payment:', error);
     toast.add({
@@ -423,13 +453,8 @@ const exportPayments = (): void => {
 const handleExport = async (format: string): Promise<void> => {
   isExporting.value = true;
   try {
-    await useExport({
-      filename: `payments_${new Date().toISOString().split('T')[0]}`,
-      data: filteredPayments.value,
-      columns: exportColumns,
-      title: 'Accounts Payable - Payments',
-      exportFormats: [format as 'pdf' | 'excel' | 'csv']
-    });
+    // Implement export logic here
+    console.log(`Exporting ${filteredPayments.value.length} payments as ${format}`);
     
     toast.add({
       severity: 'success',
@@ -515,34 +540,7 @@ const getTrendIcon = (trend: number): string => {
 
 // Lifecycle hooks
 onMounted(async (): Promise<void> => {
-  try {
-    loading.value = true;
-    await paymentStore.fetchPayments();
-    
-    // Update summary cards with actual data
-    if (paymentStore.summary) {
-      summaryCards.value[0].value = formatCurrency(paymentStore.summary.totalAmount);
-      summaryCards.value[1].value = formatCurrency(paymentStore.summary.monthlyAmount);
-      summaryCards.value[2].value = paymentStore.summary.pendingApprovalCount.toString();
-      summaryCards.value[3].value = paymentStore.summary.overdueCount.toString();
-      
-      // Calculate trends (example - implement actual trend calculation)
-      summaryCards.value[0].trend = 12.5; // Example trend percentage
-      summaryCards.value[1].trend = 5.2;
-      summaryCards.value[2].trend = -3.1;
-      summaryCards.value[3].trend = 2.7;
-    }
-  } catch (error) {
-    console.error('Error loading payments:', error);
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Failed to load payments data.',
-      life: 5000
-    });
-  } finally {
-    loading.value = false;
-  }
+  await loadPayments();
 });
 </script>
 

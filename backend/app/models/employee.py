@@ -1,105 +1,123 @@
-"""
-Employee models for the Payroll module.
-"""
-from datetime import date
-from sqlalchemy import Column, String, Date, Enum, ForeignKey, Numeric, Boolean, Text
+from sqlalchemy import Column, String, DateTime, Boolean, Text, ForeignKey, Integer, Date
+from sqlalchemy.types import DECIMAL as Decimal
 from sqlalchemy.orm import relationship
-from sqlalchemy.dialects.postgresql import UUID
-import uuid
+from .base import Base
+from datetime import datetime
 
-from app.core.db.base import Base
-from app.modules.core_financials.payroll.models.base import PayrollBase
-
-
-class Employee(PayrollBase, Base):
-    """Employee model for payroll processing."""
-    __tablename__ = "payroll_employees"
-
-    id = Column(
-        UUID(as_uuid=True),
-        primary_key=True,
-        default=uuid.uuid4,
-        index=True
-    )
-    employee_id = Column(String(50), unique=True, index=True, nullable=False)
+class Employee(Base):
+    __tablename__ = "employees"
+    
+    id = Column(String, primary_key=True)
+    company_id = Column(String, ForeignKey("companies.id"), nullable=False)
+    employee_number = Column(String(20), unique=True, nullable=False)
     first_name = Column(String(100), nullable=False)
-    middle_name = Column(String(100), nullable=True)
     last_name = Column(String(100), nullable=False)
-    date_of_birth = Column(Date, nullable=False)
-    gender = Column(Enum('M', 'F', 'O', name='gender_enum'), nullable=False)
-    marital_status = Column(
-        Enum('SINGLE', 'MARRIED', 'DIVORCED', 'WIDOWED', name='marital_status_enum'),
-        nullable=False
-    )
-    national_id = Column(String(50), unique=True, nullable=True)
-    social_security_number = Column(String(50), unique=True, nullable=True)
-    tax_identification_number = Column(String(50), unique=True, nullable=True)
-    
-    # Contact Information
-    email = Column(String(255), unique=True, nullable=False)
-    phone_number = Column(String(50), nullable=False)
-    address_line1 = Column(String(255), nullable=False)
-    address_line2 = Column(String(255), nullable=True)
-    city = Column(String(100), nullable=False)
-    state = Column(String(100), nullable=False)
-    postal_code = Column(String(20), nullable=False)
-    country = Column(String(100), nullable=False)
-    
-    # Employment Details
+    email = Column(String(255))
+    phone = Column(String(50))
+    address = Column(Text)
     hire_date = Column(Date, nullable=False)
-    termination_date = Column(Date, nullable=True)
-    employment_type = Column(
-        Enum('FULL_TIME', 'PART_TIME', 'CONTRACT', 'TEMPORARY', 'INTERN', name='employment_type_enum'),
-        nullable=False
-    )
-    job_title = Column(String(100), nullable=False)
-    department_id = Column(UUID(as_uuid=True), ForeignKey('departments.id'), nullable=True)
-    department = relationship("Department", back_populates="employees")
-    manager_id = Column(UUID(as_uuid=True), ForeignKey('payroll_employees.id'), nullable=True)
-    is_active = Column(Boolean, default=True, nullable=False)
+    termination_date = Column(Date)
+    job_title = Column(String(255))
+    department = Column(String(100))
+    salary = Column(Decimal(15, 2))
+    hourly_rate = Column(Decimal(10, 2))
+    employment_type = Column(String(50))  # full-time, part-time, contract
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+class PayRun(Base):
+    __tablename__ = "pay_runs"
     
-    # Bank Details
-    bank_name = Column(String(100), nullable=True)
-    bank_branch = Column(String(100), nullable=True)
-    account_number = Column(String(50), nullable=True)
-    account_type = Column(String(50), nullable=True)  # e.g., 'savings', 'checking'
+    id = Column(String, primary_key=True)
+    company_id = Column(String, ForeignKey("companies.id"), nullable=False)
+    pay_period_start = Column(Date, nullable=False)
+    pay_period_end = Column(Date, nullable=False)
+    pay_date = Column(Date, nullable=False)
+    total_gross_pay = Column(Decimal(15, 2), default=0)
+    total_deductions = Column(Decimal(15, 2), default=0)
+    total_net_pay = Column(Decimal(15, 2), default=0)
+    status = Column(String(20), default="draft")
+    processed_by = Column(String, ForeignKey("users.id"))
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+class Payslip(Base):
+    __tablename__ = "payslips"
     
-    # Compensation
-    base_salary = Column(Numeric(15, 2), nullable=False)
-    currency = Column(String(3), default='USD', nullable=False)
-    payment_method = Column(
-        Enum('BANK_TRANSFER', 'CHECK', 'CASH', 'OTHER', name='payment_method_enum'),
-        nullable=False
-    )
-    payment_frequency = Column(
-        Enum('WEEKLY', 'BI_WEEKLY', 'SEMI_MONTHLY', 'MONTHLY', name='payment_frequency_enum'),
-        nullable=False
-    )
+    id = Column(String, primary_key=True)
+    pay_run_id = Column(String, ForeignKey("pay_runs.id"), nullable=False)
+    employee_id = Column(String, ForeignKey("employees.id"), nullable=False)
+    gross_pay = Column(Decimal(15, 2), default=0)
+    total_deductions = Column(Decimal(15, 2), default=0)
+    net_pay = Column(Decimal(15, 2), default=0)
+    hours_worked = Column(Decimal(8, 2))
+    overtime_hours = Column(Decimal(8, 2))
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+class PayrollDeduction(Base):
+    __tablename__ = "payroll_deductions"
     
-    # Relationships
-    manager = relationship("Employee", remote_side=[id], backref="subordinates")
-    payslips = relationship("Payslip", back_populates="employee")
-    payroll_items = relationship("PayrollItem", back_populates="employee")
+    id = Column(String, primary_key=True)
+    employee_id = Column(String, ForeignKey("employees.id"), nullable=False)
+    deduction_type = Column(String(100), nullable=False)
+    deduction_name = Column(String(255), nullable=False)
+    amount = Column(Decimal(15, 2))
+    percentage = Column(Decimal(5, 2))
+    is_pre_tax = Column(Boolean, default=False)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+class PayrollBenefit(Base):
+    __tablename__ = "payroll_benefits"
     
-    # Audit Fields
-    created_at = Column(Date, default=date.today, nullable=False)
-    updated_at = Column(Date, default=date.today, onupdate=date.today, nullable=False)
+    id = Column(String, primary_key=True)
+    employee_id = Column(String, ForeignKey("employees.id"), nullable=False)
+    benefit_type = Column(String(100), nullable=False)
+    benefit_name = Column(String(255), nullable=False)
+    employer_contribution = Column(Decimal(15, 2))
+    employee_contribution = Column(Decimal(15, 2))
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+class LeaveRequest(Base):
+    __tablename__ = "leave_requests"
     
-    def __repr__(self):
-        return f"<Employee {self.employee_id}: {self.first_name} {self.last_name}>"
+    id = Column(String, primary_key=True)
+    employee_id = Column(String, ForeignKey("employees.id"), nullable=False)
+    leave_type = Column(String(50), nullable=False)
+    start_date = Column(Date, nullable=False)
+    end_date = Column(Date, nullable=False)
+    days_requested = Column(Integer, nullable=False)
+    reason = Column(Text)
+    status = Column(String(20), default="pending")
+    approved_by = Column(String, ForeignKey("users.id"))
+    approved_at = Column(DateTime)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+class Attendance(Base):
+    __tablename__ = "attendance"
     
-    @property
-    def full_name(self):
-        """Return the full name of the employee."""
-        if self.middle_name:
-            return f"{self.first_name} {self.middle_name} {self.last_name}"
-        return f"{self.first_name} {self.last_name}"
+    id = Column(String, primary_key=True)
+    employee_id = Column(String, ForeignKey("employees.id"), nullable=False)
+    attendance_date = Column(Date, nullable=False)
+    clock_in = Column(DateTime)
+    clock_out = Column(DateTime)
+    hours_worked = Column(Decimal(8, 2))
+    overtime_hours = Column(Decimal(8, 2))
+    status = Column(String(20), default="present")
+    notes = Column(Text)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+class Performance(Base):
+    __tablename__ = "performance_reviews"
     
-    @property
-    def is_currently_employed(self):
-        """Check if the employee is currently employed."""
-        if not self.is_active:
-            return False
-        if self.termination_date and self.termination_date < date.today():
-            return False
-        return True
+    id = Column(String, primary_key=True)
+    employee_id = Column(String, ForeignKey("employees.id"), nullable=False)
+    review_period_start = Column(Date, nullable=False)
+    review_period_end = Column(Date, nullable=False)
+    overall_rating = Column(Decimal(3, 2))
+    goals_achieved = Column(Text)
+    areas_for_improvement = Column(Text)
+    reviewer_id = Column(String, ForeignKey("users.id"))
+    status = Column(String(20), default="draft")
+    created_at = Column(DateTime, default=datetime.utcnow)

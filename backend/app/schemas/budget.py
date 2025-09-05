@@ -1,119 +1,69 @@
-from pydantic import BaseModel, Field, validator
-from typing import List, Optional, Dict
-from datetime import date
-from enum import Enum
+from pydantic import BaseModel
+from typing import List, Optional
+from datetime import datetime
+from decimal import Decimal
 
-class BudgetStatus(str, Enum):
-    DRAFT = "draft"
-    APPROVED = "approved"
-    REJECTED = "rejected"
-    ARCHIVED = "archived"
+class BudgetLineItemBase(BaseModel):
+    account_code: str
+    account_name: str
+    category: Optional[str] = None
+    budgeted_amount: Decimal
 
-class BudgetType(str, Enum):
-    OPERATIONAL = "operational"
-    CAPITAL = "capital"
-    PROJECT = "project"
-    DEPARTMENT = "department"
+class BudgetLineItemCreate(BudgetLineItemBase):
+    pass
+
+class BudgetLineItem(BudgetLineItemBase):
+    id: int
+    budget_id: int
+    actual_amount: Decimal = 0
+    variance: Decimal = 0
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
 
 class BudgetBase(BaseModel):
     name: str
     description: Optional[str] = None
-    budget_type: BudgetType
-    start_date: date
-    end_date: date
-    total_amount: float
-
-class BudgetLineBase(BaseModel):
-    account_id: int
-    department_id: Optional[int] = None
-    project_id: Optional[int] = None
-    amount: float
-    description: Optional[str] = None
-
-class BudgetAllocationBase(BaseModel):
-    department_id: Optional[int] = None
-    project_id: Optional[int] = None
-    amount: float
-    percentage: Optional[float] = None
-    description: Optional[str] = None
-
-class BudgetRuleBase(BaseModel):
-    rule_type: str
-    rule_data: Dict
-    description: Optional[str] = None
+    fiscal_year: int
+    start_date: datetime
+    end_date: datetime
 
 class BudgetCreate(BudgetBase):
-    lines: List[BudgetLineBase]
-    allocations: List[BudgetAllocationBase]
-    rules: List[BudgetRuleBase]
+    line_items: List[BudgetLineItemCreate] = []
 
-class BudgetUpdate(BudgetBase):
-    status: Optional[BudgetStatus] = None
-    lines: Optional[List[BudgetLineBase]] = None
-    allocations: Optional[List[BudgetAllocationBase]] = None
-    rules: Optional[List[BudgetRuleBase]] = None
-
-class BudgetApprovalBase(BaseModel):
-    approver_id: str
-    notes: Optional[str] = None
-
-class BudgetApprovalCreate(BudgetApprovalBase):
-    pass
-
-class BudgetLine(BudgetLineBase):
-    id: int
-    created_at: datetime
-    updated_at: datetime
-
-    class Config:
-        orm_mode = True
-
-class BudgetAllocation(BudgetAllocationBase):
-    id: int
-    created_at: datetime
-    updated_at: datetime
-
-    class Config:
-        orm_mode = True
-
-class BudgetRule(BudgetRuleBase):
-    id: int
-    created_at: datetime
-    updated_at: datetime
-
-    class Config:
-        orm_mode = True
-
-class BudgetApproval(BudgetApprovalBase):
-    id: int
-    approved_at: datetime
-
-    class Config:
-        orm_mode = True
+class BudgetUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    status: Optional[str] = None
+    line_items: Optional[List[BudgetLineItemCreate]] = None
 
 class Budget(BudgetBase):
     id: int
-    status: BudgetStatus
+    total_amount: Decimal
+    status: str
     created_at: datetime
     updated_at: datetime
-    created_by: str
-    updated_by: Optional[str] = None
-    lines: List[BudgetLine]
-    allocations: List[BudgetAllocation]
-    rules: List[BudgetRule]
-    approvals: List[BudgetApproval]
+    line_items: List[BudgetLineItem] = []
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
-class BudgetResponse(Budget):
-    pass
+class BudgetApprovalBase(BaseModel):
+    status: str
+    comments: Optional[str] = None
 
-class BudgetListResponse(BaseModel):
-    budgets: List[Budget]
-    total: int
-    page: int
-    limit: int
+class BudgetApprovalCreate(BudgetApprovalBase):
+    budget_id: int
+    approver_id: int
+
+class BudgetApproval(BudgetApprovalBase):
+    id: int
+    budget_id: int
+    approver_id: int
+    approved_at: Optional[datetime] = None
+    created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True

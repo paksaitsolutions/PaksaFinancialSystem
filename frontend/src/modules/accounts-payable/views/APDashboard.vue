@@ -1,216 +1,163 @@
 <template>
   <div class="ap-dashboard">
-    <!-- Header -->
-    <div class="dashboard-header">
-      <div class="header-content">
-        <div class="header-info">
-          <i class="pi pi-credit-card header-icon"></i>
-          <div>
-            <h1>Accounts Payable</h1>
-            <p>Vendor management and invoice processing</p>
-          </div>
-        </div>
-        <div class="header-actions">
-          <Button label="New Bill" icon="pi pi-plus" class="p-button-primary mr-2" @click="$router.push('/ap/create-bill')" />
-          <Button label="Make Payment" icon="pi pi-dollar" class="p-button-success" @click="$router.push('/ap/record-payment')" />
-        </div>
+    <div class="flex justify-content-between align-items-center mb-4">
+      <div>
+        <h1>Accounts Payable</h1>
+        <p class="text-color-secondary">Manage vendor bills and payments</p>
+      </div>
+      <Button label="Create Bill" icon="pi pi-plus" @click="$router.push('/ap/create-bill')" />
+    </div>
+
+    <div class="grid">
+      <div class="col-12 lg:col-3">
+        <Card>
+          <template #content>
+            <div class="metric-card">
+              <i class="pi pi-credit-card text-4xl text-red-500 mb-3"></i>
+              <div class="text-2xl font-bold">${{ stats.totalPayable }}</div>
+              <div class="text-color-secondary">Total Payable</div>
+            </div>
+          </template>
+        </Card>
+      </div>
+      <div class="col-12 lg:col-3">
+        <Card>
+          <template #content>
+            <div class="metric-card">
+              <i class="pi pi-clock text-4xl text-orange-500 mb-3"></i>
+              <div class="text-2xl font-bold">{{ stats.overdueBills }}</div>
+              <div class="text-color-secondary">Overdue Bills</div>
+            </div>
+          </template>
+        </Card>
+      </div>
+      <div class="col-12 lg:col-3">
+        <Card>
+          <template #content>
+            <div class="metric-card">
+              <i class="pi pi-users text-4xl text-blue-500 mb-3"></i>
+              <div class="text-2xl font-bold">{{ stats.activeVendors }}</div>
+              <div class="text-color-secondary">Active Vendors</div>
+            </div>
+          </template>
+        </Card>
+      </div>
+      <div class="col-12 lg:col-3">
+        <Card>
+          <template #content>
+            <div class="metric-card">
+              <i class="pi pi-money-bill text-4xl text-green-500 mb-3"></i>
+              <div class="text-2xl font-bold">${{ stats.monthlyPayments }}</div>
+              <div class="text-color-secondary">Monthly Payments</div>
+            </div>
+          </template>
+        </Card>
       </div>
     </div>
 
-    <!-- Stats Cards -->
-    <div class="stats-grid">
-      <Card class="stat-card">
-        <template #content>
-          <div class="stat-content">
-            <div class="stat-info">
-              <div class="stat-value error">$125,430</div>
-              <div class="stat-label">Outstanding Bills</div>
+    <!-- AP Module Navigation -->
+    <div class="grid mb-4">
+      <div class="col-12">
+        <Card>
+          <template #title>Accounts Payable Modules</template>
+          <template #content>
+            <div class="grid">
+              <div class="col-12 md:col-6 lg:col-3">
+                <div class="module-card" @click="$router.push('/ap/vendors')">
+                  <i class="pi pi-users text-3xl text-blue-500 mb-2"></i>
+                  <h4>Vendors</h4>
+                  <p class="text-sm text-color-secondary">Manage vendor information</p>
+                </div>
+              </div>
+              <div class="col-12 md:col-6 lg:col-3">
+                <div class="module-card" @click="$router.push('/ap/invoices')">
+                  <i class="pi pi-file-edit text-3xl text-orange-500 mb-2"></i>
+                  <h4>Invoices</h4>
+                  <p class="text-sm text-color-secondary">Process vendor invoices</p>
+                </div>
+              </div>
+              <div class="col-12 md:col-6 lg:col-3">
+                <div class="module-card" @click="$router.push('/ap/payments')">
+                  <i class="pi pi-money-bill text-3xl text-green-500 mb-2"></i>
+                  <h4>Payments</h4>
+                  <p class="text-sm text-color-secondary">Manage vendor payments</p>
+                </div>
+              </div>
+              <div class="col-12 md:col-6 lg:col-3">
+                <div class="module-card" @click="$router.push('/ap/reports')">
+                  <i class="pi pi-chart-bar text-3xl text-purple-500 mb-2"></i>
+                  <h4>Reports</h4>
+                  <p class="text-sm text-color-secondary">AP reports and analytics</p>
+                </div>
+              </div>
             </div>
-            <i class="pi pi-file stat-icon error"></i>
-          </div>
-          <ProgressBar :value="75" class="mt-3" />
-          <div class="stat-note">75% of credit limit used</div>
-        </template>
-      </Card>
-
-      <Card class="stat-card">
-        <template #content>
-          <div class="stat-content">
-            <div class="stat-info">
-              <div class="stat-value warning">$45,200</div>
-              <div class="stat-label">Overdue Bills</div>
-            </div>
-            <i class="pi pi-clock stat-icon warning"></i>
-          </div>
-          <div class="stat-note warning">12 bills overdue</div>
-        </template>
-      </Card>
-
-      <Card class="stat-card">
-        <template #content>
-          <div class="stat-content">
-            <div class="stat-info">
-              <div class="stat-value success">$89,750</div>
-              <div class="stat-label">Paid This Month</div>
-            </div>
-            <i class="pi pi-check-circle stat-icon success"></i>
-          </div>
-          <div class="stat-note success">+15% vs last month</div>
-        </template>
-      </Card>
-
-      <Card class="stat-card">
-        <template #content>
-          <div class="stat-content">
-            <div class="stat-info">
-              <div class="stat-value info">156</div>
-              <div class="stat-label">Active Vendors</div>
-            </div>
-            <i class="pi pi-users stat-icon info"></i>
-          </div>
-          <div class="stat-note">8 new this month</div>
-        </template>
-      </Card>
+          </template>
+        </Card>
+      </div>
     </div>
 
-    <!-- Quick Actions & Recent Bills -->
-    <div class="content-grid">
-      <!-- Quick Actions -->
-      <Card class="quick-actions-card">
-        <template #title>Quick Actions</template>
-        <template #content>
-          <div class="quick-actions">
-            <Button label="Create New Bill" icon="pi pi-plus" class="p-button-outlined action-btn" @click="$router.push('/ap/create-bill')" />
-            <Button label="Add Vendor" icon="pi pi-user-plus" class="p-button-outlined action-btn" @click="$router.push('/ap/add-vendor')" />
-            <Button label="Record Payment" icon="pi pi-dollar" class="p-button-outlined action-btn" @click="$router.push('/ap/record-payment')" />
-            <Button label="Import Bills" icon="pi pi-upload" class="p-button-outlined action-btn" @click="$router.push('/ap/import-bills')" />
-            <Button label="AP Reports" icon="pi pi-chart-line" class="p-button-outlined action-btn" @click="$router.push('/ap/reports')" />
-          </div>
-        </template>
-      </Card>
-
-      <!-- Recent Bills -->
-      <Card class="recent-bills-card">
-        <template #title>
-          <div class="card-header">
-            <span>Recent Bills</span>
-            <Button label="View All" class="p-button-text" />
-          </div>
-        </template>
-        <template #content>
-          <DataTable :value="recentBills" responsiveLayout="scroll">
-            <Column field="billNumber" header="Bill #"></Column>
-            <Column field="vendor" header="Vendor"></Column>
-            <Column field="amount" header="Amount">
-              <template #body="slotProps">
-                <span class="font-bold">${{ slotProps.data.amount.toLocaleString() }}</span>
-              </template>
-            </Column>
-            <Column field="dueDate" header="Due Date">
-              <template #body="slotProps">
-                <span :class="getDueDateClass(slotProps.data.dueDate)">
-                  {{ formatDate(slotProps.data.dueDate) }}
-                </span>
-              </template>
-            </Column>
-            <Column field="status" header="Status">
-              <template #body="slotProps">
-                <Tag :value="slotProps.data.status" :severity="getStatusSeverity(slotProps.data.status)" />
-              </template>
-            </Column>
-          </DataTable>
-        </template>
-      </Card>
-    </div>
-
-    <!-- Aging Report -->
-    <Card class="aging-report">
-      <template #title>Aging Report</template>
-      <template #content>
-        <div class="aging-grid">
-          <div v-for="aging in agingData" :key="aging.period" class="aging-item">
-            <div class="aging-amount" :class="aging.color">
-              ${{ aging.amount.toLocaleString() }}
+    <div class="grid">
+      <div class="col-12 lg:col-8">
+        <Card>
+          <template #title>Recent Bills</template>
+          <template #content>
+            <DataTable :value="recentBills" :rows="5">
+              <Column field="vendor" header="Vendor" />
+              <Column field="billNumber" header="Bill #" />
+              <Column field="dueDate" header="Due Date" />
+              <Column field="amount" header="Amount" />
+              <Column field="status" header="Status">
+                <template #body="{ data }">
+                  <Tag :value="data.status" :severity="getStatusSeverity(data.status)" />
+                </template>
+              </Column>
+            </DataTable>
+          </template>
+        </Card>
+      </div>
+      <div class="col-12 lg:col-4">
+        <Card>
+          <template #title>Quick Actions</template>
+          <template #content>
+            <div class="quick-actions">
+              <Button label="Add Vendor" icon="pi pi-user-plus" class="w-full mb-2" @click="$router.push('/ap/add-vendor')" />
+              <Button label="Record Payment" icon="pi pi-money-bill" class="w-full mb-2 p-button-secondary" @click="$router.push('/ap/record-payment')" />
+              <Button label="Import Bills" icon="pi pi-upload" class="w-full mb-2 p-button-success" @click="$router.push('/ap/import-bills')" />
+              <Button label="View All Vendors" icon="pi pi-users" class="w-full mb-2 p-button-help" @click="$router.push('/ap/vendors')" />
+              <Button label="View Reports" icon="pi pi-chart-bar" class="w-full p-button-info" @click="$router.push('/ap/reports')" />
             </div>
-            <div class="aging-period">{{ aging.period }}</div>
-            <div class="aging-count">{{ aging.count }} bills</div>
-          </div>
-        </div>
-      </template>
-    </Card>
+          </template>
+        </Card>
+      </div>
+    </div>
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
 
+const stats = ref({
+  totalPayable: '125,430',
+  overdueBills: 8,
+  activeVendors: 45,
+  monthlyPayments: '89,240'
+})
+
 const recentBills = ref([
-  {
-    billNumber: 'BILL-001',
-    vendor: 'ABC Supplies Co.',
-    amount: 2500,
-    dueDate: new Date('2024-02-15'),
-    status: 'Pending'
-  },
-  {
-    billNumber: 'BILL-002',
-    vendor: 'XYZ Services Ltd.',
-    amount: 1800,
-    dueDate: new Date('2024-02-10'),
-    status: 'Overdue'
-  },
-  {
-    billNumber: 'BILL-003',
-    vendor: 'Tech Solutions Inc.',
-    amount: 3200,
-    dueDate: new Date('2024-02-20'),
-    status: 'Approved'
-  },
-  {
-    billNumber: 'BILL-004',
-    vendor: 'Office Depot',
-    amount: 450,
-    dueDate: new Date('2024-02-25'),
-    status: 'Paid'
-  },
-  {
-    billNumber: 'BILL-005',
-    vendor: 'Utility Company',
-    amount: 890,
-    dueDate: new Date('2024-02-12'),
-    status: 'Pending'
-  }
+  { vendor: 'Office Supplies Co.', billNumber: 'INV-001', dueDate: '2024-01-20', amount: '$1,250.00', status: 'pending' },
+  { vendor: 'Tech Solutions Ltd.', billNumber: 'INV-002', dueDate: '2024-01-18', amount: '$3,500.00', status: 'overdue' },
+  { vendor: 'Utility Company', billNumber: 'INV-003', dueDate: '2024-01-25', amount: '$450.00', status: 'pending' },
+  { vendor: 'Marketing Agency', billNumber: 'INV-004', dueDate: '2024-01-15', amount: '$2,800.00', status: 'paid' },
+  { vendor: 'Equipment Rental', billNumber: 'INV-005', dueDate: '2024-01-22', amount: '$850.00', status: 'pending' }
 ])
 
-const agingData = ref([
-  { period: 'Current', amount: 45200, count: 23, color: 'success' },
-  { period: '1-30 Days', amount: 28500, count: 15, color: 'info' },
-  { period: '31-60 Days', amount: 18200, count: 8, color: 'warning' },
-  { period: '61-90 Days', amount: 12800, count: 5, color: 'error' },
-  { period: '90+ Days', amount: 8900, count: 3, color: 'error' }
-])
-
-const getStatusSeverity = (status) => {
+const getStatusSeverity = (status: string) => {
   switch (status) {
-    case 'Paid': return 'success'
-    case 'Approved': return 'info'
-    case 'Pending': return 'warning'
-    case 'Overdue': return 'danger'
-    default: return null
+    case 'paid': return 'success'
+    case 'overdue': return 'danger'
+    case 'pending': return 'warning'
+    default: return 'info'
   }
-}
-
-const getDueDateClass = (dueDate) => {
-  const today = new Date()
-  const due = new Date(dueDate)
-  
-  if (due < today) return 'text-red-500 font-bold'
-  if (due <= new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)) return 'text-orange-500'
-  return ''
-}
-
-const formatDate = (date) => {
-  return new Date(date).toLocaleDateString()
 }
 </script>
 
@@ -219,151 +166,37 @@ const formatDate = (date) => {
   padding: 0;
 }
 
-.dashboard-header {
-  margin-bottom: 2rem;
-}
-
-.header-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-}
-
-.header-info {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.header-icon {
-  font-size: 3rem;
-  color: #007bff;
-}
-
-.header-info h1 {
-  margin: 0;
-  font-size: 2rem;
-  font-weight: bold;
-}
-
-.header-info p {
-  margin: 0;
-  color: #6c757d;
-}
-
-.header-actions {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-}
-
-.stat-card {
-  border-radius: 8px;
-}
-
-.stat-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
-.stat-value {
-  font-size: 1.75rem;
-  font-weight: bold;
-  margin-bottom: 0.25rem;
-}
-
-.stat-label {
-  color: #6c757d;
-  font-size: 0.875rem;
-}
-
-.stat-icon {
-  font-size: 2.5rem;
-}
-
-.stat-note {
-  font-size: 0.75rem;
-  margin-top: 0.5rem;
-}
-
-.error { color: #dc3545; }
-.warning { color: #ffc107; }
-.success { color: #28a745; }
-.info { color: #17a2b8; }
-
-.content-grid {
-  display: grid;
-  grid-template-columns: 1fr 2fr;
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+.metric-card {
+  text-align: center;
 }
 
 .quick-actions {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
 }
 
-.action-btn {
-  justify-content: flex-start;
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-}
-
-.aging-report {
-  margin-top: 2rem;
-}
-
-.aging-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 1rem;
+.module-card {
   text-align: center;
+  padding: 1.5rem;
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  height: 100%;
 }
 
-.aging-amount {
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin-bottom: 0.25rem;
+.module-card:hover {
+  background-color: var(--surface-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.aging-period {
-  font-size: 0.875rem;
-  margin-bottom: 0.25rem;
+.module-card h4 {
+  margin: 0.5rem 0;
+  color: var(--text-color);
 }
 
-.aging-count {
-  font-size: 0.75rem;
-  color: #6c757d;
-}
-
-@media (max-width: 768px) {
-  .header-content {
-    flex-direction: column;
-    gap: 1rem;
-  }
-  
-  .content-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .quick-actions {
-    flex-direction: row;
-    flex-wrap: wrap;
-  }
+.module-card p {
+  margin: 0;
 }
 </style>

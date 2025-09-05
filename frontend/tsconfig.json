@@ -1,78 +1,24 @@
 {
   "compilerOptions": {
-    /* Base Options */
     "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",
+    "skipLibCheck": true,
     "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "preserve",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
-    },
-    
-    /* Strict Type-Checking */
-    "strict": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "strictFunctionTypes": true,
-    "strictBindCallApply": true,
-    "strictPropertyInitialization": true,
-    "noImplicitThis": true,
-    "useUnknownInCatchVariables": true,
-    "alwaysStrict": true,
-    "skipLibCheck": true,
-    "skipDefaultLibCheck": true,
-    
-    /* Additional Checks */
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true,
-    "noPropertyAccessFromIndexSignature": true,
-    "exactOptionalPropertyTypes": true,
-    
-    /* Module Resolution */
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "forceConsistentCasingInFileNames": true,
-    "moduleDetection": "force",
-    "allowUmdGlobalAccess": true,
-    "allowImportingTsExtensions": false,
-    "allowArbitraryExtensions": false,
-    "verbatimModuleSyntax": false,
-    
-    /* JavaScript Support */
-    "allowJs": true,
-    "checkJs": false,
-    
-    /* Emit */
-    "jsx": "preserve",
-    "declaration": false,
-    "declarationMap": false,
-    "sourceMap": true,
-    "inlineSourceMap": false,
-    "inlineSources": false,
-    "removeComments": true,
-    "noEmit": true,
-    "noEmitOnError": true,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "incremental": false,
-    "composite": false,
-    "tsBuildInfoFile": "./node_modules/.tsbuildinfo",
-    
-    /* Type Checking */
-    "types": [
-      "vite/client",
-      "node"
-    ],
-    "typeRoots": [
-      "./node_modules/@types",
-      "./src/types"
-    ]
+    }
   },
   "include": [
     "src/**/*.ts",
@@ -84,9 +30,9 @@
     "node_modules",
     "dist"
   ],
-  "vueCompilerOptions": {
-    "target": 3,
-    "strictTemplates": true,
-    "experimentalRuntimeMode": "runtime-dom"
-  }
+  "references": [
+    {
+      "path": "./tsconfig.node.json"
+    }
+  ]
 }

@@ -185,6 +185,9 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
+import bankAccountService from '@/services/bankAccountService'
+import { useAuthStore } from '@/stores/auth'
+import { useToast } from 'primevue/usetoast'
 
 interface BankAccount {
   id: string | number
@@ -196,6 +199,8 @@ interface BankAccount {
   is_active: boolean
 }
 
+const authStore = useAuthStore()
+const toast = useToast()
 const bankAccounts = ref<BankAccount[]>([])
 const account = ref<Partial<BankAccount>>({})
 const accountDialog = ref(false)
@@ -204,6 +209,7 @@ const editing = ref(false)
 const loading = ref(false)
 const saving = ref(false)
 const deleting = ref(false)
+const currentCompany = computed(() => authStore.currentCompany)
 
 // Computed properties
 const totalBalance = computed(() => {
@@ -227,29 +233,15 @@ const formatAccountType = (type: string) => {
 }
 
 const loadBankAccounts = async () => {
+  if (!currentCompany.value?.id) return
+  
   loading.value = true
   try {
-    // Mock data
-    bankAccounts.value = [
-      {
-        id: 1,
-        name: 'Main Business Account',
-        account_number: '1234567890',
-        bank_name: 'HBL',
-        account_type: 'checking',
-        current_balance: 150000,
-        is_active: true
-      },
-      {
-        id: 2,
-        name: 'Savings Account',
-        account_number: '9876543210',
-        bank_name: 'Meezan Bank',
-        account_type: 'savings',
-        current_balance: 50000,
-        is_active: true
-      }
-    ]
+    const response = await bankAccountService.getBankAccounts(currentCompany.value.id)
+    bankAccounts.value = response.data
+  } catch (error) {
+    console.error('Error loading bank accounts:', error)
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load bank accounts' })
   } finally {
     loading.value = false
   }
@@ -275,26 +267,32 @@ const editAccount = (acc: BankAccount) => {
 }
 
 const saveAccount = async () => {
+  if (!currentCompany.value?.id) return
+  
   saving.value = true
   try {
-    if (editing.value) {
-      const index = bankAccounts.value.findIndex(acc => acc.id === account.value.id)
-      if (index !== -1) {
-        bankAccounts.value[index] = { ...bankAccounts.value[index], ...account.value } as BankAccount
-      }
-    } else {
-      const newAccount: BankAccount = {
-        id: Date.now(),
-        name: account.value.name || '',
-        account_number: account.value.account_number || '',
-        bank_name: account.value.bank_name || '',
-        account_type: account.value.account_type || 'checking',
-        current_balance: account.value.current_balance || 0,
-        is_active: true
-      }
-      bankAccounts.value.push(newAccount)
+    const accountData = {
+      name: account.value.name || '',
+      account_number: account.value.account_number || '',
+      bank_name: account.value.bank_name || '',
+      account_type: account.value.account_type || 'checking',
+      current_balance: account.value.current_balance || 0,
+      is_active: account.value.is_active ?? true
     }
+    
+    if (editing.value && account.value.id) {
+      await bankAccountService.updateBankAccount(account.value.id.toString(), accountData)
+      toast.add({ severity: 'success', summary: 'Success', detail: 'Bank account updated successfully' })
+    } else {
+      await bankAccountService.createBankAccount(currentCompany.value.id, accountData)
+      toast.add({ severity: 'success', summary: 'Success', detail: 'Bank account created successfully' })
+    }
+    
     accountDialog.value = false
+    await loadBankAccounts()
+  } catch (error) {
+    console.error('Error saving bank account:', error)
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to save bank account' })
   } finally {
     saving.value = false
   }
@@ -306,10 +304,17 @@ const confirmDeleteAccount = (acc: BankAccount) => {
 }
 
 const deleteAccount = async () => {
+  if (!account.value.id) return
+  
   deleting.value = true
   try {
-    bankAccounts.value = bankAccounts.value.filter(acc => acc.id !== account.value.id)
+    await bankAccountService.deleteBankAccount(account.value.id.toString())
+    toast.add({ severity: 'success', summary: 'Success', detail: 'Bank account deleted successfully' })
     deleteAccountDialog.value = false
+    await loadBankAccounts()
+  } catch (error) {
+    console.error('Error deleting bank account:', error)
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete bank account' })
   } finally {
     deleting.value = false
   }

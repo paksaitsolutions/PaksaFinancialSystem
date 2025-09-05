@@ -1,152 +1,112 @@
-import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-import { apiClient } from '@/utils/apiClient'
+import { defineStore } from 'pinia';
+import { ref, computed } from 'vue';
+import { api } from '@/utils/api';
 
-interface User {
-  id: string
-  email: string
-  first_name: string
-  last_name: string
-  role: string
-  is_admin: boolean
-  permissions: string[]
+export interface User {
+  id: string;
+  email: string;
+  full_name: string;
+  is_active: boolean;
+  is_superuser: boolean;
+  created_at: string;
 }
 
-interface LoginRequest {
-  email: string
-  password: string
-  remember_me?: boolean
+export interface Company {
+  id: string;
+  company_name: string;
+  company_code: string;
+  default_currency: string;
+  default_language: string;
+  timezone: string;
+  fiscal_year_start: string;
 }
 
 export const useAuthStore = defineStore('auth', () => {
-  const token = ref<string | null>(localStorage.getItem('token'))
-  const user = ref<User | null>(null)
-  const loading = ref(false)
+  const user = ref<User | null>(null);
+  const currentCompany = ref<Company | null>(null);
+  const token = ref<string | null>(localStorage.getItem('token'));
+  const companies = ref<Company[]>([]);
 
-  const isAuthenticated = computed(() => !!token.value)
-  const isAdmin = computed(() => user.value?.is_admin || false)
-  const userRole = computed(() => user.value?.role || 'viewer')
+  const isAuthenticated = computed(() => !!token.value && !!user.value);
 
-  const setToken = (newToken: string) => {
-    token.value = newToken
-    localStorage.setItem('token', newToken)
-    apiClient.defaults.headers.common['Authorization'] = `Bearer ${newToken}`
-  }
-
-  const setUser = (newUser: User) => {
-    user.value = newUser
-    localStorage.setItem('user', JSON.stringify(newUser))
-  }
-
-  const login = async (credentials: LoginRequest) => {
-    loading.value = true
+  const login = async (email: string, password: string) => {
     try {
-      const response = await apiClient.post('/auth/login', credentials)
+      const response = await api.post('/auth/login', { email, password });
+      token.value = response.data.access_token;
+      user.value = response.data.user;
       
-      if (response.data.requiresMFA) {
-        return { requiresMFA: true }
+      localStorage.setItem('token', token.value);
+      
+      // Load user companies
+      await loadUserCompanies();
+      
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const logout = () => {
+    token.value = null;
+    user.value = null;
+    currentCompany.value = null;
+    companies.value = [];
+    localStorage.removeItem('token');
+    localStorage.removeItem('currentCompany');
+  };
+
+  const loadUserCompanies = async () => {
+    if (!user.value) return;
+    
+    try {
+      const response = await api.get(`/company/user/${user.value.id}/companies`);
+      companies.value = response.data;
+      
+      // Set current company from localStorage or first company
+      const savedCompanyId = localStorage.getItem('currentCompany');
+      if (savedCompanyId) {
+        const savedCompany = companies.value.find(c => c.id === savedCompanyId);
+        if (savedCompany) {
+          currentCompany.value = savedCompany;
+        }
       }
-
-      setToken(response.data.access_token)
-      setUser(response.data.user)
       
-      return response.data
-    } catch (error: any) {
-      throw new Error(error.response?.data?.detail || 'Login failed')
-    } finally {
-      loading.value = false
-    }
-  }
-
-  const verifyMFA = async (code: string) => {
-    try {
-      const response = await apiClient.post('/auth/verify-mfa', { code })
-      setToken(response.data.access_token)
-      setUser(response.data.user)
-      return response.data
-    } catch (error: any) {
-      throw new Error(error.response?.data?.detail || 'MFA verification failed')
-    }
-  }
-
-  const logout = async () => {
-    try {
-      await apiClient.post('/auth/logout')
+      if (!currentCompany.value && companies.value.length > 0) {
+        currentCompany.value = companies.value[0];
+        localStorage.setItem('currentCompany', currentCompany.value.id);
+      }
     } catch (error) {
-      console.error('Logout error:', error)
-    } finally {
-      token.value = null
-      user.value = null
-      localStorage.removeItem('token')
-      localStorage.removeItem('user')
-      delete apiClient.defaults.headers.common['Authorization']
+      console.error('Error loading user companies:', error);
     }
-  }
+  };
 
-  const refreshToken = async () => {
+  const setCurrentCompany = (company: Company) => {
+    currentCompany.value = company;
+    localStorage.setItem('currentCompany', company.id);
+  };
+
+  const initializeAuth = async () => {
+    if (!token.value) return;
+    
     try {
-      const refreshToken = localStorage.getItem('refresh_token')
-      if (!refreshToken) throw new Error('No refresh token')
-
-      const response = await apiClient.post('/auth/refresh-token', { refresh_token: refreshToken })
-      setToken(response.data.access_token)
-      return response.data
+      const response = await api.get('/auth/me');
+      user.value = response.data;
+      await loadUserCompanies();
     } catch (error) {
-      logout()
-      throw error
+      logout();
     }
-  }
-
-  const getCurrentUser = async () => {
-    try {
-      const response = await apiClient.get('/auth/me')
-      setUser(response.data)
-      return response.data
-    } catch (error) {
-      logout()
-      throw error
-    }
-  }
-
-  const hasPermission = (permission: string): boolean => {
-    if (!user.value) return false
-    if (user.value.role === 'super_admin') return true
-    return user.value.permissions.includes(permission) || user.value.permissions.includes('*')
-  }
-
-  const hasRole = (role: string): boolean => {
-    if (!user.value) return false
-    return user.value.role === role || user.value.role === 'super_admin'
-  }
-
-  // Initialize auth state
-  const initializeAuth = () => {
-    const storedToken = localStorage.getItem('token')
-    const storedUser = localStorage.getItem('user')
-
-    if (storedToken && storedUser) {
-      token.value = storedToken
-      user.value = JSON.parse(storedUser)
-      apiClient.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`
-    }
-  }
+  };
 
   return {
-    token,
     user,
-    loading,
+    currentCompany,
+    token,
+    companies,
     isAuthenticated,
-    isAdmin,
-    userRole,
     login,
-    verifyMFA,
     logout,
-    refreshToken,
-    getCurrentUser,
-    hasPermission,
-    hasRole,
-    setToken,
-    setUser,
+    loadUserCompanies,
+    setCurrentCompany,
     initializeAuth
-  }
-})
+  };
+});

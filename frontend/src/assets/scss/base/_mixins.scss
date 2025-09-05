@@ -1,0 +1,53 @@
+@use 'variables' as vars;
+
+// Responsive mixins
+@mixin mobile {
+  @media (max-width: #{vars.$breakpoint-sm - 1px}) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (min-width: #{vars.$breakpoint-sm}) and (max-width: #{vars.$breakpoint-lg - 1px}) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (min-width: #{vars.$breakpoint-lg}) {
+    @content;
+  }
+}
+
+// Utility mixins
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@mixin button-base {
+  padding: vars.$spacing-sm vars.$spacing-md;
+  border-radius: vars.$border-radius;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-1px);
+  }
+}
+
+@mixin card {
+  background: vars.$background-color;
+  border: 1px solid vars.$border-color;
+  border-radius: vars.$border-radius;
+  box-shadow: vars.$box-shadow;
+  padding: vars.$spacing-lg;
+}

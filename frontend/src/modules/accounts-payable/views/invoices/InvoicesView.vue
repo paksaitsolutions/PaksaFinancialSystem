@@ -246,8 +246,10 @@ v-tooltip.top="{ value: filteredInvoices.length ? 'Export AP invoices' : 'No dat
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
+import vendorService from '@/services/vendorService'
+import { useAuthStore } from '@/stores/auth'
 
 // Types
 interface Vendor {
@@ -288,6 +290,8 @@ interface Invoice {
 
 // State
 const toast = useToast()
+const authStore = useAuthStore()
+const currentCompany = computed(() => authStore.currentCompany)
 const showExportDialog = ref(false)
 const showCreateModal = ref(false)
 const exportInProgress = ref(false)
@@ -298,102 +302,34 @@ const dateFilter = ref('')
 const editingInvoice = ref<Invoice | null>(null)
 const exportFormat = ref('CSV')
 
-// Mock data - replace with API calls
-const vendors = ref<Vendor[]>([
-  { id: '1', name: 'ABC Supplies Inc.' },
-  { id: '2', name: 'Tech Solutions LLC' },
-  { id: '3', name: 'Construction Pro' }
-])
+// Data from API
+const vendors = ref<Vendor[]>([])
+const invoices = ref<Invoice[]>([])
+const loading = ref(false)
 
-// Initialize with mock data
-const initializeMockInvoices = (): Invoice[] => [
-  {
-    id: 1,
-    invoiceNumber: 'INV-2024-001',
-    vendorId: '1',
-    vendorName: 'ABC Supplies Inc.',
-    invoiceDate: '2024-01-15',
-    dueDate: '2024-02-14',
-    amount: 15000,
-    taxAmount: 1500,
-    status: 'approved',
-    reference: 'PO-123',
-    lines: [
-      { 
-        id: 1, 
-        description: 'Office Supplies', 
-        quantity: 10, 
-        unitPrice: 1000, 
-        amount: 10000,
-        taxRate: 0,
-        accountId: 'expense-office'
-      },
-      { 
-        id: 2, 
-        description: 'Shipping', 
-        quantity: 1, 
-        unitPrice: 500, 
-        amount: 500,
-        taxRate: 0,
-        accountId: 'expense-shipping'
-      }
-    ],
-    createdAt: '2024-01-15T10:00:00Z',
-    updatedAt: '2024-01-15T10:00:00Z'
-  },
-  {
-    id: 2,
-    invoiceNumber: 'INV-2024-002',
-    vendorId: '2',
-    vendorName: 'Tech Solutions LLC',
-    invoiceDate: '2024-01-10',
-    dueDate: '2024-01-25',
-    amount: 8500,
-    taxAmount: 850,
-    status: 'overdue',
-    reference: 'PO-124',
-    lines: [
-      { 
-        id: 3, 
-        description: 'Software License', 
-        quantity: 1, 
-        unitPrice: 8500, 
-        amount: 8500,
-        taxRate: 0,
-        accountId: 'expense-software'
-      }
-    ],
-    createdAt: '2024-01-10T09:30:00Z',
-    updatedAt: '2024-01-10T09:30:00Z'
-  },
-  {
-    id: 3,
-    invoiceNumber: 'INV-2024-003',
-    vendorId: '3',
-    vendorName: 'Construction Pro',
-    invoiceDate: '2024-01-20',
-    dueDate: '2024-02-19',
-    amount: 25000,
-    taxAmount: 2500,
-    status: 'pending',
-    reference: 'PO-125',
-    lines: [
-      { 
-        id: 4, 
-        description: 'Construction Materials', 
-        quantity: 50, 
-        unitPrice: 500, 
-        amount: 25000,
-        taxRate: 0,
-        accountId: 'expense-construction'
-      }
-    ],
-    createdAt: '2024-01-20T14:15:00Z',
-    updatedAt: '2024-01-20T14:15:00Z'
+// Load data from API
+const loadVendors = async () => {
+  try {
+    const response = await vendorService.getVendors(currentCompany.value?.id || '')
+    vendors.value = response.data.map(v => ({ id: v.id, name: v.name, email: v.email }))
+  } catch (error) {
+    console.error('Error loading vendors:', error)
   }
-]
+}
 
-const invoices = ref<Invoice[]>(initializeMockInvoices())
+const loadInvoices = async () => {
+  loading.value = true
+  try {
+    // Replace with actual invoice service call
+    // const response = await invoiceService.getInvoices(currentCompany.value?.id || '')
+    // invoices.value = response.data
+    invoices.value = [] // Placeholder until invoice service is implemented
+  } catch (error) {
+    console.error('Error loading invoices:', error)
+  } finally {
+    loading.value = false
+  }
+}
 
 // Filtered invoices - removed duplicate declaration
 
@@ -663,10 +599,17 @@ const closeModal = () => {
     invoiceDate: new Date().toISOString().split('T')[0],
     dueDate: '',
     description: '',
+    reference: '',
     taxAmount: 0,
-    lines: [{ description: '', quantity: 1, unitPrice: 0 }]
+    lines: [{ description: '', quantity: 1, unitPrice: 0, amount: 0 }]
   }
 }
+
+// Lifecycle
+onMounted(async () => {
+  await loadVendors()
+  await loadInvoices()
+})
 </script>
 
 <style scoped>

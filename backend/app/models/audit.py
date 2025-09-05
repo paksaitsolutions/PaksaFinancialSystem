@@ -1,90 +1,46 @@
-"""
-Audit logging models.
-"""
-from datetime import datetime
-from enum import Enum
-from typing import Optional
-from uuid import UUID
-
-from sqlalchemy import Column, String, DateTime, ForeignKey, Text, JSON
+from sqlalchemy import Column, String, DateTime, Boolean, Text, ForeignKey, Integer, JSON
+from sqlalchemy.types import DECIMAL as Decimal
 from sqlalchemy.orm import relationship
+from .base import Base
+from datetime import datetime
 
-from .base import BaseModel, GUID
+class AIInsight(Base):
+    __tablename__ = "ai_insights"
+    
+    id = Column(String, primary_key=True)
+    company_id = Column(String, ForeignKey("companies.id"), nullable=False)
+    insight_type = Column(String(100), nullable=False)
+    title = Column(String(255), nullable=False)
+    description = Column(Text)
+    confidence_score = Column(Decimal(5, 2))
+    data_source = Column(String(100))
+    insight_data = Column(JSON)
+    status = Column(String(20), default="active")
+    created_at = Column(DateTime, default=datetime.utcnow)
 
+class BIDashboard(Base):
+    __tablename__ = "bi_dashboards"
+    
+    id = Column(String, primary_key=True)
+    company_id = Column(String, ForeignKey("companies.id"), nullable=False)
+    dashboard_name = Column(String(255), nullable=False)
+    dashboard_type = Column(String(100))
+    configuration = Column(JSON)
+    widgets = Column(JSON)
+    is_public = Column(Boolean, default=False)
+    created_by = Column(String, ForeignKey("users.id"))
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-class AuditAction(str, Enum):
-    CREATE = "create"
-    READ = "read"
-    UPDATE = "update"
-    DELETE = "delete"
-    LOGIN = "login"
-    LOGOUT = "logout"
-    EXPORT = "export"
-    IMPORT = "import"
-    APPROVE = "approve"
-    REJECT = "reject"
-
-
-class AuditLog(BaseModel):
-    """
-    Audit log for tracking user actions and system changes.
-    """
-    __tablename__ = "audit_logs"
+class Analytics(Base):
+    __tablename__ = "analytics"
     
-    # User and session information
-    user_id = Column(GUID(), ForeignKey("users.id"), nullable=True)
-    session_id = Column(GUID(), nullable=True)
-    
-    # Action details
-    action = Column(String(20), nullable=False)
-    resource_type = Column(String(50), nullable=False)
-    resource_id = Column(String(100), nullable=True)
-    
-    # Request details
-    endpoint = Column(String(200), nullable=True)
-    method = Column(String(10), nullable=True)
-    ip_address = Column(String(45), nullable=True)
-    user_agent = Column(Text, nullable=True)
-    
-    # Data changes
-    old_values = Column(JSON, nullable=True)
-    new_values = Column(JSON, nullable=True)
-    
-    # Additional context
-    description = Column(Text, nullable=True)
-    metadata = Column(JSON, nullable=True)
-    
-    # Timestamp
-    timestamp = Column(DateTime, nullable=False, default=datetime.utcnow)
-    
-    # Relationships
-    user = relationship("User", back_populates="audit_logs")
-    
-    def __repr__(self) -> str:
-        return f"<AuditLog(id={self.id}, action='{self.action}', resource='{self.resource_type}')>"
-
-
-class AuditConfig(BaseModel):
-    """
-    Audit configuration settings.
-    """
-    __tablename__ = "audit_configs"
-    
-    # Configuration details
-    name = Column(String(100), nullable=False, default="Default Audit Config")
-    description = Column(Text, nullable=True)
-    
-    # Audit settings
-    log_read_operations = Column(String(10), nullable=False, default="false")  # true/false/sensitive
-    log_failed_attempts = Column(String(10), nullable=False, default="true")
-    retention_days = Column(String(10), nullable=False, default="2555")  # 7 years default
-    
-    # Resource-specific settings
-    excluded_resources = Column(JSON, nullable=True)  # Resources to exclude from audit
-    sensitive_resources = Column(JSON, nullable=True)  # Resources requiring detailed audit
-    
-    # Status
-    is_active = Column(String(10), nullable=False, default="true")
-    
-    def __repr__(self) -> str:
-        return f"<AuditConfig(name='{self.name}', active={self.is_active})>"
+    id = Column(String, primary_key=True)
+    company_id = Column(String, ForeignKey("companies.id"), nullable=False)
+    metric_name = Column(String(255), nullable=False)
+    metric_value = Column(Decimal(15, 2))
+    metric_data = Column(JSON)
+    period_start = Column(DateTime)
+    period_end = Column(DateTime)
+    category = Column(String(100))
+    created_at = Column(DateTime, default=datetime.utcnow)

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = '/api/employees'; // Update with your actual API base URL
+const API_BASE_URL = '/api/v1/employees'; // Base URL for employee API endpoints
 
 export interface Employee {
   id?: number;

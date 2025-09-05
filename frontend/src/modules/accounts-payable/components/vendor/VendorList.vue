@@ -148,10 +148,13 @@ import { ref, reactive, onMounted, computed } from 'vue';
 import { useSnackbar } from '@/composables/useSnackbar';
 import { debounce } from '@/utils/debounce';
 import VendorFormDialog from './VendorFormDialog.vue';
-import { apiClient } from '@/utils/apiClient';
+import vendorService from '@/services/vendorService';
+import { useAuthStore } from '@/stores/auth';
 
 // Composables
 const { showSnackbar } = useSnackbar();
+const authStore = useAuthStore();
+const currentCompany = computed(() => authStore.currentCompany);
 
 // Data
 const vendors = ref([]);
@@ -212,6 +215,8 @@ const is1099Options = [
 
 // Methods
 const fetchVendors = async () => {
+  if (!currentCompany.value?.id) return;
+  
   loading.value = true;
   try {
     const params = {
@@ -226,9 +231,9 @@ const fetchVendors = async () => {
     if (filters.status) params.status = filters.status;
     if (filters.is1099 !== null) params.is_1099 = filters.is1099;
     
-    const response = await apiClient.get('/api/v1/accounts-payable/vendors', { params });
+    const response = await vendorService.getVendors(currentCompany.value.id, params);
     vendors.value = response.data;
-    pagination.totalItems = response.meta.pagination.total;
+    pagination.totalItems = response.meta?.pagination?.total || response.data.length;
   } catch (error) {
     showSnackbar('Failed to load vendors', 'error');
     console.error('Error fetching vendors:', error);
@@ -287,7 +292,7 @@ const deleteVendor = async () => {
   if (!deleteDialog.vendor) return;
   
   try {
-    await apiClient.delete(`/api/v1/accounts-payable/vendors/${deleteDialog.vendor.id}`);
+    await vendorService.deleteVendor(deleteDialog.vendor.id);
     showSnackbar('Vendor deleted successfully', 'success');
     fetchVendors();
   } catch (error) {

@@ -1,15 +1,18 @@
-import { ref, onMounted, type Ref } from 'vue'
+import { ref, Ref } from 'vue'
+import { apiClient } from '@/utils/apiClient'
 
-export interface AsyncDataOptions<T> {
+interface UseAsyncDataOptions {
+  cache?: boolean
+  ttl?: number
   immediate?: boolean
-  onError?: (error: Error) => void
-  transform?: (data: any) => T
 }
 
-export function useAsyncData<T = any>(
-  fetcher: () => Promise<T>,
-  options: AsyncDataOptions<T> = {}
+export function useAsyncData<T>(
+  url: string,
+  options: UseAsyncDataOptions = {}
 ) {
+  const { cache = true, ttl = 5 * 60 * 1000, immediate = true } = options
+  
   const data: Ref<T | null> = ref(null)
   const loading = ref(false)
   const error = ref<Error | null>(null)
@@ -19,22 +22,22 @@ export function useAsyncData<T = any>(
     error.value = null
     
     try {
-      const result = await fetcher()
-      data.value = options.transform ? options.transform(result) : result
+      const response = await apiClient.get<T>(url, { cache, ttl })
+      data.value = response.data
     } catch (err) {
       error.value = err as Error
-      if (options.onError) {
-        options.onError(err as Error)
-      }
     } finally {
       loading.value = false
     }
   }
 
-  const refresh = () => execute()
+  const refresh = () => {
+    apiClient.clearCache()
+    return execute()
+  }
 
-  if (options.immediate !== false) {
-    onMounted(execute)
+  if (immediate) {
+    execute()
   }
 
   return {
@@ -43,28 +46,5 @@ export function useAsyncData<T = any>(
     error,
     execute,
     refresh
-  }
-}
-
-export function useAsyncList<T = any>(
-  fetcher: () => Promise<T[]>,
-  options: AsyncDataOptions<T[]> = {}
-) {
-  const { data, loading, error, execute, refresh } = useAsyncData(fetcher, options)
-  
-  const items = ref<T[]>([])
-  
-  // Watch data changes and update items
-  const updateItems = () => {
-    items.value = data.value || []
-  }
-  
-  return {
-    items,
-    loading,
-    error,
-    execute,
-    refresh,
-    updateItems
   }
 }

@@ -9,6 +9,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from sqlalchemy import create_engine, text
 from app.core.database import engine
+from app.models.base import Base
 from app.models.accounting import *
 
 def init_accounting_tables():

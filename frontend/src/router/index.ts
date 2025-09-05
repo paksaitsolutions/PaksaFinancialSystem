@@ -93,18 +93,16 @@ const publicRoutes: AppRouteRecordRaw[] = [
     component: () => import('@/views/error/NotFound.vue'),
     meta: { 
       title: 'Page Not Found',
-      requiresAuth: false,
-      layout: 'ErrorLayout'
+      requiresAuth: false
     }
   },
   {
     path: '/500',
     name: 'Error500',
-    component: () => import('@/views/common/ServerError.vue'),
+    component: () => import('@/components/common/PlaceholderView.vue'),
     meta: { 
       title: 'Server Error',
-      requiresAuth: false,
-      layout: 'ErrorLayout'  
+      requiresAuth: false
     }
   }
 ];
@@ -176,11 +174,11 @@ const mainAppRoute: AppRouteRecordRaw = {
       component: () => import('@/views/home/Home.vue'),
       meta: { title: 'Dashboard' }
     },
-    // General Ledger
+    // General Ledger - Lazy loaded with chunk names
     {
       path: 'gl',
       name: 'GeneralLedger',
-      component: () => import('@/modules/general-ledger/views/Dashboard.vue'),
+      component: () => import(/* webpackChunkName: "gl-dashboard" */ '@/modules/general-ledger/views/Dashboard.vue'),
       meta: { title: 'General Ledger' }
     },
     {
@@ -232,11 +230,11 @@ const mainAppRoute: AppRouteRecordRaw = {
       component: () => import('@/modules/accounting/views/JournalEntryView.vue'),
       meta: { title: 'Journal Entry' }
     },
-    // Accounts Payable
+    // Accounts Payable - Lazy loaded
     {
       path: 'ap',
       name: 'AccountsPayable',
-      component: () => import('@/modules/accounts-payable/views/APDashboard.vue'),
+      component: () => import(/* webpackChunkName: "ap-module" */ '@/modules/accounts-payable/views/APDashboard.vue'),
       meta: { title: 'Accounts Payable' }
     },
     {
@@ -270,16 +268,58 @@ const mainAppRoute: AppRouteRecordRaw = {
       meta: { title: 'AP Reports' }
     },
     {
+      path: 'ap/vendors',
+      name: 'APVendors',
+      component: () => import('@/modules/accounts-payable/views/VendorsView.vue'),
+      meta: { title: 'Vendors' }
+    },
+    {
+      path: 'ap/vendor-management',
+      name: 'VendorManagement',
+      component: () => import('@/modules/accounts-payable/views/VendorManagementView.vue'),
+      meta: { title: 'Vendor Management' }
+    },
+    {
       path: 'ap/invoices',
       name: 'APInvoices',
       component: () => import('@/modules/accounts-payable/views/invoices/InvoicesView.vue'),
       meta: { title: 'AP Invoices' }
     },
-    // Accounts Receivable
+    {
+      path: 'ap/invoice-management',
+      name: 'InvoiceManagement',
+      component: () => import('@/modules/accounts-payable/views/InvoiceManagementView.vue'),
+      meta: { title: 'Invoice Management' }
+    },
+    {
+      path: 'ap/payments',
+      name: 'APPayments',
+      component: () => import('@/modules/accounts-payable/views/payments/PaymentsView.vue'),
+      meta: { title: 'Payments' }
+    },
+    {
+      path: 'ap/payment-management',
+      name: 'PaymentManagement',
+      component: () => import('@/modules/accounts-payable/views/PaymentManagementView.vue'),
+      meta: { title: 'Payment Management' }
+    },
+    {
+      path: 'ap/credit-memos',
+      name: 'CreditMemos',
+      component: () => import('@/modules/accounts-payable/views/CreditMemoManagementView.vue'),
+      meta: { title: 'Credit Memos' }
+    },
+    {
+      path: 'ap/1099-forms',
+      name: 'Form1099Management',
+      component: () => import('@/modules/accounts-payable/views/Form1099ManagementView.vue'),
+      meta: { title: '1099 Forms' }
+    },
+    // Accounts Receivable - Lazy loaded
     {
       path: 'ar',
       name: 'AccountsReceivable',
-      component: () => import('@/modules/accounts-receivable/views/AccountsReceivableView.vue'),
+      component: () => import(/* webpackChunkName: "ar-module" */ '@/modules/accounts-receivable/views/AccountsReceivableView.vue'),
       meta: { title: 'Accounts Receivable' }
     },
     {
@@ -358,20 +398,20 @@ const mainAppRoute: AppRouteRecordRaw = {
       component: () => import('@/modules/budget/views/Forecasts.vue'),
       meta: { title: 'Budget Forecasting' }
     },
-    // HRM Module
-    hrmRoutes,
-    // Payroll
+    // HRM Module - Lazy loaded
+    ...hrmRoutes,
+    // Payroll - Lazy loaded
     {
       path: 'payroll',
       name: 'Payroll',
-      component: () => import('@/modules/payroll/views/AnalyticsDashboard.vue'),
+      component: () => import(/* webpackChunkName: "payroll-module" */ '@/modules/payroll/views/AnalyticsDashboard.vue'),
       meta: { title: 'Payroll' }
     },
-    // Tax Management
+    // Tax Management - Lazy loaded
     {
       path: 'tax',
       name: 'TaxManagement',
-      component: () => import('@/modules/tax/views/TaxDashboard.vue'),
+      component: () => import(/* webpackChunkName: "tax-module" */ '@/modules/tax/views/TaxDashboard.vue'),
       meta: { title: 'Tax Management' }
     },
     {
@@ -474,28 +514,28 @@ const mainAppRoute: AppRouteRecordRaw = {
     },
     // AI & Business Intelligence
     {
-      path: 'ai-bi',
-      name: 'AIBIDashboard',
+      path: 'ai',
+      name: 'AIInsights',
       component: () => import('@/modules/ai-bi/views/AIDashboard.vue'),
-      meta: { title: 'AI & BI Dashboard' }
+      meta: { title: 'AI Insights' }
     },
     {
-      path: 'ai-bi/assistant',
+      path: 'ai/assistant',
       name: 'AIAssistant',
       component: () => import('@/modules/ai-bi/views/AIAssistant.vue'),
       meta: { title: 'AI Assistant' }
     },
     {
-      path: 'ai-bi/intelligence',
-      name: 'BusinessIntelligence',
+      path: 'bi',
+      name: 'BIDashboard',
       component: () => import('@/modules/ai-bi/views/BusinessIntelligence.vue'),
-      meta: { title: 'Business Intelligence' }
+      meta: { title: 'BI Dashboard' }
     },
     {
-      path: 'ai-bi/reports',
-      name: 'AIBIReports',
+      path: 'bi/analytics',
+      name: 'BIAnalytics',
       component: () => import('@/modules/ai-bi/views/Reports.vue'),
-      meta: { title: 'AI/BI Reports' }
+      meta: { title: 'BI Analytics' }
     },
     // Super Admin
     {
@@ -556,7 +596,7 @@ const mainAppRoute: AppRouteRecordRaw = {
         },
         {
           path: 'chart-of-accounts',
-          name: 'ChartOfAccounts',
+          name: 'SettingsChartOfAccounts',
           component: () => import('@/modules/settings/views/ChartOfAccountsSettings.vue'),
           meta: { title: 'Chart of Accounts' }
         },

@@ -206,7 +206,9 @@
 <script setup>
 import { ref, reactive, computed, watch, onMounted } from 'vue';
 import { useSnackbar } from '@/composables/useSnackbar';
-import { apiClient } from '@/utils/apiClient';
+import vendorService from '@/services/vendorService';
+import { useAuthStore } from '@/stores/auth';
+import { getCurrencies } from '@/utils/constants';
 
 // Props
 const props = defineProps({
@@ -229,6 +231,8 @@ const emit = defineEmits(['update:modelValue', 'saved', 'closed']);
 
 // Composables
 const { showSnackbar } = useSnackbar();
+const authStore = useAuthStore();
+const currentCompany = computed(() => authStore.currentCompany);
 
 // Data
 const form = ref(null);
@@ -293,8 +297,8 @@ const dialogModel = computed({
 // Methods
 const fetchCurrencies = async () => {
   try {
-    const response = await apiClient.get('/api/v1/currencies');
-    currencies.value = response.data || [];
+    const currencyData = await getCurrencies();
+    currencies.value = currencyData.map(c => ({ id: c.id, name: `${c.name} (${c.code})` }));
   } catch (error) {
     console.error('Error fetching currencies:', error);
     showSnackbar('Failed to load currencies', 'error');
@@ -330,17 +334,17 @@ const populateForm = () => {
 };
 
 const save = async () => {
-  if (!valid.value) return;
+  if (!valid.value || !currentCompany.value?.id) return;
   
   loading.value = true;
   try {
     const payload = { ...formData };
     
     if (props.isEdit) {
-      await apiClient.put(`/api/v1/accounts-payable/vendors/${props.vendor.id}`, payload);
+      await vendorService.updateVendor(props.vendor.id, payload);
       showSnackbar('Vendor updated successfully', 'success');
     } else {
-      await apiClient.post('/api/v1/accounts-payable/vendors', payload);
+      await vendorService.createVendor(currentCompany.value.id, payload);
       showSnackbar('Vendor created successfully', 'success');
     }
     

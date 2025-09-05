@@ -1,286 +1,139 @@
 <template>
-  <div class="budget-view">
-    <div class="dashboard-header">
-      <h1>Budget Management</h1>
-      <p>Create and manage your organization's budgets with comprehensive planning tools.</p>
+  <div class="budgeting-view">
+    <div class="flex justify-content-between align-items-center mb-4">
+      <div>
+        <h1>Budget Planning</h1>
+        <p class="text-color-secondary">Create and manage detailed budgets</p>
+      </div>
+      <div class="flex gap-2">
+        <Button label="Import Template" icon="pi pi-upload" class="p-button-outlined" @click="importTemplate" />
+        <Button label="Export Budget" icon="pi pi-download" class="p-button-outlined" @click="exportBudget" />
+      </div>
     </div>
 
-    <div class="summary-cards">
-      <!-- Create Budget Form -->
-      <Card class="create-budget-card">
-        <template #title>
-          <div class="card-title">
-            <i class="pi pi-plus"></i>
-            <span>Create Budget</span>
-          </div>
-        </template>
+    <div class="grid">
+      <div class="col-12 lg:col-8">
+        <Card>
+          <template #title>Budget Details</template>
           <template #content>
-            <form @submit.prevent="createBudget" class="p-fluid">
-              <div class="field">
-                <label for="name">Budget Name</label>
-                <InputText
-                  id="name"
-                  v-model="budgetForm.name"
-                  :class="{ 'p-invalid': submitted && !budgetForm.name }"
-                  placeholder="Enter budget name"
-                />
-                <small v-if="submitted && !budgetForm.name" class="p-error">Budget name is required</small>
-              </div>
-
-              <div class="field">
-                <label for="amount">Amount</label>
-                <InputNumber
-                  id="amount"
-                  v-model="budgetForm.amount"
-                  :class="{ 'p-invalid': submitted && (!budgetForm.amount || budgetForm.amount <= 0) }"
-                  mode="currency"
-                  currency="USD"
-                  locale="en-US"
-                  placeholder="0.00"
-                />
-                <small v-if="submitted && (!budgetForm.amount || budgetForm.amount <= 0)" class="p-error">
-                  Amount must be greater than 0
-                </small>
-              </div>
-
-              <div class="field">
-                <label for="type">Budget Type</label>
-                <Dropdown
-                  id="type"
-                  v-model="budgetForm.type"
-                  :options="budgetTypes"
-                  option-label="label"
-                  option-value="value"
-                  :class="{ 'p-invalid': submitted && !budgetForm.type }"
-                  placeholder="Select budget type"
-                />
-                <small v-if="submitted && !budgetForm.type" class="p-error">Budget type is required</small>
-              </div>
-
-              <div class="grid">
-                <div class="col-12 md:col-6">
-                  <div class="field">
-                    <label for="startDate">Start Date</label>
-                    <Calendar
-                      id="startDate"
-                      v-model="budgetForm.start_date"
-                      :class="{ 'p-invalid': submitted && !budgetForm.start_date }"
-                      date-format="yy-mm-dd"
-                      placeholder="Select start date"
-                    />
-                    <small v-if="submitted && !budgetForm.start_date" class="p-error">Start date is required</small>
-                  </div>
-                </div>
-                <div class="col-12 md:col-6">
-                  <div class="field">
-                    <label for="endDate">End Date</label>
-                    <Calendar
-                      id="endDate"
-                      v-model="budgetForm.end_date"
-                      :class="{ 'p-invalid': submitted && !budgetForm.end_date }"
-                      date-format="yy-mm-dd"
-                      placeholder="Select end date"
-                    />
-                    <small v-if="submitted && !budgetForm.end_date" class="p-error">End date is required</small>
-                  </div>
+            <div class="grid">
+              <div class="col-12 md:col-6">
+                <div class="field">
+                  <label>Budget Name</label>
+                  <InputText v-model="currentBudget.name" class="w-full" />
                 </div>
               </div>
-
-              <div class="field">
-                <label for="description">Description</label>
-                <Textarea
-                  id="description"
-                  v-model="budgetForm.description"
-                  rows="3"
-                  placeholder="Enter budget description"
-                />
+              <div class="col-12 md:col-6">
+                <div class="field">
+                  <label>Fiscal Year</label>
+                  <InputNumber v-model="currentBudget.fiscal_year" class="w-full" />
+                </div>
               </div>
+              <div class="col-12">
+                <div class="field">
+                  <label>Description</label>
+                  <Textarea v-model="currentBudget.description" rows="3" class="w-full" />
+                </div>
+              </div>
+            </div>
 
-              <Button
-                type="submit"
-                label="Create Budget"
-                :loading="loading"
-                class="w-full"
-                icon="pi pi-plus"
-              />
-            </form>
+            <Divider />
+
+            <div class="flex justify-content-between align-items-center mb-3">
+              <h4>Budget Line Items</h4>
+              <Button label="Add Item" icon="pi pi-plus" size="small" @click="addBudgetItem" />
+            </div>
+
+            <DataTable :value="currentBudget.line_items" editMode="cell" @cell-edit-complete="onCellEditComplete">
+              <Column field="account_code" header="Account Code">
+                <template #editor="{ data, field }">
+                  <InputText v-model="data[field]" class="w-full" />
+                </template>
+              </Column>
+              <Column field="account_name" header="Account Name">
+                <template #editor="{ data, field }">
+                  <InputText v-model="data[field]" class="w-full" />
+                </template>
+              </Column>
+              <Column field="category" header="Category">
+                <template #editor="{ data, field }">
+                  <Dropdown v-model="data[field]" :options="categories" class="w-full" />
+                </template>
+              </Column>
+              <Column field="budgeted_amount" header="Budgeted Amount">
+                <template #body="{ data }">
+                  ${{ formatCurrency(data.budgeted_amount) }}
+                </template>
+                <template #editor="{ data, field }">
+                  <InputNumber v-model="data[field]" mode="currency" currency="USD" class="w-full" />
+                </template>
+              </Column>
+              <Column field="actual_amount" header="Actual Amount">
+                <template #body="{ data }">
+                  ${{ formatCurrency(data.actual_amount || 0) }}
+                </template>
+              </Column>
+              <Column field="variance" header="Variance">
+                <template #body="{ data }">
+                  <span :class="getVarianceClass(data.variance || 0)">
+                    ${{ formatCurrency(data.variance || 0) }}
+                  </span>
+                </template>
+              </Column>
+              <Column header="Actions">
+                <template #body="{ index }">
+                  <Button icon="pi pi-trash" class="p-button-text p-button-danger" @click="removeBudgetItem(index)" />
+                </template>
+              </Column>
+            </DataTable>
+
+            <div class="flex justify-content-end mt-4">
+              <div class="text-right">
+                <div class="text-lg font-bold">
+                  Total Budget: ${{ formatCurrency(totalBudget) }}
+                </div>
+              </div>
+            </div>
           </template>
         </Card>
       </div>
 
-      <!-- Budget Summary Cards -->
-      <Card class="summary-card">
-        <template #title>
-          <div class="card-title">
-            <i class="pi pi-wallet text-blue"></i>
-            <span>Total Budget</span>
-          </div>
-        </template>
-        <template #content>
-          <div class="summary-amount text-blue">{{ formatCurrency(totalBudget) }}</div>
-          <div class="summary-date">Current Period</div>
-        </template>
-      </Card>
-      
-      <Card class="summary-card">
-        <template #title>
-          <div class="card-title">
-            <i class="pi pi-chart-line text-orange"></i>
-            <span>Total Spent</span>
-          </div>
-        </template>
-        <template #content>
-          <div class="summary-amount text-orange">{{ formatCurrency(totalSpent) }}</div>
-          <div class="summary-date">Year to Date</div>
-        </template>
-      </Card>
-      
-      <Card class="summary-card">
-        <template #title>
-          <div class="card-title">
-            <i class="pi pi-check-circle text-green"></i>
-            <span>Remaining</span>
-          </div>
-        </template>
-        <template #content>
-          <div class="summary-amount text-green">{{ formatCurrency(totalBudget - totalSpent) }}</div>
-          <div class="summary-date">Available</div>
-        </template>
-      </Card>
-    </div>
-
-    <!-- Budget List -->
-    <div class="main-content">
-      <Card class="budget-list-card">
-        <template #title>
-          <div class="card-title-with-action">
-            <span>Budget List</span>
-            <Button 
-              label="View All" 
-              icon="pi pi-arrow-right" 
-              iconPos="right" 
-              class="p-button-text p-button-sm" 
-            />
-          </div>
-        </template>
+      <div class="col-12 lg:col-4">
+        <Card>
+          <template #title>Budget Summary</template>
           <template #content>
-            <DataTable
-              :value="budgets"
-              :paginator="true"
-              :rows="10"
-              :loading="tableLoading"
-              responsive-layout="scroll"
-              class="p-datatable-sm"
-            >
-              <Column field="name" header="Name" sortable>
-                <template #body="{ data }">
-                  <span class="font-medium">{{ data.name }}</span>
-                </template>
-              </Column>
-              <Column field="type" header="Type" sortable>
-                <template #body="{ data }">
-                  <Tag :value="data.type" :severity="getTypeSeverity(data.type)" />
-                </template>
-              </Column>
-              <Column field="amount" header="Amount" sortable>
-                <template #body="{ data }">
-                  <span class="font-medium">{{ formatCurrency(data.amount) }}</span>
-                </template>
-              </Column>
-              <Column field="spent" header="Spent" sortable>
-                <template #body="{ data }">
-                  <span class="text-orange-500">{{ formatCurrency(data.spent) }}</span>
-                </template>
-              </Column>
-              <Column field="status" header="Status" sortable>
-                <template #body="{ data }">
-                  <Tag :value="data.status" :severity="getStatusSeverity(data.status)" />
-                </template>
-              </Column>
-              <Column header="Actions">
-                <template #body="{ data }">
-                  <div class="flex gap-2">
-                    <Button
-                      icon="pi pi-pencil"
-                      size="small"
-                      outlined
-                      @click="editBudget(data)"
-                      v-tooltip="'Edit'"
-                    />
-                    <Button
-                      icon="pi pi-trash"
-                      size="small"
-                      outlined
-                      severity="danger"
-                      @click="deleteBudget(data)"
-                      v-tooltip="'Delete'"
-                    />
-                  </div>
-                </template>
-              </Column>
-            </DataTable>
-          </template>
-        </Card>
-      
-      <div class="create-budget-section">
-        <Card class="create-budget-card">
-          <template #title>
-            <div class="card-title">
-              <i class="pi pi-plus"></i>
-              <span>Create New Budget</span>
+            <div class="flex flex-column gap-3">
+              <div class="flex justify-content-between">
+                <span>Total Budgeted:</span>
+                <span class="font-bold">${{ formatCurrency(totalBudget) }}</span>
+              </div>
+              <div class="flex justify-content-between">
+                <span>Total Actual:</span>
+                <span class="font-bold">${{ formatCurrency(totalActual) }}</span>
+              </div>
+              <div class="flex justify-content-between">
+                <span>Variance:</span>
+                <span :class="getVarianceClass(totalVariance)" class="font-bold">
+                  ${{ formatCurrency(totalVariance) }}
+                </span>
+              </div>
+              <Divider />
+              <div class="flex justify-content-between">
+                <span>Status:</span>
+                <Tag :value="currentBudget.status || 'draft'" :severity="getStatusSeverity(currentBudget.status || 'draft')" />
+              </div>
             </div>
           </template>
+        </Card>
+
+        <Card class="mt-4">
+          <template #title>Actions</template>
           <template #content>
-            <form @submit.prevent="createBudget" class="p-fluid">
-              <div class="field">
-                <label for="name">Budget Name</label>
-                <InputText
-                  id="name"
-                  v-model="budgetForm.name"
-                  :class="{ 'p-invalid': submitted && !budgetForm.name }"
-                  placeholder="Enter budget name"
-                />
-                <small v-if="submitted && !budgetForm.name" class="p-error">Budget name is required</small>
-              </div>
-
-              <div class="field">
-                <label for="amount">Amount</label>
-                <InputNumber
-                  id="amount"
-                  v-model="budgetForm.amount"
-                  :class="{ 'p-invalid': submitted && (!budgetForm.amount || budgetForm.amount <= 0) }"
-                  mode="currency"
-                  currency="USD"
-                  locale="en-US"
-                  placeholder="0.00"
-                />
-                <small v-if="submitted && (!budgetForm.amount || budgetForm.amount <= 0)" class="p-error">
-                  Amount must be greater than 0
-                </small>
-              </div>
-
-              <div class="field">
-                <label for="type">Budget Type</label>
-                <Dropdown
-                  id="type"
-                  v-model="budgetForm.type"
-                  :options="budgetTypes"
-                  option-label="label"
-                  option-value="value"
-                  :class="{ 'p-invalid': submitted && !budgetForm.type }"
-                  placeholder="Select budget type"
-                />
-                <small v-if="submitted && !budgetForm.type" class="p-error">Budget type is required</small>
-              </div>
-
-              <Button
-                type="submit"
-                label="Create Budget"
-                :loading="loading"
-                class="w-full"
-                icon="pi pi-plus"
-              />
-            </form>
+            <div class="flex flex-column gap-2">
+              <Button label="Save Draft" icon="pi pi-save" class="w-full" @click="saveBudget" />
+              <Button label="Submit for Approval" icon="pi pi-send" class="w-full p-button-success" @click="submitForApproval" />
+              <Button label="Copy from Previous Year" icon="pi pi-copy" class="w-full p-button-outlined" @click="copyFromPrevious" />
+            </div>
           </template>
         </Card>
       </div>
@@ -289,283 +142,135 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useToast } from 'primevue/usetoast'
+import { ref, computed, onMounted } from 'vue';
+import { useToast } from 'primevue/usetoast';
+import budgetService, { type Budget, type BudgetLineItem } from '@/services/budgetService';
 
-// PrimeVue Components
-import Card from 'primevue/card'
-import InputText from 'primevue/inputtext'
-import InputNumber from 'primevue/inputnumber'
-import Dropdown from 'primevue/dropdown'
-import Calendar from 'primevue/calendar'
-import Textarea from 'primevue/textarea'
-import Button from 'primevue/button'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import Tag from 'primevue/tag'
+const toast = useToast();
 
-const toast = useToast()
-const loading = ref(false)
-const tableLoading = ref(false)
-const submitted = ref(false)
-
-const budgetForm = ref({
+const currentBudget = ref<Budget>({
   name: '',
-  amount: null as number | null,
-  type: '',
-  start_date: null as Date | null,
-  end_date: null as Date | null,
-  description: ''
-})
+  description: '',
+  fiscal_year: new Date().getFullYear(),
+  start_date: '',
+  end_date: '',
+  line_items: []
+});
 
-const budgetTypes = [
-  { label: 'Operational', value: 'OPERATIONAL' },
-  { label: 'Capital', value: 'CAPITAL' },
-  { label: 'Project', value: 'PROJECT' },
-  { label: 'Department', value: 'DEPARTMENT' }
-]
+const categories = ref([
+  'Revenue',
+  'Cost of Goods Sold',
+  'Operating Expenses',
+  'Administrative Expenses',
+  'Marketing Expenses',
+  'Capital Expenditures'
+]);
 
-const budgets = ref([
-  { 
-    id: 1, 
-    name: 'Marketing Q1', 
-    type: 'OPERATIONAL', 
-    amount: 50000, 
-    spent: 35000, 
-    status: 'APPROVED' 
-  },
-  { 
-    id: 2, 
-    name: 'IT Infrastructure', 
-    type: 'CAPITAL', 
-    amount: 100000, 
-    spent: 75000, 
-    status: 'DRAFT' 
+const totalBudget = computed(() => {
+  return currentBudget.value.line_items.reduce((sum, item) => sum + (item.budgeted_amount || 0), 0);
+});
+
+const totalActual = computed(() => {
+  return currentBudget.value.line_items.reduce((sum, item) => sum + (item.actual_amount || 0), 0);
+});
+
+const totalVariance = computed(() => {
+  return totalActual.value - totalBudget.value;
+});
+
+const addBudgetItem = () => {
+  currentBudget.value.line_items.push({
+    account_code: '',
+    account_name: '',
+    category: '',
+    budgeted_amount: 0,
+    actual_amount: 0,
+    variance: 0
+  });
+};
+
+const removeBudgetItem = (index: number) => {
+  currentBudget.value.line_items.splice(index, 1);
+};
+
+const onCellEditComplete = (event: any) => {
+  const { data, newValue, field } = event;
+  data[field] = newValue;
+  
+  // Recalculate variance if amounts change
+  if (field === 'budgeted_amount' || field === 'actual_amount') {
+    data.variance = (data.actual_amount || 0) - (data.budgeted_amount || 0);
   }
-])
+};
 
-const totalBudget = computed(() => budgets.value.reduce((sum, b) => sum + b.amount, 0))
-const totalSpent = computed(() => budgets.value.reduce((sum, b) => sum + b.spent, 0))
-
-const validateForm = () => {
-  return budgetForm.value.name && 
-         budgetForm.value.amount && 
-         budgetForm.value.amount > 0 &&
-         budgetForm.value.type &&
-         budgetForm.value.start_date &&
-         budgetForm.value.end_date
-}
-
-const createBudget = async () => {
-  submitted.value = true
-  
-  if (!validateForm()) {
-    toast.add({
-      severity: 'error',
-      summary: 'Validation Error',
-      detail: 'Please fill in all required fields',
-      life: 3000
-    })
-    return
-  }
-  
-  loading.value = true
-  
+const saveBudget = async () => {
   try {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    budgets.value.push({
-      id: Date.now(),
-      name: budgetForm.value.name,
-      type: budgetForm.value.type,
-      amount: budgetForm.value.amount!,
-      spent: 0,
-      status: 'DRAFT'
-    })
-    
-    // Reset form
-    budgetForm.value = {
-      name: '',
-      amount: null,
-      type: '',
-      start_date: null,
-      end_date: null,
-      description: ''
+    if (currentBudget.value.id) {
+      await budgetService.updateBudget(currentBudget.value.id, currentBudget.value);
+      toast.add({ severity: 'success', summary: 'Success', detail: 'Budget updated', life: 3000 });
+    } else {
+      const saved = await budgetService.createBudget(currentBudget.value);
+      currentBudget.value.id = saved.id;
+      toast.add({ severity: 'success', summary: 'Success', detail: 'Budget saved', life: 3000 });
     }
-    submitted.value = false
-    
-    toast.add({
-      severity: 'success',
-      summary: 'Success',
-      detail: 'Budget created successfully',
-      life: 3000
-    })
   } catch (error) {
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Failed to create budget',
-      life: 3000
-    })
-  } finally {
-    loading.value = false
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to save budget', life: 3000 });
   }
-}
+};
 
-const editBudget = (budget: any) => {
-  toast.add({
-    severity: 'info',
-    summary: 'Edit Budget',
-    detail: `Editing ${budget.name}`,
-    life: 3000
-  })
-}
-
-const deleteBudget = (budget: any) => {
-  toast.add({
-    severity: 'warn',
-    summary: 'Delete Budget',
-    detail: `Deleting ${budget.name}`,
-    life: 3000
-  })
-}
-
-const getTypeSeverity = (type: string) => {
-  switch (type) {
-    case 'OPERATIONAL': return 'info'
-    case 'CAPITAL': return 'warning'
-    case 'PROJECT': return 'success'
-    case 'DEPARTMENT': return 'secondary'
-    default: return 'info'
+const submitForApproval = async () => {
+  try {
+    currentBudget.value.status = 'pending_approval';
+    await saveBudget();
+    toast.add({ severity: 'success', summary: 'Success', detail: 'Budget submitted for approval', life: 3000 });
+  } catch (error) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to submit budget', life: 3000 });
   }
-}
+};
+
+const copyFromPrevious = () => {
+  toast.add({ severity: 'info', summary: 'Copy Budget', detail: 'Copying from previous year...', life: 3000 });
+};
+
+const importTemplate = () => {
+  toast.add({ severity: 'info', summary: 'Import', detail: 'Import template functionality', life: 3000 });
+};
+
+const exportBudget = () => {
+  toast.add({ severity: 'info', summary: 'Export', detail: 'Exporting budget...', life: 3000 });
+};
+
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat('en-US').format(amount);
+};
+
+const getVarianceClass = (variance: number) => {
+  if (variance > 0) return 'text-green-600';
+  if (variance < 0) return 'text-red-600';
+  return 'text-gray-600';
+};
 
 const getStatusSeverity = (status: string) => {
   switch (status) {
-    case 'APPROVED': return 'success'
-    case 'DRAFT': return 'secondary'
-    case 'PENDING_APPROVAL': return 'warning'
-    case 'REJECTED': return 'danger'
-    default: return 'secondary'
+    case 'active': return 'success';
+    case 'draft': return 'warning';
+    case 'pending_approval': return 'info';
+    default: return 'info';
   }
-}
-
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('en-US', { 
-    style: 'currency', 
-    currency: 'USD' 
-  }).format(amount)
-}
+};
 
 onMounted(() => {
-  // Load initial data
-  tableLoading.value = true
-  setTimeout(() => {
-    tableLoading.value = false
-  }, 500)
-})
+  // Initialize with some sample data
+  addBudgetItem();
+});
 </script>
 
 <style scoped>
-.budget-view {
-  padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.dashboard-header {
-  margin-bottom: 2rem;
-}
-
-.dashboard-header h1 {
-  font-size: 2rem;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0 0 0.5rem 0;
-}
-
-.dashboard-header p {
-  color: #6b7280;
-  margin: 0;
-}
-
-.summary-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-}
-
-.summary-card {
-  height: 100%;
-}
-
-.card-title {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-weight: 600;
-}
-
-.card-title i {
-  color: #3b82f6;
-}
-
-.summary-amount {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin-bottom: 0.5rem;
-}
-
-.summary-date {
-  font-size: 0.75rem;
-  color: #6b7280;
-}
-
-.main-content {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 1.5rem;
-}
-
-.budget-list-card,
-.create-budget-card {
-  height: fit-content;
-}
-
-.card-title-with-action {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
+.budgeting-view {
+  padding: 0;
 }
 
 .field {
   margin-bottom: 1rem;
-}
-
-.field > label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 600;
-}
-
-.text-blue { color: #3b82f6; }
-.text-orange { color: #f59e0b; }
-.text-green { color: #10b981; }
-
-@media (max-width: 768px) {
-  .budget-view {
-    padding: 1rem;
-  }
-  
-  .main-content {
-    grid-template-columns: 1fr;
-  }
-  
-  .summary-cards {
-    grid-template-columns: 1fr;
-  }
 }
 </style>

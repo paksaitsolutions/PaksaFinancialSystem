@@ -248,7 +248,7 @@ class FinancialStatementService(BaseService):
             "sections": [assets, liabilities, equity],
             "metadata": {
                 "as_of_date": as_of_date.isoformat(),
-                "currency": "USD",  # Should come from company settings
+                "currency": self._get_company_currency(trial_balance.company_id),
                 "total_assets": float(total_assets),
                 "total_liabilities": float(total_liabilities),
                 "total_equity": float(total_equity),
@@ -358,7 +358,7 @@ class FinancialStatementService(BaseService):
             "metadata": {
                 "start_date": start_date.isoformat(),
                 "end_date": end_date.isoformat(),
-                "currency": "USD",  # Should come from company settings
+                "currency": self._get_company_currency(company_id),
                 "total_revenue": float(total_revenue),
                 "total_expenses": float(total_expenses),
                 "net_income": float(net_income),
@@ -418,7 +418,7 @@ class FinancialStatementService(BaseService):
             "metadata": {
                 "start_date": start_date.isoformat(),
                 "end_date": end_date.isoformat(),
-                "currency": "USD",  # Should come from company settings
+                "currency": self._get_company_currency(company_id),
                 "net_cash_flow": net_cash_flow
             }
         }
@@ -522,3 +522,9 @@ class FinancialStatementService(BaseService):
             created_at=statement.created_at,
             updated_at=statement.updated_at
         )
+    
+    def _get_company_currency(self, company_id: UUID) -> str:
+        """Get company's default currency from settings."""
+        from app.models.company import Company
+        company = self.db.query(Company).filter(Company.id == company_id).first()
+        return company.default_currency if company else "USD"

@@ -1,12 +1,30 @@
-@import 'theme';
-@import 'utilities';
-@import 'base/reset';
-@import 'base/typography';
-@import 'buttons';
-@import 'button-fixes';
-@import 'primevue-overrides';
-@import 'primevue-fixes';
-@import 'critical-fixes';
-@import 'layout/app-layout';
-@import 'base/print';
-@import 'layout-fix';
+// Modern Sass using @use instead of @import
+@use 'base/reset';
+@use 'base/variables' as vars;
+@use 'base/mixins' as mix;
+
+// Global styles
+body {
+  font-family: vars.$font-family-base;
+  color: vars.$text-color;
+  background-color: vars.$background-color;
+}
+
+.container {
+  max-width: vars.$container-max-width;
+  margin: 0 auto;
+  padding: 0 vars.$container-padding;
+}
+
+// Utility classes
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+
+.mt-1 { margin-top: vars.$spacing-sm; }
+.mt-2 { margin-top: vars.$spacing-md; }
+.mt-3 { margin-top: vars.$spacing-lg; }
+
+.mb-1 { margin-bottom: vars.$spacing-sm; }
+.mb-2 { margin-bottom: vars.$spacing-md; }
+.mb-3 { margin-bottom: vars.$spacing-lg; }

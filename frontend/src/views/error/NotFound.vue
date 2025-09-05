@@ -1,54 +1,98 @@
 <template>
-  <div class="error-page">
-    <div class="error-content">
-      <h1 class="error-code">404</h1>
-      <h2 class="error-title">Page Not Found</h2>
-      <p class="error-message">
-        The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.
-      </p>
-      <Button 
-        label="Go to Dashboard" 
-        icon="pi pi-home"
-        @click="$router.push('/')"
-      />
+  <div class="not-found">
+    <div class="error-container">
+      <div class="error-content">
+        <div class="error-icon">
+          <i class="pi pi-exclamation-triangle"></i>
+        </div>
+        <h1 class="error-title">404</h1>
+        <h2 class="error-subtitle">Page Not Found</h2>
+        <p class="error-description">
+          The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.
+        </p>
+        <div class="error-actions">
+          <Button label="Go Home" icon="pi pi-home" @click="$router.push('/')" />
+          <Button label="Go Back" icon="pi pi-arrow-left" class="p-button-outlined" @click="$router.go(-1)" />
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-// No script needed
+// No additional logic needed
 </script>
 
 <style scoped>
-.error-page {
+.not-found {
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 50vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 2rem;
+}
+
+.error-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  padding: 3rem;
   text-align: center;
-}
-
-.error-content {
   max-width: 500px;
+  width: 100%;
 }
 
-.error-code {
+.error-icon {
+  font-size: 4rem;
+  color: #f59e0b;
+  margin-bottom: 1rem;
+}
+
+.error-title {
   font-size: 6rem;
   font-weight: 700;
-  color: var(--primary-color);
+  color: #1f2937;
   margin: 0;
   line-height: 1;
 }
 
-.error-title {
+.error-subtitle {
   font-size: 2rem;
-  color: var(--text-color);
+  font-weight: 600;
+  color: #374151;
   margin: 1rem 0;
 }
 
-.error-message {
-  color: var(--text-color-secondary);
-  margin-bottom: 2rem;
+.error-description {
+  color: #6b7280;
+  font-size: 1.1rem;
   line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+.error-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+  .error-container {
+    padding: 2rem;
+  }
+  
+  .error-title {
+    font-size: 4rem;
+  }
+  
+  .error-subtitle {
+    font-size: 1.5rem;
+  }
+  
+  .error-actions {
+    flex-direction: column;
+  }
 }
 </style>

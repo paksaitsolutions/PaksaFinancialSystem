@@ -241,10 +241,11 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { debounce } from '@/utils/debounce'
-import { apiClient } from '@/utils/apiClient'
+import inventoryLocationService from '@/services/inventoryLocationService'
+import { useAuthStore } from '@/stores/auth'
 import Card from 'primevue/card'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
@@ -259,33 +260,11 @@ import Divider from 'primevue/divider'
 
 // Composables
 const toast = useToast()
+const authStore = useAuthStore()
+const currentCompany = computed(() => authStore.currentCompany)
 
 // Data
-const locations = ref([
-  {
-    id: 1,
-    code: 'WH001',
-    name: 'Main Warehouse',
-    description: 'Primary storage facility',
-    is_active: true,
-    address_line1: '123 Industrial Blvd',
-    city: 'Manufacturing City',
-    state: 'CA',
-    postal_code: '90210',
-    country: 'USA'
-  },
-  {
-    id: 2,
-    code: 'STORE01',
-    name: 'Retail Store',
-    description: 'Customer-facing retail location',
-    is_active: true,
-    address_line1: '456 Main Street',
-    city: 'Downtown',
-    state: 'CA',
-    postal_code: '90211'
-  }
-])
+const locations = ref([])
 
 const loading = ref(false)
 const searchQuery = ref('')
@@ -327,6 +306,8 @@ const statusOptions = [
 
 // Methods
 const fetchLocations = async () => {
+  if (!currentCompany.value?.id) return
+  
   loading.value = true
   try {
     const params = {}
@@ -337,10 +318,8 @@ const fetchLocations = async () => {
       params.is_active = statusFilter.value
     }
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500))
-    // const response = await apiClient.get('/api/v1/inventory/locations', { params })
-    // locations.value = response.data
+    const response = await inventoryLocationService.getLocations(currentCompany.value.id, params)
+    locations.value = response.data
   } catch (error) {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load locations' })
     console.error('Error fetching locations:', error)
@@ -415,21 +394,18 @@ const editLocation = (location) => {
 }
 
 const saveLocation = async () => {
-  if (!validateForm()) {
+  if (!validateForm() || !currentCompany.value?.id) {
     toast.add({ severity: 'error', summary: 'Validation Error', detail: 'Please fix the errors and try again' })
     return
   }
   
   dialog.saving = true
   try {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
     if (dialog.isEdit) {
-      // await apiClient.put(`/api/v1/inventory/locations/${dialog.editId}`, dialog.formData)
+      await inventoryLocationService.updateLocation(dialog.editId, dialog.formData)
       toast.add({ severity: 'success', summary: 'Success', detail: 'Location updated successfully' })
     } else {
-      // await apiClient.post('/api/v1/inventory/locations', dialog.formData)
+      await inventoryLocationService.createLocation(currentCompany.value.id, dialog.formData)
       toast.add({ severity: 'success', summary: 'Success', detail: 'Location created successfully' })
     }
     
@@ -452,7 +428,7 @@ const deleteLocation = async () => {
   if (!deleteDialog.location) return
   
   try {
-    // await apiClient.delete(`/api/v1/inventory/locations/${deleteDialog.location.id}`)
+    await inventoryLocationService.deleteLocation(deleteDialog.location.id)
     toast.add({ severity: 'success', summary: 'Success', detail: 'Location deleted successfully' })
     fetchLocations()
   } catch (error) {

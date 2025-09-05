@@ -1,207 +1,37 @@
-/* ===================================
-   CSS Reset & Base Styles
-   ===================================
-   A modern CSS reset with sensible defaults
-   and improved consistency across browsers
-*/
-
-/* Box sizing rules */
-*,
-*::before,
-*::after {
+// CSS Reset
+* {
+  margin: 0;
+  padding: 0;
   box-sizing: border-box;
-  margin: 0;
-  padding: 0;
 }
 
-/* Remove default margin and padding */
-body,
-h1, h2, h3, h4, h5, h6,
-p, figure, blockquote, dl, dd,
-ul, ol, li,
-pre, fieldset, legend,
-table, th, td, caption,
-hr {
-  margin: 0;
-  padding: 0;
-}
-
-/* Set core root defaults */
 html {
-  -webkit-text-size-adjust: 100%;
-  -webkit-tap-highlight-color: transparent;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
+  font-size: 16px;
+  line-height: 1.5;
 }
 
-/* Set core body defaults */
 body {
-  min-height: 100vh;
-  line-height: var(--line-height-base, 1.5);
-  color: var(--text-primary, #333);
-  background-color: var(--bg-primary, #fff);
-  font-family: var(--font-family-sans, system-ui, -apple-system, sans-serif);
-  font-size: var(--font-size-base, 1rem);
-  font-weight: var(--font-weight-regular, 400);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Remove list styles on ul, ol elements with a list role */
-ul[role='list'],
-ol[role='list'] {
-  list-style: none;
+a {
+  text-decoration: none;
+  color: inherit;
 }
 
-/* A elements that don't have a class get default styles */
-a:not([class]) {
-  text-decoration-skip-ink: auto;
-  color: var(--link-color, currentColor);
-}
-
-/* Make images and media elements easier to work with */
-img,
-picture,
-video,
-canvas,
-svg,
-picture {
-  max-width: 100%;
-  display: block;
-}
-
-// Inherit fonts for inputs and buttons
-input,
-button,
-textarea,
-select {
-  font: inherit;
-}
-
-// Remove all animations, transitions and smooth scroll for people that prefer not to see them
-@media (prefers-reduced-motion: reduce) {
-  html:focus-within {
-    scroll-behavior: auto;
-  }
-
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-}
-
-// Remove default button styles
 button {
-  background: none;
   border: none;
-  padding: 0;
+  background: none;
   cursor: pointer;
-  outline: none;
 }
 
-// Remove default fieldset styles
-fieldset {
-  border: none;
-  margin: 0;
-  padding: 0;
-}
-
-// Remove default table spacing
-table {
-  border-collapse: collapse;
-  border-spacing: 0;
-}
-
-// Remove default hr styles
-hr {
-  border: none;
-  border-top: 1px solid var(--border-color, #e2e8f0);
-  margin: var(--spacer, 1rem) 0;
-}
-
-// Remove default form element styles
-input,
-select,
-textarea {
-  /* Standard property */
-  appearance: none;
-  /* Vendor prefixes for better browser compatibility */
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  background: none;
-  border: 1px solid var(--border-color, #e2e8f0);
-  border-radius: 4px;
-  padding: 0.5rem 0.75rem;
-  width: 100%;
-  
-  &:focus {
-    border-color: var(--primary-500, #0ea5e9);
-    box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.2);
-    outline: none;
-  }
-  
-  &:disabled {
-    background-color: var(--neutral-100, #f1f5f9);
-    cursor: not-allowed;
-    opacity: 0.7;
-  }
-}
-
-// Remove number input spinners
-input[type='number'] {
-  -moz-appearance: textfield;
-  
-  &::-webkit-outer-spin-button,
-  &::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-  }
-}
-
-// Remove autofill background color
-input:-webkit-autofill,
-input:-webkit-autofill:hover,
-input:-webkit-autofill:focus,
-input:-webkit-autofill:active {
-  -webkit-box-shadow: 0 0 0 1000px white inset !important;
-  -webkit-text-fill-color: var(--text-primary, #333) !important;
-  transition: background-color 5000s ease-in-out 0s;
-}
-
-// Remove default select arrow
-select {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 0.5rem center;
-  background-size: 1.5em 1.5em;
-  padding-right: 2.5rem;
-  
-  &::-ms-expand {
-    display: none;
-  }
-}
-
-// Remove default textarea resize
-textarea {
-  resize: vertical;
-  min-height: 100px;
-}
-
-// Remove default button focus outline
-button:focus {
-  outline: none;
-}
-
-// Remove default details marker
-summary {
+ul, ol {
   list-style: none;
-  
-  &::-webkit-details-marker {
-    display: none;
-  }
+}
+
+img {
+  max-width: 100%;
+  height: auto;
 }

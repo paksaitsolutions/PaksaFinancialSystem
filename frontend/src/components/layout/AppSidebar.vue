@@ -42,193 +42,25 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { sidebarModules } from '@/utils/sidebarModules'
 
 const route = useRoute()
-const expandedMenus = ref(['Financial Management'])
+const expandedMenus = ref<string[]>([])
 
-const menuItems = [
-  {
-    label: 'Dashboard',
-    icon: 'pi pi-home',
-    to: '/'
-  },
-  {
-    label: 'Accounting',
-    icon: 'pi pi-calculator',
-    items: [
-      {
-        label: 'General Ledger',
-        icon: 'pi pi-book',
-        to: '/gl'
-      },
-      {
-        label: 'Accounts Payable',
-        icon: 'pi pi-shopping-cart',
-        to: '/ap'
-      },
-      {
-        label: 'Accounts Receivable',
-        icon: 'pi pi-credit-card',
-        to: '/ar'
-      },
-      {
-        label: 'Budget Management',
-        icon: 'pi pi-chart-pie',
-        to: '/budget'
-      },
-      {
-        label: 'Tax Management',
-        icon: 'pi pi-percentage',
-        to: '/tax'
-      }
-    ]
-  },
-  {
-    label: 'Financial Management',
-    icon: 'pi pi-chart-line',
-    items: [
-      {
-        label: 'Cash Management',
-        icon: 'pi pi-wallet',
-        to: '/cash'
-      }
-    ]
-  },
-  {
-    label: 'Operations',
-    icon: 'pi pi-cog',
-    items: [
-      {
-        label: 'Inventory',
-        icon: 'pi pi-box',
-        to: '/inventory'
-      },
-      {
-        label: 'Fixed Assets',
-        icon: 'pi pi-building',
-        to: '/fixed-assets'
-      }
-    ]
-  },
-  {
-    label: 'Human Resources',
-    icon: 'pi pi-users',
-    items: [
-      {
-        label: 'HRM',
-        icon: 'pi pi-user',
-        to: '/hrm'
-      },
-      {
-        label: 'Payroll',
-        icon: 'pi pi-dollar',
-        to: '/payroll'
-      }
-    ]
-  },
-
-  {
-    label: 'Workflow',
-    icon: 'pi pi-check-circle',
-    items: [
-      {
-        label: 'Approvals',
-        icon: 'pi pi-check',
-        to: '/approvals'
-      }
-    ]
-  },
-  {
-    label: 'Reports',
-    icon: 'pi pi-file-pdf',
-    items: [
-      {
-        label: 'All Reports',
-        icon: 'pi pi-list',
-        to: '/reports'
-      },
-      {
-        label: 'Financial Reports',
-        icon: 'pi pi-chart-line',
-        to: '/reports/financial'
-      },
-      {
-        label: 'Operational Reports',
-        icon: 'pi pi-cog',
-        to: '/reports/operational'
-      },
-      {
-        label: 'Compliance Reports',
-        icon: 'pi pi-shield',
-        to: '/reports/compliance'
-      },
-      {
-        label: 'Custom Reports',
-        icon: 'pi pi-wrench',
-        to: '/reports/custom'
-      }
-    ]
-  },
-  {
-    label: 'AI & Business Intelligence',
-    icon: 'pi pi-chart-line',
-    items: [
-      {
-        label: 'AI Dashboard',
-        icon: 'pi pi-chart-bar',
-        to: '/ai-bi'
-      },
-      {
-        label: 'AI Assistant',
-        icon: 'pi pi-comments',
-        to: '/ai-bi/assistant'
-      },
-      {
-        label: 'Business Intelligence',
-        icon: 'pi pi-chart-pie',
-        to: '/ai-bi/intelligence'
-      },
-      {
-        label: 'Analytics Reports',
-        icon: 'pi pi-file-pdf',
-        to: '/ai-bi/reports'
-      }
-    ]
-  },
-  {
-    label: 'Administration',
-    icon: 'pi pi-cog',
-    items: [
-      {
-        label: 'Super Admin',
-        icon: 'pi pi-crown',
-        to: '/super-admin'
-      },
-      {
-        label: 'General Settings',
-        icon: 'pi pi-sliders-h',
-        to: '/settings/general'
-      },
-      {
-        label: 'User Management',
-        icon: 'pi pi-users',
-        to: '/settings/users'
-      },
-      {
-        label: 'Tenant Management',
-        icon: 'pi pi-building',
-        to: '/settings/tenant'
-      },
-      {
-        label: 'Security Settings',
-        icon: 'pi pi-shield',
-        to: '/settings/security'
-      }
-    ]
-  }
-]
+const menuItems = computed(() => {
+  return sidebarModules.map(module => ({
+    label: module.title,
+    icon: module.icon,
+    to: module.to,
+    items: module.children?.map(child => ({
+      label: child.title,
+      icon: child.icon,
+      to: child.to
+    }))
+  }))
+})
 
 const isActiveRoute = (path: string) => {
   return route.path === path || (path !== '/' && route.path.startsWith(path))

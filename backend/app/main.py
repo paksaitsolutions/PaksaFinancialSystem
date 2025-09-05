@@ -79,13 +79,28 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS middleware
+# Security middleware
+from app.middleware.security import SecurityMiddleware, CSRFMiddleware
+from app.core.config.settings import settings
+
+# Add security middleware
+app.add_middleware(SecurityMiddleware)
+app.add_middleware(CSRFMiddleware)
+
+# CORS middleware with secure configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=getattr(settings, 'CORS_ORIGINS', ["http://localhost:3000", "http://localhost:3003"]),
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH"],
+    allow_headers=[
+        "Authorization", 
+        "Content-Type", 
+        "X-CSRF-Token", 
+        "X-Request-Time",
+        "X-Session-ID"
+    ],
+    expose_headers=["X-Total-Count", "X-Rate-Limit-Remaining"]
 )
 
 # Mount versioned API under /api/v1
@@ -122,6 +137,10 @@ app.include_router(analytics_router, prefix="/api/v1/analytics", tags=["analytic
 # Include enhanced financial API
 from app.api.financial_enhanced import router as financial_enhanced_router
 app.include_router(financial_enhanced_router, prefix="/api/v1/financial", tags=["financial"])
+
+# Include HRM endpoints
+from app.api.endpoints.hrm import router as hrm_router
+app.include_router(hrm_router, prefix="/api/v1/hrm", tags=["hrm"])
 
 # Default tenant for demo
 DEFAULT_TENANT_ID = "12345678-1234-5678-9012-123456789012"
@@ -165,6 +184,14 @@ async def health_check():
         "service": "paksa-financial-system",
         "version": "1.0.0",
         "timestamp": datetime.utcnow().isoformat(),
+        "security_features": {
+            "jwt_authentication": True,
+            "rate_limiting": True,
+            "csrf_protection": True,
+            "security_headers": True,
+            "request_validation": True,
+            "session_management": True
+        },
         "modules_status": {
             "general_ledger": "operational",
             "accounts_payable": "operational",
@@ -182,6 +209,34 @@ async def health_check():
         "database": "connected",
         "cache": "active",
         "uptime": "running",
+    }
+
+# Security status endpoint
+@app.get("/api/security/status")
+async def security_status(user=Depends(get_current_user)):
+    return {
+        "security_features": {
+            "jwt_authentication": True,
+            "rate_limiting": True,
+            "csrf_protection": True,
+            "security_headers": True,
+            "request_validation": True,
+            "session_management": True,
+            "password_hashing": True,
+            "token_blacklisting": True
+        },
+        "compliance": {
+            "data_encryption": True,
+            "audit_logging": True,
+            "access_control": True,
+            "secure_headers": True
+        },
+        "authentication": {
+            "multi_factor": False,
+            "password_policy": True,
+            "session_timeout": True,
+            "account_lockout": True
+        }
     }
 
 

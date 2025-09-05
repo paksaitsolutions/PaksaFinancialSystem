@@ -1,77 +1,71 @@
 <template>
   <div class="add-vendor">
+    <div class="flex justify-content-between align-items-center mb-4">
+      <div>
+        <h1>Add Vendor</h1>
+        <p class="text-color-secondary">Add a new vendor to your system</p>
+      </div>
+      <Button label="Back to Dashboard" icon="pi pi-arrow-left" class="p-button-secondary" @click="$router.push('/ap')" />
+    </div>
+
     <Card>
-      <template #title>Add New Vendor</template>
       <template #content>
-        <form @submit.prevent="handleSubmit">
-          <div class="p-fluid">
-            <div class="field">
-              <label for="name">Vendor Name</label>
-              <InputText 
-                id="name"
-                v-model="form.name" 
-                placeholder="Enter vendor name"
-                :class="{ 'p-invalid': errors.name }"
-              />
-              <small v-if="errors.name" class="p-error">{{ errors.name }}</small>
+        <form @submit.prevent="saveVendor">
+          <div class="grid">
+            <div class="col-12 md:col-6">
+              <div class="field">
+                <label>Vendor Name</label>
+                <InputText v-model="vendor.name" class="w-full" :class="{'p-invalid': submitted && !vendor.name}" />
+                <small class="p-error" v-if="submitted && !vendor.name">Name is required.</small>
+              </div>
             </div>
+            <div class="col-12 md:col-6">
+              <div class="field">
+                <label>Vendor Code</label>
+                <InputText v-model="vendor.code" class="w-full" />
+              </div>
+            </div>
+          </div>
+          
+          <div class="grid">
+            <div class="col-12 md:col-6">
+              <div class="field">
+                <label>Email</label>
+                <InputText v-model="vendor.email" type="email" class="w-full" />
+              </div>
+            </div>
+            <div class="col-12 md:col-6">
+              <div class="field">
+                <label>Phone</label>
+                <InputText v-model="vendor.phone" class="w-full" />
+              </div>
+            </div>
+          </div>
 
-            <div class="field">
-              <label for="email">Email</label>
-              <InputText 
-                id="email"
-                v-model="form.email" 
-                type="email"
-                placeholder="Enter email address"
-                :class="{ 'p-invalid': errors.email }"
-              />
-              <small v-if="errors.email" class="p-error">{{ errors.email }}</small>
-            </div>
+          <div class="field">
+            <label>Address</label>
+            <Textarea v-model="vendor.address" rows="3" class="w-full" />
+          </div>
 
-            <div class="field">
-              <label for="phone">Phone</label>
-              <InputText 
-                id="phone"
-                v-model="form.phone" 
-                placeholder="Enter phone number"
-              />
+          <div class="grid">
+            <div class="col-12 md:col-6">
+              <div class="field">
+                <label>Payment Terms</label>
+                <Dropdown v-model="vendor.paymentTerms" :options="paymentTerms" placeholder="Select Terms" class="w-full" />
+              </div>
             </div>
+            <div class="col-12 md:col-6">
+              <div class="field">
+                <label>Tax ID</label>
+                <InputText v-model="vendor.taxId" class="w-full" />
+              </div>
+            </div>
+          </div>
 
-            <div class="field">
-              <label for="address">Address</label>
-              <Textarea 
-                id="address"
-                v-model="form.address" 
-                rows="3"
-                placeholder="Enter vendor address"
-              />
-            </div>
-
-            <div class="field">
-              <label for="taxId">Tax ID</label>
-              <InputText 
-                id="taxId"
-                v-model="form.taxId" 
-                placeholder="Enter tax ID"
-              />
-            </div>
-
-            <div class="field">
-              <label for="paymentTerms">Payment Terms</label>
-              <Dropdown 
-                id="paymentTerms"
-                v-model="form.paymentTerms" 
-                :options="paymentTermsOptions" 
-                optionLabel="label" 
-                optionValue="value"
-                placeholder="Select payment terms"
-              />
-            </div>
-
-            <div class="flex gap-2">
-              <Button type="submit" label="Add Vendor" :loading="loading" />
-              <Button type="button" label="Cancel" class="p-button-secondary" @click="$router.go(-1)" />
-            </div>
+          <div class="flex gap-2">
+            <Button type="submit" label="Save Vendor" icon="pi pi-save" />
+            <Button type="button" label="Save & New" icon="pi pi-plus" class="p-button-secondary" @click="saveAndNew" />
+            <Button type="button" label="Cancel" icon="pi pi-times" class="p-button-text" @click="$router.push('/ap')" />
           </div>
         </form>
       </template>
@@ -80,59 +74,58 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useToast } from 'primevue/usetoast'
 
 const router = useRouter()
-const loading = ref(false)
+const toast = useToast()
+const submitted = ref(false)
 
-const form = reactive({
+const vendor = ref({
   name: '',
+  code: `VEN-${Date.now()}`,
   email: '',
   phone: '',
   address: '',
-  taxId: '',
-  paymentTerms: null
+  paymentTerms: '',
+  taxId: ''
 })
 
-const errors = reactive({
-  name: '',
-  email: ''
-})
+const paymentTerms = ref(['Net 30', 'Net 15', 'Due on Receipt', 'Net 60', '2/10 Net 30'])
 
-const paymentTermsOptions = ref([
-  { label: 'Net 30', value: 'net30' },
-  { label: 'Net 15', value: 'net15' },
-  { label: 'Due on Receipt', value: 'due_on_receipt' },
-  { label: '2/10 Net 30', value: '2_10_net30' }
-])
-
-const handleSubmit = async () => {
-  // Clear errors
-  Object.keys(errors).forEach(key => errors[key] = '')
-  
-  // Validate
-  if (!form.name) errors.name = 'Vendor name is required'
-  if (!form.email) errors.email = 'Email is required'
-  
-  if (Object.values(errors).some(error => error)) return
-  
-  loading.value = true
-  try {
-    // Mock API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
+const saveVendor = () => {
+  submitted.value = true
+  if (vendor.value.name) {
+    toast.add({ severity: 'success', summary: 'Success', detail: 'Vendor created successfully', life: 3000 })
     router.push('/ap')
-  } catch (error) {
-    console.error('Failed to add vendor:', error)
-  } finally {
-    loading.value = false
+  }
+}
+
+const saveAndNew = () => {
+  submitted.value = true
+  if (vendor.value.name) {
+    toast.add({ severity: 'success', summary: 'Success', detail: 'Vendor created successfully', life: 3000 })
+    vendor.value = {
+      name: '',
+      code: `VEN-${Date.now()}`,
+      email: '',
+      phone: '',
+      address: '',
+      paymentTerms: '',
+      taxId: ''
+    }
+    submitted.value = false
   }
 }
 </script>
 
 <style scoped>
 .add-vendor {
-  max-width: 600px;
-  margin: 0 auto;
+  padding: 0;
+}
+
+.field {
+  margin-bottom: 1rem;
 }
 </style>

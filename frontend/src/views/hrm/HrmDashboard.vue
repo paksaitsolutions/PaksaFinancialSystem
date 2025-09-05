@@ -115,7 +115,10 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useToast } from 'primevue/usetoast';
 import { useStandardLayout } from '@/composables/useStandardLayout';
+
+const toast = useToast();
 
 // Types
 interface StatCard {
@@ -168,11 +171,12 @@ const formatDate = (dateString: string) => {
 };
 
 const showSettings = () => {
-  router.push({ name: 'HrmSettings' });
+  toast.add({ severity: 'info', summary: 'Settings', detail: 'Opening HRM settings...', life: 3000 });
+  router.push('/settings');
 };
 
 const showHelp = () => {
-  console.log('Help clicked');
+  toast.add({ severity: 'info', summary: 'Help', detail: 'Opening help documentation...', life: 3000 });
 };
 
 // Navigation

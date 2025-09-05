@@ -177,10 +177,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { useToast } from 'primevue/usetoast'
+import chartOfAccountsService from '@/services/chartOfAccountsService'
+import { useAuthStore } from '@/stores/auth'
+import { getAccountTypes } from '@/utils/constants'
 
 const toast = useToast()
+const authStore = useAuthStore()
 const loading = ref(false)
 const saving = ref(false)
 const showDialog = ref(false)
@@ -189,6 +193,9 @@ const editingAccount = ref(null)
 const globalFilter = ref('')
 const typeFilter = ref(null)
 const newTypeName = ref('')
+const accounts = ref([])
+const accountTypes = ref([])
+const currentCompany = computed(() => authStore.currentCompany)
 
 const form = reactive({
   code: '',
@@ -204,41 +211,9 @@ const errors = reactive({
   type: ''
 })
 
-const accounts = ref([
-  { id: 1, code: '1000', name: 'Cash', type: 'Asset', balance: 50000, status: 'Active' },
-  { id: 2, code: '1100', name: 'Accounts Receivable', type: 'Asset', balance: 25000, status: 'Active' },
-  { id: 3, code: '1200', name: 'Inventory', type: 'Asset', balance: 75000, status: 'Active' },
-  { id: 4, code: '1500', name: 'Equipment', type: 'Asset', balance: 100000, status: 'Active' },
-  { id: 5, code: '2000', name: 'Accounts Payable', type: 'Liability', balance: 15000, status: 'Active' },
-  { id: 6, code: '2100', name: 'Notes Payable', type: 'Liability', balance: 50000, status: 'Active' },
-  { id: 7, code: '3000', name: 'Owner Equity', type: 'Equity', balance: 100000, status: 'Active' },
-  { id: 8, code: '4000', name: 'Sales Revenue', type: 'Revenue', balance: 45000, status: 'Active' },
-  { id: 9, code: '5000', name: 'Cost of Goods Sold', type: 'Expense', balance: 20000, status: 'Active' },
-  { id: 10, code: '6000', name: 'Office Expenses', type: 'Expense', balance: 8000, status: 'Active' }
-])
 
-const accountTypes = ref([
-  { label: 'Asset', value: 'Asset' },
-  { label: 'Liability', value: 'Liability' },
-  { label: 'Equity', value: 'Equity' },
-  { label: 'Revenue', value: 'Revenue' },
-  { label: 'Expense', value: 'Expense' },
-  { label: 'Cost of Goods Sold', value: 'COGS' },
-  { label: 'Other Income', value: 'Other Income' },
-  { label: 'Other Expense', value: 'Other Expense' },
-  { label: 'Bank', value: 'Bank' },
-  { label: 'Credit Card', value: 'Credit Card' },
-  { label: 'Accounts Receivable', value: 'Accounts Receivable' },
-  { label: 'Accounts Payable', value: 'Accounts Payable' },
-  { label: 'Fixed Asset', value: 'Fixed Asset' },
-  { label: 'Accumulated Depreciation', value: 'Accumulated Depreciation' },
-  { label: 'Inventory', value: 'Inventory' },
-  { label: 'Prepaid Expense', value: 'Prepaid Expense' },
-  { label: 'Accrued Expense', value: 'Accrued Expense' },
-  { label: 'Deferred Revenue', value: 'Deferred Revenue' },
-  { label: 'Long Term Liability', value: 'Long Term Liability' },
-  { label: 'Retained Earnings', value: 'Retained Earnings' }
-])
+
+
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value)
@@ -297,12 +272,41 @@ const getTypeSeverity = (type: string) => {
 }
 
 const loadAccounts = async () => {
+  if (!currentCompany.value?.id) return
+  
   loading.value = true
   try {
-    await new Promise(resolve => setTimeout(resolve, 500))
-    // Mock data is already loaded
+    const response = await chartOfAccountsService.getAccounts(currentCompany.value.id)
+    accounts.value = response.data.map(account => ({
+      ...account,
+      type: account.account_type,
+      status: account.is_active ? 'Active' : 'Inactive'
+    }))
+  } catch (error) {
+    console.error('Error loading accounts:', error)
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load accounts' })
   } finally {
     loading.value = false
+  }
+}
+
+const loadAccountTypes = async () => {
+  try {
+    const types = await getAccountTypes()
+    accountTypes.value = types.map(type => ({
+      label: type.name,
+      value: type.code
+    }))
+  } catch (error) {
+    console.error('Error loading account types:', error)
+    // Fallback to basic types
+    accountTypes.value = [
+      { label: 'Asset', value: 'ASSET' },
+      { label: 'Liability', value: 'LIABILITY' },
+      { label: 'Equity', value: 'EQUITY' },
+      { label: 'Revenue', value: 'REVENUE' },
+      { label: 'Expense', value: 'EXPENSE' }
+    ]
   }
 }
 
@@ -338,6 +342,8 @@ const closeDialog = () => {
 }
 
 const saveAccount = async () => {
+  if (!currentCompany.value?.id) return
+  
   // Clear errors
   Object.keys(errors).forEach(key => errors[key] = '')
   
@@ -346,51 +352,30 @@ const saveAccount = async () => {
   if (!form.name) errors.name = 'Account name is required'
   if (!form.type) errors.type = 'Account type is required'
   
-  // Check for duplicate account code
-  const existingAccount = accounts.value.find(a => 
-    a.code === form.code && (!editingAccount.value || a.id !== editingAccount.value.id)
-  )
-  if (existingAccount) {
-    errors.code = 'Account code already exists'
-  }
-  
   if (Object.values(errors).some(error => error)) return
   
   saving.value = true
   try {
-    await new Promise(resolve => setTimeout(resolve, 500))
+    const accountData = {
+      code: form.code,
+      name: form.name,
+      account_type: form.type,
+      description: form.description,
+      is_active: form.active
+    }
     
     if (editingAccount.value) {
-      // Update existing account
-      const index = accounts.value.findIndex(a => a.id === editingAccount.value.id)
-      if (index !== -1) {
-        accounts.value[index] = {
-          ...accounts.value[index],
-          code: form.code,
-          name: form.name,
-          type: form.type,
-          description: form.description,
-          status: form.active ? 'Active' : 'Inactive'
-        }
-      }
+      await chartOfAccountsService.updateAccount(editingAccount.value.id, accountData)
       toast.add({ severity: 'success', summary: 'Success', detail: 'Account updated successfully' })
     } else {
-      // Add new account
-      const newAccount = {
-        id: Math.max(...accounts.value.map(a => a.id)) + 1,
-        code: form.code,
-        name: form.name,
-        type: form.type,
-        description: form.description,
-        balance: 0,
-        status: form.active ? 'Active' : 'Inactive'
-      }
-      accounts.value.unshift(newAccount) // Add to beginning for visibility
+      await chartOfAccountsService.createAccount(currentCompany.value.id, accountData)
       toast.add({ severity: 'success', summary: 'Success', detail: 'Account created successfully' })
     }
     
     closeDialog()
+    await loadAccounts()
   } catch (error) {
+    console.error('Error saving account:', error)
     toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to save account' })
   } finally {
     saving.value = false
@@ -430,8 +415,9 @@ const addCustomType = () => {
   closeTypeDialog()
 }
 
-onMounted(() => {
-  loadAccounts()
+onMounted(async () => {
+  await loadAccountTypes()
+  await loadAccounts()
 })
 </script>
 

@@ -125,7 +125,7 @@
                   icon="pi pi-chart-line"
                   class="w-full mb-3"
                   severity="info"
-                  @click="$router.push('/tax/reports')
+                  @click="$router.push('/tax/reports')"
                 />
               </div>
               <div class="col-6">

@@ -45,12 +45,13 @@
               
               <v-col cols="12" md="4">
                 <v-select
-                  v-model="selectedCompany"
+                  :model-value="selectedCompany"
                   :items="companies"
-                  item-title="name"
+                  item-title="company_name"
                   item-value="id"
                   label="Company"
                   prepend-icon="mdi-office-building"
+                  readonly
                 ></v-select>
               </v-col>
               
@@ -454,24 +455,34 @@ import { ref, computed, onMounted, watch } from 'vue';
 import { format } from 'date-fns';
 import financialStatementService from '@/services/financialStatementService';
 import { useSnackbar } from '@/composables/useSnackbar';
+import { useAuthStore } from '@/stores/auth';
+import { getCurrencies } from '@/utils/constants';
 
 export default {
   name: 'FinancialStatementsView',
   
   setup() {
     const { showSnackbar } = useSnackbar();
+    const authStore = useAuthStore();
     
     // Form data
-    const asOfDate = ref(new Date().toISOString().substr(0, 10));
+    const asOfDate = ref(new Date());
     const asOfDateMenu = ref(false);
-    const selectedCompany = ref(null);
-    const companies = ref([
-      { id: '1', name: 'Main Company' },
-      { id: '2', name: 'Subsidiary A' },
-      { id: '3', name: 'Subsidiary B' }
-    ]);
-    const currency = ref('USD');
-    const currencies = ref(['USD', 'EUR', 'GBP', 'CAD', 'AUD']);
+    const selectedCompany = computed(() => authStore.currentCompany?.id);
+    const companies = computed(() => authStore.companies);
+    const currency = ref(authStore.currentCompany?.default_currency || 'USD');
+    const currencies = ref([]);
+    
+    // Load currencies
+    const loadCurrencies = async () => {
+      try {
+        const currencyData = await getCurrencies();
+        currencies.value = currencyData.map(c => c.code);
+      } catch (error) {
+        console.error('Error loading currencies:', error);
+        currencies.value = ['USD', 'EUR', 'GBP', 'PKR']; // Fallback
+      }
+    };
     const includeComparative = ref(true);
     const includeYtd = ref(true);
     const formatCurrency = ref(true);
@@ -485,7 +496,7 @@ export default {
     
     // Computed properties
     const formattedAsOfDate = computed(() => {
-      return format(new Date(asOfDate.value), 'MMM dd, yyyy');
+      return format(asOfDate.value, 'MMM dd, yyyy');
     });
     
     const previousStatementsHeaders = [
@@ -499,7 +510,7 @@ export default {
     // Methods
     const generateStatements = async () => {
       if (!selectedCompany.value) {
-        showSnackbar('Please select a company', 'error');
+        showSnackbar('No company selected', 'error');
         return;
       }
       
@@ -508,7 +519,7 @@ export default {
       try {
         const response = await financialStatementService.generateAllStatements(
           selectedCompany.value,
-          new Date(asOfDate.value),
+          asOfDate.value,
           {
             includeComparative: includeComparative.value,
             includeYtd: includeYtd.value,
@@ -622,19 +633,16 @@ export default {
       return format(new Date(dateString), 'MMM dd, yyyy');
     };
     
+
+    
     // Lifecycle hooks
-    onMounted(() => {
-      // Set default company
-      if (companies.value.length > 0) {
-        selectedCompany.value = companies.value[0].id;
-      }
-      
-      // Load previous statements
+    onMounted(async () => {
+      await loadCurrencies();
       loadPreviousStatements();
     });
     
     // Watch for company changes to reload previous statements
-    watch(selectedCompany, () => {
+    watch(() => authStore.currentCompany, () => {
       loadPreviousStatements();
     });
     

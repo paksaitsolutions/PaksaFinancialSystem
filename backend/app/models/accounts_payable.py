@@ -1,303 +1,78 @@
-<<<<<<< HEAD:backend/models/accounts_payable.py
-"""
-Accounts Payable Database Models
-"""
-from datetime import date, datetime
-from enum import Enum
-from typing import List, Optional
-from uuid import UUID, uuid4
-
-from sqlalchemy import (
-    Boolean, Column, Date, DateTime, Enum as SQLEnum, 
-    ForeignKey, Numeric, String, Text, UniqueConstraint
-)
-from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+from sqlalchemy import Column, String, DateTime, Boolean, Text, ForeignKey, Integer
+from sqlalchemy.types import DECIMAL as Decimal
 from sqlalchemy.orm import relationship
+from .base import Base
+from datetime import datetime
 
-from core.database import Base
-
-
-class BillStatus(str, Enum):
-    DRAFT = "draft"
-    AWAITING_APPROVAL = "awaiting_approval"
-    APPROVED = "approved"
-    PARTIALLY_PAID = "partially_paid"
-    PAID = "paid"
-    CANCELLED = "cancelled"
-    VOID = "void"
-
-
-class PaymentMethod(str, Enum):
-    CHECK = "check"
-    BANK_TRANSFER = "bank_transfer"
-    CASH = "cash"
-    CREDIT_CARD = "credit_card"
-    OTHER = "other"
-
-
-class Bill(Base):
-    """
-    Represents a vendor bill in the Accounts Payable system.
-    """
-    __tablename__ = "ap_bills"
+class Vendor(Base):
+    __tablename__ = "vendors"
     
-    id = Column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
-    bill_number = Column(String(50), unique=True, index=True, nullable=False)
-    vendor_id = Column(PG_UUID(as_uuid=True), ForeignKey("vendors.id"), nullable=False)
-    bill_date = Column(Date, nullable=False, index=True)
-    due_date = Column(Date, nullable=False, index=True)
-    reference = Column(String(100))
-    terms = Column(String(100))
-    status = Column(SQLEnum(BillStatus), default=BillStatus.DRAFT, nullable=False)
-    subtotal = Column(Numeric(15, 2), nullable=False, default=0)
-    tax_amount = Column(Numeric(15, 2), nullable=False, default=0)
-    discount_amount = Column(Numeric(15, 2), nullable=False, default=0)
-    total_amount = Column(Numeric(15, 2), nullable=False, default=0)
-    amount_paid = Column(Numeric(15, 2), nullable=False, default=0)
-    balance_due = Column(Numeric(15, 2), nullable=False, default=0)
-    notes = Column(Text)
-    journal_entry_id = Column(PG_UUID(as_uuid=True), ForeignKey("journal_entries.id"), index=True)
-    
-    # Audit fields
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-    created_by_id = Column(PG_UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    updated_by_id = Column(PG_UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    approved_by_id = Column(PG_UUID(as_uuid=True), ForeignKey("users.id"))
-    approved_at = Column(DateTime)
-    
-    # Relationships
-    vendor = relationship("Vendor", back_populates="bills")
-    items = relationship("BillItem", back_populates="bill", cascade="all, delete-orphan")
-    payments = relationship("Payment", back_populates="bill")
-    journal_entry = relationship("JournalEntry")
-    created_by = relationship("User", foreign_keys=[created_by_id])
-    updated_by = relationship("User", foreign_keys=[updated_by_id])
-    approved_by = relationship("User", foreign_keys=[approved_by_id])
-    
-    __table_args__ = (
-        UniqueConstraint('bill_number', name='uq_ap_bills_bill_number'),
-    )
-    
-    def __repr__(self):
-        return f"<Bill {self.bill_number} - {self.vendor.name} - {self.total_amount}>"
+    id = Column(String, primary_key=True)
+    company_id = Column(String, ForeignKey("companies.id"), nullable=False)
+    vendor_code = Column(String(20), unique=True, nullable=False)
+    vendor_name = Column(String(255), nullable=False)
+    contact_person = Column(String(255))
+    email = Column(String(255))
+    phone = Column(String(50))
+    address = Column(Text)
+    tax_id = Column(String(50))
+    payment_terms = Column(String(50))
+    credit_limit = Column(Decimal(15, 2), default=0)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+class APInvoice(Base):
+    __tablename__ = "ap_invoices"
+    
+    id = Column(String, primary_key=True)
+    company_id = Column(String, ForeignKey("companies.id"), nullable=False)
+    vendor_id = Column(String, ForeignKey("vendors.id"), nullable=False)
+    invoice_number = Column(String(50), nullable=False)
+    invoice_date = Column(DateTime, nullable=False)
+    due_date = Column(DateTime, nullable=False)
+    subtotal = Column(Decimal(15, 2), default=0)
+    tax_amount = Column(Decimal(15, 2), default=0)
+    total_amount = Column(Decimal(15, 2), default=0)
+    paid_amount = Column(Decimal(15, 2), default=0)
+    status = Column(String(20), default="pending")
+    created_at = Column(DateTime, default=datetime.utcnow)
 
-class BillItem(Base):
-    """
-    Line items for a vendor bill.
-    """
-    __tablename__ = "ap_bill_items"
-    
-    id = Column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
-    bill_id = Column(PG_UUID(as_uuid=True), ForeignKey("ap_bills.id"), nullable=False)
-    account_id = Column(PG_UUID(as_uuid=True), ForeignKey("chart_of_accounts.id"), nullable=False)
-    item_description = Column(Text, nullable=False)
-    quantity = Column(Numeric(15, 6), nullable=False, default=1)
-    unit_price = Column(Numeric(15, 6), nullable=False)
-    tax_rate = Column(Numeric(5, 4), default=0)  # 0.05 for 5%
-    tax_amount = Column(Numeric(15, 2), default=0)
-    discount_percent = Column(Numeric(5, 2), default=0)  # 10.00 for 10%
-    discount_amount = Column(Numeric(15, 2), default=0)
-    amount = Column(Numeric(15, 2), nullable=False)
-    
-    # Audit fields
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-    
-    # Relationships
-    bill = relationship("Bill", back_populates="items")
-    account = relationship("ChartOfAccounts")
-    
-    def __repr__(self):
-        return f"<BillItem {self.item_description} - {self.amount}>"
-
-
-class Payment(Base):
-    """
-    Represents a payment made against a vendor bill.
-    """
+class APPayment(Base):
     __tablename__ = "ap_payments"
     
-    id = Column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
-    payment_number = Column(String(50), unique=True, index=True, nullable=False)
-    bill_id = Column(PG_UUID(as_uuid=True), ForeignKey("ap_bills.id"), nullable=False, index=True)
-    payment_date = Column(Date, nullable=False, index=True)
-    payment_method = Column(SQLEnum(PaymentMethod), nullable=False)
+    id = Column(String, primary_key=True)
+    company_id = Column(String, ForeignKey("companies.id"), nullable=False)
+    vendor_id = Column(String, ForeignKey("vendors.id"), nullable=False)
+    payment_number = Column(String(50), nullable=False)
+    payment_date = Column(DateTime, nullable=False)
+    payment_method = Column(String(50))
+    amount = Column(Decimal(15, 2), nullable=False)
     reference = Column(String(100))
-    amount = Column(Numeric(15, 2), nullable=False)
-    notes = Column(Text)
-    is_posted = Column(Boolean, default=False, nullable=False)
-    posted_at = Column(DateTime)
-    journal_entry_id = Column(PG_UUID(as_uuid=True), ForeignKey("journal_entries.id"), index=True)
-    
-    # Audit fields
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-    created_by_id = Column(PG_UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    updated_by_id = Column(PG_UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    
-    # Relationships
-    bill = relationship("Bill", back_populates="payments")
-    journal_entry = relationship("JournalEntry")
-    created_by = relationship("User", foreign_keys=[created_by_id])
-    updated_by = relationship("User", foreign_keys=[updated_by_id])
-    
-    __table_args__ = (
-        UniqueConstraint('payment_number', name='uq_ap_payments_payment_number'),
-    )
-    
-    def __repr__(self):
-        return f"<Payment {self.payment_number} - {self.amount} - {self.payment_date}>"
-=======
-"""
-Accounts Payable Database Models
-"""
-from datetime import date, datetime
-from enum import Enum
-from typing import List, Optional
-from uuid import UUID, uuid4
+    status = Column(String(20), default="completed")
+    created_at = Column(DateTime, default=datetime.utcnow)
 
-from sqlalchemy import (
-    Boolean, Column, Date, DateTime, Enum as SQLEnum, 
-    ForeignKey, Numeric, String, Text, UniqueConstraint
-)
-from sqlalchemy.dialects.postgresql import UUID as PG_UUID
-from sqlalchemy.orm import relationship
+class CreditMemo(Base):
+    __tablename__ = "credit_memos"
+    
+    id = Column(String, primary_key=True)
+    company_id = Column(String, ForeignKey("companies.id"), nullable=False)
+    vendor_id = Column(String, ForeignKey("vendors.id"), nullable=False)
+    memo_number = Column(String(50), nullable=False)
+    memo_date = Column(DateTime, nullable=False)
+    amount = Column(Decimal(15, 2), nullable=False)
+    reason = Column(Text)
+    status = Column(String(20), default="active")
+    created_at = Column(DateTime, default=datetime.utcnow)
 
-from app.core.database import Base
-
-
-class BillStatus(str, Enum):
-    DRAFT = "draft"
-    AWAITING_APPROVAL = "awaiting_approval"
-    APPROVED = "approved"
-    PARTIALLY_PAID = "partially_paid"
-    PAID = "paid"
-    CANCELLED = "cancelled"
-    VOID = "void"
-
-
-class PaymentMethod(str, Enum):
-    CHECK = "check"
-    BANK_TRANSFER = "bank_transfer"
-    CASH = "cash"
-    CREDIT_CARD = "credit_card"
-    OTHER = "other"
-
-
-class Bill(Base):
-    """
-    Represents a vendor bill in the Accounts Payable system.
-    """
-    __tablename__ = "ap_bills"
+class Form1099(Base):
+    __tablename__ = "form_1099"
     
-    id = Column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
-    bill_number = Column(String(50), unique=True, index=True, nullable=False)
-    vendor_id = Column(PG_UUID(as_uuid=True), ForeignKey("vendors.id"), nullable=False)
-    bill_date = Column(Date, nullable=False, index=True)
-    due_date = Column(Date, nullable=False, index=True)
-    reference = Column(String(100))
-    terms = Column(String(100))
-    status = Column(SQLEnum(BillStatus), default=BillStatus.DRAFT, nullable=False)
-    subtotal = Column(Numeric(15, 2), nullable=False, default=0)
-    tax_amount = Column(Numeric(15, 2), nullable=False, default=0)
-    discount_amount = Column(Numeric(15, 2), nullable=False, default=0)
-    total_amount = Column(Numeric(15, 2), nullable=False, default=0)
-    amount_paid = Column(Numeric(15, 2), nullable=False, default=0)
-    balance_due = Column(Numeric(15, 2), nullable=False, default=0)
-    notes = Column(Text)
-    journal_entry_id = Column(PG_UUID(as_uuid=True), ForeignKey("journal_entries.id"), index=True)
-    
-    # Audit fields
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-    created_by_id = Column(PG_UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    updated_by_id = Column(PG_UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    approved_by_id = Column(PG_UUID(as_uuid=True), ForeignKey("users.id"))
-    approved_at = Column(DateTime)
-    
-    # Relationships
-    vendor = relationship("Vendor", back_populates="bills")
-    items = relationship("BillItem", back_populates="bill", cascade="all, delete-orphan")
-    payments = relationship("Payment", back_populates="bill")
-    journal_entry = relationship("JournalEntry")
-    created_by = relationship("User", foreign_keys=[created_by_id])
-    updated_by = relationship("User", foreign_keys=[updated_by_id])
-    approved_by = relationship("User", foreign_keys=[approved_by_id])
-    
-    __table_args__ = (
-        UniqueConstraint('bill_number', name='uq_ap_bills_bill_number'),
-    )
-    
-    def __repr__(self):
-        return f"<Bill {self.bill_number} - {self.vendor.name} - {self.total_amount}>"
-
-
-class BillItem(Base):
-    """
-    Line items for a vendor bill.
-    """
-    __tablename__ = "ap_bill_items"
-    
-    id = Column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
-    bill_id = Column(PG_UUID(as_uuid=True), ForeignKey("ap_bills.id"), nullable=False)
-    account_id = Column(PG_UUID(as_uuid=True), ForeignKey("chart_of_accounts.id"), nullable=False)
-    item_description = Column(Text, nullable=False)
-    quantity = Column(Numeric(15, 6), nullable=False, default=1)
-    unit_price = Column(Numeric(15, 6), nullable=False)
-    tax_rate = Column(Numeric(5, 4), default=0)  # 0.05 for 5%
-    tax_amount = Column(Numeric(15, 2), default=0)
-    discount_percent = Column(Numeric(5, 2), default=0)  # 10.00 for 10%
-    discount_amount = Column(Numeric(15, 2), default=0)
-    amount = Column(Numeric(15, 2), nullable=False)
-    
-    # Audit fields
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-    
-    # Relationships
-    bill = relationship("Bill", back_populates="items")
-    account = relationship("ChartOfAccounts")
-    
-    def __repr__(self):
-        return f"<BillItem {self.item_description} - {self.amount}>"
-
-
-class Payment(Base):
-    """
-    Represents a payment made against a vendor bill.
-    """
-    __tablename__ = "ap_payments"
-    
-    id = Column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
-    payment_number = Column(String(50), unique=True, index=True, nullable=False)
-    bill_id = Column(PG_UUID(as_uuid=True), ForeignKey("ap_bills.id"), nullable=False, index=True)
-    payment_date = Column(Date, nullable=False, index=True)
-    payment_method = Column(SQLEnum(PaymentMethod), nullable=False)
-    reference = Column(String(100))
-    amount = Column(Numeric(15, 2), nullable=False)
-    notes = Column(Text)
-    is_posted = Column(Boolean, default=False, nullable=False)
-    posted_at = Column(DateTime)
-    journal_entry_id = Column(PG_UUID(as_uuid=True), ForeignKey("journal_entries.id"), index=True)
-    
-    # Audit fields
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-    created_by_id = Column(PG_UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    updated_by_id = Column(PG_UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    
-    # Relationships
-    bill = relationship("Bill", back_populates="payments")
-    journal_entry = relationship("JournalEntry")
-    created_by = relationship("User", foreign_keys=[created_by_id])
-    updated_by = relationship("User", foreign_keys=[updated_by_id])
-    
-    __table_args__ = (
-        UniqueConstraint('payment_number', name='uq_ap_payments_payment_number'),
-    )
-    
-    def __repr__(self):
-        return f"<Payment {self.payment_number} - {self.amount} - {self.payment_date}>"
->>>>>>> e96df7278ce4216131b6c65d411c0723f4de7f91:backend/app/models/accounts_payable.py
+    id = Column(String, primary_key=True)
+    company_id = Column(String, ForeignKey("companies.id"), nullable=False)
+    vendor_id = Column(String, ForeignKey("vendors.id"), nullable=False)
+    tax_year = Column(Integer, nullable=False)
+    total_payments = Column(Decimal(15, 2), default=0)
+    form_type = Column(String(20), default="1099-NEC")
+    status = Column(String(20), default="draft")
+    created_at = Column(DateTime, default=datetime.utcnow)

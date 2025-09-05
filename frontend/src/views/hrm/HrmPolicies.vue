@@ -271,25 +271,9 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref, onMounted } from 'vue';
+<script setup lang="ts">
+import { ref, onMounted } from 'vue';
 import { useToast } from 'primevue/usetoast';
-import { useRouter } from 'vue-router';
-
-// PrimeVue Components
-import Button from 'primevue/button';
-import Card from 'primevue/card';
-import Column from 'primevue/column';
-import DataTable from 'primevue/datatable';
-import Dialog from 'primevue/dialog';
-import Dropdown from 'primevue/dropdown';
-import InputText from 'primevue/inputtext';
-import Textarea from 'primevue/textarea';
-import Calendar from 'primevue/calendar';
-import Editor from 'primevue/editor';
-import Tag from 'primevue/tag';
-import Breadcrumb from 'primevue/breadcrumb';
-import Divider from 'primevue/divider';
 
 // Types
 interface Policy {
@@ -314,141 +298,190 @@ interface StatusOption {
   value: string;
 }
 
-export default defineComponent({
-  name: 'HrmPolicies',
-  components: {
-    Button,
-    Card,
-    Column,
-    DataTable,
-    Dialog,
-    Dropdown,
-    InputText,
-    Textarea,
-    Calendar,
-    Editor,
-    Tag,
-    Breadcrumb,
-    Divider
-  },
-  setup() {
-    const toast = useToast();
-    const router = useRouter();
+const toast = useToast();
+
+// State
+const loading = ref(false);
+const submitting = ref(false);
+const deleting = ref(false);
+const policyDialog = ref(false);
+const deletePolicyDialog = ref(false);
+const viewerDialog = ref(false);
+const editing = ref(false);
+const submitted = ref(false);
+
+const policies = ref<Policy[]>([]);
+const viewingPolicy = ref<Policy | null>(null);
+const policy = ref<Policy>({
+  id: null,
+  title: '',
+  description: '',
+  content: '',
+  category: '',
+  effectiveDate: new Date(),
+  status: 'draft'
+});
+
+const categories = ref<Category[]>([
+  { name: 'Attendance', code: 'attendance' },
+  { name: 'Leave', code: 'leave' },
+  { name: 'Code of Conduct', code: 'conduct' },
+  { name: 'Health & Safety', code: 'safety' },
+  { name: 'Diversity & Inclusion', code: 'diversity' },
+  { name: 'Remote Work', code: 'remote' },
+  { name: 'Benefits', code: 'benefits' },
+  { name: 'Other', code: 'other' }
+]);
+
+const statuses = ref<StatusOption[]>([
+  { label: 'Draft', value: 'draft' },
+  { label: 'Active', value: 'active' },
+  { label: 'Inactive', value: 'inactive' },
+  { label: 'Archived', value: 'archived' }
+]);
+
+const filters = ref({
+  global: { value: null, matchMode: 'contains' },
+  title: { value: null, matchMode: 'contains' },
+  category: { value: null, matchMode: 'equals' },
+  status: { value: null, matchMode: 'equals' }
+});
+
+const home = ref({
+  icon: 'pi pi-home',
+  to: '/'
+});
+
+const breadcrumbItems = ref([
+  { label: 'HRM', to: '/hrm' },
+  { label: 'Policies', to: '/hrm/policies' }
+]);
+
+// Methods
+const loadPolicies = async () => {
+  loading.value = true;
+  try {
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // State
-    const loading = ref(false);
-    const submitting = ref(false);
-    const deleting = ref(false);
-    const policyDialog = ref(false);
-    const deletePolicyDialog = ref(false);
-    const viewerDialog = ref(false);
-    const editing = ref(false);
-    const submitted = ref(false);
-    
-    const policies = ref<Policy[]>([]);
-    const viewingPolicy = ref<Policy | null>(null);
-    const policy = ref<Policy>({
-      id: null,
-      title: '',
-      description: '',
-      content: '',
-      category: '',
-      effectiveDate: new Date(),
-      status: 'draft'
+    policies.value = [
+      {
+        id: '1',
+        title: 'Remote Work Policy',
+        description: 'Guidelines and expectations for remote work arrangements',
+        content: '<h2>1. Purpose</h2><p>This policy outlines the guidelines for remote work arrangements...</p>',
+        category: 'remote',
+        effectiveDate: '2023-01-15',
+        status: 'active',
+        createdAt: new Date('2023-01-10'),
+        updatedAt: new Date('2023-01-10')
+      },
+      {
+        id: '2',
+        title: 'Code of Conduct',
+        description: 'Expected behavior and professional standards for all employees',
+        content: '<h2>1. Introduction</h2><p>Our company is committed to maintaining a workplace that is free from discrimination and harassment...</p>',
+        category: 'conduct',
+        effectiveDate: '2022-06-01',
+        status: 'active',
+        createdAt: new Date('2022-05-15'),
+        updatedAt: new Date('2022-11-20')
+      },
+      {
+        id: '3',
+        title: 'Paid Time Off Policy',
+        description: 'Guidelines for requesting and using paid time off',
+        content: '<h2>1. Eligibility</h2><p>All full-time employees are eligible for paid time off...</p>',
+        category: 'leave',
+        effectiveDate: '2023-03-01',
+        status: 'draft',
+        createdAt: new Date('2023-02-15'),
+        updatedAt: new Date('2023-02-28')
+      }
+    ];
+  } catch (error) {
+    console.error('Error loading policies:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to load policies',
+      life: 3000
     });
+  } finally {
+    loading.value = false;
+  }
+};
+
+const showNewPolicyDialog = () => {
+  policy.value = {
+    id: null,
+    title: '',
+    description: '',
+    content: '',
+    category: '',
+    effectiveDate: new Date(),
+    status: 'draft'
+  };
+  editing.value = false;
+  submitted.value = false;
+  policyDialog.value = true;
+};
+
+const editPolicy = (pol: Policy) => {
+  policy.value = { ...pol };
+  editing.value = true;
+  policyDialog.value = true;
+};
+
+const viewPolicy = (pol: Policy) => {
+  viewingPolicy.value = { ...pol };
+  viewerDialog.value = true;
+};
+
+const hideDialog = () => {
+  policyDialog.value = false;
+  submitted.value = false;
+};
+
+const savePolicy = async () => {
+  submitted.value = true;
+  
+  if (policy.value.title && policy.value.content) {
+    submitting.value = true;
     
-    const categories = ref<Category[]>([
-      { name: 'Attendance', code: 'attendance' },
-      { name: 'Leave', code: 'leave' },
-      { name: 'Code of Conduct', code: 'conduct' },
-      { name: 'Health & Safety', code: 'safety' },
-      { name: 'Diversity & Inclusion', code: 'diversity' },
-      { name: 'Remote Work', code: 'remote' },
-      { name: 'Benefits', code: 'benefits' },
-      { name: 'Other', code: 'other' }
-    ]);
-    
-    const statuses = ref<StatusOption[]>([
-      { label: 'Draft', value: 'draft' },
-      { label: 'Active', value: 'active' },
-      { label: 'Inactive', value: 'inactive' },
-      { label: 'Archived', value: 'archived' }
-    ]);
-    
-    const filters = ref({
-      global: { value: null, matchMode: 'contains' },
-      title: { value: null, matchMode: 'contains' },
-      category: { value: null, matchMode: 'equals' },
-      status: { value: null, matchMode: 'equals' }
-    });
-    
-    const home = ref({
-      icon: 'pi pi-home',
-      to: '/'
-    });
-    
-    const breadcrumbItems = ref([
-      { label: 'HRM', to: '/hrm' },
-      { label: 'Policies', to: '/hrm/policies' }
-    ]);
-    
-    // Methods
-    const loadPolicies = async () => {
-      loading.value = true;
-      try {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Mock data - replace with actual API call
-        policies.value = [
-          {
-            id: '1',
-            title: 'Remote Work Policy',
-            description: 'Guidelines and expectations for remote work arrangements',
-            content: '<h2>1. Purpose</h2><p>This policy outlines the guidelines for remote work arrangements...</p>',
-            category: 'remote',
-            effectiveDate: '2023-01-15',
-            status: 'active',
-            createdAt: new Date('2023-01-10'),
-            updatedAt: new Date('2023-01-10')
-          },
-          {
-            id: '2',
-            title: 'Code of Conduct',
-            description: 'Expected behavior and professional standards for all employees',
-            content: '<h2>1. Introduction</h2><p>Our company is committed to maintaining a workplace that is free from discrimination and harassment...</p>',
-            category: 'conduct',
-            effectiveDate: '2022-06-01',
-            status: 'active',
-            createdAt: new Date('2022-05-15'),
-            updatedAt: new Date('2022-11-20')
-          },
-          {
-            id: '3',
-            title: 'Paid Time Off Policy',
-            description: 'Guidelines for requesting and using paid time off',
-            content: '<h2>1. Eligibility</h2><p>All full-time employees are eligible for paid time off...</p>',
-            category: 'leave',
-            effectiveDate: '2023-03-01',
-            status: 'draft',
-            createdAt: new Date('2023-02-15'),
-            updatedAt: new Date('2023-02-28')
-          }
-        ];
-      } catch (error) {
-        console.error('Error loading policies:', error);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      if (editing.value) {
+        const index = policies.value.findIndex(p => p.id === policy.value.id);
+        if (index !== -1) {
+          policies.value[index] = { 
+            ...policy.value,
+            updatedAt: new Date()
+          };
+        }
         toast.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Failed to load policies',
+          severity: 'success',
+          summary: 'Success',
+          detail: 'Policy updated',
           life: 3000
         });
-      } finally {
-        loading.value = false;
+      } else {
+        const newPolicy: Policy = {
+          ...policy.value,
+          id: Date.now().toString(),
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+        policies.value.push(newPolicy);
+        toast.add({
+          severity: 'success',
+          summary: 'Success',
+          detail: 'Policy created',
+          life: 3000
+        });
       }
-    };
-    
-    const showNewPolicyDialog = () => {
+      
+      policyDialog.value = false;
       policy.value = {
         id: null,
         title: '',
@@ -458,197 +491,87 @@ export default defineComponent({
         effectiveDate: new Date(),
         status: 'draft'
       };
-      editing.value = false;
-      submitted.value = false;
-      policyDialog.value = true;
-    };
-    
-    const editPolicy = (pol: Policy) => {
-      policy.value = { ...pol };
-      editing.value = true;
-      policyDialog.value = true;
-    };
-    
-    const viewPolicy = (pol: Policy) => {
-      viewingPolicy.value = { ...pol };
-      viewerDialog.value = true;
-    };
-    
-    const hideDialog = () => {
-      policyDialog.value = false;
-      submitted.value = false;
-    };
-    
-    const savePolicy = async () => {
-      submitted.value = true;
-      
-      if (policy.value.title && policy.value.content) {
-        submitting.value = true;
-        
-        try {
-          // Simulate API call
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          
-          if (editing.value) {
-            // Update existing policy
-            const index = policies.value.findIndex(p => p.id === policy.value.id);
-            if (index !== -1) {
-              policies.value[index] = { 
-                ...policy.value,
-                updatedAt: new Date()
-              };
-            }
-            toast.add({
-              severity: 'success',
-              summary: 'Success',
-              detail: 'Policy updated',
-              life: 3000
-            });
-          } else {
-            // Add new policy
-            const newPolicy: Policy = {
-              ...policy.value,
-              id: Date.now().toString(),
-              createdAt: new Date(),
-              updatedAt: new Date()
-            };
-            policies.value.push(newPolicy);
-            toast.add({
-              severity: 'success',
-              summary: 'Success',
-              detail: 'Policy created',
-              life: 3000
-            });
-          }
-          
-          policyDialog.value = false;
-          policy.value = {
-            id: null,
-            title: '',
-            description: '',
-            content: '',
-            category: '',
-            effectiveDate: new Date(),
-            status: 'draft'
-          };
-        } catch (error) {
-          console.error('Error saving policy:', error);
-          toast.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'Failed to save policy',
-            life: 3000
-          });
-        } finally {
-          submitting.value = false;
-        }
-      }
-    };
-    
-    const confirmDeletePolicy = (pol: Policy) => {
-      policy.value = { ...pol };
-      deletePolicyDialog.value = true;
-    };
-    
-    const deletePolicy = async () => {
-      if (policy.value.id) {
-        deleting.value = true;
-        
-        try {
-          // Simulate API call
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-          // Remove from the list
-          policies.value = policies.value.filter(p => p.id !== policy.value.id);
-          
-          toast.add({
-            severity: 'success',
-            summary: 'Success',
-            detail: 'Policy deleted',
-            life: 3000
-          });
-        } catch (error) {
-          console.error('Error deleting policy:', error);
-          toast.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'Failed to delete policy',
-            life: 3000
-          });
-        } finally {
-          deletePolicyDialog.value = false;
-          deleting.value = false;
-        }
-      }
-    };
-    
-    const printPolicy = () => {
-      window.print();
-    };
-    
-    const formatDate = (date: string | Date): string => {
-      if (!date) return '';
-      const dateObj = typeof date === 'string' ? new Date(date) : date;
-      return dateObj.toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'short', 
-        day: 'numeric' 
+    } catch (error) {
+      console.error('Error saving policy:', error);
+      toast.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Failed to save policy',
+        life: 3000
       });
-    };
-    
-    const getStatusSeverity = (status: string): string => {
-      switch (status) {
-        case 'active':
-          return 'success';
-        case 'draft':
-          return 'info';
-        case 'inactive':
-          return 'warning';
-        case 'archived':
-          return 'danger';
-        default:
-          return 'info';
-      }
-    };
-    
-    // Lifecycle hooks
-    onMounted(() => {
-      loadPolicies();
-    });
-    
-    return {
-      // State
-      loading,
-      submitting,
-      deleting,
-      policyDialog,
-      deletePolicyDialog,
-      viewerDialog,
-      editing,
-      submitted,
-      policies,
-      viewingPolicy,
-      policy,
-      categories,
-      statuses,
-      filters,
-      home,
-      breadcrumbItems,
-      
-      // Methods
-      loadPolicies,
-      showNewPolicyDialog,
-      editPolicy,
-      viewPolicy,
-      hideDialog,
-      savePolicy,
-      confirmDeletePolicy,
-      deletePolicy,
-      printPolicy,
-      formatDate,
-      getStatusSeverity
-    };
+    } finally {
+      submitting.value = false;
+    }
   }
+};
+
+const confirmDeletePolicy = (pol: Policy) => {
+  policy.value = { ...pol };
+  deletePolicyDialog.value = true;
+};
+
+const deletePolicy = async () => {
+  if (policy.value.id) {
+    deleting.value = true;
+    
+    try {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      policies.value = policies.value.filter(p => p.id !== policy.value.id);
+      
+      toast.add({
+        severity: 'success',
+        summary: 'Success',
+        detail: 'Policy deleted',
+        life: 3000
+      });
+    } catch (error) {
+      console.error('Error deleting policy:', error);
+      toast.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Failed to delete policy',
+        life: 3000
+      });
+    } finally {
+      deletePolicyDialog.value = false;
+      deleting.value = false;
+    }
+  }
+};
+
+const printPolicy = () => {
+  window.print();
+};
+
+const formatDate = (date: string | Date): string => {
+  if (!date) return '';
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  return dateObj.toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'short', 
+    day: 'numeric' 
+  });
+};
+
+const getStatusSeverity = (status: string): string => {
+  switch (status) {
+    case 'active':
+      return 'success';
+    case 'draft':
+      return 'info';
+    case 'inactive':
+      return 'warning';
+    case 'archived':
+      return 'danger';
+    default:
+      return 'info';
+  }
+};
+
+// Lifecycle hooks
+onMounted(() => {
+  loadPolicies();
 });
 </script>
 
