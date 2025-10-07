@@ -9,7 +9,7 @@ from uuid import UUID
 from sqlalchemy import Column, String, DateTime, Boolean, Text, JSON, Integer
 from sqlalchemy.orm import relationship
 
-from .base import BaseModel, GUID
+from .base import BaseModel
 
 
 class ActivityType(str, Enum):
@@ -29,8 +29,8 @@ class LoginHistory(BaseModel):
     """
     __tablename__ = "login_history"
     
-    user_id = Column(GUID(), nullable=False, index=True)
-    company_id = Column(GUID(), nullable=False, index=True)
+    user_id = Column(String, nullable=False, index=True)
+    company_id = Column(String, nullable=False, index=True)
     
     # Login details
     login_time = Column(DateTime, nullable=False, default=datetime.utcnow)
@@ -58,8 +58,8 @@ class UserActivity(BaseModel):
     """
     __tablename__ = "user_activities"
     
-    user_id = Column(GUID(), nullable=False, index=True)
-    company_id = Column(GUID(), nullable=False, index=True)
+    user_id = Column(String, nullable=False, index=True)
+    company_id = Column(String, nullable=False, index=True)
     
     # Activity details
     activity_type = Column(String(50), nullable=False)
@@ -68,7 +68,7 @@ class UserActivity(BaseModel):
     
     # Resource details
     resource_type = Column(String(100), nullable=True)
-    resource_id = Column(GUID(), nullable=True)
+    resource_id = Column(String, nullable=True)
     
     # Request details
     ip_address = Column(String(45), nullable=True)
@@ -77,7 +77,7 @@ class UserActivity(BaseModel):
     request_path = Column(String(500), nullable=True)
     
     # Additional data
-    metadata = Column(JSON, nullable=True)
+    meta_data = Column(JSON, nullable=True)
     
     def __repr__(self) -> str:
         return f"<UserActivity(user_id={self.user_id}, action='{self.action}')>"
@@ -89,7 +89,7 @@ class CompanyPasswordPolicy(BaseModel):
     """
     __tablename__ = "company_password_policies"
     
-    company_id = Column(GUID(), nullable=False, unique=True, index=True)
+    company_id = Column(String, nullable=False, unique=True, index=True)
     
     # Password requirements
     min_length = Column(Integer, nullable=False, default=8)
@@ -121,9 +121,9 @@ class CrossCompanyAccess(BaseModel):
     """
     __tablename__ = "cross_company_access"
     
-    user_id = Column(GUID(), nullable=False, index=True)
-    source_company_id = Column(GUID(), nullable=False, index=True)
-    target_company_id = Column(GUID(), nullable=False, index=True)
+    user_id = Column(String, nullable=False, index=True)
+    source_company_id = Column(String, nullable=False, index=True)
+    target_company_id = Column(String, nullable=False, index=True)
     
     # Access details
     access_type = Column(String(50), nullable=False, default="read_only")
@@ -134,7 +134,7 @@ class CrossCompanyAccess(BaseModel):
     expires_at = Column(DateTime, nullable=True)
     
     # Approval
-    approved_by = Column(GUID(), nullable=False)
+    approved_by = Column(String, nullable=False)
     approval_reason = Column(Text, nullable=True)
     
     def __repr__(self) -> str:
@@ -147,9 +147,9 @@ class UserSessionActivity(BaseModel):
     """
     __tablename__ = "user_session_activities"
     
-    session_id = Column(GUID(), nullable=False, index=True)
-    user_id = Column(GUID(), nullable=False, index=True)
-    company_id = Column(GUID(), nullable=False, index=True)
+    session_id = Column(String, nullable=False, index=True)
+    user_id = Column(String, nullable=False, index=True)
+    company_id = Column(String, nullable=False, index=True)
     
     # Activity details
     activity_time = Column(DateTime, nullable=False, default=datetime.utcnow)

@@ -15,6 +15,7 @@ from sqlalchemy import (
     DateTime,
     Enum as SQLEnum,
     ForeignKey,
+    Integer,
     Numeric,
     String,
     Text,
@@ -49,6 +50,81 @@ class PaymentStatus(str, Enum):
     CANCELLED = 'cancelled'
 
 
+class Customer(Base):
+    """Customer model for tracking customer information."""
+    __tablename__ = 'ar_customers'
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    customer_id: Mapped[str] = mapped_column(String(20), unique=True, nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    legal_name: Mapped[Optional[str]] = mapped_column(String(255))
+    customer_type: Mapped[str] = mapped_column(String(50), default='business', index=True)
+    
+    # Contact Information
+    contact_person: Mapped[Optional[str]] = mapped_column(String(255))
+    email: Mapped[Optional[str]] = mapped_column(String(255), index=True)
+    phone: Mapped[Optional[str]] = mapped_column(String(50))
+    
+    # Billing Address
+    billing_address_line1: Mapped[Optional[str]] = mapped_column(String(255))
+    billing_city: Mapped[Optional[str]] = mapped_column(String(100))
+    billing_state: Mapped[Optional[str]] = mapped_column(String(100))
+    billing_postal_code: Mapped[Optional[str]] = mapped_column(String(20))
+    billing_country: Mapped[str] = mapped_column(String(100), default='US')
+    
+    # Financial Information
+    credit_limit: Mapped[Decimal] = mapped_column(Numeric(15, 2), default=0)
+    current_balance: Mapped[Decimal] = mapped_column(Numeric(15, 2), default=0)
+    payment_terms: Mapped[str] = mapped_column(String(50), default='NET30')
+    credit_rating: Mapped[Optional[str]] = mapped_column(String(20))
+    credit_hold: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
+    
+    # Status and Tracking
+    status: Mapped[str] = mapped_column(String(20), default='active', index=True)
+    customer_since: Mapped[Optional[date]] = mapped_column(Date)
+    
+    # YTD Information
+    total_sales_ytd: Mapped[Decimal] = mapped_column(Numeric(15, 2), default=0)
+    total_payments_ytd: Mapped[Decimal] = mapped_column(Numeric(15, 2), default=0)
+    average_days_to_pay: Mapped[int] = mapped_column(Integer, default=0)
+    
+    # Additional Information
+    tax_id: Mapped[Optional[str]] = mapped_column(String(50))
+    tax_exempt: Mapped[bool] = mapped_column(Boolean, default=False)
+    preferred_currency: Mapped[str] = mapped_column(String(3), default='USD')
+    
+    # Notes
+    internal_notes: Mapped[Optional[str]] = mapped_column(Text)
+    
+    # Audit fields
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    created_by: Mapped[Optional[int]] = mapped_column(Integer)
+    updated_by: Mapped[Optional[int]] = mapped_column(Integer)
+    
+    # Relationships
+    invoices: Mapped[List['Invoice']] = relationship('Invoice', back_populates='customer')
+    payments: Mapped[List['Payment']] = relationship('Payment', back_populates='customer')
+    
+    @property
+    def outstanding_balance(self):
+        """Calculate outstanding balance from invoices"""
+        return sum(invoice.balance_due for invoice in self.invoices if invoice.balance_due > 0)
+    
+    @property
+    def overdue_balance(self):
+        """Calculate overdue balance from invoices"""
+        from datetime import date
+        today = date.today()
+        return sum(
+            invoice.balance_due for invoice in self.invoices 
+            if invoice.balance_due > 0 and invoice.due_date < today
+        )
+    
+    def __repr__(self) -> str:
+        return f'<Customer {self.customer_id}: {self.name}>'
+
+
 class Invoice(Base):
     """Invoice model for tracking customer invoices."""
     __tablename__ = 'ar_invoices'
@@ -57,8 +133,8 @@ class Invoice(Base):
     invoice_number: Mapped[str] = mapped_column(String(50), unique=True, index=True, nullable=False)
     
     # Customer information
-    customer_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), ForeignKey('customers.id'), nullable=False)
-    customer: Mapped['Customer'] = relationship('Customer')
+    customer_id: Mapped[int] = mapped_column(Integer, ForeignKey('ar_customers.id'), nullable=False)
+    customer: Mapped['Customer'] = relationship('Customer', back_populates='invoices')
     
     # Invoice details
     issue_date: Mapped[date] = mapped_column(Date, nullable=False, server_default=func.current_date())
@@ -83,9 +159,6 @@ class Invoice(Base):
     terms: Mapped[Optional[str]] = mapped_column(Text)
     notes: Mapped[Optional[str]] = mapped_column(Text)
     
-    # Accounting integration
-    gl_journal_entry_id: Mapped[Optional[UUID]] = mapped_column(PG_UUID(as_uuid=True), ForeignKey('gl_journal_entries.id'))
-    
     # Audit fields
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
@@ -99,15 +172,18 @@ class Invoice(Base):
     payments: Mapped[List['Payment']] = relationship('Payment', back_populates='invoice')
     
     # Created by/updated by
-    created_by_id: Mapped[Optional[UUID]] = mapped_column(PG_UUID(as_uuid=True), ForeignKey('users.id'))
-    updated_by_id: Mapped[Optional[UUID]] = mapped_column(PG_UUID(as_uuid=True), ForeignKey('users.id'))
+    created_by_id: Mapped[Optional[UUID]] = mapped_column(PG_UUID(as_uuid=True))
+    updated_by_id: Mapped[Optional[UUID]] = mapped_column(PG_UUID(as_uuid=True))
     
-    # Constraints
-    __table_args__ = (
-        CheckConstraint('total_amount = subtotal + tax_amount - discount_amount', name='check_invoice_amounts'),
-        CheckConstraint('balance_due = total_amount - amount_paid', name='check_balance_due'),
-        CheckConstraint('amount_paid <= total_amount', name='check_amount_paid'),
-    )
+    @property
+    def days_overdue(self):
+        """Calculate days overdue"""
+        if self.due_date and self.balance_due > 0:
+            from datetime import date
+            today = date.today()
+            if today > self.due_date:
+                return (today - self.due_date).days
+        return 0
     
     def __repr__(self) -> str:
         return f'<Invoice {self.invoice_number} ({self.status})>'
@@ -128,10 +204,6 @@ class InvoiceItem(Base):
     # Amounts
     discount_percent: Mapped[Decimal] = mapped_column(Numeric(5, 2), default=0, nullable=False)
     tax_rate: Mapped[Decimal] = mapped_column(Numeric(5, 2), default=0, nullable=False)
-    
-    # References
-    item_id: Mapped[Optional[UUID]] = mapped_column(PG_UUID(as_uuid=True), ForeignKey('inventory_items.id'))
-    gl_account_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), ForeignKey('gl_accounts.id'), nullable=False)
     
     # Relationships
     invoice: Mapped['Invoice'] = relationship('Invoice', back_populates='invoice_items')
@@ -174,22 +246,19 @@ class Payment(Base):
     amount: Mapped[Decimal] = mapped_column(Numeric(19, 4), nullable=False)
     
     # Payment method
-    payment_method: Mapped[str] = mapped_column(String(50), nullable=False)  # e.g., 'credit_card', 'bank_transfer', 'cash'
+    payment_method: Mapped[str] = mapped_column(String(50), nullable=False)
     transaction_id: Mapped[Optional[str]] = mapped_column(String(100))
     reference_number: Mapped[Optional[str]] = mapped_column(String(100))
     
     # Notes
     notes: Mapped[Optional[str]] = mapped_column(Text)
     
-    # Accounting integration
-    gl_journal_entry_id: Mapped[Optional[UUID]] = mapped_column(PG_UUID(as_uuid=True), ForeignKey('gl_journal_entries.id'))
-    
     # Relationships
     invoice_id: Mapped[Optional[UUID]] = mapped_column(PG_UUID(as_uuid=True), ForeignKey('ar_invoices.id'))
     invoice: Mapped[Optional['Invoice']] = relationship('Invoice', back_populates='payments')
     
-    customer_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), ForeignKey('customers.id'), nullable=False)
-    customer: Mapped['Customer'] = relationship('Customer')
+    customer_id: Mapped[int] = mapped_column(Integer, ForeignKey('ar_customers.id'), nullable=False)
+    customer: Mapped['Customer'] = relationship('Customer', back_populates='payments')
     
     # Audit fields
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
@@ -200,8 +269,8 @@ class Payment(Base):
     )
     
     # Created by/updated by
-    created_by_id: Mapped[Optional[UUID]] = mapped_column(PG_UUID(as_uuid=True), ForeignKey('users.id'))
-    updated_by_id: Mapped[Optional[UUID]] = mapped_column(PG_UUID(as_uuid=True), ForeignKey('users.id'))
+    created_by_id: Mapped[Optional[UUID]] = mapped_column(PG_UUID(as_uuid=True))
+    updated_by_id: Mapped[Optional[UUID]] = mapped_column(PG_UUID(as_uuid=True))
     
     def __repr__(self) -> str:
         return f'<Payment {self.payment_number} ({self.amount})>'
@@ -215,12 +284,12 @@ class CreditNote(Base):
     credit_note_number: Mapped[str] = mapped_column(String(50), unique=True, index=True, nullable=False)
     
     # Customer information
-    customer_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), ForeignKey('customers.id'), nullable=False)
+    customer_id: Mapped[int] = mapped_column(Integer, ForeignKey('ar_customers.id'), nullable=False)
     customer: Mapped['Customer'] = relationship('Customer')
     
     # Credit note details
     issue_date: Mapped[date] = mapped_column(Date, nullable=False, server_default=func.current_date())
-    status: Mapped[str] = mapped_column(String(20), default='open', nullable=False)  # open, applied, expired, void
+    status: Mapped[str] = mapped_column(String(20), default='open', nullable=False)
     
     # Amounts
     total_amount: Mapped[Decimal] = mapped_column(Numeric(19, 4), default=0, nullable=False)
@@ -229,9 +298,6 @@ class CreditNote(Base):
     # References
     reference_invoice_id: Mapped[Optional[UUID]] = mapped_column(PG_UUID(as_uuid=True), ForeignKey('ar_invoices.id'))
     reason: Mapped[Optional[str]] = mapped_column(Text)
-    
-    # Accounting integration
-    gl_journal_entry_id: Mapped[Optional[UUID]] = mapped_column(PG_UUID(as_uuid=True), ForeignKey('gl_journal_entries.id'))
     
     # Audit fields
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
@@ -242,242 +308,8 @@ class CreditNote(Base):
     )
     
     # Created by/updated by
-    created_by_id: Mapped[Optional[UUID]] = mapped_column(PG_UUID(as_uuid=True), ForeignKey('users.id'))
-    updated_by_id: Mapped[Optional[UUID]] = mapped_column(PG_UUID(as_uuid=True), ForeignKey('users.id'))
-    
-    # Relationships
-    credit_note_items: Mapped[List['CreditNoteItem']] = relationship('CreditNoteItem', back_populates='credit_note')
+    created_by_id: Mapped[Optional[UUID]] = mapped_column(PG_UUID(as_uuid=True))
+    updated_by_id: Mapped[Optional[UUID]] = mapped_column(PG_UUID(as_uuid=True))
     
     def __repr__(self) -> str:
         return f'<CreditNote {self.credit_note_number} ({self.total_amount})>'
-    total_sales_ytd = Column(Numeric(15, 2), default=0)
-    total_payments_ytd = Column(Numeric(15, 2), default=0)
-    average_days_to_pay = Column(Integer, default=0)
-    
-    # Additional Information
-    tax_id = Column(String(50))
-    tax_exempt = Column(Boolean, default=False)
-    preferred_currency = Column(String(3), default='USD')
-    preferred_language = Column(String(10), default='en')
-    
-    # Custom Fields
-    custom_fields = Column(JSONB)
-    internal_notes = Column(Text)
-    
-    # Audit fields
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
-    created_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"))
-    updated_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"))
-    
-    # Relationships
-    invoices = relationship("ARInvoice", back_populates="customer", cascade="all, delete-orphan")
-    payments = relationship("ARPayment", back_populates="customer", cascade="all, delete-orphan")
-    
-    # Indexes
-    __table_args__ = (
-        Index('idx_customer_name_type', 'name', 'customer_type'),
-        Index('idx_customer_status_credit', 'status', 'credit_hold'),
-        Index('idx_customer_contact', 'email', 'phone'),
-    )
-
-    @property
-    def outstanding_balance(self):
-        return sum(invoice.balance_due for invoice in self.invoices if invoice.balance_due > 0)
-
-    @property
-    def overdue_balance(self):
-        from datetime import date
-        today = date.today()
-        return sum(
-            invoice.balance_due for invoice in self.invoices 
-            if invoice.balance_due > 0 and invoice.due_date < today
-        )
-
-class ARInvoice(Base):
-    __tablename__ = "ar_invoices"
-
-    id = Column(Integer, primary_key=True, index=True)
-    invoice_number = Column(String(50), unique=True, nullable=False, index=True)
-    customer_id = Column(Integer, ForeignKey("ar_customers.id", ondelete="CASCADE"), nullable=False, index=True)
-    
-    # Invoice Details
-    invoice_date = Column(Date, nullable=False, index=True)
-    due_date = Column(Date, nullable=False, index=True)
-    terms = Column(String(50))
-    po_number = Column(String(100))
-    
-    # Amounts
-    subtotal = Column(Numeric(15, 2), nullable=False, default=0)
-    tax_amount = Column(Numeric(15, 2), default=0)
-    discount_amount = Column(Numeric(15, 2), default=0)
-    total_amount = Column(Numeric(15, 2), nullable=False, default=0)
-    paid_amount = Column(Numeric(15, 2), default=0)
-    balance_due = Column(Numeric(15, 2), default=0)
-    
-    # Status and Tracking
-    status = Column(SQLEnum(InvoiceStatus, name="ar_invoice_status_enum"), default=InvoiceStatus.DRAFT, index=True)
-    sent_date = Column(DateTime(timezone=True))
-    viewed_date = Column(DateTime(timezone=True))
-    
-    # Additional Information
-    notes = Column(Text)
-    terms_conditions = Column(Text)
-    currency_code = Column(String(3), default='USD')
-    exchange_rate = Column(Numeric(15, 6), default=1.0)
-    
-    # Recurring Invoice Information
-    is_recurring = Column(Boolean, default=False, index=True)
-    recurring_frequency = Column(String(20))  # monthly, quarterly, annually
-    next_invoice_date = Column(Date)
-    
-    # Custom Fields
-    custom_fields = Column(JSONB)
-    
-    # Audit fields
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
-    created_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"))
-    updated_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"))
-    
-    # Relationships
-    customer = relationship("Customer", back_populates="invoices")
-    line_items = relationship("ARInvoiceLineItem", back_populates="invoice", cascade="all, delete-orphan")
-    payments = relationship("ARPaymentInvoice", back_populates="invoice", cascade="all, delete-orphan")
-    
-    # Indexes
-    __table_args__ = (
-        Index('idx_ar_invoice_customer_status', 'customer_id', 'status'),
-        Index('idx_ar_invoice_dates', 'invoice_date', 'due_date'),
-        Index('idx_ar_invoice_balance', 'balance_due'),
-    )
-
-    @property
-    def days_overdue(self):
-        if self.due_date and self.balance_due > 0:
-            from datetime import date
-            today = date.today()
-            if today > self.due_date:
-                return (today - self.due_date).days
-        return 0
-
-class ARInvoiceLineItem(Base):
-    __tablename__ = "ar_invoice_line_items"
-
-    id = Column(Integer, primary_key=True)
-    invoice_id = Column(Integer, ForeignKey("ar_invoices.id", ondelete="CASCADE"), nullable=False, index=True)
-    line_number = Column(Integer, nullable=False)
-    
-    # Item Details
-    item_code = Column(String(50))
-    description = Column(Text, nullable=False)
-    quantity = Column(Numeric(15, 4), default=1)
-    unit_price = Column(Numeric(15, 4), nullable=False)
-    
-    # Amounts
-    line_total = Column(Numeric(15, 2), nullable=False)
-    tax_amount = Column(Numeric(15, 2), default=0)
-    discount_amount = Column(Numeric(15, 2), default=0)
-    
-    # Accounting
-    revenue_account_id = Column(Integer, ForeignKey("gl_accounts.id", ondelete="SET NULL"))
-    
-    # Relationships
-    invoice = relationship("ARInvoice", back_populates="line_items")
-    
-    # Indexes
-    __table_args__ = (
-        Index('idx_ar_line_invoice_number', 'invoice_id', 'line_number', unique=True),
-    )
-
-class ARPayment(Base):
-    __tablename__ = "ar_payments"
-
-    id = Column(Integer, primary_key=True, index=True)
-    payment_number = Column(String(50), unique=True, nullable=False, index=True)
-    customer_id = Column(Integer, ForeignKey("ar_customers.id", ondelete="CASCADE"), nullable=False, index=True)
-    
-    # Payment Details
-    payment_date = Column(Date, nullable=False, index=True)
-    payment_method = Column(String(50))
-    reference_number = Column(String(100))
-    amount = Column(Numeric(15, 2), nullable=False)
-    
-    # Status and Processing
-    status = Column(SQLEnum(PaymentStatus, name="ar_payment_status_enum"), default=PaymentStatus.PENDING, index=True)
-    processed_date = Column(DateTime(timezone=True))
-    
-    # Additional Information
-    notes = Column(Text)
-    currency_code = Column(String(3), default='USD')
-    exchange_rate = Column(Numeric(15, 6), default=1.0)
-    
-    # Bank Information
-    bank_account_id = Column(Integer, ForeignKey("bank_accounts.id", ondelete="SET NULL"))
-    
-    # Audit fields
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
-    created_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"))
-    updated_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"))
-    
-    # Relationships
-    customer = relationship("Customer", back_populates="payments")
-    invoice_applications = relationship("ARPaymentInvoice", back_populates="payment", cascade="all, delete-orphan")
-    
-    # Indexes
-    __table_args__ = (
-        Index('idx_ar_payment_customer_date', 'customer_id', 'payment_date'),
-    )
-
-class ARPaymentInvoice(Base):
-    __tablename__ = "ar_payment_invoices"
-
-    id = Column(Integer, primary_key=True)
-    payment_id = Column(Integer, ForeignKey("ar_payments.id", ondelete="CASCADE"), nullable=False, index=True)
-    invoice_id = Column(Integer, ForeignKey("ar_invoices.id", ondelete="CASCADE"), nullable=False, index=True)
-    amount_applied = Column(Numeric(15, 2), nullable=False)
-    
-    # Audit fields
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    
-    # Relationships
-    payment = relationship("ARPayment", back_populates="invoice_applications")
-    invoice = relationship("ARInvoice", back_populates="payments")
-    
-    # Indexes
-    __table_args__ = (
-        Index('idx_ar_payment_invoice', 'payment_id', 'invoice_id', unique=True),
-    )
-
-class CollectionActivity(Base):
-    __tablename__ = "ar_collection_activities"
-
-    id = Column(Integer, primary_key=True)
-    customer_id = Column(Integer, ForeignKey("ar_customers.id", ondelete="CASCADE"), nullable=False, index=True)
-    invoice_id = Column(Integer, ForeignKey("ar_invoices.id", ondelete="CASCADE"), index=True)
-    
-    # Activity Details
-    activity_date = Column(Date, nullable=False, default=func.current_date(), index=True)
-    activity_type = Column(String(50), nullable=False, index=True)  # call, email, letter, meeting
-    status = Column(SQLEnum(CollectionStatus, name="collection_status_enum"), nullable=False, index=True)
-    
-    # Content
-    subject = Column(String(255))
-    description = Column(Text)
-    outcome = Column(Text)
-    
-    # Follow-up
-    follow_up_date = Column(Date, index=True)
-    follow_up_action = Column(String(255))
-    
-    # Audit fields
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    created_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"))
-    
-    # Indexes
-    __table_args__ = (
-        Index('idx_collection_customer_date', 'customer_id', 'activity_date'),
-        Index('idx_collection_status_followup', 'status', 'follow_up_date'),
-    )
->>>>>>> e96df7278ce4216131b6c65d411c0723f4de7f91

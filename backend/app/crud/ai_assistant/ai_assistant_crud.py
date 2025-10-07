@@ -50,9 +50,9 @@ class AIAssistantCRUD:
         
         assistant = AIAssistant(
             tenant_id=tenant_id,
-            model_config=obj_in.model_config or default_config,
+            model_config=obj_in.ai_model_config or default_config,
             enabled_features=obj_in.enabled_features or default_features,
-            **obj_in.dict(exclude={"model_config", "enabled_features"})
+            **obj_in.dict(exclude={"ai_model_config", "enabled_features"})
         )
         
         db.add(assistant)

@@ -17,16 +17,16 @@ from app.schemas.inventory.item import (
     InventoryItemUpdate,
     InventoryItemResponse,
 )
-from app.services.inventory.transfer_service import TransferService
-from app.services.inventory.cycle_count_service import CycleCountService
-from app.services.inventory.barcode_service import BarcodeService
+# Temporarily disabled: from app.services.inventory.transfer_service import TransferService
+# Temporarily disabled: from app.services.inventory.cycle_count_service import CycleCountService
+# Temporarily disabled: from app.services.inventory.barcode_service import BarcodeService
 
 router = APIRouter()
 
-# Initialize services
-transfer_service = TransferService()
-cycle_service = CycleCountService()
-barcode_service = BarcodeService()
+# Initialize services - temporarily disabled to avoid conflicts
+# transfer_service = TransferService()
+# cycle_service = CycleCountService()
+# barcode_service = BarcodeService()
 
 @router.post("/", response_model=InventoryItemResponse, status_code=status.HTTP_201_CREATED)
 async def create_inventory_item(

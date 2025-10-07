@@ -68,6 +68,7 @@ class JournalEntryLine(Base):
 # Vendors (AP)
 class Vendor(Base):
     __tablename__ = 'vendors'
+    __table_args__ = {'extend_existing': True}
     
     id = Column(Integer, primary_key=True, index=True)
     vendor_code = Column(String(20), unique=True, nullable=False)
@@ -111,6 +112,7 @@ class Bill(Base):
 # Customers (AR)
 class Customer(Base):
     __tablename__ = 'customers'
+    __table_args__ = {'extend_existing': True}
     
     id = Column(Integer, primary_key=True, index=True)
     customer_code = Column(String(20), unique=True, nullable=False)
@@ -187,3 +189,16 @@ class TaxCode(Base):
     # Audit fields
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+
+class AccountingRule(Base):
+    __tablename__ = 'accounting_rules'
+    __table_args__ = {'extend_existing': True}
+    
+    id = Column(Integer, primary_key=True, index=True)
+    rule_name = Column(String(255), nullable=False)
+    trigger_event = Column(String(100), nullable=False)
+    conditions = Column(Text)
+    debit_account_id = Column(Integer, ForeignKey('chart_of_accounts.id'))
+    credit_account_id = Column(Integer, ForeignKey('chart_of_accounts.id'))
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=func.now())

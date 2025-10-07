@@ -4,7 +4,7 @@ Payroll AI Module - Handles AI-powered payroll queries and suggestions.
 from typing import Dict, List, Any, Optional
 from datetime import datetime, date
 import logging
-from ...services.ai.module_interface import AIModule, AIResponse
+from ...services.ai.module_interface import AIModule, AIResponse, ModuleResponse
 from ...core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -22,6 +22,20 @@ class PayrollAIModule(AIModule):
             "process_bonuses",
             "handle_overtime"
         ]
+    
+    @property
+    def module_name(self) -> str:
+        """Return the name of the module"""
+        return "payroll"
+    
+    async def handle_query(self, query: str, context: Dict[str, Any]) -> ModuleResponse:
+        """Handle a user query within this module's context"""
+        ai_response = await self.process_query(query, context)
+        return ModuleResponse(
+            response=ai_response.answer,
+            suggestions=[{"text": s, "type": "suggestion"} for s in (ai_response.suggestions or [])],
+            actions=ai_response.actions
+        )
     
     async def process_query(self, query: str, context: Dict[str, Any] = None) -> AIResponse:
         """Process payroll-related queries."""

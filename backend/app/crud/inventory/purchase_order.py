@@ -10,9 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.db.query_helper import QueryHelper
-from app.models.inventory.purchase_order import PurchaseOrder, PurchaseOrderLineItem, PurchaseOrderReceipt, PurchaseOrderReceiptLineItem
-from app.models.inventory.item import InventoryItem
-from app.models.inventory.transaction import InventoryTransaction
+from app.models.inventory import PurchaseOrder, PurchaseOrderLineItem, PurchaseOrderReceipt, PurchaseOrderReceiptLineItem, InventoryItem, InventoryTransaction
 from app.schemas.inventory.purchase_order import PurchaseOrderCreate, PurchaseOrderUpdate, PurchaseOrderReceiptCreate
 
 class PurchaseOrderCRUD:

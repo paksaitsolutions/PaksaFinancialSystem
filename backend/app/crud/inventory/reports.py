@@ -8,8 +8,7 @@ from sqlalchemy import select, func, and_, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.inventory.item import InventoryItem, InventoryCategory
-from app.models.inventory.transaction import InventoryTransaction
+from app.models.inventory import InventoryItem, InventoryCategory, InventoryTransaction
 from app.schemas.inventory.reports import InventoryValueReport, StockLevelReport, TransactionSummary, InventoryAnalytics
 
 class InventoryReportsCRUD:

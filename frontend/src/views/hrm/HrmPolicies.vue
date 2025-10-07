@@ -361,43 +361,17 @@ const breadcrumbItems = ref([
 const loadPolicies = async () => {
   loading.value = true;
   try {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    policies.value = [
-      {
-        id: '1',
-        title: 'Remote Work Policy',
-        description: 'Guidelines and expectations for remote work arrangements',
-        content: '<h2>1. Purpose</h2><p>This policy outlines the guidelines for remote work arrangements...</p>',
-        category: 'remote',
-        effectiveDate: '2023-01-15',
-        status: 'active',
-        createdAt: new Date('2023-01-10'),
-        updatedAt: new Date('2023-01-10')
-      },
-      {
-        id: '2',
-        title: 'Code of Conduct',
-        description: 'Expected behavior and professional standards for all employees',
-        content: '<h2>1. Introduction</h2><p>Our company is committed to maintaining a workplace that is free from discrimination and harassment...</p>',
-        category: 'conduct',
-        effectiveDate: '2022-06-01',
-        status: 'active',
-        createdAt: new Date('2022-05-15'),
-        updatedAt: new Date('2022-11-20')
-      },
-      {
-        id: '3',
-        title: 'Paid Time Off Policy',
-        description: 'Guidelines for requesting and using paid time off',
-        content: '<h2>1. Eligibility</h2><p>All full-time employees are eligible for paid time off...</p>',
-        category: 'leave',
-        effectiveDate: '2023-03-01',
-        status: 'draft',
-        createdAt: new Date('2023-02-15'),
-        updatedAt: new Date('2023-02-28')
-      }
-    ];
+    const response = await fetch('http://localhost:8000/api/v1/hrm/policies/');
+    if (!response.ok) {
+      throw new Error('Failed to fetch policies');
+    }
+    const data = await response.json();
+    policies.value = data.map((policy: any) => ({
+      ...policy,
+      effectiveDate: policy.effective_date,
+      createdAt: new Date(policy.created_at),
+      updatedAt: policy.updated_at ? new Date(policy.updated_at) : null
+    }));
   } catch (error) {
     console.error('Error loading policies:', error);
     toast.add({
@@ -449,39 +423,48 @@ const savePolicy = async () => {
     submitting.value = true;
     
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const payload = {
+        title: policy.value.title,
+        description: policy.value.description,
+        content: policy.value.content,
+        category: policy.value.category,
+        effective_date: policy.value.effectiveDate,
+        status: policy.value.status
+      };
       
+      let response;
       if (editing.value) {
-        const index = policies.value.findIndex(p => p.id === policy.value.id);
-        if (index !== -1) {
-          policies.value[index] = { 
-            ...policy.value,
-            updatedAt: new Date()
-          };
-        }
-        toast.add({
-          severity: 'success',
-          summary: 'Success',
-          detail: 'Policy updated',
-          life: 3000
+        response = await fetch(`http://localhost:8000/api/v1/hrm/policies/${policy.value.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
         });
       } else {
-        const newPolicy: Policy = {
-          ...policy.value,
-          id: Date.now().toString(),
-          createdAt: new Date(),
-          updatedAt: new Date()
-        };
-        policies.value.push(newPolicy);
-        toast.add({
-          severity: 'success',
-          summary: 'Success',
-          detail: 'Policy created',
-          life: 3000
+        response = await fetch('http://localhost:8000/api/v1/hrm/policies/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
         });
       }
       
+      if (!response.ok) {
+        throw new Error('Failed to save policy');
+      }
+      
+      toast.add({
+        severity: 'success',
+        summary: 'Success',
+        detail: editing.value ? 'Policy updated' : 'Policy created',
+        life: 3000
+      });
+      
       policyDialog.value = false;
+      await loadPolicies();
+      
       policy.value = {
         id: null,
         title: '',
@@ -515,9 +498,13 @@ const deletePolicy = async () => {
     deleting.value = true;
     
     try {
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const response = await fetch(`http://localhost:8000/api/v1/hrm/policies/${policy.value.id}`, {
+        method: 'DELETE'
+      });
       
-      policies.value = policies.value.filter(p => p.id !== policy.value.id);
+      if (!response.ok) {
+        throw new Error('Failed to delete policy');
+      }
       
       toast.add({
         severity: 'success',
@@ -525,6 +512,8 @@ const deletePolicy = async () => {
         detail: 'Policy deleted',
         life: 3000
       });
+      
+      await loadPolicies();
     } catch (error) {
       console.error('Error deleting policy:', error);
       toast.add({

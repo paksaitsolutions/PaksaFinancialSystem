@@ -86,25 +86,46 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
 const stats = ref({
-  totalAccounts: 156,
-  journalEntries: 1247,
-  trialBalance: '2,456,789',
-  openPeriods: 3
+  totalAccounts: 0,
+  journalEntries: 0,
+  trialBalance: '0',
+  openPeriods: 0
 })
 
-const recentEntries = ref([
-  { date: '2024-01-15', reference: 'JE001', description: 'Office Rent Payment', amount: '$2,500.00' },
-  { date: '2024-01-14', reference: 'JE002', description: 'Sales Revenue', amount: '$15,000.00' },
-  { date: '2024-01-13', reference: 'JE003', description: 'Equipment Purchase', amount: '$8,500.00' },
-  { date: '2024-01-12', reference: 'JE004', description: 'Utility Expense', amount: '$450.00' },
-  { date: '2024-01-11', reference: 'JE005', description: 'Bank Interest', amount: '$125.00' }
-])
+const recentEntries = ref([])
+const loading = ref(false)
+
+const loadDashboardData = async () => {
+  loading.value = true
+  try {
+    const [statsResponse, entriesResponse] = await Promise.all([
+      fetch('http://localhost:8000/api/v1/gl/dashboard/stats'),
+      fetch('http://localhost:8000/api/v1/gl/dashboard/recent-entries')
+    ])
+    
+    if (statsResponse.ok) {
+      stats.value = await statsResponse.json()
+    }
+    
+    if (entriesResponse.ok) {
+      recentEntries.value = await entriesResponse.json()
+    }
+  } catch (error) {
+    console.error('Error loading dashboard data:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  loadDashboardData()
+})
 
 const navigateToJournalEntry = () => router.push('/accounting/journal-entry')
 const navigateToChartOfAccounts = () => router.push('/gl/chart-of-accounts')

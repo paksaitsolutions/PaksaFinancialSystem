@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.db.query_helper import QueryHelper
-from app.models.tax.tax_rate import TaxRate, TaxExemption, TaxPolicy
+from app.models.tax import TaxRate, TaxExemption, TaxPolicy
 from app.schemas.tax.tax_schemas import (
     TaxRateCreate, TaxRateUpdate, TaxExemptionCreate, TaxExemptionUpdate,
     TaxPolicyCreate, TaxPolicyUpdate, TaxCalculationRequest, TaxCalculationResponse

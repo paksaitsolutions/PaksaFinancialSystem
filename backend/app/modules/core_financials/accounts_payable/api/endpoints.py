@@ -4,7 +4,7 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.database import get_async_db
+from app.core.database import get_db
 from .. import schemas, services
 from ..exceptions import AccountsPayableException
 
@@ -14,13 +14,13 @@ router_bills = APIRouter()
 router_payments = APIRouter()
 
 # --- Dependencies ---
-def get_vendor_service(db: AsyncSession = Depends(get_async_db)) -> services.VendorService:
+def get_vendor_service(db: AsyncSession = Depends(get_db)) -> services.VendorService:
     return services.VendorService(db)
 
-def get_bill_service(db: AsyncSession = Depends(get_async_db)) -> services.BillService:
+def get_bill_service(db: AsyncSession = Depends(get_db)) -> services.BillService:
     return services.BillService(db)
 
-def get_payment_service(db: AsyncSession = Depends(get_async_db)) -> services.PaymentService:
+def get_payment_service(db: AsyncSession = Depends(get_db)) -> services.PaymentService:
     return services.PaymentService(db)
 
 # --- Vendor Endpoints ---

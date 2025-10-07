@@ -2,9 +2,9 @@ from datetime import date
 from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
-from ...models.gl.account import GLAccount
-from ...models.gl.journal_entry import JournalEntry, JournalEntryLine
-from ...schemas.gl.trial_balance import TrialBalance, TrialBalanceEntry
+from app.models.gl_account import GLAccount
+from app.models.gl_models import JournalEntry, JournalEntryLine
+from app.schemas.gl_schemas import TrialBalance, TrialBalanceEntry
 
 class TrialBalanceService:
     @staticmethod

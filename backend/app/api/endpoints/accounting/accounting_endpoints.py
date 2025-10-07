@@ -6,7 +6,7 @@ from uuid import UUID
 
 from sqlalchemy import select, and_
 
-from app.models.accounting.journal_entry import JournalEntry
+from app.models.accounting import JournalEntry
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession

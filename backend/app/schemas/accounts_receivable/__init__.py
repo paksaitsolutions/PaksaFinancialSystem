@@ -1,0 +1,1 @@
+# Accounts Receivable schemas package

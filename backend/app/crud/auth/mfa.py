@@ -2,9 +2,10 @@
 MFA CRUD operations.
 """
 import secrets
-import pyotp
-import qrcode
-import io
+import hashlib
+import hmac
+import struct
+import time
 import base64
 import json
 from typing import List, Optional
@@ -30,7 +31,7 @@ class MFACRUD:
         """Create MFA device."""
         secret_key = None
         if device_data.device_type == "totp":
-            secret_key = pyotp.random_base32()
+            secret_key = base64.b32encode(secrets.token_bytes(20)).decode().rstrip('=')
         
         # Generate backup codes
         backup_codes = [secrets.token_hex(4).upper() for _ in range(10)]
@@ -78,8 +79,7 @@ class MFACRUD:
         if device.device_type != "totp" or not device.secret_key:
             return False
         
-        totp = pyotp.TOTP(device.secret_key)
-        return totp.verify(code, valid_window=1)
+        return self._verify_totp(device.secret_key, code)
     
     async def verify_backup_code(self, db: AsyncSession, device: MFADevice, code: str) -> bool:
         """Verify backup code."""
@@ -123,22 +123,8 @@ class MFACRUD:
         if device.device_type != "totp" or not device.secret_key:
             return None
         
-        totp = pyotp.TOTP(device.secret_key)
-        provisioning_uri = totp.provisioning_uri(
-            name=user_email,
-            issuer_name="Paksa Financial System"
-        )
-        
-        qr = qrcode.QRCode(version=1, box_size=10, border=5)
-        qr.add_data(provisioning_uri)
-        qr.make(fit=True)
-        
-        img = qr.make_image(fill_color="black", back_color="white")
-        buffer = io.BytesIO()
-        img.save(buffer, format='PNG')
-        buffer.seek(0)
-        
-        return base64.b64encode(buffer.getvalue()).decode()
+        provisioning_uri = f"otpauth://totp/Paksa Financial System:{user_email}?secret={device.secret_key}&issuer=Paksa Financial System"
+        return provisioning_uri
     
     async def disable_device(self, db: AsyncSession, device_id: UUID) -> bool:
         """Disable MFA device."""
@@ -148,6 +134,33 @@ class MFACRUD:
             await db.commit()
             return True
         return False
+
+    def _verify_totp(self, secret: str, token: str) -> bool:
+        """Simple TOTP verification."""
+        try:
+            secret = secret.upper()
+            missing_padding = len(secret) % 8
+            if missing_padding:
+                secret += '=' * (8 - missing_padding)
+            
+            key = base64.b32decode(secret)
+            current_time = int(time.time()) // 30
+            
+            for time_window in [current_time - 1, current_time, current_time + 1]:
+                expected = self._generate_totp(key, time_window)
+                if expected == token:
+                    return True
+            return False
+        except:
+            return False
+    
+    def _generate_totp(self, key: bytes, time_counter: int) -> str:
+        """Generate TOTP token."""
+        time_bytes = struct.pack('>Q', time_counter)
+        hmac_hash = hmac.new(key, time_bytes, hashlib.sha1).digest()
+        offset = hmac_hash[-1] & 0x0f
+        truncated = struct.unpack('>I', hmac_hash[offset:offset + 4])[0] & 0x7fffffff
+        return str(truncated % 1000000).zfill(6)
 
 # Create instance
 mfa_crud = MFACRUD()

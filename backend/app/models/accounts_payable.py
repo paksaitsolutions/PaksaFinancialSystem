@@ -6,6 +6,7 @@ from datetime import datetime
 
 class Vendor(Base):
     __tablename__ = "vendors"
+    __table_args__ = {'extend_existing': True}
     
     id = Column(String, primary_key=True)
     company_id = Column(String, ForeignKey("companies.id"), nullable=False)

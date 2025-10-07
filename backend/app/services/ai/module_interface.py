@@ -14,6 +14,14 @@ class ModuleResponse(BaseModel):
     actions: Optional[List[Dict[str, Any]]] = None
     requires_confirmation: bool = False
 
+class AIResponse(BaseModel):
+    """AI response format"""
+    answer: str
+    confidence: float = 1.0
+    metadata: Optional[Dict[str, Any]] = None
+    suggestions: Optional[List[str]] = None
+    actions: Optional[List[Dict[str, Any]]] = None
+
 class AIModule(ABC):
     """Abstract base class for AI module integration"""
     

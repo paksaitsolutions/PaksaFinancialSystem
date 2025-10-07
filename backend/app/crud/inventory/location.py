@@ -8,7 +8,7 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db.query_helper import QueryHelper
-from app.models.inventory.item import InventoryLocation, InventoryItem
+from app.models.inventory import InventoryLocation, InventoryItem
 from app.schemas.inventory.location import InventoryLocationCreate, InventoryLocationUpdate
 
 class InventoryLocationCRUD:

@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.db.query_helper import QueryHelper
-from app.models.inventory.item import InventoryCategory, InventoryItem
+from app.models.inventory import InventoryCategory, InventoryItem
 from app.schemas.inventory.category import InventoryCategoryCreate, InventoryCategoryUpdate
 
 class InventoryCategoryCRUD:

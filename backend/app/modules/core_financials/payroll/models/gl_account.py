@@ -3,7 +3,7 @@ GL Account model for the Payroll module.
 """
 from datetime import date
 from decimal import Decimal
-from sqlalchemy import Column, String, Text, Boolean, Date, Numeric, ForeignKey, Enum
+from sqlalchemy import Column, String, Text, Boolean, Date, Numeric, ForeignKey, Enum, Integer
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 import uuid

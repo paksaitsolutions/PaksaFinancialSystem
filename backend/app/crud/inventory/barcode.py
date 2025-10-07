@@ -7,7 +7,7 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.inventory.item import InventoryItem
+from app.models.inventory import InventoryItem
 
 class BarcodeCRUD:
     """CRUD operations for barcode scanning."""

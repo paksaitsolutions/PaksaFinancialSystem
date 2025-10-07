@@ -10,9 +10,6 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from app.models.base import Base
-# Import only essential models for migration
-from app.models.financial_core import *
-from app.models.user_enhanced import *
 
 # this is the Alembic Config object
 config = context.config

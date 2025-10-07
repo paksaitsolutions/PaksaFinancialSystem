@@ -369,7 +369,7 @@ async def get_customer_statement(
 
 @router.get("/reports/sales-analysis")
 async def get_sales_analysis(
-    period: str = Query("month", regex="^(week|month|quarter|year)$"),
+    period: str = Query("month", pattern="^(week|month|quarter|year)$"),
     customer_id: Optional[int] = Query(None),
     db: Session = Depends(get_db)
 ):

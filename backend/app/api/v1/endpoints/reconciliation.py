@@ -6,12 +6,37 @@ Endpoints to start, track, and complete cash/bank reconciliations.
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query
-from pydantic import BaseModel
+from pydantic import BaseModel as PydanticBaseModel
 from sqlalchemy import select, and_, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.models import Reconciliation, ReconciliationMatch, CashTransaction
+from app.models.reconciliation import Reconciliation
+
+# Create simple models for compatibility
+from sqlalchemy import Column, String, ForeignKey, Numeric, DateTime, Text
+from sqlalchemy.dialects.postgresql import UUID
+from app.models.base import BaseModel as SQLAlchemyBaseModel
+import uuid
+from datetime import datetime
+
+class CashTransaction(SQLAlchemyBaseModel):
+    __tablename__ = "cash_transactions"
+    
+    tenant_id = Column(UUID(as_uuid=True), nullable=False, index=True, default=uuid.uuid4)
+    cash_account_id = Column(UUID(as_uuid=True), nullable=False)
+    transaction_date = Column(DateTime, nullable=False, default=datetime.utcnow)
+    reference = Column(String(100))
+    description = Column(Text)
+    amount = Column(Numeric(15, 2), nullable=False)
+    transaction_type = Column(String(20), default='debit')
+
+class ReconciliationMatch(SQLAlchemyBaseModel):
+    __tablename__ = "reconciliation_matches"
+    
+    tenant_id = Column(UUID(as_uuid=True), nullable=False, index=True, default=uuid.uuid4)
+    reconciliation_id = Column(UUID(as_uuid=True), ForeignKey('reconciliations.id'), nullable=False)
+    cash_transaction_id = Column(UUID(as_uuid=True), ForeignKey('cash_transactions.id'), nullable=False)
 
 router = APIRouter(prefix="/reconciliation", tags=["reconciliation"])
 
@@ -19,7 +44,7 @@ router = APIRouter(prefix="/reconciliation", tags=["reconciliation"])
 DEFAULT_TENANT_ID = "12345678-1234-5678-9012-123456789012"
 
 
-class StartReconciliationRequest(BaseModel):
+class StartReconciliationRequest(PydanticBaseModel):
     account_id: str
     statement_date: str
     opening_balance: float
@@ -126,12 +151,12 @@ async def get_unreconciled_transactions(
     return {"transactions": transactions}
 
 
-class MatchItem(BaseModel):
+class MatchItem(PydanticBaseModel):
     transaction_id: str
     statement_item_ids: Optional[List[str]] = None
 
 
-class MatchRequest(BaseModel):
+class MatchRequest(PydanticBaseModel):
     matches: List[MatchItem]
 
 

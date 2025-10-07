@@ -7,7 +7,7 @@ from typing import Dict, List, Optional
 from datetime import datetime
 
 from app.core.logging import logger
-from app.core.cache import cache_manager
+# from app.core.cache import cache_manager
 
 class ServiceRegistry:
     """Service registry for microservices discovery."""
@@ -28,14 +28,14 @@ class ServiceRegistry:
         }
         
         self.services[service_name] = service_info
-        await cache_manager.set(f"service:{service_name}", service_info, ttl=300)
+        # await cache_manager.set(f"service:{service_name}", service_info, ttl=300)
         logger.info(f"Registered service: {service_name} at {service_url}")
     
     async def get_service(self, service_name: str) -> Optional[Dict]:
         """Get service information."""
-        service_info = await cache_manager.get(f"service:{service_name}")
-        if service_info:
-            return service_info
+        # service_info = await cache_manager.get(f"service:{service_name}")
+        # if service_info:
+        #     return service_info
         return self.services.get(service_name)
     
     async def start_health_checks(self):
@@ -56,7 +56,7 @@ class ServiceRegistry:
                 service_info["status"] = "unhealthy"
             
             service_info["last_health_check"] = datetime.utcnow()
-            await cache_manager.set(f"service:{service_name}", service_info, ttl=300)
+            # await cache_manager.set(f"service:{service_name}", service_info, ttl=300)
 
 class ServiceClient:
     """Client for making requests to microservices."""

@@ -10,7 +10,7 @@ Copyright © 2023 Paksa IT Solutions
 from sqlalchemy import Column, Integer, String, Date, DateTime, Text, ForeignKey, Numeric
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from app.db.base_class import Base
+from app.models.base import Base
 
 class Budget(Base):
     __tablename__ = 'budgets'

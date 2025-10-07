@@ -1,54 +1,47 @@
 """
-Schemas for AI-powered collections insights.
+Collections AI schemas.
 """
-from typing import List, Optional, Dict, Any
-from uuid import UUID
+from typing import List, Optional
+from pydantic import BaseModel, Field
 from datetime import date
-from decimal import Decimal
-from pydantic import BaseModel
+
+class CollectionPredictionRequest(BaseModel):
+    customer_id: str
+    
+class CollectionPredictionResponse(BaseModel):
+    customer_id: str
+    payment_probability: float = Field(..., ge=0, le=1)
+    risk_score: float = Field(..., ge=0, le=1)
+    recommended_action: str
+    
+class OverdueAccountResponse(BaseModel):
+    customer_id: str
+    customer_name: str
+    overdue_amount: float
+    days_overdue: int
+    risk_score: float
 
 class CustomerRiskProfile(BaseModel):
-    """Schema for customer risk assessment."""
-    customer_id: UUID
-    customer_name: str
-    risk_score: float  # 0-100, higher = riskier
-    risk_level: str  # low, medium, high, critical
-    payment_behavior: str
-    days_sales_outstanding: int
-    total_outstanding: Decimal
-    overdue_amount: Decimal
-    payment_history_score: float
-    credit_utilization: float
-    recommended_action: str
+    customer_id: str
+    risk_score: float
+    payment_history: str
+    credit_rating: str
 
 class CollectionPrediction(BaseModel):
-    """Schema for collection probability prediction."""
-    invoice_id: UUID
-    customer_id: UUID
-    invoice_number: str
-    amount: Decimal
-    days_overdue: int
-    collection_probability: float  # 0-1
-    predicted_collection_date: Optional[date] = None
-    recommended_strategy: str
-    confidence_level: float
+    customer_id: str
+    payment_probability: float
+    predicted_payment_date: Optional[date] = None
+    confidence_score: float
 
 class CollectionsInsights(BaseModel):
-    """Schema for overall collections insights."""
-    total_outstanding: Decimal
+    total_overdue: float
     high_risk_customers: int
-    predicted_collections_30_days: Decimal
-    collection_efficiency_score: float
-    top_risks: List[CustomerRiskProfile]
-    urgent_actions: List[Dict[str, Any]]
-    trends: Dict[str, Any]
+    collection_efficiency: float
+    recommendations: List[str]
 
 class CollectionStrategy(BaseModel):
-    """Schema for AI-recommended collection strategy."""
-    customer_id: UUID
-    strategy_type: str  # email, call, legal, discount
-    priority: int  # 1-5
-    message_template: str
-    timing: str
-    expected_outcome: str
-    success_probability: float
+    customer_id: str
+    strategy_type: str
+    priority_level: str
+    recommended_actions: List[str]
+    follow_up_date: date

@@ -8,8 +8,7 @@ from decimal import Decimal
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.inventory.item import InventoryItem
-from app.models.inventory.transaction import InventoryTransaction
+from app.models.inventory import InventoryItem, InventoryTransaction
 from app.schemas.inventory.adjustment import InventoryAdjustmentCreate
 
 class InventoryAdjustmentCRUD:

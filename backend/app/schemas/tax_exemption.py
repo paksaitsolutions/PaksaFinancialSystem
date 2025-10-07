@@ -6,7 +6,7 @@ from ..core.tax.tax_policy_service import TaxType, TaxJurisdiction
 from uuid import UUID
 
 class TaxExemptionBase(BaseModel):
-    exemption_code: str = Field(..., min_length=2, max_length=50, regex=r'^[A-Z0-9-_]+$')
+    exemption_code: str = Field(..., min_length=2, max_length=50, pattern=r'^[A-Z0-9-_]+$')
     description: str
     certificate_required: bool = False
     valid_from: date = Field(default_factory=date.today)

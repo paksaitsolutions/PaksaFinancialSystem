@@ -1,39 +1,48 @@
 import os
 from typing import List
-from pydantic import BaseSettings
+from pydantic import BaseModel, ConfigDict
 
-class Settings(BaseSettings):
-    # Database
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./paksa_financial.db")
-    
-    # Security
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
-    ALGORITHM: str = os.getenv("ALGORITHM", "HS256")
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
-    REFRESH_TOKEN_EXPIRE_DAYS: int = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "7"))
-    
-    # CORS
-    CORS_ORIGINS: List[str] = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://localhost:3003").split(",")
-    
-    # Rate Limiting
-    RATE_LIMIT_PER_MINUTE: int = int(os.getenv("RATE_LIMIT_PER_MINUTE", "60"))
-    MAX_LOGIN_ATTEMPTS: int = int(os.getenv("MAX_LOGIN_ATTEMPTS", "5"))
-    LOCKOUT_DURATION_MINUTES: int = int(os.getenv("LOCKOUT_DURATION_MINUTES", "15"))
-    
-    # Redis
-    REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379")
-    
-    # Email
-    SMTP_HOST: str = os.getenv("SMTP_HOST", "")
-    SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))
-    SMTP_USER: str = os.getenv("SMTP_USER", "")
-    SMTP_PASSWORD: str = os.getenv("SMTP_PASSWORD", "")
-    
-    # Environment
-    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
-    DEBUG: bool = os.getenv("DEBUG", "true").lower() == "true"
-    
-    class Config:
-        env_file = ".env"
+class Settings(BaseModel):
+    DATABASE_URL: str
+    SECRET_KEY: str
+    ALGORITHM: str
+    ACCESS_TOKEN_EXPIRE_MINUTES: int
+    REFRESH_TOKEN_EXPIRE_DAYS: int
+    CORS_ORIGINS: List[str]
+    RATE_LIMIT_PER_MINUTE: int
+    MAX_LOGIN_ATTEMPTS: int
+    LOCKOUT_DURATION_MINUTES: int
+    REDIS_URL: str
+    SMTP_HOST: str
+    SMTP_PORT: int
+    SMTP_USER: str
+    SMTP_PASSWORD: str
+    ENVIRONMENT: str
+    DEBUG: bool
+    PLAID_CLIENT_ID: str
+    PLAID_SECRET: str
+    PLAID_ENVIRONMENT: str
 
-settings = Settings()
+    model_config = ConfigDict(env_file=".env")
+
+settings = Settings(
+    DATABASE_URL=os.getenv("DATABASE_URL", "sqlite:///./paksa_financial.db"),
+    SECRET_KEY=os.getenv("SECRET_KEY", "your-secret-key-change-in-production"),
+    ALGORITHM=os.getenv("ALGORITHM", "HS256"),
+    ACCESS_TOKEN_EXPIRE_MINUTES=int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30")),
+    REFRESH_TOKEN_EXPIRE_DAYS=int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "7")),
+    CORS_ORIGINS=os.getenv("CORS_ORIGINS", "http://localhost:3000,http://localhost:3003").split(","),
+    RATE_LIMIT_PER_MINUTE=int(os.getenv("RATE_LIMIT_PER_MINUTE", "60")),
+    MAX_LOGIN_ATTEMPTS=int(os.getenv("MAX_LOGIN_ATTEMPTS", "5")),
+    LOCKOUT_DURATION_MINUTES=int(os.getenv("LOCKOUT_DURATION_MINUTES", "15")),
+    REDIS_URL=os.getenv("REDIS_URL", "redis://localhost:6379"),
+    SMTP_HOST=os.getenv("SMTP_HOST", ""),
+    SMTP_PORT=int(os.getenv("SMTP_PORT", "587")),
+    SMTP_USER=os.getenv("SMTP_USER", ""),
+    SMTP_PASSWORD=os.getenv("SMTP_PASSWORD", ""),
+    ENVIRONMENT=os.getenv("ENVIRONMENT", "development"),
+    DEBUG=os.getenv("DEBUG", "true").lower() == "true",
+    PLAID_CLIENT_ID=os.getenv("PLAID_CLIENT_ID", ""),
+    PLAID_SECRET=os.getenv("PLAID_SECRET", ""),
+    PLAID_ENVIRONMENT=os.getenv("PLAID_ENVIRONMENT", "sandbox")
+)

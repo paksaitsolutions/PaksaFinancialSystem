@@ -7,9 +7,9 @@ from enum import Enum
 from typing import List, Optional, Union
 from uuid import UUID
 
-from pydantic import BaseModel, Field, validator, root_validator
+from pydantic import BaseModel, Field, field_validator, model_validator, ConfigDict
 
-from schemas.base import BaseSchema
+from app.schemas.base import BaseSchema
 
 
 class InvoiceStatus(str, Enum):
@@ -44,8 +44,10 @@ class InvoiceItemBase(BaseModel):
     discount_percent: Decimal = Field(0, ge=0, le=100, description="Discount percentage (0-100)")
     amount: Decimal = Field(..., gt=0, description="Total amount for this line")
 
-    @validator('amount')
-    def validate_amount(cls, v, values):
+    @field_validator('amount')
+    @classmethod
+    def validate_amount(cls, v, info):
+        values = info.data if hasattr(info, 'data') else {}
         if 'quantity' in values and 'unit_price' in values and 'discount_percent' in values and 'tax_rate' in values:
             calculated = (
                 values['quantity'] * 
@@ -75,8 +77,7 @@ class InvoiceItemInDB(InvoiceItemBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class InvoiceBase(BaseModel):
@@ -89,8 +90,10 @@ class InvoiceBase(BaseModel):
     notes: Optional[str] = Field(None, description="Additional notes")
     items: List[InvoiceItemCreate] = Field(..., min_items=1, description="Invoice line items")
 
-    @validator('due_date')
-    def due_date_after_issue_date(cls, v, values):
+    @field_validator('due_date')
+    @classmethod
+    def due_date_after_issue_date(cls, v, info):
+        values = info.data if hasattr(info, 'data') else {}
         if 'issue_date' in values and v < values['issue_date']:
             raise ValueError("Due date must be on or after the issue date")
         return v
@@ -112,15 +115,16 @@ class InvoiceUpdate(BaseModel):
     status: Optional[InvoiceStatus] = None
     items: Optional[List[Union[InvoiceItemCreate, InvoiceItemUpdate]]] = None
 
-    @root_validator
-    def validate_dates(cls, values):
+    @model_validator(mode='after')
+    def validate_dates(self):
+        values = self.__dict__
         issue_date = values.get('issue_date')
         due_date = values.get('due_date')
         
         if issue_date and due_date and due_date < issue_date:
             raise ValueError("Due date must be on or after the issue date")
             
-        return values
+        return self
 
 
 class InvoiceInDB(BaseSchema):
@@ -150,9 +154,6 @@ class InvoiceInDB(BaseSchema):
     
     # Relationships
     items: List[InvoiceItemInDB] = []
-    
-    class Config:
-        orm_mode = True
 
 
 class PaymentReceiptBase(BaseModel):
@@ -198,9 +199,6 @@ class PaymentReceiptInDB(BaseSchema):
     updated_at: datetime
     created_by_id: UUID
     updated_by_id: UUID
-    
-    class Config:
-        orm_mode = True
 
 
 class InvoiceWithPayments(InvoiceInDB):

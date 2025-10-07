@@ -14,11 +14,11 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID, JSONB
 from sqlalchemy.orm import relationship, validates
 
-<<<<<<< HEAD
+
 from app.models.base import Base
-=======
-from app.core.db.base import Base
->>>>>>> e96df7278ce4216131b6c65d411c0723f4de7f91
+
+
+
 from app.models.gl_models import JournalEntry, JournalEntryStatus, ChartOfAccounts
 
 class RecurrenceFrequency(str, Enum):
@@ -48,9 +48,8 @@ class RecurringJournalStatus(str, Enum):
 class RecurringJournalEntry(Base):
     """Defines a template for recurring journal entries."""
     __tablename__ = "recurring_journal_entries"
-    __table_args__ = (
-        {"comment": "Templates for automatically generating recurring journal entries"}
-    )
+    
+    id = Column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
     
     # Basic information
     name = Column(String(200), nullable=False, comment="Name of the recurring entry")
@@ -200,6 +199,8 @@ class RecurringJournalTemplate(Base):
 class AllocationRule(Base):
     """Rules for allocating amounts across multiple accounts."""
     __tablename__ = "allocation_rules"
+    
+    id = Column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
     
     # Basic information
     name = Column(String(200), nullable=False, comment="Name of the allocation rule")
@@ -351,15 +352,4 @@ class AllocationDestination(Base):
         return f"<AllocationDestination {self.account_id}>"
 
 
-# Add relationships to Company model
-Company.recurring_journal_entries = relationship("RecurringJournalEntry", back_populates="company")
-Company.allocation_rules = relationship("AllocationRule", back_populates="company")
 
-# Add relationship to JournalEntry
-JournalEntry.recurring_journal_id = Column(
-    PG_UUID(as_uuid=True),
-    ForeignKey("recurring_journal_entries.id"),
-    nullable=True,
-    comment="Reference to the recurring journal entry that generated this entry"
-)
-JournalEntry.recurring_journal = relationship("RecurringJournalEntry", back_populates="generated_entries")

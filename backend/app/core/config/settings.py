@@ -19,8 +19,13 @@ class Settings(BaseSettings):
     
     # Security
     SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
+    ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8  # 8 days
     REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 30  # 30 days
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 30
+    RATE_LIMIT_PER_MINUTE: int = 60
+    MAX_LOGIN_ATTEMPTS: int = 5
+    LOCKOUT_DURATION_MINUTES: int = 15
     
     # Database
     DATABASE_URL: str = os.getenv(
@@ -37,8 +42,17 @@ class Settings(BaseSettings):
     SQLALCHEMY_POOL_RECYCLE: int = 3600
     SQLALCHEMY_ECHO: bool = False
     
-    # Redis
-    REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+    # Read Replica Configuration
+    USE_READ_REPLICA: bool = os.getenv("USE_READ_REPLICA", "false").lower() == "true"
+    DATABASE_READ_REPLICA_URL: Optional[str] = os.getenv("DATABASE_READ_REPLICA_URL")
+    DATABASE_REPLICA_URLS: List[str] = []
+    
+    # Redis (disabled for now)
+    REDIS_URL: Optional[str] = None
+    REDIS_HOST: str = os.getenv("REDIS_HOST", "localhost")
+    REDIS_PORT: int = int(os.getenv("REDIS_PORT", "6379"))
+    REDIS_DB: int = int(os.getenv("REDIS_DB", "0"))
+    USE_REDIS: bool = False
     
     # CORS
     BACKEND_CORS_ORIGINS: List[str] = [
@@ -56,10 +70,32 @@ class Settings(BaseSettings):
     SMTP_TLS: bool = True
     SMTP_PORT: Optional[int] = None
     SMTP_HOST: Optional[str] = None
+    SMTP_SERVER: Optional[str] = None
     SMTP_USER: Optional[str] = None
+    SMTP_USERNAME: Optional[str] = None
     SMTP_PASSWORD: Optional[str] = None
     EMAILS_FROM_EMAIL: Optional[str] = None
     EMAILS_FROM_NAME: Optional[str] = None
+    
+    # Banking Integrations
+    PLAID_CLIENT_ID: str = os.getenv("PLAID_CLIENT_ID", "")
+    PLAID_SECRET: str = os.getenv("PLAID_SECRET", "")
+    PLAID_ENVIRONMENT: str = os.getenv("PLAID_ENVIRONMENT", "sandbox")
+    
+    # Tax Integrations
+    AVALARA_ACCOUNT_ID: str = os.getenv("AVALARA_ACCOUNT_ID", "")
+    AVALARA_LICENSE_KEY: str = os.getenv("AVALARA_LICENSE_KEY", "")
+    AVALARA_ENVIRONMENT: str = os.getenv("AVALARA_ENVIRONMENT", "sandbox")
+    TAXJAR_API_TOKEN: str = os.getenv("TAXJAR_API_TOKEN", "")
+    
+    # Payment Integrations
+    STRIPE_SECRET_KEY: str = os.getenv("STRIPE_SECRET_KEY", "")
+    STRIPE_PUBLISHABLE_KEY: str = os.getenv("STRIPE_PUBLISHABLE_KEY", "")
+    PAYPAL_CLIENT_ID: str = os.getenv("PAYPAL_CLIENT_ID", "")
+    PAYPAL_CLIENT_SECRET: str = os.getenv("PAYPAL_CLIENT_SECRET", "")
+    
+    # Notifications
+    SLACK_WEBHOOK_URL: str = os.getenv("SLACK_WEBHOOK_URL", "")
     
     @validator("BACKEND_CORS_ORIGINS", pre=True)
     def assemble_cors_origins(cls, v):

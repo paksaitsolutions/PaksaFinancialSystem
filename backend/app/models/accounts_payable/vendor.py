@@ -14,6 +14,7 @@ class Vendor(Base):
     """Vendor model for managing supplier information."""
     
     __tablename__ = "vendor"
+    __table_args__ = {'extend_existing': True}
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     code = Column(String(20), unique=True, nullable=False, index=True)
@@ -61,6 +62,7 @@ class VendorContact(Base):
     """Contact person for a vendor."""
     
     __tablename__ = "vendor_contact"
+    __table_args__ = {'extend_existing': True}
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     vendor_id = Column(UUID(as_uuid=True), ForeignKey("vendor.id"), nullable=False)

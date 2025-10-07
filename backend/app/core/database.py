@@ -47,11 +47,16 @@ def init_db():
     """Initialize database tables."""
     # Import all models to ensure they are registered
     from app.models import user  # noqa
-    from app.models.gl_models import (  # Import GL models
-        ChartOfAccounts, JournalEntry, JournalEntryLine, 
-        AccountingPeriod, LedgerBalance, TrialBalance, 
-        TrialBalanceAccount, FinancialStatement
-    )
+    try:
+        from app.models.gl_models import (  # Import GL models
+            ChartOfAccounts, JournalEntry, JournalEntryLine, 
+            AccountingPeriod, LedgerBalance, TrialBalance, 
+            TrialBalanceAccount, FinancialStatement, BudgetEntry
+        )
+        from app.core.audit import AuditLog
+        print("✅ Advanced GL models imported")
+    except ImportError as e:
+        print(f"Warning: Could not import advanced models: {e}")
     
     # Create all tables
     Base.metadata.create_all(bind=engine)

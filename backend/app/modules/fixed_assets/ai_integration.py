@@ -4,7 +4,7 @@ Fixed Assets AI Module - Handles AI-powered fixed assets management queries.
 from typing import Dict, List, Any, Optional
 from datetime import datetime, date, timedelta
 import logging
-from ...services.ai.module_interface import AIModule, AIResponse
+from ...services.ai.module_interface import AIModule, AIResponse, ModuleResponse
 from ...core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -23,6 +23,20 @@ class FixedAssetsAIModule(AIModule):
             "schedule_maintenance"
         ]
         self.current_year = date.today().year
+    
+    @property
+    def module_name(self) -> str:
+        """Return the name of the module"""
+        return "fixed_assets"
+    
+    async def handle_query(self, query: str, context: Dict[str, Any]) -> ModuleResponse:
+        """Handle a user query within this module's context"""
+        ai_response = await self.process_query(query, context)
+        return ModuleResponse(
+            response=ai_response.answer,
+            suggestions=[{"text": s, "type": "suggestion"} for s in (ai_response.suggestions or [])],
+            actions=ai_response.actions
+        )
     
     async def process_query(self, query: str, context: Dict[str, Any] = None) -> AIResponse:
         """Process fixed assets related queries."""

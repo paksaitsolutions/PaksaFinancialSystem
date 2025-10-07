@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional, Any, Dict
 from datetime import datetime
 
-from app.api.deps import get_db, get_current_user
+from app.core.deps import get_db, get_current_user
 from app.models.user import User
 from .. import schemas, models
 from ..services import BudgetService

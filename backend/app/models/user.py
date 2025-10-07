@@ -8,7 +8,7 @@ from sqlalchemy import select
 from datetime import datetime
 import uuid
 from app.core.database import Base
-# from app.core.security import verify_password
+from app.core.security import verify_password
 
 
 class User(Base):
@@ -28,21 +28,17 @@ class User(Base):
     last_login = Column(DateTime)
     
     @classmethod
-    async def authenticate(cls, db: Session, email: str, password: str):
+    def authenticate(cls, db: Session, email: str, password: str):
         """Authenticate user by email and password."""
-        result = await db.execute(
-            select(cls).filter(
-                cls.email == email,
-                cls.is_active == True
-            )
-        )
-        user = result.scalar_one_or_none()
+        user = db.query(cls).filter(
+            cls.email == email,
+            cls.is_active == True
+        ).first()
 
-        # if user and verify_password(password, user.hashed_password):
-        if user:  # Temporary fix for migration
+        if user and verify_password(password, user.hashed_password):
             # Update last login
             user.last_login = datetime.utcnow()
-            await db.commit()
+            db.commit()
             return user
 
         return None

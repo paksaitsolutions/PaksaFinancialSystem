@@ -9,7 +9,8 @@ from uuid import UUID, uuid4
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session, joinedload
 
-from app import models, schemas
+from app.models import gl_recurring_models as models
+from app.schemas import gl_recurring_schemas as schemas
 from app.core.config import settings
 from app.core.logging import logger
 from app.services import gl_service

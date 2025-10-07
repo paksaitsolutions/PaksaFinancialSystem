@@ -24,18 +24,22 @@ export interface Company {
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null);
   const currentCompany = ref<Company | null>(null);
-  const token = ref<string | null>(localStorage.getItem('token'));
+  const token = ref<string | null>(localStorage.getItem('token') || sessionStorage.getItem('token'));
   const companies = ref<Company[]>([]);
 
   const isAuthenticated = computed(() => !!token.value && !!user.value);
 
-  const login = async (email: string, password: string) => {
+  const login = async (credentials: { email: string; password: string; remember_me?: boolean }) => {
     try {
-      const response = await api.post('/auth/login', { email, password });
+      const response = await api.post('/auth/login', credentials);
       token.value = response.data.access_token;
       user.value = response.data.user;
       
-      localStorage.setItem('token', token.value);
+      if (credentials.remember_me) {
+        localStorage.setItem('token', token.value);
+      } else {
+        sessionStorage.setItem('token', token.value);
+      }
       
       // Load user companies
       await loadUserCompanies();
@@ -52,6 +56,7 @@ export const useAuthStore = defineStore('auth', () => {
     currentCompany.value = null;
     companies.value = [];
     localStorage.removeItem('token');
+    sessionStorage.removeItem('token');
     localStorage.removeItem('currentCompany');
   };
 

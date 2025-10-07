@@ -15,7 +15,7 @@ class JournalEntryItemBase(BaseModel):
     account_code: str = Field(..., description="Account code for this line item")
     description: Optional[str] = Field(None, description="Description of the line item")
     amount: float = Field(..., gt=0, description="Amount for this line item (always positive)")
-    side: str = Field(..., description="'debit' or 'credit'", regex="^(debit|credit)$")
+    side: str = Field(..., description="'debit' or 'credit'", pattern="^(debit|credit)$")
     
     # Foreign currency information (optional)
     foreign_currency_code: Optional[str] = Field(
@@ -56,7 +56,7 @@ class JournalEntryItemUpdate(BaseModel):
     """Schema for updating a journal entry line item."""
     description: Optional[str] = Field(None, description="Description of the line item")
     amount: Optional[float] = Field(None, gt=0, description="Amount for this line item (always positive)")
-    side: Optional[str] = Field(None, description="'debit' or 'credit'", regex="^(debit|credit)$")
+    side: Optional[str] = Field(None, description="'debit' or 'credit'", pattern="^(debit|credit)$")
     foreign_currency_code: Optional[str] = Field(None, max_length=3)
     foreign_amount: Optional[float] = Field(None, gt=0)
     exchange_rate: Optional[float] = Field(None, gt=0)

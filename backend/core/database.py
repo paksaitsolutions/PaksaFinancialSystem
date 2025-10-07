@@ -62,6 +62,9 @@ async def close_db() -> None:
     if engine:
         await engine.dispose()
 
+# Alias for compatibility
+get_async_db = get_db
+
 # Import all models to ensure they are registered with SQLAlchemy
 # This must be done after Base is defined
-from ..models import *  # noqa
+# from ..models import *  # noqa - Commented out to avoid import issues

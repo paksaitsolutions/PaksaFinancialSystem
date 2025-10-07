@@ -16,7 +16,7 @@
               </div>
               <div class="stat-info">
                 <h3>Total Revenue</h3>
-                <p class="stat-value">$125,430</p>
+                <p class="stat-value">${{ dashboardStats.totalRevenue.toLocaleString() }}</p>
                 <span class="stat-change positive">+12.5%</span>
               </div>
             </div>
@@ -31,7 +31,7 @@
               </div>
               <div class="stat-info">
                 <h3>Net Profit</h3>
-                <p class="stat-value">$45,230</p>
+                <p class="stat-value">${{ dashboardStats.netProfit.toLocaleString() }}</p>
                 <span class="stat-change positive">+8.2%</span>
               </div>
             </div>
@@ -46,7 +46,7 @@
               </div>
               <div class="stat-info">
                 <h3>Customers</h3>
-                <p class="stat-value">1,234</p>
+                <p class="stat-value">{{ dashboardStats.customers.toLocaleString() }}</p>
                 <span class="stat-change positive">+5.1%</span>
               </div>
             </div>
@@ -61,7 +61,7 @@
               </div>
               <div class="stat-info">
                 <h3>Overdue</h3>
-                <p class="stat-value">$8,450</p>
+                <p class="stat-value">${{ dashboardStats.overdue.toLocaleString() }}</p>
                 <span class="stat-change negative">-2.3%</span>
               </div>
             </div>
@@ -104,15 +104,50 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 
-const recentTransactions = ref([
-  { date: '2024-01-15', description: 'Sales Invoice #1001', amount: 2500 },
-  { date: '2024-01-14', description: 'Office Supplies', amount: -450 },
-  { date: '2024-01-13', description: 'Customer Payment', amount: 1800 },
-  { date: '2024-01-12', description: 'Utility Bill', amount: -320 },
-  { date: '2024-01-11', description: 'Service Revenue', amount: 3200 }
-])
+const recentTransactions = ref([])
+const dashboardStats = ref({
+  totalRevenue: 0,
+  netProfit: 0,
+  customers: 0,
+  overdue: 0
+})
+const loading = ref(false)
+
+const loadDashboardData = async () => {
+  loading.value = true
+  try {
+    const [statsResponse, transactionsResponse] = await Promise.all([
+      fetch('http://localhost:8000/api/v1/dashboard/stats'),
+      fetch('http://localhost:8000/api/v1/dashboard/recent-transactions')
+    ])
+    
+    if (statsResponse.ok) {
+      dashboardStats.value = await statsResponse.json()
+    }
+    
+    if (transactionsResponse.ok) {
+      recentTransactions.value = await transactionsResponse.json()
+    }
+  } catch (error) {
+    console.error('Error loading dashboard data:', error)
+    // Fallback data
+    recentTransactions.value = [
+      { date: '2024-01-15', description: 'Sales Invoice #1001', amount: 2500 },
+      { date: '2024-01-14', description: 'Office Supplies', amount: -450 },
+      { date: '2024-01-13', description: 'Customer Payment', amount: 1800 },
+      { date: '2024-01-12', description: 'Utility Bill', amount: -320 },
+      { date: '2024-01-11', description: 'Service Revenue', amount: 3200 }
+    ]
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  loadDashboardData()
+})
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value)

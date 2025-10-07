@@ -8,7 +8,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, validator
 
-from schemas.base import BaseSchema
+# from app.schemas.base import BaseSchema
 
 
 class BillStatus(str, Enum):
@@ -112,7 +112,7 @@ class BillUpdate(BaseModel):
         return v
 
 
-class BillInDB(BaseSchema):
+class BillInDB(BaseModel):
     """Schema for bill in database"""
     id: UUID
     bill_number: str
@@ -168,7 +168,7 @@ class PaymentUpdate(BaseModel):
     is_posted: Optional[bool] = None
 
 
-class PaymentInDB(BaseSchema):
+class PaymentInDB(BaseModel):
     """Schema for payment in database"""
     id: UUID
     payment_number: str

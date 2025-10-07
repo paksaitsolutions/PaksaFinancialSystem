@@ -9,10 +9,11 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.database import get_async_db
-from core.deps import get_current_active_user
-from .. import exceptions, models, schemas, services
-from ...users.models import User
+from app.core.database import get_db
+from app.core.deps import get_current_active_user
+from .. import exceptions, models, schemas
+from ..services import InvoiceService, PaymentService, CreditNoteService, ReportingService
+from app.models.user import User
 
 # Routers for each resource
 router_invoices = APIRouter(prefix="/invoices", tags=["Accounts Receivable - Invoices"])
@@ -25,27 +26,27 @@ router_reports = APIRouter(prefix="/reports", tags=["Accounts Receivable - Repor
 
 # --- Dependencies ---
 def get_invoice_service(
-    db: AsyncSession = Depends(get_async_db),
-) -> services.InvoiceService:
-    return services.InvoiceService(db)
+    db: AsyncSession = Depends(get_db),
+) -> InvoiceService:
+    return InvoiceService(db)
 
 
 def get_payment_service(
-    db: AsyncSession = Depends(get_async_db),
-) -> services.PaymentService:
-    return services.PaymentService(db)
+    db: AsyncSession = Depends(get_db),
+) -> PaymentService:
+    return PaymentService(db)
 
 
 def get_credit_note_service(
-    db: AsyncSession = Depends(get_async_db),
-) -> services.CreditNoteService:
-    return services.CreditNoteService(db)
+    db: AsyncSession = Depends(get_db),
+) -> CreditNoteService:
+    return CreditNoteService(db)
 
 
 def get_reporting_service(
-    db: AsyncSession = Depends(get_async_db),
-) -> services.ReportingService:
-    return services.ReportingService(db)
+    db: AsyncSession = Depends(get_db),
+) -> ReportingService:
+    return ReportingService(db)
 
 
 # --- Invoice Endpoints ---
@@ -54,7 +55,7 @@ def get_reporting_service(
 )
 async def create_invoice(
     invoice_in: schemas.InvoiceCreate,
-    service: services.InvoiceService = Depends(get_invoice_service),
+    service: InvoiceService = Depends(get_invoice_service),
     current_user: User = Depends(get_current_active_user),
 ):
     """Create a new invoice."""
@@ -67,7 +68,7 @@ async def create_invoice(
 @router_invoices.get("/{invoice_id}", response_model=schemas.InvoiceResponse)
 async def get_invoice(
     invoice_id: UUID,
-    service: services.InvoiceService = Depends(get_invoice_service),
+    service: InvoiceService = Depends(get_invoice_service),
 ):
     """Get an invoice by ID."""
     invoice = await service.get_invoice(invoice_id)

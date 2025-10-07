@@ -1,11 +1,13 @@
 from sqlalchemy import Column, String, Numeric, Date, ForeignKey, Text
 from sqlalchemy.orm import relationship
-from .base import BaseModel, GUID
+from sqlalchemy.dialects.postgresql import UUID
+from .base import BaseModel
+import uuid
 
 class JournalEntry(BaseModel):
     __tablename__ = "journal_entries"
     
-    tenant_id = Column(GUID(), nullable=False, index=True)
+    tenant_id = Column(UUID(as_uuid=True), nullable=False, index=True, default=uuid.uuid4)
     entry_number = Column(String(50), nullable=False, unique=True)
     entry_date = Column(Date, nullable=False)
     description = Column(Text)
@@ -20,9 +22,9 @@ class JournalEntry(BaseModel):
 class JournalEntryLine(BaseModel):
     __tablename__ = "journal_entry_lines"
     
-    tenant_id = Column(GUID(), nullable=False, index=True)
-    journal_entry_id = Column(GUID(), ForeignKey('journal_entries.id'), nullable=False)
-    account_id = Column(GUID(), ForeignKey('gl_accounts.id'), nullable=False)
+    tenant_id = Column(UUID(as_uuid=True), nullable=False, index=True, default=uuid.uuid4)
+    journal_entry_id = Column(UUID(as_uuid=True), ForeignKey('journal_entries.id'), nullable=False)
+    account_id = Column(UUID(as_uuid=True), ForeignKey('gl_accounts.id'), nullable=False)
     description = Column(Text)
     debit_amount = Column(Numeric(15, 2), default=0)
     credit_amount = Column(Numeric(15, 2), default=0)

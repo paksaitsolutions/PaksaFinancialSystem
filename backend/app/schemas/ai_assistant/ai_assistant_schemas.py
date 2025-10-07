@@ -11,7 +11,7 @@ class AIAssistantBase(BaseModel):
     name: str
     description: Optional[str] = None
     language: str = "en"
-    model_config: Optional[Dict[str, Any]] = None
+    ai_model_config: Optional[Dict[str, Any]] = None
     training_data: Optional[Dict[str, Any]] = None
     custom_prompts: Optional[Dict[str, Any]] = None
     enabled_features: Optional[List[str]] = None
@@ -29,8 +29,7 @@ class AIAssistantResponse(AIAssistantBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        orm_mode = True
+    model_config = {"from_attributes": True}
 
 class ChatSessionBase(BaseModel):
     """Base chat session schema."""
@@ -50,8 +49,7 @@ class ChatSessionResponse(ChatSessionBase):
     created_at: datetime
     last_activity: datetime
 
-    class Config:
-        orm_mode = True
+    model_config = {"from_attributes": True}
 
 class ChatMessageBase(BaseModel):
     """Base chat message schema."""
@@ -71,8 +69,7 @@ class ChatMessageResponse(ChatMessageBase):
     processing_time: Optional[int] = None
     created_at: datetime
 
-    class Config:
-        orm_mode = True
+    model_config = {"from_attributes": True}
 
 class ChatRequest(BaseModel):
     """Chat request schema."""
@@ -109,8 +106,7 @@ class AIWorkflowResponse(AIWorkflowBase):
     created_by: UUID
     created_at: datetime
 
-    class Config:
-        orm_mode = True
+    model_config = {"from_attributes": True}
 
 class AIAnalyticsData(BaseModel):
     """AI analytics data schema."""

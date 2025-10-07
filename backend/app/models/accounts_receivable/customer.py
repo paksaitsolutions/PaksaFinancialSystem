@@ -12,6 +12,7 @@ class Customer(Base):
     """Customer model."""
     
     __tablename__ = "customer"
+    __table_args__ = {'extend_existing': True}
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String(200), nullable=False, index=True)

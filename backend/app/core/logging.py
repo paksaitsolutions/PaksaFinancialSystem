@@ -71,3 +71,12 @@ def setup_logging():
     
     logger = logging.getLogger(__name__)
     logger.info("Logging configured successfully")
+
+# Export logger instance
+logger = logging.getLogger("app")
+
+def get_logger(name: str = None) -> logging.Logger:
+    """Get a logger instance."""
+    if name:
+        return logging.getLogger(f"app.{name}")
+    return logger

@@ -6,6 +6,7 @@ from datetime import datetime
 
 class TaxRate(Base):
     __tablename__ = "tax_rates"
+    __table_args__ = {'extend_existing': True}
     
     id = Column(String, primary_key=True)
     company_id = Column(String, ForeignKey("companies.id"), nullable=False)
@@ -18,6 +19,8 @@ class TaxRate(Base):
     expiry_date = Column(DateTime)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+    
+    policies = relationship("TaxPolicy", back_populates="tax_rate")
 
 class TaxJurisdiction(Base):
     __tablename__ = "tax_jurisdictions"
@@ -61,6 +64,21 @@ class TaxReturn(Base):
     status = Column(String(20), default="draft")
     filed_by = Column(String, ForeignKey("users.id"))
     created_at = Column(DateTime, default=datetime.utcnow)
+
+class TaxPolicy(Base):
+    __tablename__ = "tax_policies"
+    
+    id = Column(String, primary_key=True)
+    company_id = Column(String, ForeignKey("companies.id"), nullable=False)
+    policy_name = Column(String(255), nullable=False)
+    policy_type = Column(String(50), nullable=False)
+    tax_rate_id = Column(String, ForeignKey("tax_rates.id"))
+    priority = Column(Integer, default=1)
+    conditions = Column(Text)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    tax_rate = relationship("TaxRate", back_populates="policies")
 
 class TaxCompliance(Base):
     __tablename__ = "tax_compliance"

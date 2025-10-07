@@ -6,9 +6,8 @@ from sqlalchemy.orm import Session
 import io
 import csv
 
-from ....core.database import get_db
-from ....services.gl.trial_balance_service import TrialBalanceService
-from ....schemas.gl.trial_balance import TrialBalanceParams
+from app.core.db.session import get_db
+from app.services.gl.trial_balance_service import TrialBalanceService
 
 router = APIRouter()
 

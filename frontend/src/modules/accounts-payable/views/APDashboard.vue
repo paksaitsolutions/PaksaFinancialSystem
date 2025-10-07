@@ -134,22 +134,43 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 
 const stats = ref({
-  totalPayable: '125,430',
-  overdueBills: 8,
-  activeVendors: 45,
-  monthlyPayments: '89,240'
+  totalPayable: '0',
+  overdueBills: 0,
+  activeVendors: 0,
+  monthlyPayments: '0'
 })
 
-const recentBills = ref([
-  { vendor: 'Office Supplies Co.', billNumber: 'INV-001', dueDate: '2024-01-20', amount: '$1,250.00', status: 'pending' },
-  { vendor: 'Tech Solutions Ltd.', billNumber: 'INV-002', dueDate: '2024-01-18', amount: '$3,500.00', status: 'overdue' },
-  { vendor: 'Utility Company', billNumber: 'INV-003', dueDate: '2024-01-25', amount: '$450.00', status: 'pending' },
-  { vendor: 'Marketing Agency', billNumber: 'INV-004', dueDate: '2024-01-15', amount: '$2,800.00', status: 'paid' },
-  { vendor: 'Equipment Rental', billNumber: 'INV-005', dueDate: '2024-01-22', amount: '$850.00', status: 'pending' }
-])
+const recentBills = ref([])
+const loading = ref(false)
+
+const loadDashboardData = async () => {
+  loading.value = true
+  try {
+    const [statsResponse, billsResponse] = await Promise.all([
+      fetch('http://localhost:8000/api/v1/ap/dashboard/stats'),
+      fetch('http://localhost:8000/api/v1/ap/dashboard/recent-bills')
+    ])
+    
+    if (statsResponse.ok) {
+      stats.value = await statsResponse.json()
+    }
+    
+    if (billsResponse.ok) {
+      recentBills.value = await billsResponse.json()
+    }
+  } catch (error) {
+    console.error('Error loading AP dashboard data:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  loadDashboardData()
+})
 
 const getStatusSeverity = (status: string) => {
   switch (status) {

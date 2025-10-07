@@ -10,7 +10,7 @@ class CompanySettingsBase(BaseModel):
     company_address: Optional[str] = None
     
     # Financial Settings
-    base_currency: str = Field(default='USD', regex=r'^[A-Z]{3}$')
+    base_currency: str = Field(default='USD', pattern=r'^[A-Z]{3}$')
     fiscal_year_start: str = Field(default='January')
     decimal_places: int = Field(default=2, ge=0, le=6)
     rounding_method: str = Field(default='round')
@@ -20,7 +20,7 @@ class CompanySettingsBase(BaseModel):
     timezone: str = Field(default='UTC')
     language: str = Field(default='en', max_length=10)
     date_format: str = Field(default='MM/DD/YYYY')
-    time_format: str = Field(default='12', regex=r'^(12|24)$')
+    time_format: str = Field(default='12', pattern=r'^(12|24)$')
     number_format: str = Field(default='US')
     week_start: str = Field(default='Sunday')
     
@@ -101,7 +101,7 @@ class CompanySettingsUpdate(BaseModel):
     tax_id: Optional[str] = Field(None, max_length=100)
     registration_number: Optional[str] = Field(None, max_length=100)
     company_address: Optional[str] = None
-    base_currency: Optional[str] = Field(None, regex=r'^[A-Z]{3}$')
+    base_currency: Optional[str] = Field(None, pattern=r'^[A-Z]{3}$')
     fiscal_year_start: Optional[str] = None
     decimal_places: Optional[int] = Field(None, ge=0, le=6)
     rounding_method: Optional[str] = None
@@ -109,7 +109,7 @@ class CompanySettingsUpdate(BaseModel):
     timezone: Optional[str] = None
     language: Optional[str] = Field(None, max_length=10)
     date_format: Optional[str] = None
-    time_format: Optional[str] = Field(None, regex=r'^(12|24)$')
+    time_format: Optional[str] = Field(None, pattern=r'^(12|24)$')
     number_format: Optional[str] = None
     week_start: Optional[str] = None
     invoice_prefix: Optional[str] = Field(None, max_length=20)

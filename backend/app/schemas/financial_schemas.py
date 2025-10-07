@@ -9,9 +9,9 @@ from decimal import Decimal
 class ChartOfAccountsBase(BaseModel):
     account_code: str = Field(..., min_length=1, max_length=20)
     account_name: str = Field(..., min_length=1, max_length=255)
-    account_type: str = Field(..., regex="^(Asset|Liability|Equity|Revenue|Expense)$")
+    account_type: str = Field(..., pattern="^(Asset|Liability|Equity|Revenue|Expense)$")
     parent_id: Optional[str] = None
-    normal_balance: str = Field(..., regex="^(Debit|Credit)$")
+    normal_balance: str = Field(..., pattern="^(Debit|Credit)$")
     is_active: bool = True
 
 class ChartOfAccountsCreate(ChartOfAccountsBase):
@@ -77,7 +77,7 @@ class VendorBase(BaseModel):
     vendor_code: str = Field(..., min_length=1, max_length=20)
     vendor_name: str = Field(..., min_length=1, max_length=255)
     contact_person: Optional[str] = Field(None, max_length=255)
-    email: Optional[str] = Field(None, regex=r'^[^@]+@[^@]+\.[^@]+$')
+    email: Optional[str] = Field(None, pattern=r'^[^@]+@[^@]+\.[^@]+$')
     phone: Optional[str] = Field(None, max_length=50)
     address: Optional[str] = None
     tax_id: Optional[str] = Field(None, max_length=50)
@@ -90,7 +90,7 @@ class VendorCreate(VendorBase):
 class VendorUpdate(BaseModel):
     vendor_name: Optional[str] = Field(None, min_length=1, max_length=255)
     contact_person: Optional[str] = Field(None, max_length=255)
-    email: Optional[str] = Field(None, regex=r'^[^@]+@[^@]+\.[^@]+$')
+    email: Optional[str] = Field(None, pattern=r'^[^@]+@[^@]+\.[^@]+$')
     phone: Optional[str] = Field(None, max_length=50)
     address: Optional[str] = None
     payment_terms: Optional[str] = Field(None, max_length=50)
@@ -110,7 +110,7 @@ class CustomerBase(BaseModel):
     customer_code: str = Field(..., min_length=1, max_length=20)
     customer_name: str = Field(..., min_length=1, max_length=255)
     contact_person: Optional[str] = Field(None, max_length=255)
-    email: Optional[str] = Field(None, regex=r'^[^@]+@[^@]+\.[^@]+$')
+    email: Optional[str] = Field(None, pattern=r'^[^@]+@[^@]+\.[^@]+$')
     phone: Optional[str] = Field(None, max_length=50)
     address: Optional[str] = None
     tax_id: Optional[str] = Field(None, max_length=50)
@@ -190,7 +190,7 @@ class InvoiceResponse(BaseModel):
 class PaymentCreate(BaseModel):
     amount: Decimal = Field(..., gt=0)
     payment_date: datetime
-    payment_method: str = Field(..., regex="^(check|wire|ach|credit_card|cash)$")
+    payment_method: str = Field(..., pattern="^(check|wire|ach|credit_card|cash)$")
     reference: Optional[str] = Field(None, max_length=100)
     description: Optional[str] = None
 

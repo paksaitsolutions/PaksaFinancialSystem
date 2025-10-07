@@ -172,7 +172,7 @@ const mainAppRoute: AppRouteRecordRaw = {
       path: '',
       name: 'Dashboard',
       component: () => import('@/views/home/Home.vue'),
-      meta: { title: 'Dashboard' }
+      meta: { title: 'Dashboard', requiresAuth: true }
     },
     // General Ledger - Lazy loaded with chunk names
     {
@@ -180,6 +180,12 @@ const mainAppRoute: AppRouteRecordRaw = {
       name: 'GeneralLedger',
       component: () => import(/* webpackChunkName: "gl-dashboard" */ '@/modules/general-ledger/views/Dashboard.vue'),
       meta: { title: 'General Ledger' }
+    },
+    {
+      path: 'gl/dashboard',
+      name: 'GLDashboard',
+      component: () => import('@/modules/general-ledger/views/Dashboard.vue'),
+      meta: { title: 'GL Dashboard' }
     },
     {
       path: 'gl/chart-of-accounts',
@@ -327,6 +333,24 @@ const mainAppRoute: AppRouteRecordRaw = {
       name: 'ARInvoicesList',
       component: () => import('@/modules/accounts-receivable/views/AccountsReceivableView.vue'),
       meta: { title: 'AR Invoices' }
+    },
+    {
+      path: 'ar/invoices',
+      name: 'ARInvoices',
+      component: () => import('@/modules/accounts-receivable/views/AccountsReceivableView.vue'),
+      meta: { title: 'AR Invoices' }
+    },
+    {
+      path: 'ar/payments',
+      name: 'ARPayments',
+      component: () => import('@/modules/accounts-receivable/views/AccountsReceivableView.vue'),
+      meta: { title: 'AR Payments' }
+    },
+    {
+      path: 'ar/collections',
+      name: 'ARCollections',
+      component: () => import('@/modules/accounts-receivable/views/CollectionsManagementView.vue'),
+      meta: { title: 'AR Collections' }
     },
     {
       path: 'ar/customers',
@@ -671,11 +695,13 @@ router.beforeEach((to, _from, next) => {
   const requiresGuest = to.matched.some(record => record.meta.requiresGuest);
   const token = localStorage.getItem('token') || sessionStorage.getItem('token');
 
+  console.log('Router guard:', { path: to.path, requiresAuth, requiresGuest, hasToken: !!token });
+
   if (requiresAuth && !token) {
-    // Redirect to login if authentication is required but user is not logged in
+    console.log('Redirecting to login - auth required but no token');
     next('/auth/login');
   } else if (requiresGuest && token) {
-    // Redirect to dashboard if user is already logged in and trying to access guest pages
+    console.log('Redirecting to dashboard - guest page but has token');
     next('/');
   } else {
     next();

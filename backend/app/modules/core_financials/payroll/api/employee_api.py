@@ -22,8 +22,8 @@ def get_employees(
     search: Optional[str] = None,
     department: Optional[str] = None,
     is_active: Optional[bool] = None,
-    sort_by: str = Query("last_name", regex="^[a-zA-Z_]+$"),
-    sort_order: str = Query("asc", regex="^(asc|desc)$"),
+    sort_by: str = Query("last_name", pattern="^[a-zA-Z_]+$"),
+    sort_order: str = Query("asc", pattern="^(asc|desc)$"),
     db: Session = Depends(get_db)
 ):
     """

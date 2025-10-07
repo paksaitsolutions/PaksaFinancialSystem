@@ -1,11 +1,12 @@
 from sqlalchemy import Column, String, Numeric, Boolean, Text, ForeignKey
 from sqlalchemy.orm import relationship
-from .base import BaseModel, GUID
+from .base import BaseModel
 
 class Vendor(BaseModel):
     __tablename__ = "vendors"
+    __table_args__ = {'extend_existing': True}
     
-    tenant_id = Column(GUID(), nullable=False, index=True)
+    tenant_id = Column(String, nullable=False, index=True)
     vendor_code = Column(String(20), nullable=False, unique=True)
     vendor_name = Column(String(200), nullable=False)
     contact_person = Column(String(100))
@@ -24,9 +25,10 @@ class Vendor(BaseModel):
 
 class APInvoice(BaseModel):
     __tablename__ = "ap_invoices"
+    __table_args__ = {'extend_existing': True}
     
-    tenant_id = Column(GUID(), nullable=False, index=True)
-    vendor_id = Column(GUID(), ForeignKey('vendors.id'), nullable=False)
+    tenant_id = Column(String, nullable=False, index=True)
+    vendor_id = Column(String, ForeignKey('vendors.id'), nullable=False)
     invoice_number = Column(String(50), nullable=False)
     invoice_date = Column(String(10), nullable=False)
     due_date = Column(String(10))
@@ -40,9 +42,10 @@ class APInvoice(BaseModel):
 
 class APPayment(BaseModel):
     __tablename__ = "ap_payments"
+    __table_args__ = {'extend_existing': True}
     
-    tenant_id = Column(GUID(), nullable=False, index=True)
-    vendor_id = Column(GUID(), ForeignKey('vendors.id'), nullable=False)
+    tenant_id = Column(String, nullable=False, index=True)
+    vendor_id = Column(String, ForeignKey('vendors.id'), nullable=False)
     payment_number = Column(String(50), nullable=False)
     payment_date = Column(String(10), nullable=False)
     amount = Column(Numeric(15, 2), nullable=False)

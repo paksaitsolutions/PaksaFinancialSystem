@@ -1,11 +1,12 @@
 from sqlalchemy import Column, String, Numeric, Boolean, Text, ForeignKey
 from sqlalchemy.orm import relationship
-from .base import BaseModel, GUID
+from .base import BaseModel
 
 class Customer(BaseModel):
     __tablename__ = "customers"
+    __table_args__ = {'extend_existing': True}
     
-    tenant_id = Column(GUID(), nullable=False, index=True)
+    tenant_id = Column(String, nullable=False, index=True)
     customer_code = Column(String(20), nullable=False, unique=True)
     customer_name = Column(String(200), nullable=False)
     contact_person = Column(String(100))
@@ -24,9 +25,10 @@ class Customer(BaseModel):
 
 class ARInvoice(BaseModel):
     __tablename__ = "ar_invoices"
+    __table_args__ = {'extend_existing': True}
     
-    tenant_id = Column(GUID(), nullable=False, index=True)
-    customer_id = Column(GUID(), ForeignKey('customers.id'), nullable=False)
+    tenant_id = Column(String, nullable=False, index=True)
+    customer_id = Column(String, ForeignKey('customers.id'), nullable=False)
     invoice_number = Column(String(50), nullable=False)
     invoice_date = Column(String(10), nullable=False)
     due_date = Column(String(10))
@@ -40,9 +42,10 @@ class ARInvoice(BaseModel):
 
 class ARPayment(BaseModel):
     __tablename__ = "ar_payments"
+    __table_args__ = {'extend_existing': True}
     
-    tenant_id = Column(GUID(), nullable=False, index=True)
-    customer_id = Column(GUID(), ForeignKey('customers.id'), nullable=False)
+    tenant_id = Column(String, nullable=False, index=True)
+    customer_id = Column(String, ForeignKey('customers.id'), nullable=False)
     payment_number = Column(String(50), nullable=False)
     payment_date = Column(String(10), nullable=False)
     amount = Column(Numeric(15, 2), nullable=False)

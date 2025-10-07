@@ -6,6 +6,19 @@ module integration, and response generation.
 from typing import Dict, List, Optional, Any
 from pydantic import BaseModel
 import logging
+from datetime import datetime, timedelta
+from functools import wraps
+
+def handle_ai_errors(func):
+    """Decorator to handle AI errors gracefully"""
+    @wraps(func)
+    async def wrapper(*args, **kwargs):
+        try:
+            return await func(*args, **kwargs)
+        except Exception as e:
+            logger.error(f"Error in {func.__name__}: {str(e)}", exc_info=True)
+            return {"error": str(e), "status": "error"}
+    return wrapper
 
 logger = logging.getLogger(__name__)
 

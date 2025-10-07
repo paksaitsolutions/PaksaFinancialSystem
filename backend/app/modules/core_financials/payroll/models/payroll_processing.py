@@ -6,7 +6,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from datetime import datetime
 
-from app.core.db.base import Base
+from app.core.database import Base
 
 class PayrollRun(Base):
     """
@@ -24,7 +24,7 @@ class PayrollRun(Base):
     total_deductions = Column(Float, default=0.0)
     total_net = Column(Float, default=0.0)
     currency = Column(String(3), default="USD")
-    metadata = Column(JSON, nullable=True)
+    meta_data = Column(JSON, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
@@ -66,7 +66,7 @@ class PayrollItem(Base):
     status = Column(String(20), default="pending")  # pending, paid, failed, cancelled
     
     # Metadata
-    metadata = Column(JSON, nullable=True)
+    meta_data = Column(JSON, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     

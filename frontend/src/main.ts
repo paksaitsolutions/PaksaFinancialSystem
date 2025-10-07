@@ -4,6 +4,7 @@ import PrimeVuePlugin from './plugins/primevue'
 
 import App from './App.vue'
 import router from './router'
+import { useAuthStore } from './stores/auth'
 
 // Lazy load PrimeVue theme
 import('primevue/resources/themes/lara-light-blue/theme.css')
@@ -20,6 +21,10 @@ const pinia = createPinia()
 app.use(pinia)
 app.use(router)
 app.use(PrimeVuePlugin)
+
+// Initialize auth store
+const authStore = useAuthStore()
+console.log('Auth store initialized:', { isAuthenticated: authStore.isAuthenticated, token: !!authStore.token })
 
 // Initialize performance optimizations
 document.addEventListener('DOMContentLoaded', () => {

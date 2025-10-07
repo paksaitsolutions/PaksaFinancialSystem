@@ -12,8 +12,8 @@ class TenantCompanyBase(BaseModel):
     # Domain & Branding
     subdomain: str = Field(..., min_length=1, max_length=100)
     logo_url: Optional[str] = Field(None, max_length=500)
-    primary_color: Optional[str] = Field('#1976D2', regex=r'^#[0-9A-Fa-f]{6}$')
-    secondary_color: Optional[str] = Field(None, regex=r'^#[0-9A-Fa-f]{6}$')
+    primary_color: Optional[str] = Field('#1976D2', pattern=r'^#[0-9A-Fa-f]{6}$')
+    secondary_color: Optional[str] = Field(None, pattern=r'^#[0-9A-Fa-f]{6}$')
     
     # Subscription & Limits
     plan: str = Field(..., max_length=50)
@@ -24,7 +24,7 @@ class TenantCompanyBase(BaseModel):
     # Configuration
     timezone: str = Field(default='UTC', max_length=50)
     language: str = Field(default='en', max_length=10)
-    currency: str = Field(default='USD', regex=r'^[A-Z]{3}$')
+    currency: str = Field(default='USD', pattern=r'^[A-Z]{3}$')
     date_format: str = Field(default='MM/DD/YYYY', max_length=20)
     
     # Features & Modules
@@ -89,14 +89,14 @@ class TenantCompanyUpdate(BaseModel):
     size: Optional[str] = Field(None, max_length=50)
     address: Optional[str] = None
     logo_url: Optional[str] = Field(None, max_length=500)
-    primary_color: Optional[str] = Field(None, regex=r'^#[0-9A-Fa-f]{6}$')
-    secondary_color: Optional[str] = Field(None, regex=r'^#[0-9A-Fa-f]{6}$')
+    primary_color: Optional[str] = Field(None, pattern=r'^#[0-9A-Fa-f]{6}$')
+    secondary_color: Optional[str] = Field(None, pattern=r'^#[0-9A-Fa-f]{6}$')
     max_users: Optional[int] = Field(None, ge=1, le=10000)
     storage_limit_gb: Optional[int] = Field(None, ge=1, le=1000)
     api_rate_limit: Optional[int] = Field(None, ge=100, le=100000)
     timezone: Optional[str] = Field(None, max_length=50)
     language: Optional[str] = Field(None, max_length=10)
-    currency: Optional[str] = Field(None, regex=r'^[A-Z]{3}$')
+    currency: Optional[str] = Field(None, pattern=r'^[A-Z]{3}$')
     date_format: Optional[str] = Field(None, max_length=20)
     enabled_modules: Optional[List[str]] = None
     feature_flags: Optional[Dict[str, bool]] = None
@@ -184,7 +184,7 @@ class CompanySubscriptionBase(BaseModel):
     plan_name: str = Field(..., max_length=50)
     billing_cycle: str = Field(default='monthly', max_length=20)
     amount: int = Field(..., ge=0)  # Amount in cents
-    currency: str = Field(default='USD', regex=r'^[A-Z]{3}$')
+    currency: str = Field(default='USD', pattern=r'^[A-Z]{3}$')
     starts_at: datetime
     ends_at: Optional[datetime] = None
     auto_renew: bool = Field(default=True)

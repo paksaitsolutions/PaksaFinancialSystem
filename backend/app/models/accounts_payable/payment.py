@@ -14,7 +14,7 @@ from app.models.enums import PaymentStatus, PaymentMethod
 class APPayment(Base):
     """Payment model for Accounts Payable."""
     
-    __tablename__ = "ap_payment"
+    __tablename__ = "ap_payments"
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     payment_number = Column(String(50), nullable=False, index=True, unique=True)

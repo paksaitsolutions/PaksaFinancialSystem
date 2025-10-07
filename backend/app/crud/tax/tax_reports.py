@@ -8,7 +8,7 @@ from decimal import Decimal
 from sqlalchemy import select, func, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.tax.tax_rate import TaxRate, TaxExemption
+from app.models.tax import TaxRate, TaxExemption
 
 class TaxReportsCRUD:
     """CRUD operations for tax reports."""

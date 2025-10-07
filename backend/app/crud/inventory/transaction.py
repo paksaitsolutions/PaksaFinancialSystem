@@ -10,8 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.db.query_helper import QueryHelper
-from app.models.inventory.transaction import InventoryTransaction
-from app.models.inventory.item import InventoryItem, InventoryLocation
+from app.models.inventory import InventoryTransaction, InventoryItem, InventoryLocation
 
 class InventoryTransactionCRUD:
     """CRUD operations for inventory transactions."""

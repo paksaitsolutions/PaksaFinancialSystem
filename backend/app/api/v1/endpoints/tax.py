@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 # Request and Response Models
 class TaxRuleCreate(BaseModel):
-    code: str = Field(..., min_length=2, max_length=50, regex=r'^[A-Z0-9-_]+$')
+    code: str = Field(..., min_length=2, max_length=50, pattern=r'^[A-Z0-9-_]+$')
     name: str = Field(..., min_length=2, max_length=100)
     description: Optional[str] = None
     type: TaxType
@@ -52,7 +52,7 @@ class TaxRuleResponse(TaxRule):
     updated_by: str
 
 class TaxExemptionCreate(BaseModel):
-    exemption_code: str = Field(..., min_length=2, max_length=50, regex=r'^[A-Z0-9-_]+$')
+    exemption_code: str = Field(..., min_length=2, max_length=50, pattern=r'^[A-Z0-9-_]+$')
     description: str
     certificate_required: bool = False
     valid_from: date = Field(default_factory=date.today)

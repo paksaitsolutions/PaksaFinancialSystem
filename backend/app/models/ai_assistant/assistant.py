@@ -61,7 +61,7 @@ class ChatMessage(Base):
     
     message_type = Column(String(20), nullable=False)  # user, assistant, system
     content = Column(Text, nullable=False)
-    metadata = Column(JSON)  # Additional message metadata
+    meta_data = Column(JSON)  # Additional message metadata
     
     # AI Response data
     confidence_score = Column(String(10))

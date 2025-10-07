@@ -18,7 +18,7 @@ router = APIRouter()
 # Cache Management
 @router.get("/cache/stats")
 async def get_cache_stats(
-    _: bool = Depends(require_permission(Permission.ADMIN))
+    _: bool = Depends(require_permission(Permission.ADMIN_READ))
 ) -> Any:
     """Get cache statistics."""
     try:
@@ -36,7 +36,7 @@ async def get_cache_stats(
 @router.delete("/cache/tenant/{tenant_id}")
 async def clear_tenant_cache(
     tenant_id: str,
-    _: bool = Depends(require_permission(Permission.ADMIN))
+    _: bool = Depends(require_permission(Permission.ADMIN_WRITE))
 ) -> Any:
     """Clear cache for specific tenant."""
     try:
@@ -113,7 +113,7 @@ async def schedule_batch(
 # Database Sharding
 @router.get("/sharding/stats")
 async def get_sharding_stats(
-    _: bool = Depends(require_permission(Permission.ADMIN))
+    _: bool = Depends(require_permission(Permission.ADMIN_READ))
 ) -> Any:
     """Get database sharding statistics."""
     try:
@@ -125,7 +125,7 @@ async def get_sharding_stats(
 @router.get("/sharding/tenant/{tenant_id}/shard")
 async def get_tenant_shard(
     tenant_id: str,
-    _: bool = Depends(require_permission(Permission.ADMIN))
+    _: bool = Depends(require_permission(Permission.ADMIN_READ))
 ) -> Any:
     """Get shard assignment for tenant."""
     try:

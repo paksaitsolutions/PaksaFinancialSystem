@@ -11,8 +11,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.db.query_helper import QueryHelper
-from app.models.accounting.chart_of_accounts import ChartOfAccounts, FinancialPeriod, AccountingRule
-from app.models.accounting.journal_entry import JournalEntry, JournalEntryLine
+from app.models.accounting import ChartOfAccounts, JournalEntry, JournalEntryLine, AccountingRule
+from app.models.financial_core import FinancialPeriod
+from app.models.base import BaseModel
 from app.schemas.accounting.accounting_schemas import (
     ChartOfAccountsCreate, ChartOfAccountsUpdate,
     JournalEntryCreate, JournalEntryUpdate,

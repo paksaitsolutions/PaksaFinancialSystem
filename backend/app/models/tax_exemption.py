@@ -20,7 +20,7 @@ class TaxExemption(Base):
     valid_to = Column(Date, nullable=True)
     tax_types = Column(JSON, nullable=False)  # List of tax types this exemption applies to
     jurisdictions = Column(JSON, nullable=False)  # List of jurisdictions where this exemption is valid
-    metadata = Column(JSON, default=dict)
+    meta_data = Column(JSON, default=dict)
     
     # Relationships
     company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id"), nullable=True)

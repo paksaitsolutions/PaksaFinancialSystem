@@ -31,7 +31,7 @@ class RedisManager:
     
     async def initialize(self):
         """Initialize the Redis connection pool."""
-        if not self._initialized:
+        if not self._initialized and settings.REDIS_URL:
             try:
                 self._redis = await aioredis.from_url(
                     settings.REDIS_URL,
@@ -42,12 +42,13 @@ class RedisManager:
                 logger.info("Redis connection pool initialized")
             except Exception as e:
                 logger.error(f"Failed to initialize Redis: {e}")
-                raise
+                self._redis = None
+                self._initialized = False
     
     @property
-    async def redis(self) -> aioredis.Redis:
+    async def redis(self) -> Optional[aioredis.Redis]:
         """Get a Redis client from the pool."""
-        if not self._initialized:
+        if not self._initialized and settings.REDIS_URL:
             await self.initialize()
         return self._redis
     
@@ -84,7 +85,7 @@ async def cache(
         @functools.wraps(func)
         async def wrapper(*args, **kwargs):
             # Skip caching if Redis is not available
-            if not settings.REDIS_URL:
+            if not getattr(settings, 'USE_REDIS', False) or not settings.REDIS_URL:
                 return await func(*args, **kwargs)
                 
             # Build cache key
@@ -100,10 +101,11 @@ async def cache(
             # Try to get from cache
             try:
                 redis = await redis_manager.redis()
-                cached = await redis.get(f"cache:{cache_key}")
-                if cached is not None:
-                    logger.debug(f"Cache hit for key: {cache_key}")
-                    return deserialize(cached)
+                if redis:
+                    cached = await redis.get(f"cache:{cache_key}")
+                    if cached is not None:
+                        logger.debug(f"Cache hit for key: {cache_key}")
+                        return deserialize(cached)
             except Exception as e:
                 logger.warning(f"Cache get error: {e}")
             
@@ -112,12 +114,13 @@ async def cache(
             
             try:
                 redis = await redis_manager.redis()
-                await redis.set(
-                    f"cache:{cache_key}",
-                    serialize(result),
-                    ex=ttl
-                )
-                logger.debug(f"Cached result for key: {cache_key}")
+                if redis:
+                    await redis.set(
+                        f"cache:{cache_key}",
+                        serialize(result),
+                        ex=ttl
+                    )
+                    logger.debug(f"Cached result for key: {cache_key}")
             except Exception as e:
                 logger.warning(f"Cache set error: {e}")
             
@@ -145,7 +148,7 @@ class ReportManager:
     @staticmethod
     async def store_report_status(report_id: str, status: str, result: Any = None, error: str = None):
         """Store report generation status in Redis."""
-        if not settings.REDIS_URL:
+        if not getattr(settings, 'USE_REDIS', False) or not settings.REDIS_URL:
             return
             
         try:
@@ -167,7 +170,7 @@ class ReportManager:
     @staticmethod
     async def get_report_status(report_id: str) -> Dict[str, Any]:
         """Get report generation status from Redis."""
-        if not settings.REDIS_URL:
+        if not getattr(settings, 'USE_REDIS', False) or not settings.REDIS_URL:
             return {"status": "not_found", "error": "Redis not configured"}
             
         try:
@@ -183,7 +186,7 @@ class ReportManager:
     @staticmethod
     async def store_report_chunk(report_id: str, chunk_id: int, data: Any):
         """Store a chunk of report data in Redis."""
-        if not settings.REDIS_URL:
+        if not getattr(settings, 'USE_REDIS', False) or not settings.REDIS_URL:
             return
             
         try:
@@ -200,7 +203,7 @@ class ReportManager:
     @staticmethod
     async def get_report_chunks(report_id: str) -> List[Dict[str, Any]]:
         """Get all chunks of report data from Redis."""
-        if not settings.REDIS_URL:
+        if not getattr(settings, 'USE_REDIS', False) or not settings.REDIS_URL:
             return []
             
         try:
@@ -214,8 +217,11 @@ class ReportManager:
 # Initialize Redis manager on module import
 async def init_redis():
     """Initialize Redis connection."""
-    if settings.REDIS_URL:
-        await redis_manager.initialize()
+    if getattr(settings, 'USE_REDIS', False) and settings.REDIS_URL:
+        try:
+            await redis_manager.initialize()
+        except Exception as e:
+            logger.warning(f"Redis initialization failed, continuing without Redis: {e}")
 
 # Close Redis connections on shutdown
 async def close_redis():

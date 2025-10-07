@@ -8,7 +8,6 @@ pydantic-settings==2.1.0
 sqlalchemy==2.0.23
 alembic==1.13.1
 psycopg2-binary==2.9.9
-sqlite3
 
 # Authentication and Security
 python-jose[cryptography]==3.3.0
@@ -19,7 +18,6 @@ cryptography==41.0.8
 
 # Session and Cache Management
 redis==5.0.1
-python-redis==0.1.4
 
 # HTTP and API
 httpx==0.25.2

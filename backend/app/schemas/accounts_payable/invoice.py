@@ -6,7 +6,7 @@ from uuid import UUID
 from datetime import date, datetime
 from decimal import Decimal
 
-from pydantic import BaseModel, Field, validator, root_validator
+from pydantic import BaseModel, Field, validator, model_validator
 
 from app.models.enums import InvoiceStatus, PaymentTerms
 
@@ -19,11 +19,13 @@ class InvoiceLineItemBase(BaseModel):
     account_id: UUID
     tax_code_id: Optional[UUID] = None
 
-    @root_validator
+    @model_validator(mode='before')
+    @classmethod
     def calculate_amount(cls, values):
         """Calculate amount if not provided."""
-        if values.get('amount') is None and values.get('quantity') is not None and values.get('unit_price') is not None:
-            values['amount'] = values['quantity'] * values['unit_price']
+        if isinstance(values, dict):
+            if values.get('amount') is None and values.get('quantity') is not None and values.get('unit_price') is not None:
+                values['amount'] = values['quantity'] * values['unit_price']
         return values
 
 class InvoiceLineItemCreate(InvoiceLineItemBase):
@@ -45,7 +47,7 @@ class InvoiceLineItemResponse(InvoiceLineItemBase):
     invoice_id: UUID
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class InvoiceBase(BaseModel):
     """Base schema for invoice."""
@@ -100,7 +102,7 @@ class InvoiceResponse(InvoiceBase):
     updated_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class InvoiceListResponse(BaseModel):
     """Schema for invoice list response."""

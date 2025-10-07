@@ -10,6 +10,7 @@ from decimal import Decimal
 
 class ChartOfAccounts(BaseModel, AuditMixin):
     __tablename__ = "chart_of_accounts"
+    __table_args__ = {'extend_existing': True}
     
     account_code = Column(String(20), unique=True, nullable=False, index=True)
     account_name = Column(String(255), nullable=False)
@@ -39,6 +40,7 @@ class ChartOfAccounts(BaseModel, AuditMixin):
 
 class JournalEntry(BaseModel, AuditMixin):
     __tablename__ = "journal_entries"
+    __table_args__ = {'extend_existing': True}
     
     entry_number = Column(String(50), unique=True, nullable=False)
     description = Column(Text, nullable=False)
@@ -69,6 +71,7 @@ class JournalEntry(BaseModel, AuditMixin):
 
 class JournalEntryLine(BaseModel):
     __tablename__ = "journal_entry_lines"
+    __table_args__ = {'extend_existing': True}
     
     journal_entry_id = Column(String, ForeignKey("journal_entries.id"), nullable=False)
     account_id = Column(String, ForeignKey("chart_of_accounts.id"), nullable=False)
@@ -96,6 +99,7 @@ class JournalEntryLine(BaseModel):
 
 class Vendor(BaseModel, AuditMixin):
     __tablename__ = "vendors"
+    __table_args__ = {'extend_existing': True}
     
     vendor_code = Column(String(20), unique=True, nullable=False)
     vendor_name = Column(String(255), nullable=False)
@@ -114,6 +118,7 @@ class Vendor(BaseModel, AuditMixin):
 
 class Customer(BaseModel, AuditMixin):
     __tablename__ = "customers"
+    __table_args__ = {'extend_existing': True}
     
     customer_code = Column(String(20), unique=True, nullable=False)
     customer_name = Column(String(255), nullable=False)
@@ -132,6 +137,7 @@ class Customer(BaseModel, AuditMixin):
 
 class Bill(BaseModel, AuditMixin):
     __tablename__ = "bills"
+    __table_args__ = {'extend_existing': True}
     
     bill_number = Column(String(50), unique=True, nullable=False)
     vendor_id = Column(String, ForeignKey("vendors.id"), nullable=False)
@@ -152,6 +158,7 @@ class Bill(BaseModel, AuditMixin):
 
 class Invoice(BaseModel, AuditMixin):
     __tablename__ = "invoices"
+    __table_args__ = {'extend_existing': True}
     
     invoice_number = Column(String(50), unique=True, nullable=False)
     customer_id = Column(String, ForeignKey("customers.id"), nullable=False)
@@ -228,6 +235,7 @@ class ExchangeRate(BaseModel):
 
 class TaxRate(BaseModel, AuditMixin):
     __tablename__ = "tax_rates"
+    __table_args__ = {'extend_existing': True}
     
     tax_code = Column(String(20), unique=True, nullable=False)
     tax_name = Column(String(100), nullable=False)
@@ -272,6 +280,17 @@ class BankReconciliation(BaseModel, AuditMixin):
     
     # Relationships
     bank_account = relationship("ChartOfAccounts")
+
+class FinancialPeriod(BaseModel, AuditMixin):
+    __tablename__ = "financial_periods"
+    __table_args__ = {'extend_existing': True}
+    
+    period_name = Column(String(50), nullable=False)
+    start_date = Column(DateTime, nullable=False)
+    end_date = Column(DateTime, nullable=False)
+    is_current = Column(Boolean, default=False)
+    is_closed = Column(Boolean, default=False)
+    closed_at = Column(DateTime)
 
 # Indexes for performance
 Index('idx_journal_entry_date', JournalEntry.entry_date)

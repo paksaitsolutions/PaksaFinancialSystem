@@ -38,7 +38,7 @@ class TaxExemptionCertificate(Base):
     document_reference = Column(String(255), nullable=True)
     
     # Metadata
-    metadata = Column(JSONB, default=dict, nullable=False, server_default='{}')
+    meta_data = Column(JSONB, default=dict, nullable=False, server_default='{}')
     notes = Column(Text, nullable=True)
     
     # Audit fields

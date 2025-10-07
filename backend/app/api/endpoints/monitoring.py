@@ -36,14 +36,14 @@ async def health_check(db: AsyncSession = Depends(get_db)) -> Any:
 
 @router.get("/metrics")
 async def get_metrics(
-    _: bool = Depends(require_permission(Permission.ADMIN))
+    _: bool = Depends(require_permission(Permission.ADMIN_READ))
 ) -> Any:
     """Get application metrics."""
     return success_response(data=metrics.get_metrics())
 
 @router.get("/performance")
 async def get_performance_data(
-    _: bool = Depends(require_permission(Permission.ADMIN))
+    _: bool = Depends(require_permission(Permission.ADMIN_READ))
 ) -> Any:
     """Get performance monitoring data."""
     health_data = performance_monitor.check_system_health()
