@@ -5,10 +5,10 @@ python-dotenv>=0.21.0
 pydantic[email]
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
-python-multipart==0.0.6
+python-multipart==0.0.18
 sqlalchemy==2.0.23
 alembic==1.12.1
-pydantic==2.4.2
+pydantic==2.11.7
 pydantic-settings
 python-dateutil==2.8.2
 
@@ -18,7 +18,7 @@ sqlalchemy-utils==0.41.1
 # Authentication
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
-python-multipart==0.0.6
+python-multipart==0.0.18
 
 # API Documentation
 typing-extensions==4.8.0
@@ -29,7 +29,7 @@ pytest-asyncio==0.21.1
 httpx==0.25.1
 
 # Development
-black==23.11.0
+black==24.3.0
 isort==5.12.0
 mypy==1.6.1
 pre-commit==3.5.0
