@@ -1,69 +1,59 @@
-from sqlalchemy import Column, String, DateTime, Boolean, Text, ForeignKey, Integer
-from sqlalchemy.types import DECIMAL as Decimal
+from sqlalchemy import Column, Integer, String, Numeric, DateTime, Text, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
-from .base import Base
-from datetime import datetime
+from sqlalchemy.sql import func
+from app.core.database import Base
 
-class BudgetPlan(Base):
-    __tablename__ = "budget_plans"
-    
-    id = Column(String, primary_key=True)
-    company_id = Column(String, ForeignKey("companies.id"), nullable=False)
-    plan_name = Column(String(255), nullable=False)
-    fiscal_year = Column(Integer, nullable=False)
-    start_date = Column(DateTime, nullable=False)
-    end_date = Column(DateTime, nullable=False)
-    total_budget = Column(Decimal(15, 2), default=0)
-    status = Column(String(20), default="draft")
-    created_by = Column(String, ForeignKey("users.id"))
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+class Budget(Base):
+    __tablename__ = "budgets"
 
-class BudgetLine(Base):
-    __tablename__ = "budget_lines"
-    
-    id = Column(String, primary_key=True)
-    budget_plan_id = Column(String, ForeignKey("budget_plans.id"), nullable=False)
-    account_id = Column(String, ForeignKey("chart_of_accounts.id"), nullable=False)
-    department = Column(String(100))
-    budgeted_amount = Column(Decimal(15, 2), default=0)
-    actual_amount = Column(Decimal(15, 2), default=0)
-    variance = Column(Decimal(15, 2), default=0)
-    notes = Column(Text)
-
-class BudgetForecast(Base):
-    __tablename__ = "budget_forecasts"
-    
-    id = Column(String, primary_key=True)
-    company_id = Column(String, ForeignKey("companies.id"), nullable=False)
-    forecast_name = Column(String(255), nullable=False)
-    forecast_period = Column(String(50))
-    projected_revenue = Column(Decimal(15, 2), default=0)
-    projected_expenses = Column(Decimal(15, 2), default=0)
-    net_projection = Column(Decimal(15, 2), default=0)
-    confidence_level = Column(String(20))
-    created_at = Column(DateTime, default=datetime.utcnow)
-
-class BudgetScenario(Base):
-    __tablename__ = "budget_scenarios"
-    
-    id = Column(String, primary_key=True)
-    company_id = Column(String, ForeignKey("companies.id"), nullable=False)
-    scenario_name = Column(String(255), nullable=False)
-    scenario_type = Column(String(50))  # optimistic, pessimistic, realistic
-    base_budget_id = Column(String, ForeignKey("budget_plans.id"))
-    adjustment_factor = Column(Decimal(5, 2), default=1.0)
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(255), nullable=False)
+    type = Column(String(50), nullable=False)  # OPERATIONAL, CAPITAL, PROJECT, DEPARTMENT
+    amount = Column(Numeric(15, 2), nullable=False)
+    period_start = Column(DateTime, nullable=False)
+    period_end = Column(DateTime, nullable=False)
+    status = Column(String(50), default="DRAFT")  # DRAFT, PENDING_APPROVAL, APPROVED, REJECTED
     description = Column(Text)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relationships
+    line_items = relationship("BudgetLineItem", back_populates="budget", cascade="all, delete-orphan")
+    actuals = relationship("BudgetActual", back_populates="budget", cascade="all, delete-orphan")
+
+class BudgetLineItem(Base):
+    __tablename__ = "budget_line_items"
+
+    id = Column(Integer, primary_key=True, index=True)
+    budget_id = Column(Integer, ForeignKey("budgets.id"), nullable=False)
+    category = Column(String(100), nullable=False)
+    description = Column(Text)
+    amount = Column(Numeric(15, 2), nullable=False)
+
+    # Relationships
+    budget = relationship("Budget", back_populates="line_items")
+
+class BudgetActual(Base):
+    __tablename__ = "budget_actuals"
+
+    id = Column(Integer, primary_key=True, index=True)
+    budget_id = Column(Integer, ForeignKey("budgets.id"), nullable=False)
+    category = Column(String(100), nullable=False)
+    actual_amount = Column(Numeric(15, 2), nullable=False)
+    period_date = Column(DateTime, nullable=False)
+
+    # Relationships
+    budget = relationship("Budget", back_populates="actuals")
 
 class BudgetApproval(Base):
     __tablename__ = "budget_approvals"
-    
-    id = Column(String, primary_key=True)
-    budget_plan_id = Column(String, ForeignKey("budget_plans.id"), nullable=False)
-    approver_id = Column(String, ForeignKey("users.id"), nullable=False)
-    approval_level = Column(Integer, default=1)
-    status = Column(String(20), default="pending")
-    comments = Column(Text)
-    approved_at = Column(DateTime)
-    created_at = Column(DateTime, default=datetime.utcnow)
+
+    id = Column(Integer, primary_key=True, index=True)
+    budget_id = Column(Integer, ForeignKey("budgets.id"), nullable=False)
+    action = Column(String(20), nullable=False)  # APPROVED, REJECTED
+    notes = Column(Text)
+    approved_by = Column(String(255), nullable=False)
+    approved_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationships
+    budget = relationship("Budget")

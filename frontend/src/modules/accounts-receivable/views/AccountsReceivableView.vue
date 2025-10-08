@@ -82,7 +82,7 @@
               <Button label="Add Customer" icon="pi pi-user-plus" class="w-full mb-2" @click="$router.push('/ar/customers')" />
               <Button label="Record Payment" icon="pi pi-money-bill" class="w-full mb-2 p-button-secondary" @click="recordPayment" />
               <Button label="Send Reminders" icon="pi pi-send" class="w-full mb-2 p-button-success" @click="sendReminders" />
-              <Button label="View Reports" icon="pi pi-chart-bar" class="w-full p-button-info" @click="$router.push('/reports/financial')" />
+              <Button label="View Reports" icon="pi pi-chart-bar" class="w-full p-button-info" @click="$router.push('/ar/reports')" />
             </div>
           </template>
         </Card>
@@ -119,32 +119,52 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useToast } from 'primevue/usetoast'
+import { analyticsService, customerService, invoiceService } from '@/api/arService'
 
 const toast = useToast()
 const invoiceDialog = ref(false)
+const loading = ref(false)
+const dashboardData = ref(null)
+const recentInvoicesData = ref([])
+const customersData = ref([])
 
-const stats = ref({
-  totalReceivable: '185,670',
-  overdueInvoices: 12,
-  activeCustomers: 78,
-  monthlyRevenue: '156,890'
+const stats = computed(() => {
+  if (!dashboardData.value) {
+    return {
+      totalReceivable: '0',
+      overdueInvoices: 0,
+      activeCustomers: 0,
+      monthlyRevenue: '0'
+    }
+  }
+  
+  const kpis = dashboardData.value.kpis
+  return {
+    totalReceivable: formatCurrency(kpis.total_outstanding),
+    overdueInvoices: Math.floor(kpis.overdue_amount / 10000), // Estimate count
+    activeCustomers: kpis.active_customers,
+    monthlyRevenue: formatCurrency(kpis.current_month_collections)
+  }
 })
 
-const recentInvoices = ref([
-  { customer: 'ABC Corporation', invoiceNumber: 'INV-2024-001', dueDate: '2024-01-25', amount: '$5,500.00', status: 'pending' },
-  { customer: 'XYZ Ltd.', invoiceNumber: 'INV-2024-002', dueDate: '2024-01-20', amount: '$3,200.00', status: 'overdue' },
-  { customer: 'Tech Startup Inc.', invoiceNumber: 'INV-2024-003', dueDate: '2024-01-30', amount: '$8,750.00', status: 'pending' },
-  { customer: 'Local Business', invoiceNumber: 'INV-2024-004', dueDate: '2024-01-15', amount: '$1,200.00', status: 'paid' },
-  { customer: 'Enterprise Co.', invoiceNumber: 'INV-2024-005', dueDate: '2024-02-05', amount: '$12,500.00', status: 'pending' }
-])
+const recentInvoices = computed(() => {
+  return recentInvoicesData.value.map(invoice => ({
+    customer: invoice.customer?.name || 'Unknown',
+    invoiceNumber: invoice.invoice_number,
+    dueDate: formatDate(invoice.due_date),
+    amount: formatCurrency(invoice.total_amount),
+    status: invoice.status
+  }))
+})
 
-const customers = ref([
-  { id: 1, name: 'ABC Corporation' },
-  { id: 2, name: 'XYZ Ltd.' },
-  { id: 3, name: 'Tech Startup Inc.' }
-])
+const customers = computed(() => {
+  return customersData.value.map(customer => ({
+    id: customer.id,
+    name: customer.name
+  }))
+})
 
 const invoice = ref({
   customerId: null,
@@ -165,10 +185,23 @@ const openInvoiceDialog = () => {
   invoiceDialog.value = true
 }
 
-const createInvoice = () => {
-  // Simulate invoice creation
-  invoiceDialog.value = false
-  toast.add({ severity: 'success', summary: 'Success', detail: 'Invoice created successfully', life: 3000 })
+const createInvoice = async () => {
+  try {
+    await invoiceService.createInvoice({
+      customer_id: invoice.value.customerId,
+      invoice_date: invoice.value.invoiceDate.toISOString().split('T')[0],
+      due_date: invoice.value.dueDate.toISOString().split('T')[0],
+      total_amount: invoice.value.amount,
+      description: invoice.value.description
+    })
+    
+    invoiceDialog.value = false
+    toast.add({ severity: 'success', summary: 'Success', detail: 'Invoice created successfully', life: 3000 })
+    await loadData() // Refresh data
+  } catch (error) {
+    console.error('Error creating invoice:', error)
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to create invoice', life: 5000 })
+  }
 }
 
 const recordPayment = () => {
@@ -179,6 +212,46 @@ const sendReminders = () => {
   toast.add({ severity: 'info', summary: 'Info', detail: 'Reminders sent to overdue customers', life: 3000 })
 }
 
+const loadData = async () => {
+  loading.value = true
+  try {
+    // Load dashboard analytics
+    dashboardData.value = await analyticsService.getDashboardAnalytics()
+    
+    // Load recent invoices
+    const invoicesResponse = await invoiceService.getInvoices({ limit: 5 })
+    recentInvoicesData.value = invoicesResponse.invoices || []
+    
+    // Load customers
+    const customersResponse = await customerService.getCustomers({ limit: 100 })
+    customersData.value = customersResponse.customers || []
+    
+  } catch (error) {
+    console.error('Error loading data:', error)
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 })
+  } finally {
+    loading.value = false
+  }
+}
+
+const formatCurrency = (amount) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(amount || 0).replace('$', '')
+}
+
+const formatDate = (dateString) => {
+  if (!dateString) return ''
+  return new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  })
+}
+
 const getStatusSeverity = (status: string) => {
   switch (status) {
     case 'paid': return 'success'
@@ -187,6 +260,10 @@ const getStatusSeverity = (status: string) => {
     default: return 'info'
   }
 }
+
+onMounted(() => {
+  loadData()
+})
 </script>
 
 <style scoped>

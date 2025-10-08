@@ -162,13 +162,13 @@ class TaxCalculationService:
         """
         self.db = db
         self.tax_policy_service = tax_policy_service
-        self._cache_enabled = settings.REDIS_URL is not None
+        self._cache_enabled = settings.REDIS_URL is not None and getattr(settings, 'USE_REDIS', False)
         self._cache_ttl = settings.CACHE_TTL_SECONDS if hasattr(settings, 'CACHE_TTL_SECONDS') else 300  # 5 minutes default
         self._last_cache_refresh = datetime.min
         self._local_cache = {}
         
         # Initialize Redis cache if available
-        if self._cache_enabled and not hasattr(self, '_redis_initialized'):
+        if self._cache_enabled and getattr(settings, 'USE_REDIS', False) and not hasattr(self, '_redis_initialized'):
             try:
                 from redis import asyncio as aioredis
                 redis = aioredis.from_url(settings.REDIS_URL)
@@ -178,6 +178,9 @@ class TaxCalculationService:
             except Exception as e:
                 logger.warning(f"Failed to initialize Redis cache: {str(e)}. Using in-memory cache only.")
                 self._cache_enabled = False
+        else:
+            logger.info("Redis is disabled for tax service, using in-memory cache only")
+            self._cache_enabled = False
         
     def _get_db(self) -> Session:
         """Get a database session, creating one if needed."""

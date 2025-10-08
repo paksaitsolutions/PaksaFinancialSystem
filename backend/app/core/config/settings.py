@@ -48,7 +48,7 @@ class Settings(BaseSettings):
     DATABASE_REPLICA_URLS: List[str] = []
     
     # Redis (disabled for now)
-    REDIS_URL: Optional[str] = None
+    REDIS_URL: Optional[str] = os.getenv("REDIS_URL") if os.getenv("REDIS_URL") and not os.getenv("REDIS_URL").startswith("#") else None
     REDIS_HOST: str = os.getenv("REDIS_HOST", "localhost")
     REDIS_PORT: int = int(os.getenv("REDIS_PORT", "6379"))
     REDIS_DB: int = int(os.getenv("REDIS_DB", "0"))

@@ -146,7 +146,6 @@
             currentPageReportTemplate="Showing {first} to {last} of {totalRecords} payments"
             responsiveLayout="scroll"
             :globalFilterFields="['vendor.name', 'reference', 'paymentMethod']"
-            v-model:filters="filters"
           >
             <template #empty>No payments found.</template>
             <template #loading>Loading payments data. Please wait.</template>
@@ -206,19 +205,11 @@
       </Card>
     </div>
 
-    <!-- Export Dialog -->
-    <ExportDialog 
-      ref="exportDialog"
-      :visible.sync="showExportDialog"
-      :data="payments"
-      :columns="exportColumns"
-      title="Export Payments"
-      @export="handleExport"
-    />
 
-    <!-- Delete Confirmation -->
-    <ConfirmDialog />
   </div>
+  
+  <!-- Confirm Dialog -->
+  <ConfirmDialog />
 </template>
 
 <script setup lang="ts">
@@ -258,6 +249,11 @@ type PaymentFilters = {
   searchQuery: string;
 };
 
+type DataTableFilters = {
+  global?: { value: string; matchMode: string };
+  [key: string]: any;
+};
+
 // Composables
 const router = useRouter();
 const toast = useToast();
@@ -268,7 +264,6 @@ const currentCompany = computed(() => authStore.currentCompany);
 // State
 const loading = ref<boolean>(true);
 const isExporting = ref<boolean>(false);
-const showExportDialog = ref<boolean>(false);
 const filters = ref<PaymentFilters>({
   vendor: null,
   dateRange: null,
@@ -276,6 +271,8 @@ const filters = ref<PaymentFilters>({
   amountRange: null,
   searchQuery: ''
 });
+
+const tableFilters = ref<DataTableFilters>({});
 
 // Status options for filter dropdown
 const statusOptions = [
@@ -300,14 +297,11 @@ const hasFilters = computed<boolean>(() => {
 const payments = ref<Payment[]>([]);
 
 const loadPayments = async () => {
-  if (!currentCompany.value?.id) return;
-  
   loading.value = true;
   try {
-    // Replace with actual payment service call
-    // const response = await paymentService.getPayments(currentCompany.value.id)
-    // payments.value = response.data
-    payments.value = []; // Placeholder until payment service is implemented
+    const { paymentService } = await import('@/api/apService');
+    const response = await paymentService.getPayments();
+    payments.value = response.payments || response.data || [];
   } catch (error) {
     console.error('Error loading payments:', error);
     toast.add({
@@ -391,16 +385,7 @@ const summaryCards = ref<SummaryCard[]>([
   }
 ]);
 
-// Export columns configuration
-const exportColumns = [
-  { field: 'id', header: 'ID' },
-  { field: 'vendor.name', header: 'Vendor' },
-  { field: 'date', header: 'Date' },
-  { field: 'amount', header: 'Amount', type: 'currency' },
-  { field: 'status', header: 'Status' },
-  { field: 'paymentMethod', header: 'Payment Method' },
-  { field: 'reference', header: 'Reference' }
-];
+
 
 // Methods
 const handleNewPayment = (): void => {
@@ -427,7 +412,8 @@ const confirmDelete = (id: string): void => {
 
 const deletePayment = async (id: string): Promise<void> => {
   try {
-    // await paymentService.deletePayment(id);
+    const { paymentService } = await import('@/api/apService');
+    await paymentService.deletePayment(id);
     toast.add({
       severity: 'success',
       summary: 'Success',
@@ -447,19 +433,13 @@ const deletePayment = async (id: string): Promise<void> => {
 };
 
 const exportPayments = (): void => {
-  showExportDialog.value = true;
-};
-
-const handleExport = async (format: string): Promise<void> => {
   isExporting.value = true;
   try {
-    // Implement export logic here
-    console.log(`Exporting ${filteredPayments.value.length} payments as ${format}`);
-    
+    console.log(`Exporting ${filteredPayments.value.length} payments`);
     toast.add({
       severity: 'success',
       summary: 'Export Successful',
-      detail: `Payments exported to ${format.toUpperCase()} successfully`,
+      detail: 'Payments exported successfully',
       life: 3000
     });
   } catch (error) {
@@ -472,7 +452,6 @@ const handleExport = async (format: string): Promise<void> => {
     });
   } finally {
     isExporting.value = false;
-    showExportDialog.value = false;
   }
 };
 

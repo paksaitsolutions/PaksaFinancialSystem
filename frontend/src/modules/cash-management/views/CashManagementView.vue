@@ -129,32 +129,51 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useToast } from 'primevue/usetoast'
+import { cashService } from '@/api/cashService'
 
 const toast = useToast()
+const loading = ref(false)
+const dashboardData = ref(null)
+const recentTransactionsData = ref([])
+const bankAccountsData = ref([])
 
-const stats = ref({
-  totalCash: '245,680',
-  bankAccounts: 4,
-  monthlyInflow: '156,890',
-  monthlyOutflow: '89,240'
+const stats = computed(() => {
+  if (!dashboardData.value) {
+    return {
+      totalCash: '0',
+      bankAccounts: 0,
+      monthlyInflow: '0',
+      monthlyOutflow: '0'
+    }
+  }
+  return {
+    totalCash: formatCurrency(dashboardData.value.total_balance).replace('$', ''),
+    bankAccounts: dashboardData.value.account_count,
+    monthlyInflow: '0',
+    monthlyOutflow: '0'
+  }
 })
 
-const recentTransactions = ref([
-  { date: '2024-01-15', description: 'Customer Payment', account: 'Main Checking', type: 'inflow', amount: 5500 },
-  { date: '2024-01-14', description: 'Office Rent', account: 'Main Checking', type: 'outflow', amount: 2500 },
-  { date: '2024-01-13', description: 'Equipment Purchase', account: 'Business Savings', type: 'outflow', amount: 8500 },
-  { date: '2024-01-12', description: 'Service Revenue', account: 'Main Checking', type: 'inflow', amount: 3200 },
-  { date: '2024-01-11', description: 'Utility Payment', account: 'Main Checking', type: 'outflow', amount: 450 }
-])
+const recentTransactions = computed(() => {
+  return recentTransactionsData.value.map(transaction => ({
+    date: formatDate(transaction.transaction_date),
+    description: transaction.memo || 'Transaction',
+    account: transaction.account?.name || 'Unknown Account',
+    type: ['deposit', 'transfer_in'].includes(transaction.transaction_type) ? 'inflow' : 'outflow',
+    amount: parseFloat(transaction.amount)
+  }))
+})
 
-const bankAccounts = ref([
-  { id: 1, name: 'Main Checking', number: '****1234', balance: 125680 },
-  { id: 2, name: 'Business Savings', number: '****5678', balance: 85000 },
-  { id: 3, name: 'Payroll Account', number: '****9012', balance: 25000 },
-  { id: 4, name: 'Tax Reserve', number: '****3456', balance: 10000 }
-])
+const bankAccounts = computed(() => {
+  return bankAccountsData.value.map(account => ({
+    id: account.id,
+    name: account.name,
+    number: account.account_number,
+    balance: parseFloat(account.current_balance)
+  }))
+})
 
 const transactionDialog = ref(false)
 const submitted = ref(false)
@@ -196,18 +215,47 @@ const hideDialog = () => {
   submitted.value = false
 }
 
-const saveTransaction = () => {
+const loadDashboardData = async () => {
+  loading.value = true
+  try {
+    dashboardData.value = await cashService.getDashboard()
+    const accountsResponse = await cashService.getBankAccounts()
+    bankAccountsData.value = accountsResponse.items || accountsResponse || []
+    const transactionsResponse = await cashService.getTransactions({ limit: 10 })
+    recentTransactionsData.value = transactionsResponse.items || transactionsResponse || []
+  } catch (error) {
+    console.error('Error loading dashboard data:', error)
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 })
+  } finally {
+    loading.value = false
+  }
+}
+
+const saveTransaction = async () => {
   submitted.value = true
   if (transaction.value.description && transaction.value.account && transaction.value.amount > 0) {
-    recentTransactions.value.unshift({
-      date: transaction.value.date.toISOString().split('T')[0],
-      description: transaction.value.description,
-      account: transaction.value.account,
-      type: transaction.value.type,
-      amount: transaction.value.type === 'inflow' ? transaction.value.amount : -transaction.value.amount
-    })
-    transactionDialog.value = false
-    toast.add({ severity: 'success', summary: 'Success', detail: 'Transaction recorded', life: 3000 })
+    try {
+      const account = bankAccountsData.value.find(acc => acc.name === transaction.value.account)
+      if (!account) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Account not found', life: 3000 })
+        return
+      }
+      
+      await cashService.createTransaction({
+        account_id: account.id,
+        transaction_date: transaction.value.date.toISOString(),
+        transaction_type: transaction.value.type === 'inflow' ? 'deposit' : 'withdrawal',
+        amount: transaction.value.amount,
+        memo: transaction.value.description
+      })
+      
+      transactionDialog.value = false
+      toast.add({ severity: 'success', summary: 'Success', detail: 'Transaction recorded', life: 3000 })
+      await loadDashboardData()
+    } catch (error) {
+      console.error('Error saving transaction:', error)
+      toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to save transaction', life: 5000 })
+    }
   }
 }
 
@@ -217,6 +265,18 @@ const formatCurrency = (amount: number) => {
     currency: 'USD'
   }).format(amount)
 }
+
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  })
+}
+
+onMounted(() => {
+  loadDashboardData()
+})
 </script>
 
 <style scoped>

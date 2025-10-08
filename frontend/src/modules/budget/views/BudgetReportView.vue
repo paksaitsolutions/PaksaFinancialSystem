@@ -173,15 +173,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
 
-// PrimeVue Components
-import Card from 'primevue/card'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import Button from 'primevue/button'
-import Tag from 'primevue/tag'
-import Dropdown from 'primevue/dropdown'
-import Chart from 'primevue/chart'
-import ProgressBar from 'primevue/progressbar'
+
 
 const toast = useToast()
 
@@ -315,10 +307,12 @@ const getUtilizationClass = (utilization) => {
 }
 
 const generateReport = () => {
+  console.log('Generate report clicked')
   toast.add({ severity: 'info', summary: 'Generating Report', detail: 'Report is being generated...' })
 }
 
 const exportReport = () => {
+  console.log('Export report clicked')
   toast.add({ severity: 'success', summary: 'Export Started', detail: 'Report export has been initiated' })
 }
 

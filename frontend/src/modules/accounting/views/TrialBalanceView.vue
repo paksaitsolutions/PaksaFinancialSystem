@@ -1,53 +1,56 @@
 <template>
-  <AppLayout title="Trial Balance">
-    <v-container>
-      <v-card>
-        <v-card-title>Trial Balance</v-card-title>
-        <v-card-text>
-          <v-data-table
-            :headers="headers"
-            :items="trialBalance"
-            class="elevation-1"
-          >
-            <template v-slot:item.debit="{ item }">
-              {{ item.debit ? formatCurrency(item.debit) : '-' }}
+  <div class="trial-balance p-4">
+    <div class="flex justify-content-between align-items-center mb-4">
+      <div>
+        <h1>Trial Balance</h1>
+        <Breadcrumb :home="home" :model="breadcrumbItems" />
+      </div>
+    </div>
+    <Card>
+      <template #content>
+        <DataTable :value="trialBalance" class="p-datatable-sm">
+          <Column field="account" header="Account" />
+          <Column field="debit" header="Debit">
+            <template #body="{ data }">
+              {{ data.debit ? formatCurrency(data.debit) : '-' }}
             </template>
-            <template v-slot:item.credit="{ item }">
-              {{ item.credit ? formatCurrency(item.credit) : '-' }}
+          </Column>
+          <Column field="credit" header="Credit">
+            <template #body="{ data }">
+              {{ data.credit ? formatCurrency(data.credit) : '-' }}
             </template>
-          </v-data-table>
-          
-          <v-row class="mt-4">
-            <v-col cols="6">
-              <v-card color="blue-lighten-5">
-                <v-card-text>
-                  <div class="text-h6">Total Debits: {{ formatCurrency(totalDebits) }}</div>
-                </v-card-text>
-              </v-card>
-            </v-col>
-            <v-col cols="6">
-              <v-card color="green-lighten-5">
-                <v-card-text>
-                  <div class="text-h6">Total Credits: {{ formatCurrency(totalCredits) }}</div>
-                </v-card-text>
-              </v-card>
-            </v-col>
-          </v-row>
-        </v-card-text>
-      </v-card>
-    </v-container>
-  </AppLayout>
+          </Column>
+        </DataTable>
+        
+        <div class="grid mt-4">
+          <div class="col-6">
+            <Card class="bg-blue-50">
+              <template #content>
+                <div class="text-xl font-semibold">Total Debits: {{ formatCurrency(totalDebits) }}</div>
+              </template>
+            </Card>
+          </div>
+          <div class="col-6">
+            <Card class="bg-green-50">
+              <template #content>
+                <div class="text-xl font-semibold">Total Credits: {{ formatCurrency(totalCredits) }}</div>
+              </template>
+            </Card>
+          </div>
+        </div>
+      </template>
+    </Card>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import AppLayout from '@/layouts/AppLayout.vue'
+import { computed, ref } from 'vue'
 
-const headers = [
-  { title: 'Account', key: 'account' },
-  { title: 'Debit', key: 'debit' },
-  { title: 'Credit', key: 'credit' }
-]
+const home = ref({ icon: 'pi pi-home', to: '/' })
+const breadcrumbItems = ref([
+  { label: 'Accounting', to: '/accounting' },
+  { label: 'Trial Balance' }
+])
 
 const trialBalance = [
   { account: 'Cash', debit: 50000, credit: 0 },

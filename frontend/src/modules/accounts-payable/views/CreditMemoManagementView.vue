@@ -1,139 +1,207 @@
 <template>
   <div class="credit-memo-management">
-    <v-container fluid>
-      <v-row>
-        <v-col cols="12">
-          <h1 class="text-h4 mb-4">Credit Memo Management</h1>
+    <div class="container">
+      <div class="grid">
+        <div class="col-12">
+          <h1 class="mb-4">Credit Memo Management</h1>
           
-          <v-card v-if="selectedCreditMemo && !isCreating && !isApplying">
-            <v-card-text class="pa-0">
-              <div class="d-flex align-center px-4 py-2 bg-grey-lighten-4">
-                <v-btn
-                  variant="text"
-                  prepend-icon="mdi-arrow-left"
+          <Card v-if="selectedCreditMemo && !isCreating && !isApplying">
+            <template #content>
+              <div class="flex align-items-center p-3 surface-100">
+                <Button
+                  icon="pi pi-arrow-left"
+                  label="Back to List"
+                  class="p-button-text"
                   @click="clearSelection"
-                >
-                  Back to List
-                </v-btn>
-                <v-spacer></v-spacer>
-                <div class="text-h6">Credit Memo {{ selectedCreditMemo.credit_memo_number }}</div>
+                />
+                <div class="flex-1"></div>
+                <div class="text-xl font-semibold">Credit Memo {{ selectedCreditMemo.credit_memo_number }}</div>
               </div>
               
-              <!-- Credit memo detail view would go here -->
-              <div class="pa-4">
+              <div class="p-4">
                 <p>Credit memo detail view will be implemented here.</p>
               </div>
-            </v-card-text>
-          </v-card>
+            </template>
+          </Card>
           
-          <v-card v-else-if="isCreating">
-            <v-card-text class="pa-0">
-              <div class="d-flex align-center px-4 py-2 bg-grey-lighten-4">
-                <v-btn
-                  variant="text"
-                  prepend-icon="mdi-arrow-left"
+          <Card v-else-if="isCreating">
+            <template #content>
+              <div class="flex align-items-center p-3 surface-100">
+                <Button
+                  icon="pi pi-arrow-left"
+                  label="Back to List"
+                  class="p-button-text"
                   @click="clearSelection"
-                >
-                  Back to List
-                </v-btn>
-                <v-spacer></v-spacer>
-                <div class="text-h6">Create New Credit Memo</div>
+                />
+                <div class="flex-1"></div>
+                <div class="text-xl font-semibold">Create New Credit Memo</div>
               </div>
               
-              <credit-memo-form
-                @saved="handleCreditMemoSaved"
-                @cancelled="clearSelection"
-              />
-            </v-card-text>
-          </v-card>
+              <div class="p-4">
+                <div class="grid">
+                  <div class="col-12 md:col-6">
+                    <div class="field">
+                      <label for="vendor">Vendor *</label>
+                      <Dropdown 
+                        id="vendor" 
+                        v-model="creditMemoForm.vendorId" 
+                        :options="vendors" 
+                        optionLabel="name" 
+                        optionValue="id" 
+                        placeholder="Select vendor"
+                        class="w-full"
+                      />
+                    </div>
+                  </div>
+                  <div class="col-12 md:col-6">
+                    <div class="field">
+                      <label for="creditDate">Credit Date *</label>
+                      <Calendar 
+                        id="creditDate" 
+                        v-model="creditMemoForm.creditDate" 
+                        dateFormat="yy-mm-dd" 
+                        :showIcon="true" 
+                        class="w-full"
+                      />
+                    </div>
+                  </div>
+                  <div class="col-12 md:col-6">
+                    <div class="field">
+                      <label for="amount">Amount *</label>
+                      <InputNumber 
+                        id="amount" 
+                        v-model="creditMemoForm.amount" 
+                        mode="currency" 
+                        currency="USD" 
+                        locale="en-US" 
+                        class="w-full"
+                      />
+                    </div>
+                  </div>
+                  <div class="col-12 md:col-6">
+                    <div class="field">
+                      <label for="reference">Reference</label>
+                      <InputText 
+                        id="reference" 
+                        v-model="creditMemoForm.reference" 
+                        class="w-full"
+                      />
+                    </div>
+                  </div>
+                  <div class="col-12">
+                    <div class="field">
+                      <label for="description">Description</label>
+                      <Textarea 
+                        id="description" 
+                        v-model="creditMemoForm.description" 
+                        rows="3" 
+                        class="w-full"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div class="flex gap-2 mt-4">
+                  <Button label="Save" @click="handleCreditMemoSaved" />
+                  <Button label="Cancel" severity="secondary" @click="clearSelection" />
+                </div>
+              </div>
+            </template>
+          </Card>
           
-          <v-card v-else-if="isApplying && selectedCreditMemo">
-            <v-card-text class="pa-0">
-              <div class="d-flex align-center px-4 py-2 bg-grey-lighten-4">
-                <v-btn
-                  variant="text"
-                  prepend-icon="mdi-arrow-left"
+          <Card v-else-if="isApplying && selectedCreditMemo">
+            <template #content>
+              <div class="flex align-items-center p-3 surface-100">
+                <Button
+                  icon="pi pi-arrow-left"
+                  label="Back to List"
+                  class="p-button-text"
                   @click="clearSelection"
-                >
-                  Back to List
-                </v-btn>
-                <v-spacer></v-spacer>
-                <div class="text-h6">Apply Credit Memo {{ selectedCreditMemo.credit_memo_number }}</div>
+                />
+                <div class="flex-1"></div>
+                <div class="text-xl font-semibold">Apply Credit Memo {{ selectedCreditMemo.credit_memo_number }}</div>
               </div>
               
-              <credit-memo-application
-                :credit-memo="selectedCreditMemo"
-                @saved="handleCreditMemoApplied"
-                @cancelled="clearSelection"
-              />
-            </v-card-text>
-          </v-card>
+              <div class="p-4">
+                <p>Credit memo application form will be implemented here.</p>
+                <div class="flex gap-2 mt-4">
+                  <Button label="Apply" @click="handleCreditMemoApplied" />
+                  <Button label="Cancel" severity="secondary" @click="clearSelection" />
+                </div>
+              </div>
+            </template>
+          </Card>
           
           <div v-else>
-            <v-tabs v-model="activeTab" bg-color="primary">
-              <v-tab value="all">All Credit Memos</v-tab>
-              <v-tab value="active">Active</v-tab>
-              <v-tab value="applied">Fully Applied</v-tab>
-              <v-tab value="voided">Voided</v-tab>
-            </v-tabs>
-            
-            <v-window v-model="activeTab" class="mt-4">
-              <v-window-item value="all">
-                <credit-memo-list
+            <TabView v-model:activeIndex="activeTabIndex">
+              <TabPanel header="All Credit Memos">
+                <CreditMemoList
                   @view="viewCreditMemo"
                   @create="createCreditMemo"
                   @apply="applyCreditMemo"
                 />
-              </v-window-item>
+              </TabPanel>
               
-              <v-window-item value="active">
-                <credit-memo-list
+              <TabPanel header="Active">
+                <CreditMemoList
                   :default-filters="{ status: 'active' }"
                   @view="viewCreditMemo"
                   @create="createCreditMemo"
                   @apply="applyCreditMemo"
                 />
-              </v-window-item>
+              </TabPanel>
               
-              <v-window-item value="applied">
-                <credit-memo-list
+              <TabPanel header="Fully Applied">
+                <CreditMemoList
                   :default-filters="{ status: 'fully_applied' }"
                   @view="viewCreditMemo"
                   @create="createCreditMemo"
                   @apply="applyCreditMemo"
                 />
-              </v-window-item>
+              </TabPanel>
               
-              <v-window-item value="voided">
-                <credit-memo-list
+              <TabPanel header="Voided">
+                <CreditMemoList
                   :default-filters="{ status: 'voided' }"
                   @view="viewCreditMemo"
                   @create="createCreditMemo"
                   @apply="applyCreditMemo"
                 />
-              </v-window-item>
-            </v-window>
+              </TabPanel>
+            </TabView>
           </div>
-        </v-col>
-      </v-row>
-    </v-container>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue';
 import CreditMemoList from '../components/credit-memo/CreditMemoList.vue';
-import CreditMemoForm from '../components/credit-memo/CreditMemoForm.vue';
-import CreditMemoApplication from '../components/credit-memo/CreditMemoApplication.vue';
+
+type CreditMemo = {
+  credit_memo_number: string;
+  [key: string]: any;
+};
 
 // Data
-const activeTab = ref('all');
-const selectedCreditMemo = ref(null);
+const activeTabIndex = ref(0);
+const selectedCreditMemo = ref<CreditMemo | null>(null);
 const isCreating = ref(false);
 const isApplying = ref(false);
 
+const creditMemoForm = ref({
+  vendorId: null,
+  creditDate: new Date(),
+  amount: 0,
+  reference: '',
+  description: ''
+});
+
+const vendors = ref([]);
+
 // Methods
-const viewCreditMemo = (creditMemo) => {
+const viewCreditMemo = (creditMemo: CreditMemo) => {
   selectedCreditMemo.value = creditMemo;
   isCreating.value = false;
   isApplying.value = false;
@@ -145,7 +213,7 @@ const createCreditMemo = () => {
   isApplying.value = false;
 };
 
-const applyCreditMemo = (creditMemo) => {
+const applyCreditMemo = (creditMemo: CreditMemo) => {
   selectedCreditMemo.value = creditMemo;
   isCreating.value = false;
   isApplying.value = true;
@@ -158,6 +226,14 @@ const clearSelection = () => {
 };
 
 const handleCreditMemoSaved = () => {
+  // Reset form
+  creditMemoForm.value = {
+    vendorId: null,
+    creditDate: new Date(),
+    amount: 0,
+    reference: '',
+    description: ''
+  };
   clearSelection();
 };
 
@@ -168,6 +244,10 @@ const handleCreditMemoApplied = () => {
 
 <style scoped>
 .credit-memo-management {
-  padding: 16px;
+  padding: 1rem;
+}
+
+.flex-1 {
+  flex: 1;
 }
 </style>

@@ -31,22 +31,46 @@ export const useAuthStore = defineStore('auth', () => {
 
   const login = async (credentials: { email: string; password: string; remember_me?: boolean }) => {
     try {
-      const response = await api.post('/auth/login', credentials);
-      token.value = response.data.access_token;
-      user.value = response.data.user;
-      
-      if (credentials.remember_me) {
-        localStorage.setItem('token', token.value);
+      // Mock login for demo - check credentials
+      if (credentials.email === 'admin@paksa.com' && credentials.password === 'admin123') {
+        const mockToken = 'mock-jwt-token-' + Date.now()
+        const mockUser = {
+          id: '1',
+          email: 'admin@paksa.com',
+          full_name: 'System Administrator',
+          is_active: true,
+          is_superuser: true,
+          created_at: new Date().toISOString()
+        }
+        
+        token.value = mockToken
+        user.value = mockUser
+        
+        if (credentials.remember_me) {
+          localStorage.setItem('token', token.value)
+        } else {
+          sessionStorage.setItem('token', token.value)
+        }
+        
+        // Set mock company
+        currentCompany.value = {
+          id: '1',
+          company_name: 'Paksa Financial Demo',
+          company_code: 'PAKSA',
+          default_currency: 'USD',
+          default_language: 'en',
+          timezone: 'UTC',
+          fiscal_year_start: '01-01'
+        }
+        companies.value = [currentCompany.value]
+        localStorage.setItem('currentCompany', currentCompany.value.id)
+        
+        return { access_token: mockToken, user: mockUser }
       } else {
-        sessionStorage.setItem('token', token.value);
+        throw new Error('Invalid email or password')
       }
-      
-      // Load user companies
-      await loadUserCompanies();
-      
-      return response.data;
     } catch (error) {
-      throw error;
+      throw error
     }
   };
 

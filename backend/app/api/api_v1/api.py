@@ -25,6 +25,7 @@ from app.api.v1.endpoints.gl import trial_balance as gl_trial_balance
 from app.api.v1.endpoints.gl import recurring_journals as gl_recurring_journals
 from app.api.v1.endpoints import auth as auth_v1
 from app.api.v1.endpoints import reconciliation as reconciliation_v1
+from app.api.v1.endpoints import tax_compliance
 
 api_router = APIRouter()
 
@@ -142,5 +143,8 @@ try:
     api_router.include_router(ai_assistant_router, prefix="/ai-assistant", tags=["ai-assistant"])
 except ImportError as e:
     print(f"Warning: Could not import AI assistant module: {e}")
+
+# Tax Compliance
+api_router.include_router(tax_compliance.router, prefix="/tax/compliance", tags=["tax-compliance"])
 
 # Add additional routers below as needed, using the same style.

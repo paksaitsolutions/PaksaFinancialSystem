@@ -72,26 +72,26 @@
     <Card>
       <template #content>
         <DataTable :value="taxReturns" :loading="loading" paginator :rows="10" responsiveLayout="scroll">
-          <Column field="returnId" header="Return ID" sortable />
-          <Column field="taxYear" header="Tax Year" sortable />
-          <Column field="returnType" header="Type" sortable>
+          <Column field="return_id" header="Return ID" sortable />
+          <Column field="tax_year" header="Tax Year" sortable />
+          <Column field="return_type" header="Type" sortable>
             <template #body="{ data }">
-              <Tag :value="data.returnType" :severity="getReturnTypeSeverity(data.returnType)" />
+              <Tag :value="data.return_type" :severity="getReturnTypeSeverity(data.return_type)" />
             </template>
           </Column>
-          <Column field="dueDate" header="Due Date" sortable>
+          <Column field="due_date" header="Due Date" sortable>
             <template #body="{ data }">
-              {{ formatDate(data.dueDate) }}
+              {{ formatDate(data.due_date) }}
             </template>
           </Column>
-          <Column field="filedDate" header="Filed Date" sortable>
+          <Column field="filed_date" header="Filed Date" sortable>
             <template #body="{ data }">
-              {{ data.filedDate ? formatDate(data.filedDate) : '-' }}
+              {{ data.filed_date ? formatDate(data.filed_date) : '-' }}
             </template>
           </Column>
-          <Column field="taxLiability" header="Tax Liability" sortable>
+          <Column field="tax_liability" header="Tax Liability" sortable>
             <template #body="{ data }">
-              Rs. {{ formatCurrency(data.taxLiability) }}
+              Rs. {{ formatCurrency(data.tax_liability) }}
             </template>
           </Column>
           <Column field="status" header="Status" sortable>
@@ -117,15 +117,15 @@
         <div class="col-12 md:col-6">
           <div class="field">
             <label>Return Type</label>
-            <Dropdown v-model="taxReturn.returnType" :options="returnTypes" optionLabel="label" optionValue="value" class="w-full" :class="{'p-invalid': submitted && !taxReturn.returnType}" />
-            <small class="p-error" v-if="submitted && !taxReturn.returnType">Return type is required.</small>
+            <Dropdown v-model="taxReturn.return_type" :options="returnTypes" optionLabel="label" optionValue="value" class="w-full" :class="{'p-invalid': submitted && !taxReturn.return_type}" />
+            <small class="p-error" v-if="submitted && !taxReturn.return_type">Return type is required.</small>
           </div>
         </div>
         <div class="col-12 md:col-6">
           <div class="field">
             <label>Tax Year</label>
-            <Dropdown v-model="taxReturn.taxYear" :options="taxYears" class="w-full" :class="{'p-invalid': submitted && !taxReturn.taxYear}" />
-            <small class="p-error" v-if="submitted && !taxReturn.taxYear">Tax year is required.</small>
+            <Dropdown v-model="taxReturn.tax_year" :options="taxYears" class="w-full" :class="{'p-invalid': submitted && !taxReturn.tax_year}" />
+            <small class="p-error" v-if="submitted && !taxReturn.tax_year">Tax year is required.</small>
           </div>
         </div>
         <div class="col-12 md:col-6">
@@ -143,25 +143,25 @@
         <div class="col-12 md:col-6">
           <div class="field">
             <label>Gross Income (Rs.)</label>
-            <InputNumber v-model="taxReturn.grossIncome" class="w-full" :minFractionDigits="2" />
+            <InputNumber v-model="taxReturn.gross_income" class="w-full" :minFractionDigits="2" />
           </div>
         </div>
         <div class="col-12 md:col-6">
           <div class="field">
             <label>Taxable Income (Rs.)</label>
-            <InputNumber v-model="taxReturn.taxableIncome" class="w-full" :minFractionDigits="2" />
+            <InputNumber v-model="taxReturn.taxable_income" class="w-full" :minFractionDigits="2" />
           </div>
         </div>
         <div class="col-12 md:col-6">
           <div class="field">
             <label>Tax Liability (Rs.)</label>
-            <InputNumber v-model="taxReturn.taxLiability" class="w-full" :minFractionDigits="2" />
+            <InputNumber v-model="taxReturn.tax_liability" class="w-full" :minFractionDigits="2" />
           </div>
         </div>
         <div class="col-12 md:col-6">
           <div class="field">
             <label>Advance Tax Paid (Rs.)</label>
-            <InputNumber v-model="taxReturn.advanceTaxPaid" class="w-full" :minFractionDigits="2" />
+            <InputNumber v-model="taxReturn.advance_tax_paid" class="w-full" :minFractionDigits="2" />
           </div>
         </div>
         <div class="col-12">
@@ -185,9 +185,9 @@
           <h3>Return Information</h3>
           <Divider />
         </div>
-        <div class="col-6"><strong>Return ID:</strong> {{ selectedReturn.returnId }}</div>
-        <div class="col-6"><strong>Tax Year:</strong> {{ selectedReturn.taxYear }}</div>
-        <div class="col-6"><strong>Return Type:</strong> {{ selectedReturn.returnType }}</div>
+        <div class="col-6"><strong>Return ID:</strong> {{ selectedReturn.return_id }}</div>
+        <div class="col-6"><strong>Tax Year:</strong> {{ selectedReturn.tax_year }}</div>
+        <div class="col-6"><strong>Return Type:</strong> {{ selectedReturn.return_type }}</div>
         <div class="col-6"><strong>Status:</strong> <Tag :value="selectedReturn.status" :severity="getStatusSeverity(selectedReturn.status)" /></div>
         <div class="col-6"><strong>NTN:</strong> {{ selectedReturn.ntn || 'N/A' }}</div>
         <div class="col-6"><strong>CNIC:</strong> {{ selectedReturn.cnic || 'N/A' }}</div>
@@ -195,10 +195,10 @@
           <h3>Financial Details</h3>
           <Divider />
         </div>
-        <div class="col-6"><strong>Gross Income:</strong> Rs. {{ formatCurrency(selectedReturn.grossIncome) }}</div>
-        <div class="col-6"><strong>Taxable Income:</strong> Rs. {{ formatCurrency(selectedReturn.taxableIncome) }}</div>
-        <div class="col-6"><strong>Tax Liability:</strong> Rs. {{ formatCurrency(selectedReturn.taxLiability) }}</div>
-        <div class="col-6"><strong>Advance Tax Paid:</strong> Rs. {{ formatCurrency(selectedReturn.advanceTaxPaid) }}</div>
+        <div class="col-6"><strong>Gross Income:</strong> Rs. {{ formatCurrency(selectedReturn.gross_income) }}</div>
+        <div class="col-6"><strong>Taxable Income:</strong> Rs. {{ formatCurrency(selectedReturn.taxable_income) }}</div>
+        <div class="col-6"><strong>Tax Liability:</strong> Rs. {{ formatCurrency(selectedReturn.tax_liability) }}</div>
+        <div class="col-6"><strong>Advance Tax Paid:</strong> Rs. {{ formatCurrency(selectedReturn.advance_tax_paid) }}</div>
         <div class="col-12" v-if="selectedReturn.remarks">
           <strong>Remarks:</strong><br>
           {{ selectedReturn.remarks }}
@@ -215,20 +215,21 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useToast } from 'primevue/usetoast';
+import taxReturnService, { type TaxReturn, type TaxReturnStats, type TaxReturnFilters } from '@/api/taxReturnService';
 
-interface TaxReturn {
-  id?: string;
-  returnId: string;
-  taxYear: string;
-  returnType: string;
+interface TaxReturnForm {
+  id?: number;
+  return_id: string;
+  tax_year: string;
+  return_type: string;
   ntn?: string;
   cnic?: string;
-  grossIncome: number;
-  taxableIncome: number;
-  taxLiability: number;
-  advanceTaxPaid: number;
-  dueDate: string;
-  filedDate?: string;
+  gross_income: number;
+  taxable_income: number;
+  tax_liability: number;
+  advance_tax_paid: number;
+  due_date: string;
+  filed_date?: string;
   status: string;
   remarks?: string;
 }
@@ -241,23 +242,23 @@ const submitted = ref(false);
 
 const taxReturns = ref<TaxReturn[]>([]);
 const selectedReturn = ref<TaxReturn | null>(null);
-const taxReturn = ref<TaxReturn>({
-  returnId: '',
-  taxYear: '2024',
-  returnType: 'income_tax',
-  grossIncome: 0,
-  taxableIncome: 0,
-  taxLiability: 0,
-  advanceTaxPaid: 0,
-  dueDate: '',
+const taxReturn = ref<TaxReturnForm>({
+  return_id: '',
+  tax_year: '2024',
+  return_type: 'income_tax',
+  gross_income: 0,
+  taxable_income: 0,
+  tax_liability: 0,
+  advance_tax_paid: 0,
+  due_date: '',
   status: 'draft'
 });
 
-const stats = ref({
-  filed: 12,
-  pending: 3,
-  overdue: 1,
-  amendments: 2
+const stats = ref<TaxReturnStats>({
+  filed: 0,
+  pending: 0,
+  overdue: 0,
+  amendments: 0
 });
 
 const filters = ref({
@@ -287,14 +288,14 @@ const statuses = ref([
 
 const openNew = () => {
   taxReturn.value = {
-    returnId: `TR${Date.now()}`,
-    taxYear: '2024',
-    returnType: 'income_tax',
-    grossIncome: 0,
-    taxableIncome: 0,
-    taxLiability: 0,
-    advanceTaxPaid: 0,
-    dueDate: '2024-12-31',
+    return_id: `TR${Date.now()}`,
+    tax_year: '2024',
+    return_type: 'income_tax',
+    gross_income: 0,
+    taxable_income: 0,
+    tax_liability: 0,
+    advance_tax_paid: 0,
+    due_date: '2024-12-31',
     status: 'draft'
   };
   submitted.value = false;
@@ -302,7 +303,22 @@ const openNew = () => {
 };
 
 const editReturn = (ret: TaxReturn) => {
-  taxReturn.value = { ...ret };
+  taxReturn.value = {
+    id: ret.id,
+    return_id: ret.return_id,
+    tax_year: ret.tax_year,
+    return_type: ret.return_type,
+    ntn: ret.ntn,
+    cnic: ret.cnic,
+    gross_income: ret.gross_income,
+    taxable_income: ret.taxable_income,
+    tax_liability: ret.tax_liability,
+    advance_tax_paid: ret.advance_tax_paid,
+    due_date: ret.due_date,
+    filed_date: ret.filed_date,
+    status: ret.status,
+    remarks: ret.remarks
+  };
   returnDialog.value = true;
 };
 
@@ -318,7 +334,7 @@ const hideDialog = () => {
 
 const saveDraft = async () => {
   submitted.value = true;
-  if (taxReturn.value.returnType && taxReturn.value.taxYear) {
+  if (taxReturn.value.return_type && taxReturn.value.tax_year) {
     try {
       taxReturn.value.status = 'draft';
       await saveReturnData();
@@ -331,10 +347,10 @@ const saveDraft = async () => {
 
 const saveReturn = async () => {
   submitted.value = true;
-  if (taxReturn.value.returnType && taxReturn.value.taxYear) {
+  if (taxReturn.value.return_type && taxReturn.value.tax_year) {
     try {
       taxReturn.value.status = 'filed';
-      taxReturn.value.filedDate = new Date().toISOString().split('T')[0];
+      taxReturn.value.filed_date = new Date().toISOString().split('T')[0];
       await saveReturnData();
       toast.add({ severity: 'success', summary: 'Success', detail: 'Return filed successfully', life: 3000 });
     } catch (error: any) {
@@ -344,36 +360,39 @@ const saveReturn = async () => {
 };
 
 const saveReturnData = async () => {
-  if (taxReturn.value.id) {
-    const index = taxReturns.value.findIndex(r => r.id === taxReturn.value.id);
-    if (index !== -1) {
-      taxReturns.value[index] = { ...taxReturn.value };
+  try {
+    if (taxReturn.value.id) {
+      await taxReturnService.updateTaxReturn(taxReturn.value.id, taxReturn.value);
+    } else {
+      await taxReturnService.createTaxReturn(taxReturn.value);
     }
-  } else {
-    const newReturn = { ...taxReturn.value, id: Date.now().toString() };
-    taxReturns.value.push(newReturn);
+    returnDialog.value = false;
+    await loadTaxReturns();
+    await loadStats();
+  } catch (error: any) {
+    throw new Error(error.response?.data?.detail || 'Save failed');
   }
-  returnDialog.value = false;
-  updateStats();
 };
 
 const fileReturn = async (ret: TaxReturn) => {
   try {
-    ret.status = 'filed';
-    ret.filedDate = new Date().toISOString().split('T')[0];
-    toast.add({ severity: 'success', summary: 'Success', detail: 'Return filed with FBR', life: 3000 });
-    updateStats();
+    if (ret.id) {
+      await taxReturnService.fileTaxReturn(ret.id);
+      toast.add({ severity: 'success', summary: 'Success', detail: 'Return filed with FBR', life: 3000 });
+      await loadTaxReturns();
+      await loadStats();
+    }
   } catch (error: any) {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Filing failed', life: 3000 });
   }
 };
 
 const downloadReturn = (ret: TaxReturn) => {
-  toast.add({ severity: 'info', summary: 'Download', detail: `Downloading ${ret.returnId}.pdf`, life: 3000 });
+  toast.add({ severity: 'info', summary: 'Download', detail: `Downloading ${ret.return_id}.pdf`, life: 3000 });
 };
 
-const applyFilters = () => {
-  loadTaxReturns();
+const applyFilters = async () => {
+  await loadTaxReturns();
 };
 
 const getReturnTypeSeverity = (type: string) => {
@@ -403,81 +422,23 @@ const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-PK').format(amount);
 };
 
-const updateStats = () => {
-  stats.value = {
-    filed: taxReturns.value.filter(r => ['filed', 'accepted'].includes(r.status)).length,
-    pending: taxReturns.value.filter(r => r.status === 'draft').length,
-    overdue: taxReturns.value.filter(r => r.status === 'overdue').length,
-    amendments: taxReturns.value.filter(r => r.status === 'amended').length
-  };
+const loadStats = async () => {
+  try {
+    stats.value = await taxReturnService.getTaxReturnStats();
+  } catch (error: any) {
+    console.error('Error loading stats:', error);
+  }
 };
 
 const loadTaxReturns = async () => {
   loading.value = true;
   try {
-    // Mock FBR Pakistan tax returns data
-    taxReturns.value = [
-      {
-        id: '1',
-        returnId: 'ITR-2024-001',
-        taxYear: '2024',
-        returnType: 'income_tax',
-        ntn: '1234567-8',
-        cnic: '12345-1234567-1',
-        grossIncome: 2500000,
-        taxableIncome: 2200000,
-        taxLiability: 165000,
-        advanceTaxPaid: 150000,
-        dueDate: '2024-12-31',
-        filedDate: '2024-11-15',
-        status: 'filed',
-        remarks: 'Regular income tax return for salaried individual'
-      },
-      {
-        id: '2',
-        returnId: 'STR-2024-002',
-        taxYear: '2024',
-        returnType: 'sales_tax',
-        ntn: '1234567-8',
-        grossIncome: 5000000,
-        taxableIncome: 4500000,
-        taxLiability: 810000,
-        advanceTaxPaid: 800000,
-        dueDate: '2024-11-15',
-        status: 'draft',
-        remarks: 'Monthly sales tax return'
-      },
-      {
-        id: '3',
-        returnId: 'WTR-2024-003',
-        taxYear: '2024',
-        returnType: 'withholding_tax',
-        ntn: '1234567-8',
-        grossIncome: 1200000,
-        taxableIncome: 1200000,
-        taxLiability: 120000,
-        advanceTaxPaid: 120000,
-        dueDate: '2024-10-15',
-        filedDate: '2024-10-10',
-        status: 'accepted',
-        remarks: 'Withholding tax on contracts'
-      },
-      {
-        id: '4',
-        returnId: 'CTR-2023-004',
-        taxYear: '2023',
-        returnType: 'corporate_tax',
-        ntn: '1234567-8',
-        grossIncome: 15000000,
-        taxableIncome: 12000000,
-        taxLiability: 3480000,
-        advanceTaxPaid: 3200000,
-        dueDate: '2023-12-31',
-        status: 'overdue',
-        remarks: 'Corporate tax return - pending submission'
-      }
-    ];
-    updateStats();
+    const filterParams: TaxReturnFilters = {
+      tax_year: filters.value.taxYear || undefined,
+      return_type: filters.value.returnType || undefined,
+      status: filters.value.status || undefined
+    };
+    taxReturns.value = await taxReturnService.getTaxReturns(filterParams);
   } catch (error: any) {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load tax returns', life: 3000 });
   } finally {
@@ -485,8 +446,9 @@ const loadTaxReturns = async () => {
   }
 };
 
-onMounted(() => {
-  loadTaxReturns();
+onMounted(async () => {
+  await loadTaxReturns();
+  await loadStats();
 });
 </script>
 

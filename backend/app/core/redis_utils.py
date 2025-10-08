@@ -31,7 +31,7 @@ class RedisManager:
     
     async def initialize(self):
         """Initialize the Redis connection pool."""
-        if not self._initialized and settings.REDIS_URL:
+        if not self._initialized and settings.REDIS_URL and getattr(settings, 'USE_REDIS', False):
             try:
                 self._redis = await aioredis.from_url(
                     settings.REDIS_URL,
@@ -44,11 +44,14 @@ class RedisManager:
                 logger.error(f"Failed to initialize Redis: {e}")
                 self._redis = None
                 self._initialized = False
+        else:
+            logger.info("Redis is disabled, skipping initialization")
+            self._initialized = True
     
     @property
     async def redis(self) -> Optional[aioredis.Redis]:
         """Get a Redis client from the pool."""
-        if not self._initialized and settings.REDIS_URL:
+        if not self._initialized and settings.REDIS_URL and getattr(settings, 'USE_REDIS', False):
             await self.initialize()
         return self._redis
     
@@ -222,6 +225,8 @@ async def init_redis():
             await redis_manager.initialize()
         except Exception as e:
             logger.warning(f"Redis initialization failed, continuing without Redis: {e}")
+    else:
+        logger.info("Redis is disabled, skipping initialization")
 
 # Close Redis connections on shutdown
 async def close_redis():

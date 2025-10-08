@@ -7,6 +7,7 @@ import Tooltip from 'primevue/tooltip'
 // Components
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
+import Password from 'primevue/password'
 import InputNumber from 'primevue/inputnumber'
 import Textarea from 'primevue/textarea'
 import Dropdown from 'primevue/dropdown'
@@ -26,6 +27,9 @@ import SelectButton from 'primevue/selectbutton'
 import MultiSelect from 'primevue/multiselect'
 import TreeSelect from 'primevue/treeselect'
 import AutoComplete from 'primevue/autocomplete'
+import ConfirmDialog from 'primevue/confirmdialog'
+import TabView from 'primevue/tabview'
+import TabPanel from 'primevue/tabpanel'
 
 export default {
   install(app: App) {
@@ -39,6 +43,7 @@ export default {
     // Global components
     app.component('Button', Button)
     app.component('InputText', InputText)
+    app.component('Password', Password)
     app.component('InputNumber', InputNumber)
     app.component('Textarea', Textarea)
     app.component('Dropdown', Dropdown)
@@ -58,5 +63,8 @@ export default {
     app.component('MultiSelect', MultiSelect)
     app.component('TreeSelect', TreeSelect)
     app.component('AutoComplete', AutoComplete)
+    app.component('ConfirmDialog', ConfirmDialog)
+    app.component('TabView', TabView)
+    app.component('TabPanel', TabPanel)
   }
 }

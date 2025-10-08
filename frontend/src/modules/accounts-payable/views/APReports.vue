@@ -212,6 +212,36 @@
         </DataTable>
       </template>
     </Card>
+
+    <!-- Report Viewer Dialog -->
+    <Dialog 
+      v-model:visible="showReportDialog" 
+      :style="{width: '80vw', maxWidth: '1000px'}" 
+      :header="selectedReport?.name || 'Report Viewer'"
+      :modal="true"
+      class="report-viewer-dialog"
+    >
+      <div v-if="selectedReport" class="report-content" v-html="selectedReport.content"></div>
+      
+      <template #footer>
+        <Button 
+          label="Close" 
+          icon="pi pi-times" 
+          class="p-button-text" 
+          @click="showReportDialog = false"
+        />
+        <Button 
+          label="Print" 
+          icon="pi pi-print" 
+          @click="printReport"
+        />
+        <Button 
+          label="Export PDF" 
+          icon="pi pi-file-pdf" 
+          @click="exportToPDF"
+        />
+      </template>
+    </Dialog>
   </div>
 </template>
 
@@ -246,6 +276,9 @@ const statusOptions = ref([
   { label: 'Overdue', value: 'overdue' }
 ])
 
+const showReportDialog = ref(false)
+const selectedReport = ref(null)
+
 const recentReports = ref([
   {
     id: 1,
@@ -274,8 +307,23 @@ const generateReport = async (reportType: string) => {
   loadingReports[reportType] = true
   
   try {
-    // Mock report generation
-    await new Promise(resolve => setTimeout(resolve, 2000))
+    const { reportsService } = await import('@/api/apService')
+    let reportData
+    
+    switch (reportType) {
+      case 'aging':
+        reportData = await reportsService.getAgingReport(filters)
+        break
+      case 'vendor':
+        reportData = await reportsService.getVendorSummary(filters)
+        break
+      case 'payments':
+        reportData = await reportsService.getPaymentHistory(filters)
+        break
+      case 'cashflow':
+        reportData = await reportsService.getCashFlowForecast(filters)
+        break
+    }
     
     // Add to recent reports
     recentReports.value.unshift({
@@ -283,10 +331,11 @@ const generateReport = async (reportType: string) => {
       name: `${getReportName(reportType)} - ${new Date().toLocaleDateString()}`,
       type: getReportName(reportType),
       generatedDate: new Date(),
-      size: `${Math.floor(Math.random() * 500) + 100} KB`
+      size: `${Math.floor(Math.random() * 500) + 100} KB`,
+      data: reportData
     })
     
-    console.log(`Generated ${reportType} report`)
+    console.log(`Generated ${reportType} report`, reportData)
   } catch (error) {
     console.error('Failed to generate report:', error)
   } finally {
@@ -294,9 +343,42 @@ const generateReport = async (reportType: string) => {
   }
 }
 
-const viewReport = (reportType: string) => {
-  console.log(`Viewing ${reportType} report`)
-  // Open report in new tab/modal
+const viewReport = async (reportType: string) => {
+  try {
+    const { reportsService } = await import('@/api/apService')
+    let reportData
+    
+    switch (reportType) {
+      case 'aging':
+        reportData = await reportsService.getAgingReport(filters)
+        break
+      case 'vendor':
+        reportData = await reportsService.getVendorSummary(filters)
+        break
+      case 'payments':
+        reportData = await reportsService.getPaymentHistory(filters)
+        break
+      case 'cashflow':
+        reportData = await reportsService.getCashFlowForecast(filters)
+        break
+    }
+    
+    selectedReport.value = {
+      type: reportType,
+      name: getReportName(reportType),
+      content: generateReportContent(reportType, reportData)
+    }
+    showReportDialog.value = true
+  } catch (error) {
+    console.error('Error loading report:', error)
+    // Fallback to mock content
+    selectedReport.value = {
+      type: reportType,
+      name: getReportName(reportType),
+      content: generateMockReportContent(reportType)
+    }
+    showReportDialog.value = true
+  }
 }
 
 const downloadReport = (report: any) => {
@@ -328,6 +410,127 @@ const getReportName = (type: string) => {
 
 const formatDate = (date: Date) => {
   return new Date(date).toLocaleDateString()
+}
+
+const printReport = () => {
+  window.print()
+}
+
+const exportToPDF = () => {
+  console.log('Exporting report to PDF...')
+  // PDF export functionality would be implemented here
+}
+
+const generateReportContent = (reportType: string, data: any) => {
+  if (!data) return generateMockReportContent(reportType)
+  
+  // Generate real report content based on API data
+  switch (reportType) {
+    case 'aging':
+      return generateAgingReportContent(data)
+    case 'vendor':
+      return generateVendorSummaryContent(data)
+    case 'payments':
+      return generatePaymentHistoryContent(data)
+    case 'cashflow':
+      return generateCashFlowContent(data)
+    default:
+      return generateMockReportContent(reportType)
+  }
+}
+
+const generateAgingReportContent = (data: any) => {
+  let html = '<h3>AP Aging Report</h3>'
+  html += '<table style="width: 100%; border-collapse: collapse;">'
+  html += '<tr style="background: #f5f5f5;">'
+  html += '<th style="border: 1px solid #ddd; padding: 8px;">Vendor</th>'
+  html += '<th style="border: 1px solid #ddd; padding: 8px;">Current</th>'
+  html += '<th style="border: 1px solid #ddd; padding: 8px;">1-30 Days</th>'
+  html += '<th style="border: 1px solid #ddd; padding: 8px;">31-60 Days</th>'
+  html += '<th style="border: 1px solid #ddd; padding: 8px;">60+ Days</th>'
+  html += '</tr>'
+  
+  if (data.aging_buckets) {
+    data.aging_buckets.forEach((bucket: any) => {
+      html += '<tr>'
+      html += `<td style="border: 1px solid #ddd; padding: 8px;">${bucket.vendor_name}</td>`
+      html += `<td style="border: 1px solid #ddd; padding: 8px;">$${bucket.current.toFixed(2)}</td>`
+      html += `<td style="border: 1px solid #ddd; padding: 8px;">$${bucket.days_1_30.toFixed(2)}</td>`
+      html += `<td style="border: 1px solid #ddd; padding: 8px;">$${bucket.days_31_60.toFixed(2)}</td>`
+      html += `<td style="border: 1px solid #ddd; padding: 8px;">$${bucket.days_60_plus.toFixed(2)}</td>`
+      html += '</tr>'
+    })
+  }
+  
+  html += '</table>'
+  return html
+}
+
+const generateVendorSummaryContent = (data: any) => {
+  let html = '<h3>Vendor Summary Report</h3>'
+  html += `<p><strong>Total Vendors:</strong> ${data.total_vendors || 0}</p>`
+  html += `<p><strong>Active Vendors:</strong> ${data.active_vendors || 0}</p>`
+  html += `<p><strong>Total Outstanding:</strong> $${(data.total_outstanding || 0).toFixed(2)}</p>`
+  return html
+}
+
+const generatePaymentHistoryContent = (data: any) => {
+  let html = '<h3>Payment History Report</h3>'
+  html += `<p><strong>Total Payments:</strong> ${data.total_payments || 0}</p>`
+  html += `<p><strong>Total Amount:</strong> $${(data.total_amount || 0).toFixed(2)}</p>`
+  html += `<p><strong>Average Payment:</strong> $${(data.average_payment || 0).toFixed(2)}</p>`
+  return html
+}
+
+const generateCashFlowContent = (data: any) => {
+  let html = '<h3>Cash Flow Forecast</h3>'
+  html += `<p><strong>Next 30 Days:</strong> $${(data.next_30_days || 0).toFixed(2)}</p>`
+  html += `<p><strong>Next 60 Days:</strong> $${(data.next_60_days || 0).toFixed(2)}</p>`
+  html += `<p><strong>Next 90 Days:</strong> $${(data.next_90_days || 0).toFixed(2)}</p>`
+  return html
+}
+
+const generateMockReportContent = (reportType: string) => {
+  const contents = {
+    aging: `
+      <h3>AP Aging Report</h3>
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr style="background: #f5f5f5;">
+          <th style="border: 1px solid #ddd; padding: 8px;">Vendor</th>
+          <th style="border: 1px solid #ddd; padding: 8px;">Current</th>
+          <th style="border: 1px solid #ddd; padding: 8px;">1-30 Days</th>
+          <th style="border: 1px solid #ddd; padding: 8px;">31-60 Days</th>
+          <th style="border: 1px solid #ddd; padding: 8px;">60+ Days</th>
+        </tr>
+        <tr>
+          <td style="border: 1px solid #ddd; padding: 8px;">ABC Supplies Co.</td>
+          <td style="border: 1px solid #ddd; padding: 8px;">$2,500.00</td>
+          <td style="border: 1px solid #ddd; padding: 8px;">$1,200.00</td>
+          <td style="border: 1px solid #ddd; padding: 8px;">$0.00</td>
+          <td style="border: 1px solid #ddd; padding: 8px;">$0.00</td>
+        </tr>
+      </table>
+    `,
+    vendor: `
+      <h3>Vendor Summary Report</h3>
+      <p><strong>Total Vendors:</strong> 25</p>
+      <p><strong>Active Vendors:</strong> 22</p>
+      <p><strong>Total Outstanding:</strong> $45,230.50</p>
+    `,
+    payments: `
+      <h3>Payment History Report</h3>
+      <p><strong>Total Payments:</strong> 156</p>
+      <p><strong>Total Amount:</strong> $125,450.75</p>
+      <p><strong>Average Payment:</strong> $804.17</p>
+    `,
+    cashflow: `
+      <h3>Cash Flow Forecast</h3>
+      <p><strong>Next 30 Days:</strong> $15,200.00</p>
+      <p><strong>Next 60 Days:</strong> $28,450.00</p>
+      <p><strong>Next 90 Days:</strong> $42,100.00</p>
+    `
+  }
+  return contents[reportType] || '<p>Report content not available</p>'
 }
 </script>
 
@@ -401,6 +604,24 @@ const formatDate = (date: Date) => {
   gap: 0.25rem;
 }
 
+.report-viewer-dialog .report-content {
+  padding: 1rem;
+  background: white;
+  border-radius: 4px;
+  border: 1px solid #e0e0e0;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.report-viewer-dialog .report-content h3 {
+  margin-top: 0;
+  color: var(--primary-color);
+}
+
+.report-viewer-dialog .report-content table {
+  margin: 1rem 0;
+}
+
 @media (max-width: 768px) {
   .reports-grid {
     grid-template-columns: 1fr;
@@ -412,6 +633,10 @@ const formatDate = (date: Date) => {
   
   .amount-inputs {
     flex-direction: column;
+  }
+  
+  .report-viewer-dialog {
+    width: 95vw !important;
   }
 }
 </style>

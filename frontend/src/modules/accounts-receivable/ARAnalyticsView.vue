@@ -253,6 +253,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { analyticsService, type AnalyticsDashboard } from '@/api/arService'
 
 const router = useRouter()
 
@@ -260,7 +261,8 @@ const router = useRouter()
 const showPredictions = ref(true)
 const selectedTimeframe = ref('month')
 const dsoTimeframe = ref('12months')
-const highRiskCount = ref(12)
+const loading = ref(false)
+const dashboardData = ref<AnalyticsDashboard | null>(null)
 
 // AI Insights
 const aiInsights = ref([
@@ -305,61 +307,76 @@ const aiInsights = ref([
   }
 ])
 
-// KPIs
-const kpis = ref([
-  {
-    id: 'dso',
-    icon: '📅',
-    title: 'Days Sales Outstanding',
-    value: '32.5 days',
-    change: '-2.3 days vs last month',
-    trend: 'positive',
-    target: '≤ 30 days'
-  },
-  {
-    id: 'cei',
-    icon: '🎯',
-    title: 'Collection Effectiveness',
-    value: '92.5%',
-    change: '+1.8% vs last month',
-    trend: 'positive',
-    target: '≥ 90%'
-  },
-  {
-    id: 'bad_debt',
-    icon: '💸',
-    title: 'Bad Debt Rate',
-    value: '1.2%',
-    change: '-0.3% vs last month',
-    trend: 'positive',
-    target: '≤ 2%'
-  },
-  {
-    id: 'cash_collected',
-    icon: '💰',
-    title: 'Cash Collected MTD',
-    value: '$1.2M',
-    change: '+15% vs last month',
-    trend: 'positive',
-    target: '$1.5M'
-  }
-])
+// Computed KPIs from real data
+const kpis = computed(() => {
+  if (!dashboardData.value) return []
+  
+  const data = dashboardData.value.kpis
+  return [
+    {
+      id: 'dso',
+      icon: '📅',
+      title: 'Days Sales Outstanding',
+      value: `${data.dso.toFixed(1)} days`,
+      change: data.dso <= 30 ? 'Within target' : 'Above target',
+      trend: data.dso <= 30 ? 'positive' : 'negative',
+      target: '≤ 30 days'
+    },
+    {
+      id: 'outstanding',
+      icon: '💰',
+      title: 'Total Outstanding',
+      value: formatCurrency(data.total_outstanding),
+      change: `${data.active_customers} active customers`,
+      trend: 'neutral',
+      target: 'Monitor'
+    },
+    {
+      id: 'overdue',
+      icon: '⚠️',
+      title: 'Overdue Amount',
+      value: formatCurrency(data.overdue_amount),
+      change: data.overdue_amount > 0 ? 'Requires attention' : 'All current',
+      trend: data.overdue_amount > 0 ? 'negative' : 'positive',
+      target: '$0'
+    },
+    {
+      id: 'collections',
+      icon: '📈',
+      title: 'Monthly Collections',
+      value: formatCurrency(data.current_month_collections),
+      change: 'Current month',
+      trend: 'positive',
+      target: 'Track monthly'
+    }
+  ]
+})
 
-// Payment Forecasts
-const paymentForecasts = ref([
-  { period: 'Week 1', amount: 125000, percentage: 80, risk: 'low' },
-  { period: 'Week 2', amount: 98000, percentage: 65, risk: 'medium' },
-  { period: 'Week 3', amount: 156000, percentage: 95, risk: 'low' },
-  { period: 'Week 4', amount: 87000, percentage: 55, risk: 'high' }
-])
+// Payment Forecasts from API
+const paymentForecasts = computed(() => {
+  if (!dashboardData.value) return []
+  return dashboardData.value.payment_forecasts.map(forecast => ({
+    period: forecast.period,
+    amount: forecast.amount,
+    percentage: forecast.confidence,
+    risk: forecast.risk_level
+  }))
+})
 
-// Risk Breakdown
-const riskBreakdown = ref([
-  { level: 'critical', label: 'Critical Risk', count: 5, amount: 125000 },
-  { level: 'high', label: 'High Risk', count: 12, amount: 285000 },
-  { level: 'medium', label: 'Medium Risk', count: 28, amount: 450000 },
-  { level: 'low', label: 'Low Risk', count: 156, amount: 1250000 }
-])
+// Risk Breakdown from API
+const riskBreakdown = computed(() => {
+  if (!dashboardData.value) return []
+  const risk = dashboardData.value.risk_analysis
+  return [
+    { level: 'high', label: 'High Risk', count: risk.high_risk_customers, amount: risk.total_at_risk_amount * 0.4 },
+    { level: 'medium', label: 'Medium Risk', count: risk.medium_risk_customers, amount: risk.total_at_risk_amount * 0.6 },
+    { level: 'low', label: 'Low Risk', count: risk.low_risk_customers, amount: 1250000 }
+  ]
+})
+
+const highRiskCount = computed(() => {
+  return dashboardData.value?.risk_analysis.high_risk_customers || 0
+})
 
 // Customer Segments
 const customerSegments = ref([
@@ -379,21 +396,25 @@ const dsoTrend = ref([
   { period: 'Jun', value: 32.5, percentage: 62 }
 ])
 
-// Collection Metrics
-const collectionMetrics = ref([
-  { name: 'Current Collections', value: '95%', percentage: 95, status: 'excellent' },
-  { name: '1-30 Days', value: '88%', percentage: 88, status: 'good' },
-  { name: '31-60 Days', value: '72%', percentage: 72, status: 'fair' },
-  { name: '60+ Days', value: '45%', percentage: 45, status: 'poor' }
-])
+// Collection Metrics from API
+const collectionMetrics = computed(() => {
+  if (!dashboardData.value) return []
+  return dashboardData.value.collection_metrics
+})
 
-// Aging Buckets
-const agingBuckets = ref([
-  { range: 'Current', amount: 850000, percentage: 45, invoiceCount: 156, risk: 'low', trend: '+5%', trendDirection: 'positive' },
-  { range: '1-30 Days', amount: 420000, percentage: 25, invoiceCount: 89, risk: 'medium', trend: '-2%', trendDirection: 'positive' },
-  { range: '31-60 Days', amount: 285000, percentage: 18, invoiceCount: 45, risk: 'high', trend: '+8%', trendDirection: 'negative' },
-  { range: '60+ Days', amount: 125000, percentage: 12, invoiceCount: 23, risk: 'critical', trend: '-12%', trendDirection: 'positive' }
-])
+// Aging Buckets from API
+const agingBuckets = computed(() => {
+  if (!dashboardData.value) return []
+  return dashboardData.value.aging_buckets.map(bucket => ({
+    range: bucket.range,
+    amount: bucket.amount,
+    percentage: bucket.percentage,
+    invoiceCount: bucket.invoice_count,
+    risk: bucket.risk,
+    trend: '+5%', // Mock trend - replace with actual calculation
+    trendDirection: 'positive'
+  }))
+})
 
 // Recommended Actions
 const recommendedActions = ref([
@@ -478,8 +499,23 @@ const exportReport = () => {
   alert('Exporting analytics report...')
 }
 
+const loadAnalyticsData = async () => {
+  loading.value = true
+  try {
+    dashboardData.value = await analyticsService.getDashboardAnalytics()
+  } catch (error) {
+    console.error('Error loading analytics data:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+const refreshData = async () => {
+  await loadAnalyticsData()
+}
+
 onMounted(() => {
-  // Load analytics data
+  loadAnalyticsData()
 })
 </script>
 

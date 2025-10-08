@@ -47,6 +47,7 @@ def init_db():
     """Initialize database tables."""
     # Import all models to ensure they are registered
     from app.models import user  # noqa
+    from app.models import tax_return  # noqa
     try:
         from app.models.gl_models import (  # Import GL models
             ChartOfAccounts, JournalEntry, JournalEntryLine, 
@@ -57,6 +58,8 @@ def init_db():
         print("✅ Advanced GL models imported")
     except ImportError as e:
         print(f"Warning: Could not import advanced models: {e}")
+    
+    print("✅ Tax return model imported")
     
     # Create all tables
     Base.metadata.create_all(bind=engine)

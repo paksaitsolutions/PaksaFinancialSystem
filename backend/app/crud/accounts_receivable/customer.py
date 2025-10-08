@@ -1,131 +1,111 @@
 """
-CRUD operations for customers.
+CRUD operations for Customer model
 """
-from typing import Any, Dict, List, Optional, Union
-from uuid import UUID
-
-from sqlalchemy import select
+from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, func, or_, text
 from sqlalchemy.orm import selectinload
 
-from app.core.db.query_helper import QueryHelper
 from app.models.accounts_receivable.customer import Customer, CustomerContact
-from app.schemas.accounts_receivable.customer import CustomerCreate, CustomerUpdate
 
 class CustomerCRUD:
-    """CRUD operations for customers."""
+    """CRUD operations for customers"""
     
-    def __init__(self):
-        """Initialize with query helper."""
-        self.query_helper = QueryHelper(Customer)
-    
-    async def create(self, db: AsyncSession, *, obj_in: CustomerCreate) -> Customer:
-        """Create a new customer."""
-        # Extract contacts data
-        contacts_data = obj_in.contacts
-        obj_in_data = obj_in.dict(exclude={"contacts"})
-        
-        # Create customer
-        db_obj = Customer(**obj_in_data)
-        db.add(db_obj)
-        await db.flush()
-        
-        # Create contacts if provided
-        if contacts_data:
-            for contact_data in contacts_data:
-                contact = CustomerContact(**contact_data.dict(), customer_id=db_obj.id)
-                db.add(contact)
-        
-        await db.commit()
-        await db.refresh(db_obj)
-        return db_obj
-    
-    async def get(self, db: AsyncSession, id: UUID) -> Optional[Customer]:
-        """Get a customer by ID."""
-        query = select(Customer).where(Customer.id == id).options(
-            selectinload(Customer.contacts)
-        )
-        result = await db.execute(query)
-        return result.scalars().first()
-    
-    async def get_by_code(self, db: AsyncSession, code: str) -> Optional[Customer]:
-        """Get a customer by code."""
-        query = select(Customer).where(Customer.code == code)
-        result = await db.execute(query)
-        return result.scalars().first()
-    
-    async def get_multi(
-        self,
-        db: AsyncSession,
-        *,
-        skip: int = 0,
+    async def get_customers(
+        self, 
+        db: AsyncSession, 
+        skip: int = 0, 
         limit: int = 100,
-        filters: Optional[Dict[str, Any]] = None,
-        sort_by: Optional[str] = None,
-        sort_order: str = "asc"
+        status: Optional[str] = None,
+        search: Optional[str] = None
     ) -> List[Customer]:
-        """Get multiple customers."""
-        query = self.query_helper.build_query(
-            filters=filters,
-            sort_by=sort_by or "name",
-            sort_order=sort_order,
-            skip=skip,
-            limit=limit,
-            eager_load=["contacts"]
-        )
-        return await self.query_helper.execute_query(db, query)
-    
-    async def get_paginated(
-        self,
-        db: AsyncSession,
-        *,
-        page: int = 1,
-        page_size: int = 20,
-        filters: Optional[Dict[str, Any]] = None,
-        sort_by: Optional[str] = None,
-        sort_order: str = "asc"
-    ) -> Dict[str, Any]:
-        """Get paginated customers."""
-        return await self.query_helper.get_paginated(
-            db,
-            filters=filters,
-            sort_by=sort_by or "name",
-            sort_order=sort_order,
-            page=page,
-            page_size=page_size,
-            eager_load=["contacts"]
-        )
-    
-    async def update(
-        self,
-        db: AsyncSession,
-        *,
-        db_obj: Customer,
-        obj_in: Union[CustomerUpdate, Dict[str, Any]]
-    ) -> Customer:
-        """Update a customer."""
-        if isinstance(obj_in, dict):
-            update_data = obj_in
-        else:
-            update_data = obj_in.dict(exclude_unset=True)
+        """Get customers with filtering"""
+        query = select(Customer).options(selectinload(Customer.contacts))
         
-        # Update customer attributes
-        for field in update_data:
-            if field != "contacts" and hasattr(db_obj, field):
-                setattr(db_obj, field, update_data[field])
+        if status:
+            query = query.where(Customer.status == status)
+            
+        if search:
+            query = query.where(
+                or_(
+                    Customer.name.ilike(f"%{search}%"),
+                    Customer.code.ilike(f"%{search}%"),
+                    Customer.email.ilike(f"%{search}%")
+                )
+            )
         
-        db.add(db_obj)
-        await db.commit()
-        await db.refresh(db_obj)
-        return db_obj
+        query = query.offset(skip).limit(limit).order_by(Customer.name)
+        result = await db.execute(query)
+        return result.scalars().all()
     
-    async def delete(self, db: AsyncSession, *, id: UUID) -> Optional[Customer]:
-        """Delete a customer."""
-        customer = await self.get(db, id)
-        if customer:
-            await db.delete(customer)
-            await db.commit()
-        return customer
-
-# Create an instance for dependency injection
-customer_crud = CustomerCRUD()
+    async def count_customers(
+        self, 
+        db: AsyncSession,
+        status: Optional[str] = None,
+        search: Optional[str] = None
+    ) -> int:
+        """Count customers with filtering"""
+        query = select(func.count(Customer.id))
+        
+        if status:
+            query = query.where(Customer.status == status)
+            
+        if search:
+            query = query.where(
+                or_(
+                    Customer.name.ilike(f"%{search}%"),
+                    Customer.code.ilike(f"%{search}%"),
+                    Customer.email.ilike(f"%{search}%")
+                )
+            )
+        
+        result = await db.execute(query)
+        return result.scalar()
+    
+    async def get_customer(self, db: AsyncSession, customer_id: str) -> Optional[Customer]:
+        """Get customer by ID"""
+        query = select(Customer).options(selectinload(Customer.contacts)).where(Customer.id == customer_id)
+        result = await db.execute(query)
+        return result.scalar_one_or_none()
+    
+    async def get_customer_segmentation(self, db: AsyncSession):
+        """Get customer segmentation analysis"""
+        # Mock segmentation - replace with actual analysis
+        return [
+            {
+                "id": 1,
+                "name": "Champions",
+                "count": 45,
+                "value": 850000,
+                "percentage": 35,
+                "color": "#10B981",
+                "criteria": "High value, frequent purchases, low risk"
+            },
+            {
+                "id": 2,
+                "name": "Loyal Customers",
+                "count": 78,
+                "value": 650000,
+                "percentage": 28,
+                "color": "#3B82F6",
+                "criteria": "Regular purchases, good payment history"
+            },
+            {
+                "id": 3,
+                "name": "Potential Loyalists",
+                "count": 52,
+                "value": 420000,
+                "percentage": 22,
+                "color": "#F59E0B",
+                "criteria": "Recent customers with growth potential"
+            },
+            {
+                "id": 4,
+                "name": "At Risk",
+                "count": 23,
+                "value": 180000,
+                "percentage": 15,
+                "color": "#EF4444",
+                "criteria": "Declining purchases, payment delays"
+            }
+        ]

@@ -45,13 +45,16 @@ class TaxReportingService:
     
     async def initialize_redis(self):
         """Initialize Redis connection if not already initialized."""
-        if not self._redis_initialized and settings.REDIS_URL:
+        if not self._redis_initialized and settings.REDIS_URL and getattr(settings, 'USE_REDIS', False):
             try:
                 await redis_manager.initialize()
                 self.redis = await redis_manager.redis()
                 self._redis_initialized = True
             except Exception as e:
                 logger.warning(f"Failed to initialize Redis: {e}")
+        else:
+            logger.info("Redis is disabled for tax reporting service, skipping initialization")
+            self._redis_initialized = True
     
     def _get_cache_key(self, func_name: str, **kwargs) -> str:
         """Generate a consistent cache key for function calls."""

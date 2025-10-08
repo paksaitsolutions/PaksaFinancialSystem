@@ -1,33 +1,34 @@
 <template>
-  <AppLayout title="User Management - Roles">
-    <div class="card">
-      <div class="flex justify-content-between align-items-center mb-4">
-        <h2>Role Management</h2>
-        <div class="flex gap-2">
-          <Button 
-            label="New Role" 
-            icon="pi pi-plus" 
-            @click="openRoleDialog()"
-            class="p-button-sm"
-          />
-          <Button 
-            label="Initialize RBAC" 
-            icon="pi pi-cog" 
-            @click="initializeRBAC"
-            class="p-button-secondary p-button-sm"
-          />
-        </div>
+  <div class="role-management p-4">
+    <div class="flex justify-content-between align-items-center mb-4">
+      <div>
+        <h1>Role Management</h1>
+        <Breadcrumb :home="home" :model="breadcrumbItems" />
       </div>
-      
-      <div class="card">
+      <div class="flex gap-2">
+        <Button 
+          label="New Role" 
+          icon="pi pi-plus" 
+          @click="openRoleDialog()"
+          class="p-button-sm"
+        />
+        <Button 
+          label="Initialize RBAC" 
+          icon="pi pi-cog" 
+          @click="initializeRBAC"
+          class="p-button-secondary p-button-sm"
+        />
+      </div>
+    </div>
+    
+    <Card>
+      <template #content>
         <DataTable 
           :value="roles" 
           :loading="loading"
           :paginator="true"
           :rows="10"
           :rowsPerPageOptions="[5,10,25,50]"
-          paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-          currentPageReportTemplate="Showing {first} to {last} of {totalRecords} roles"
           class="p-datatable-sm"
           :globalFilterFields="['name', 'code']"
           responsiveLayout="scroll"
@@ -59,24 +60,6 @@
             </template>
           </Column>
           
-          <Column field="permissions" header="Permissions">
-            <template #body="{ data }">
-              <div class="flex flex-wrap gap-1">
-                <Chip 
-                  v-for="permission in data.permissions.slice(0, 3)"
-                  :key="permission.id"
-                  :label="permission.code"
-                  class="text-xs"
-                />
-                <Chip 
-                  v-if="data.permissions.length > 3"
-                  :label="'+' + (data.permissions.length - 3) + ' more'"
-                  class="text-xs"
-                />
-              </div>
-            </template>
-          </Column>
-          
           <Column header="Actions" style="width: 100px">
             <template #body="{ data }">
               <div class="flex gap-1">
@@ -102,8 +85,8 @@
             </template>
           </Column>
         </DataTable>
-      </div>
-    </div>
+      </template>
+    </Card>
     
     <!-- Role Dialog -->
     <Dialog 
@@ -163,26 +146,6 @@
               <label for="is_active">Active</label>
             </div>
           </div>
-          
-          <div class="col-12">
-            <h4 class="mb-4">Permissions</h4>
-            <div class="grid">
-              <div 
-                v-for="permission in permissions"
-                :key="permission.id"
-                class="col-12 md:col-4"
-              >
-                <div class="field-checkbox">
-                  <Checkbox
-                    :id="'perm_' + permission.id"
-                    :value="permission.id"
-                    v-model="editedRole.permission_ids"
-                  />
-                  <label :for="'perm_' + permission.id">{{ permission.name }}</label>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </form>
       
@@ -211,60 +174,32 @@
         />
       </template>
     </Dialog>
-    
-    <!-- Delete Confirmation Dialog -->
-    <Dialog 
-      v-model:visible="deleteDialog" 
-      header="Confirm Delete" 
-      :modal="true"
-      :style="{ width: '450px' }"
-    >
-      <div class="confirmation-content">
-        <i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem" />
-        <span v-if="selectedRole">
-          Are you sure you want to delete <b>{{ selectedRole.name }}</b>?
-        </span>
-      </div>
-      <template #footer>
-        <Button 
-          label="No" 
-          icon="pi pi-times" 
-          @click="deleteDialog = false" 
-          class="p-button-text"
-        />
-        <Button 
-          label="Yes" 
-          icon="pi pi-check" 
-          @click="deleteRole" 
-          class="p-button-danger"
-          autofocus
-        />
-      </template>
-    </Dialog>
-  </AppLayout>
+  </div>
 </template>
 
 <script setup>
 import { ref, onMounted, reactive } from 'vue'
 import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
-import AppLayout from '@/layouts/AppLayout.vue'
 import { FilterMatchMode } from 'primevue/api'
-import roleService from '@/services/roleService'
 
 const confirm = useConfirm()
 const toast = useToast()
+
+const home = ref({ icon: 'pi pi-home', to: '/' })
+const breadcrumbItems = ref([
+  { label: 'RBAC', to: '/rbac' },
+  { label: 'Roles' }
+])
 
 // State
 const loading = ref(false)
 const saving = ref(false)
 const roleDialog = ref(false)
-const deleteDialog = ref(false)
 const editMode = ref(false)
 const viewMode = ref(false)
 const submitted = ref(false)
 const roles = ref([])
-const permissions = ref([])
 const selectedRole = ref(null)
 
 // Filters
@@ -278,8 +213,7 @@ const editedRole = ref({
   name: '',
   code: '',
   description: '',
-  is_active: true,
-  permission_ids: []
+  is_active: true
 })
 
 const defaultRole = () => ({
@@ -287,40 +221,27 @@ const defaultRole = () => ({
   name: '',
   code: '',
   description: '',
-  is_active: true,
-  permission_ids: []
+  is_active: true
 })
 
 const fetchRoles = async () => {
   loading.value = true
   try {
-    const response = await roleService.getRoles()
-    roles.value = response.data
+    // Mock data
+    roles.value = [
+      { id: 1, name: 'Administrator', code: 'admin', description: 'Full system access', is_active: true },
+      { id: 2, name: 'Manager', code: 'manager', description: 'Management access', is_active: true },
+      { id: 3, name: 'User', code: 'user', description: 'Basic user access', is_active: true }
+    ]
   } catch (error) {
-    console.error('Error fetching roles:', error)
     toast.add({ 
       severity: 'error', 
       summary: 'Error', 
-      detail: 'Failed to fetch roles. Please try again.',
+      detail: 'Failed to fetch roles',
       life: 3000 
     })
   } finally {
     loading.value = false
-  }
-}
-
-const fetchPermissions = async () => {
-  try {
-    const response = await roleService.getPermissions()
-    permissions.value = response.data
-  } catch (error) {
-    console.error('Error fetching permissions:', error)
-    toast.add({ 
-      severity: 'error', 
-      summary: 'Error', 
-      detail: 'Failed to fetch permissions. Please try again.',
-      life: 3000 
-    })
   }
 }
 
@@ -335,13 +256,6 @@ const saveRole = async () => {
   
   try {
     if (editMode.value) {
-      // Update existing role
-      await roleService.updateRole(editedRole.value.id, editedRole.value)
-      // Update local state
-      const index = roles.value.findIndex(r => r.id === editedRole.value.id)
-      if (index !== -1) {
-        roles.value[index] = { ...editedRole.value }
-      }
       toast.add({ 
         severity: 'success', 
         summary: 'Success', 
@@ -349,9 +263,8 @@ const saveRole = async () => {
         life: 3000 
       })
     } else {
-      // Create new role
-      const newRole = await roleService.createRole(editedRole.value)
-      roles.value.unshift(newRole)
+      editedRole.value.id = Date.now()
+      roles.value.unshift({ ...editedRole.value })
       toast.add({ 
         severity: 'success', 
         summary: 'Success', 
@@ -362,11 +275,10 @@ const saveRole = async () => {
     
     closeRoleDialog()
   } catch (error) {
-    console.error('Error saving role:', error)
     toast.add({ 
       severity: 'error', 
       summary: 'Error', 
-      detail: 'Failed to save role. Please try again.',
+      detail: 'Failed to save role',
       life: 3000 
     })
   } finally {
@@ -376,10 +288,7 @@ const saveRole = async () => {
 
 const openRoleDialog = (role = null) => {
   if (role) {
-    editedRole.value = { 
-      ...role, 
-      permission_ids: role.permissions ? role.permissions.map(p => p.id) : [] 
-    }
+    editedRole.value = { ...role }
     editMode.value = true
     viewMode.value = true
   } else {
@@ -401,20 +310,14 @@ const closeRoleDialog = () => {
 }
 
 const viewRole = (role) => {
-  editedRole.value = { 
-    ...role, 
-    permission_ids: role.permissions ? role.permissions.map(p => p.id) : [] 
-  }
+  editedRole.value = { ...role }
   editMode.value = true
   viewMode.value = true
   roleDialog.value = true
 }
 
 const editRole = (role) => {
-  editedRole.value = { 
-    ...role, 
-    permission_ids: role.permissions ? role.permissions.map(p => p.id) : [] 
-  }
+  editedRole.value = { ...role }
   editMode.value = true
   viewMode.value = false
   roleDialog.value = true
@@ -427,10 +330,7 @@ const confirmDeleteRole = (role) => {
     header: 'Confirm Delete',
     icon: 'pi pi-exclamation-triangle',
     acceptClass: 'p-button-danger',
-    accept: deleteRole,
-    reject: () => {
-      selectedRole.value = null
-    }
+    accept: deleteRole
   })
 }
 
@@ -438,7 +338,6 @@ const deleteRole = async () => {
   if (!selectedRole.value) return
   
   try {
-    await roleService.deleteRole(selectedRole.value.id)
     roles.value = roles.value.filter(r => r.id !== selectedRole.value.id)
     toast.add({ 
       severity: 'success', 
@@ -447,11 +346,10 @@ const deleteRole = async () => {
       life: 3000 
     })
   } catch (error) {
-    console.error('Error deleting role:', error)
     toast.add({ 
       severity: 'error', 
       summary: 'Error', 
-      detail: 'Failed to delete role. Please try again.',
+      detail: 'Failed to delete role',
       life: 3000 
     })
   } finally {
@@ -462,21 +360,18 @@ const deleteRole = async () => {
 const initializeRBAC = async () => {
   try {
     loading.value = true
-    const response = await roleService.initializeRBAC()
-    await Promise.all([fetchRoles(), fetchPermissions()])
+    await fetchRoles()
     toast.add({ 
       severity: 'success', 
       summary: 'Success', 
-      detail: response.data?.message || 'RBAC initialized successfully',
+      detail: 'RBAC initialized successfully',
       life: 3000 
     })
   } catch (error) {
-    console.error('Error initializing RBAC:', error)
-    const errorMessage = error.response?.data?.detail || 'Failed to initialize RBAC'
     toast.add({ 
       severity: 'error', 
       summary: 'Error', 
-      detail: errorMessage,
+      detail: 'Failed to initialize RBAC',
       life: 3000 
     })
   } finally {
@@ -484,67 +379,7 @@ const initializeRBAC = async () => {
   }
 }
 
-// Format date for display
-const formatDate = (dateString) => {
-  if (!dateString) return 'N/A'
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
-}
-
-// Toggle role status
-const toggleRoleStatus = async (role) => {
-  try {
-    const newStatus = !role.is_active
-    await roleService.updateRole(role.id, { is_active: newStatus })
-    
-    // Update local state
-    const index = roles.value.findIndex(r => r.id === role.id)
-    if (index !== -1) {
-      roles.value[index].is_active = newStatus
-    }
-    
-    toast.add({ 
-      severity: 'success', 
-      summary: 'Success', 
-      detail: `Role ${newStatus ? 'activated' : 'deactivated'} successfully`,
-      life: 3000 
-    })
-  } catch (error) {
-    console.error('Error toggling role status:', error)
-    toast.add({ 
-      severity: 'error', 
-      summary: 'Error', 
-      detail: 'Failed to update role status. Please try again.',
-      life: 3000 
-    })
-  }
-}
-
-// Export roles to different formats
-const exportRoles = (format) => {
-  // This would typically call an API endpoint to generate the export
-  // For now, we'll just show a toast
-  toast.add({
-    severity: 'info',
-    summary: 'Export Started',
-    detail: `Exporting roles to ${format.toUpperCase()} format...`,
-    life: 3000
-  })
-  
-  // In a real implementation, you would:
-  // 1. Call an API endpoint to generate the export
-  // 2. Handle the file download
-  // 3. Show success/error toast based on the result
-}
-
-// Lifecycle Hooks
 onMounted(() => {
   fetchRoles()
-  fetchPermissions()
 })
 </script>

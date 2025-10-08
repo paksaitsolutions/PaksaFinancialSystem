@@ -35,7 +35,7 @@ class ReportCache:
         
     async def initialize(self):
         """Initialize the Redis connection if not already done."""
-        if not self._redis_initialized and settings.REDIS_URL:
+        if not self._redis_initialized and settings.REDIS_URL and getattr(settings, 'USE_REDIS', False):
             try:
                 await redis_manager.initialize()
                 self.redis = await redis_manager.redis()
@@ -44,6 +44,9 @@ class ReportCache:
             except Exception as e:
                 logger.error(f"Failed to initialize ReportCache Redis: {e}")
                 self._redis_initialized = False
+        else:
+            logger.info("Redis is disabled for ReportCache, skipping initialization")
+            self._redis_initialized = True
     
     def _generate_cache_key(self, prefix: str, **kwargs) -> str:
         """Generate a consistent cache key from function arguments."""

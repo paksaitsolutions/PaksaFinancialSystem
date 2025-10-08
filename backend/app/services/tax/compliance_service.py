@@ -9,9 +9,9 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 import pytz
 
-from app.core.config import settings
+from app.core.config.settings import settings
 from app.models.tax_models import (
-    ComplianceCheck, ComplianceRule, ComplianceAlert, TaxTransaction, TaxRate
+    ComplianceCheck, ComplianceRule, ComplianceAlert, TaxTransaction, TaxRateCompliance
 )
 from app.core.integrations.regulatory_api import RegulatoryAPIClient
 from app.core.notifications import NotificationService
@@ -68,8 +68,8 @@ class ComplianceService:
     def __init__(self, db: Session):
         self.db = db
         self.regulatory_client = RegulatoryAPIClient(
-            api_key=settings.REGULATORY_API_KEY,
-            environment=settings.ENV
+            api_key=getattr(settings, 'REGULATORY_API_KEY', None),
+            environment=getattr(settings, 'ENVIRONMENT', 'production')
         )
         self.notification_service = NotificationService()
         

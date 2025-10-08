@@ -4,10 +4,9 @@ from datetime import datetime
 from decimal import Decimal
 
 class BudgetLineItemBase(BaseModel):
-    account_code: str
-    account_name: str
-    category: Optional[str] = None
-    budgeted_amount: Decimal
+    category: str
+    description: Optional[str] = None
+    amount: Decimal
 
 class BudgetLineItemCreate(BudgetLineItemBase):
     pass
@@ -15,55 +14,67 @@ class BudgetLineItemCreate(BudgetLineItemBase):
 class BudgetLineItem(BudgetLineItemBase):
     id: int
     budget_id: int
-    actual_amount: Decimal = 0
-    variance: Decimal = 0
-    created_at: datetime
-    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class BudgetActualBase(BaseModel):
+    category: str
+    actual_amount: Decimal
+    period_date: datetime
+
+class BudgetActualCreate(BudgetActualBase):
+    pass
+
+class BudgetActual(BudgetActualBase):
+    id: int
+    budget_id: int
 
     class Config:
         from_attributes = True
 
 class BudgetBase(BaseModel):
     name: str
+    type: str
+    amount: Decimal
+    period_start: datetime
+    period_end: datetime
+    status: str = "DRAFT"
     description: Optional[str] = None
-    fiscal_year: int
-    start_date: datetime
-    end_date: datetime
 
 class BudgetCreate(BudgetBase):
     line_items: List[BudgetLineItemCreate] = []
 
 class BudgetUpdate(BaseModel):
     name: Optional[str] = None
-    description: Optional[str] = None
+    type: Optional[str] = None
+    amount: Optional[Decimal] = None
+    period_start: Optional[datetime] = None
+    period_end: Optional[datetime] = None
     status: Optional[str] = None
-    line_items: Optional[List[BudgetLineItemCreate]] = None
+    description: Optional[str] = None
 
 class Budget(BudgetBase):
     id: int
-    total_amount: Decimal
-    status: str
     created_at: datetime
-    updated_at: datetime
+    updated_at: Optional[datetime] = None
     line_items: List[BudgetLineItem] = []
+    actuals: List[BudgetActual] = []
 
     class Config:
         from_attributes = True
 
-class BudgetApprovalBase(BaseModel):
+class BudgetSummary(BaseModel):
+    total_budgets: int
+    total_amount: Decimal
+    approved_amount: Decimal
+    pending_amount: Decimal
+    utilization_rate: float
+
+class BudgetVariance(BaseModel):
+    category: str
+    budget: Decimal
+    actual: Decimal
+    variance: Decimal
+    variance_percent: float
     status: str
-    comments: Optional[str] = None
-
-class BudgetApprovalCreate(BudgetApprovalBase):
-    budget_id: int
-    approver_id: int
-
-class BudgetApproval(BudgetApprovalBase):
-    id: int
-    budget_id: int
-    approver_id: int
-    approved_at: Optional[datetime] = None
-    created_at: datetime
-
-    class Config:
-        from_attributes = True

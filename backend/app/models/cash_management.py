@@ -1,61 +1,74 @@
-from sqlalchemy import Column, String, DateTime, Boolean, Text, ForeignKey, Integer
-from sqlalchemy.types import DECIMAL as Decimal
+from sqlalchemy import Column, String, DateTime, Decimal, Boolean, Text, ForeignKey, Enum
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-from .base import Base
-from datetime import datetime
+from sqlalchemy.sql import func
+import uuid
+import enum
+
+from app.core.database import Base
+
+class AccountType(str, enum.Enum):
+    CHECKING = "checking"
+    SAVINGS = "savings"
+    MONEY_MARKET = "money_market"
+    CREDIT_CARD = "credit_card"
+
+class TransactionType(str, enum.Enum):
+    DEPOSIT = "deposit"
+    WITHDRAWAL = "withdrawal"
+    TRANSFER_IN = "transfer_in"
+    TRANSFER_OUT = "transfer_out"
+    FEE = "fee"
+    PAYMENT = "payment"
+
+class TransactionStatus(str, enum.Enum):
+    PENDING = "pending"
+    POSTED = "posted"
+    CLEARED = "cleared"
+    VOID = "void"
 
 class BankAccount(Base):
     __tablename__ = "bank_accounts"
-    
-    id = Column(String, primary_key=True)
-    company_id = Column(String, ForeignKey("companies.id"), nullable=False)
-    account_name = Column(String(255), nullable=False)
-    account_number = Column(String(50), nullable=False)
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String(255), nullable=False)
+    account_number = Column(String(100), nullable=False)
+    account_type = Column(Enum(AccountType), nullable=False)
     bank_name = Column(String(255), nullable=False)
     routing_number = Column(String(50))
-    account_type = Column(String(50))
-    currency = Column(String(3), default="USD")
-    current_balance = Column(Decimal(15, 2), default=0)
+    current_balance = Column(Decimal(15, 2), default=0.00)
+    available_balance = Column(Decimal(15, 2), default=0.00)
     is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
-class CashTransaction(Base):
-    __tablename__ = "cash_transactions"
-    
-    id = Column(String, primary_key=True)
-    company_id = Column(String, ForeignKey("companies.id"), nullable=False)
-    bank_account_id = Column(String, ForeignKey("bank_accounts.id"), nullable=False)
-    transaction_date = Column(DateTime, nullable=False)
-    transaction_type = Column(String(20), nullable=False)  # debit, credit
+    transactions = relationship("BankTransaction", back_populates="account")
+
+class BankTransaction(Base):
+    __tablename__ = "bank_transactions"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    account_id = Column(UUID(as_uuid=True), ForeignKey("bank_accounts.id"), nullable=False)
+    transaction_date = Column(DateTime(timezone=True), nullable=False)
+    transaction_type = Column(Enum(TransactionType), nullable=False)
+    status = Column(Enum(TransactionStatus), default=TransactionStatus.PENDING)
     amount = Column(Decimal(15, 2), nullable=False)
+    reference_number = Column(String(100))
+    memo = Column(Text)
+    payee = Column(String(255))
+    payment_method = Column(String(100))
+    running_balance = Column(Decimal(15, 2))
+    is_reconciled = Column(Boolean, default=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    account = relationship("BankAccount", back_populates="transactions")
+
+class CashFlowCategory(Base):
+    __tablename__ = "cash_flow_categories"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String(100), nullable=False)
     description = Column(Text)
-    reference = Column(String(100))
-    reconciled = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-
-class BankReconciliation(Base):
-    __tablename__ = "bank_reconciliations"
-    
-    id = Column(String, primary_key=True)
-    company_id = Column(String, ForeignKey("companies.id"), nullable=False)
-    bank_account_id = Column(String, ForeignKey("bank_accounts.id"), nullable=False)
-    reconciliation_date = Column(DateTime, nullable=False)
-    statement_balance = Column(Decimal(15, 2), nullable=False)
-    book_balance = Column(Decimal(15, 2), nullable=False)
-    adjusted_balance = Column(Decimal(15, 2), nullable=False)
-    status = Column(String(20), default="in_progress")
-    created_by = Column(String, ForeignKey("users.id"))
-    created_at = Column(DateTime, default=datetime.utcnow)
-
-class CashForecast(Base):
-    __tablename__ = "cash_forecasts"
-    
-    id = Column(String, primary_key=True)
-    company_id = Column(String, ForeignKey("companies.id"), nullable=False)
-    forecast_date = Column(DateTime, nullable=False)
-    projected_inflow = Column(Decimal(15, 2), default=0)
-    projected_outflow = Column(Decimal(15, 2), default=0)
-    net_cash_flow = Column(Decimal(15, 2), default=0)
-    notes = Column(Text)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())

@@ -16,9 +16,13 @@ security = HTTPBearer()
 # Redis for session management (optional)
 try:
     import redis
-    redis_client = redis.Redis.from_url(settings.REDIS_URL, decode_responses=True)
-    REDIS_AVAILABLE = True
-except ImportError:
+    if hasattr(settings, 'USE_REDIS') and settings.USE_REDIS and settings.REDIS_URL:
+        redis_client = redis.Redis.from_url(settings.REDIS_URL, decode_responses=True)
+        REDIS_AVAILABLE = True
+    else:
+        redis_client = None
+        REDIS_AVAILABLE = False
+except (ImportError, ValueError):
     redis_client = None
     REDIS_AVAILABLE = False
 

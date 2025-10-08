@@ -1,184 +1,192 @@
 <template>
   <div class="credit-memo-list">
-    <v-card>
-      <v-card-title class="d-flex align-center justify-space-between">
-        <h2>Credit Memos</h2>
-        <v-btn color="primary" prepend-icon="mdi-plus" @click="openCreateDialog">
-          New Credit Memo
-        </v-btn>
-      </v-card-title>
+    <Card>
+      <template #title>
+        <div class="flex align-items-center justify-content-between">
+          <h2>Credit Memos</h2>
+          <Button 
+            label="New Credit Memo" 
+            icon="pi pi-plus" 
+            @click="openCreateDialog"
+          />
+        </div>
+      </template>
       
-      <v-card-text>
+      <template #content>
         <!-- Search and filters -->
-        <v-row>
-          <v-col cols="12" sm="3">
-            <v-select
+        <div class="grid mb-4">
+          <div class="col-12 sm:col-3">
+            <Dropdown
               v-model="filters.status"
-              label="Status"
-              :items="statusOptions"
-              density="compact"
-              hide-details
-              clearable
-              @update:model-value="fetchCreditMemos"
-            ></v-select>
-          </v-col>
-          <v-col cols="12" sm="3">
-            <v-select
+              :options="statusOptions"
+              optionLabel="title"
+              optionValue="value"
+              placeholder="Status"
+              :showClear="true"
+              @change="fetchCreditMemos"
+            />
+          </div>
+          <div class="col-12 sm:col-3">
+            <Dropdown
               v-model="filters.vendorId"
-              label="Vendor"
-              :items="vendors"
-              item-title="name"
-              item-value="id"
-              density="compact"
-              hide-details
-              clearable
-              @update:model-value="fetchCreditMemos"
-            ></v-select>
-          </v-col>
-          <v-col cols="12" sm="3">
-            <v-text-field
+              :options="vendors"
+              optionLabel="name"
+              optionValue="id"
+              placeholder="Vendor"
+              :showClear="true"
+              @change="fetchCreditMemos"
+            />
+          </div>
+          <div class="col-12 sm:col-3">
+            <InputText
               v-model="filters.creditMemoNumber"
-              label="Credit Memo Number"
-              prepend-inner-icon="mdi-pound"
-              density="compact"
-              hide-details
-              @update:model-value="debouncedFetchCreditMemos"
-            ></v-text-field>
-          </v-col>
-          <v-col cols="12" sm="3">
-            <v-btn
-              color="secondary"
-              variant="outlined"
-              prepend-icon="mdi-filter-remove"
+              placeholder="Credit Memo Number"
+              @input="debouncedFetchCreditMemos"
+            />
+          </div>
+          <div class="col-12 sm:col-3">
+            <Button
+              label="Clear"
+              icon="pi pi-filter-slash"
+              severity="secondary"
+              outlined
               @click="clearFilters"
-            >
-              Clear
-            </v-btn>
-          </v-col>
-        </v-row>
-      </v-card-text>
-      
-      <!-- Data table -->
-      <v-data-table
-        v-model:items-per-page="pagination.itemsPerPage"
-        :headers="headers"
-        :items="creditMemos"
-        :loading="loading"
-        :server-items-length="pagination.totalItems"
-        class="elevation-1"
-        @update:options="handleTableUpdate"
-      >
-        <!-- Status column -->
-        <template v-slot:item.status="{ item }">
-          <v-chip
-            :color="getStatusColor(item.status)"
-            size="small"
-            text-color="white"
-          >
-            {{ formatStatus(item.status) }}
-          </v-chip>
-        </template>
+            />
+          </div>
+        </div>
         
-        <!-- Amount columns -->
-        <template v-slot:item.amount="{ item }">
-          {{ formatCurrency(item.amount) }}
-        </template>
-        
-        <template v-slot:item.applied_amount="{ item }">
-          {{ formatCurrency(item.applied_amount) }}
-        </template>
-        
-        <template v-slot:item.remaining_amount="{ item }">
-          {{ formatCurrency(item.remaining_amount) }}
-        </template>
-        
-        <!-- Date column -->
-        <template v-slot:item.credit_date="{ item }">
-          {{ formatDate(item.credit_date) }}
-        </template>
-        
-        <!-- Actions column -->
-        <template v-slot:item.actions="{ item }">
-          <v-btn
-            icon
-            variant="text"
-            size="small"
-            color="primary"
-            @click="viewCreditMemo(item)"
-          >
-            <v-icon>mdi-eye</v-icon>
-          </v-btn>
-          <v-btn
-            v-if="canEdit(item)"
-            icon
-            variant="text"
-            size="small"
-            color="warning"
-            @click="editCreditMemo(item)"
-          >
-            <v-icon>mdi-pencil</v-icon>
-          </v-btn>
-          <v-btn
-            v-if="canApply(item)"
-            icon
-            variant="text"
-            size="small"
-            color="success"
-            @click="applyCreditMemo(item)"
-          >
-            <v-icon>mdi-check-circle</v-icon>
-          </v-btn>
-          <v-btn
-            v-if="canVoid(item)"
-            icon
-            variant="text"
-            size="small"
-            color="error"
-            @click="voidCreditMemo(item)"
-          >
-            <v-icon>mdi-cancel</v-icon>
-          </v-btn>
-        </template>
-      </v-data-table>
-    </v-card>
+        <!-- Data table -->
+        <DataTable
+          :value="creditMemos"
+          :loading="loading"
+          :paginator="true"
+          :rows="pagination.itemsPerPage"
+          :totalRecords="pagination.totalItems"
+          :lazy="true"
+          @page="onPage"
+          @sort="onSort"
+        >
+          <Column field="credit_memo_number" header="Credit Memo #" :sortable="true" />
+          <Column field="vendor.name" header="Vendor" :sortable="true" />
+          <Column field="credit_date" header="Date" :sortable="true">
+            <template #body="{ data }">
+              {{ formatDate(data.credit_date) }}
+            </template>
+          </Column>
+          <Column field="amount" header="Amount" :sortable="true">
+            <template #body="{ data }">
+              {{ formatCurrency(data.amount) }}
+            </template>
+          </Column>
+          <Column field="applied_amount" header="Applied" :sortable="true">
+            <template #body="{ data }">
+              {{ formatCurrency(data.applied_amount) }}
+            </template>
+          </Column>
+          <Column field="remaining_amount" header="Remaining" :sortable="true">
+            <template #body="{ data }">
+              {{ formatCurrency(data.remaining_amount) }}
+            </template>
+          </Column>
+          <Column field="status" header="Status" :sortable="true">
+            <template #body="{ data }">
+              <Tag :value="formatStatus(data.status)" :severity="getStatusSeverity(data.status)" />
+            </template>
+          </Column>
+          <Column header="Actions">
+            <template #body="{ data }">
+              <div class="flex gap-2">
+                <Button
+                  icon="pi pi-eye"
+                  class="p-button-rounded p-button-text"
+                  @click="viewCreditMemo(data)"
+                  v-tooltip.top="'View'"
+                />
+                <Button
+                  v-if="canEdit(data)"
+                  icon="pi pi-pencil"
+                  class="p-button-rounded p-button-text p-button-warning"
+                  @click="editCreditMemo(data)"
+                  v-tooltip.top="'Edit'"
+                />
+                <Button
+                  v-if="canApply(data)"
+                  icon="pi pi-check-circle"
+                  class="p-button-rounded p-button-text p-button-success"
+                  @click="applyCreditMemo(data)"
+                  v-tooltip.top="'Apply'"
+                />
+                <Button
+                  v-if="canVoid(data)"
+                  icon="pi pi-times"
+                  class="p-button-rounded p-button-text p-button-danger"
+                  @click="voidCreditMemo(data)"
+                  v-tooltip.top="'Void'"
+                />
+              </div>
+            </template>
+          </Column>
+        </DataTable>
+    </template>
+    </Card>
     
     <!-- Void Dialog -->
-    <v-dialog v-model="voidDialog.show" max-width="500px">
-      <v-card>
-        <v-card-title>Void Credit Memo</v-card-title>
-        <v-card-text>
-          <p>Are you sure you want to void credit memo "{{ voidDialog.creditMemo?.credit_memo_number }}"?</p>
-          <p class="text-warning">This will reverse all applications and cannot be undone.</p>
-          <v-textarea
-            v-model="voidDialog.reason"
-            label="Reason"
-            rows="3"
-            auto-grow
-            :rules="[v => !!v || 'Reason is required']"
-          ></v-textarea>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="primary" variant="text" @click="voidDialog.show = false">Cancel</v-btn>
-          <v-btn 
-            color="error"
-            :disabled="!voidDialog.reason"
-            @click="submitVoidAction"
-          >
-            Void Credit Memo
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <Dialog 
+      v-model:visible="voidDialog.show" 
+      :style="{width: '500px'}" 
+      header="Void Credit Memo" 
+      :modal="true"
+    >
+      <p>Are you sure you want to void credit memo "{{ voidDialog.creditMemo?.credit_memo_number }}"?</p>
+      <p class="text-orange-500">This will reverse all applications and cannot be undone.</p>
+      <div class="field">
+        <label for="reason">Reason</label>
+        <Textarea
+          id="reason"
+          v-model="voidDialog.reason"
+          rows="3"
+          class="w-full"
+        />
+      </div>
+      
+      <template #footer>
+        <Button 
+          label="Cancel" 
+          icon="pi pi-times" 
+          class="p-button-text" 
+          @click="voidDialog.show = false"
+        />
+        <Button 
+          label="Void Credit Memo" 
+          icon="pi pi-check" 
+          class="p-button-danger" 
+          :disabled="!voidDialog.reason"
+          @click="submitVoidAction"
+        />
+      </template>
+    </Dialog>
   </div>
 </template>
 
-<script setup>
-import { ref, reactive, onMounted, computed } from 'vue';
-import { useSnackbar } from '@/composables/useSnackbar';
-import { debounce } from '@/utils/debounce';
-import { formatCurrency, formatDate } from '@/utils/formatters';
-import { apiClient } from '@/utils/apiClient';
+<script setup lang="ts">
+import { ref, reactive, onMounted } from 'vue';
+import { useToast } from 'primevue/usetoast';
+
+type CreditMemo = {
+  id: string;
+  credit_memo_number: string;
+  vendor: { name: string };
+  credit_date: string;
+  amount: number;
+  applied_amount: number;
+  remaining_amount: number;
+  status: string;
+};
+
+type Vendor = {
+  id: string;
+  name: string;
+};
 
 // Props
 const props = defineProps({
@@ -192,11 +200,11 @@ const props = defineProps({
 const emit = defineEmits(['view', 'create', 'apply']);
 
 // Composables
-const { showSnackbar } = useSnackbar();
+const toast = useToast();
 
 // Data
-const creditMemos = ref([]);
-const vendors = ref([]);
+const creditMemos = ref<CreditMemo[]>([]);
+const vendors = ref<Vendor[]>([]);
 const loading = ref(false);
 
 // Pagination
@@ -246,23 +254,22 @@ const statusOptions = [
 const fetchCreditMemos = async () => {
   loading.value = true;
   try {
+    const { creditMemoService } = await import('@/api/apService');
     const params = {
       page: pagination.page,
-      page_size: pagination.itemsPerPage,
-      sort_by: pagination.sortBy,
-      sort_order: pagination.sortDesc ? 'desc' : 'asc',
+      limit: pagination.itemsPerPage,
+      ...filters
     };
-    
-    // Add filters
-    if (filters.status) params.status = filters.status;
-    if (filters.vendorId) params.vendor_id = filters.vendorId;
-    if (filters.creditMemoNumber) params.credit_memo_number = filters.creditMemoNumber;
-    
-    const response = await apiClient.get('/api/v1/accounts-payable/credit-memos', { params });
-    creditMemos.value = response.data;
-    pagination.totalItems = response.meta.pagination.total;
+    const response = await creditMemoService.getCreditMemos(params);
+    creditMemos.value = response.credit_memos || response.data || [];
+    pagination.totalItems = response.total || creditMemos.value.length;
   } catch (error) {
-    showSnackbar('Failed to load credit memos', 'error');
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to load credit memos',
+      life: 5000
+    });
     console.error('Error fetching credit memos:', error);
   } finally {
     loading.value = false;
@@ -271,29 +278,26 @@ const fetchCreditMemos = async () => {
 
 const fetchVendors = async () => {
   try {
-    const response = await apiClient.get('/api/v1/accounts-payable/vendors', { 
-      params: { page_size: 100 } 
-    });
-    vendors.value = response.data;
+    const { vendorService } = await import('@/api/apService');
+    const response = await vendorService.getVendors();
+    vendors.value = response.vendors || response.data || [];
   } catch (error) {
     console.error('Error fetching vendors:', error);
   }
 };
 
-const debouncedFetchCreditMemos = debounce(fetchCreditMemos, 300);
+const debouncedFetchCreditMemos = () => {
+  setTimeout(fetchCreditMemos, 300);
+};
 
-const handleTableUpdate = (options) => {
-  pagination.page = options.page;
-  pagination.itemsPerPage = options.itemsPerPage;
-  
-  if (options.sortBy.length > 0) {
-    pagination.sortBy = options.sortBy[0].key;
-    pagination.sortDesc = options.sortBy[0].order === 'desc';
-  } else {
-    pagination.sortBy = 'credit_date';
-    pagination.sortDesc = true;
-  }
-  
+const onPage = (event: any) => {
+  pagination.page = event.page + 1;
+  fetchCreditMemos();
+};
+
+const onSort = (event: any) => {
+  pagination.sortBy = event.sortField;
+  pagination.sortDesc = event.sortOrder === -1;
   fetchCreditMemos();
 };
 
@@ -331,13 +335,22 @@ const submitVoidAction = async () => {
   if (!voidDialog.creditMemo || !voidDialog.reason) return;
   
   try {
-    await apiClient.post(`/api/v1/accounts-payable/credit-memos/${voidDialog.creditMemo.id}/void`, {
-      reason: voidDialog.reason
+    const { creditMemoService } = await import('@/api/apService');
+    await creditMemoService.voidCreditMemo(voidDialog.creditMemo.id, voidDialog.reason);
+    toast.add({
+      severity: 'success',
+      summary: 'Success',
+      detail: 'Credit memo voided successfully',
+      life: 3000
     });
-    showSnackbar('Credit memo voided successfully', 'success');
     fetchCreditMemos();
   } catch (error) {
-    showSnackbar('Failed to void credit memo', 'error');
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to void credit memo',
+      life: 5000
+    });
     console.error('Error voiding credit memo:', error);
   } finally {
     voidDialog.show = false;
@@ -346,30 +359,46 @@ const submitVoidAction = async () => {
 };
 
 // Helper methods
-const getStatusColor = (status) => {
-  const colors = {
+const getStatusSeverity = (status: string) => {
+  const severities: Record<string, string> = {
     active: 'success',
     fully_applied: 'info',
     expired: 'warning',
-    voided: 'error',
+    voided: 'danger',
   };
-  return colors[status] || 'grey';
+  return severities[status] || 'info';
 };
 
-const formatStatus = (status) => {
+const formatCurrency = (amount: number): string => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD'
+  }).format(amount || 0);
+};
+
+const formatDate = (dateString: string): string => {
+  if (!dateString) return '';
+  return new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+};
+
+const formatStatus = (status: string) => {
   return status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ');
 };
 
 // Permission checks
-const canEdit = (creditMemo) => {
+const canEdit = (creditMemo: CreditMemo) => {
   return creditMemo.status === 'active';
 };
 
-const canApply = (creditMemo) => {
+const canApply = (creditMemo: CreditMemo) => {
   return creditMemo.status === 'active' && creditMemo.remaining_amount > 0;
 };
 
-const canVoid = (creditMemo) => {
+const canVoid = (creditMemo: CreditMemo) => {
   return ['active', 'fully_applied'].includes(creditMemo.status);
 };
 
@@ -382,6 +411,6 @@ onMounted(() => {
 
 <style scoped>
 .credit-memo-list {
-  padding: 16px;
+  padding: 1rem;
 }
 </style>

@@ -10,7 +10,7 @@
           </div>
         </div>
         <div class="header-actions">
-          <Button label="Import Accounts" icon="pi pi-upload" class="p-button-outlined" />
+          <Button label="Import Accounts" icon="pi pi-upload" class="p-button-outlined" @click="showImportDialog = true" />
           <Button label="New Account" icon="pi pi-plus" class="p-button-success" @click="showDialog = true" />
         </div>
       </div>
@@ -155,6 +155,34 @@
       </template>
     </Dialog>
 
+    <!-- Import Accounts Dialog -->
+    <Dialog v-model:visible="showImportDialog" modal header="Import Accounts" :style="{width: '500px'}">
+      <div class="p-fluid">
+        <div class="field">
+          <label for="importFile">Select CSV File</label>
+          <input 
+            type="file" 
+            accept=".csv" 
+            @change="onFileSelect" 
+            class="p-inputtext p-component w-full"
+          />
+          <small class="text-600">Upload a CSV file with columns: Code, Name, Type, Description</small>
+        </div>
+        <div v-if="importPreview.length > 0" class="field">
+          <label>Preview (First 5 rows)</label>
+          <DataTable :value="importPreview" class="p-datatable-sm">
+            <Column field="code" header="Code" />
+            <Column field="name" header="Name" />
+            <Column field="type" header="Type" />
+          </DataTable>
+        </div>
+      </div>
+      <template #footer>
+        <Button label="Cancel" class="p-button-text" @click="closeImportDialog" />
+        <Button label="Import" @click="importAccounts" :disabled="importPreview.length === 0" :loading="importing" />
+      </template>
+    </Dialog>
+
     <!-- Custom Account Type Dialog -->
     <Dialog v-model:visible="showTypeDialog" modal header="Add Custom Account Type" :style="{width: '400px'}">
       <div class="p-fluid">
@@ -189,10 +217,14 @@ const loading = ref(false)
 const saving = ref(false)
 const showDialog = ref(false)
 const showTypeDialog = ref(false)
+const showImportDialog = ref(false)
 const editingAccount = ref(null)
 const globalFilter = ref('')
 const typeFilter = ref(null)
 const newTypeName = ref('')
+const importing = ref(false)
+const importPreview = ref([])
+const importFile = ref(null)
 const accounts = ref([])
 const accountTypes = ref([])
 const currentCompany = computed(() => authStore.currentCompany)
@@ -413,6 +445,85 @@ const addCustomType = () => {
   }
   
   closeTypeDialog()
+}
+
+const onFileSelect = (event: any) => {
+  const file = event.target.files[0]
+  if (!file) return
+  
+  importFile.value = file
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    const csv = e.target?.result as string
+    const lines = csv.split('\n')
+    
+    const preview = lines.slice(1, 6).map(line => {
+      const values = line.split(',')
+      return {
+        code: values[0]?.trim(),
+        name: values[1]?.trim(),
+        type: values[2]?.trim(),
+        description: values[3]?.trim()
+      }
+    }).filter(row => row.code && row.name)
+    
+    importPreview.value = preview
+  }
+  reader.readAsText(file)
+}
+
+const closeImportDialog = () => {
+  showImportDialog.value = false
+  importPreview.value = []
+  importFile.value = null
+}
+
+const importAccounts = async () => {
+  if (!importFile.value || !currentCompany.value?.id) return
+  
+  importing.value = true
+  try {
+    const reader = new FileReader()
+    reader.onload = async (e) => {
+      const csv = e.target?.result as string
+      const lines = csv.split('\n')
+      const accounts = lines.slice(1).map(line => {
+        const values = line.split(',')
+        return {
+          code: values[0]?.trim(),
+          name: values[1]?.trim(),
+          account_type: values[2]?.trim(),
+          description: values[3]?.trim(),
+          is_active: true
+        }
+      }).filter(account => account.code && account.name)
+      
+      let successCount = 0
+      for (const account of accounts) {
+        try {
+          await chartOfAccountsService.createAccount(currentCompany.value.id, account)
+          successCount++
+        } catch (error) {
+          console.error(`Failed to import account ${account.code}:`, error)
+        }
+      }
+      
+      toast.add({
+        severity: 'success',
+        summary: 'Import Complete',
+        detail: `Successfully imported ${successCount} of ${accounts.length} accounts`
+      })
+      
+      closeImportDialog()
+      await loadAccounts()
+    }
+    reader.readAsText(importFile.value)
+  } catch (error) {
+    console.error('Error importing accounts:', error)
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to import accounts' })
+  } finally {
+    importing.value = false
+  }
 }
 
 onMounted(async () => {

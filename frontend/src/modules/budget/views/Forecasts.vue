@@ -1,15 +1,22 @@
 <template>
-  <div class="budget-forecasts">
-    <div class="dashboard-header">
-      <h1>Budget Forecasting</h1>
-      <p>Create financial forecasts and scenario planning for future budget periods.</p>
+  <div class="grid">
+    <div class="col-12">
+      <div class="flex flex-column md:flex-row justify-content-between align-items-start md:align-items-center mb-4 gap-3">
+        <div>
+          <h1>Budget Forecasting</h1>
+          <p class="text-color-secondary">Create financial forecasts and scenario planning for future budget periods.</p>
+        </div>
+        <div>
+          <Button label="New Forecast" icon="pi pi-plus" class="p-button-success" @click="showNewForecastDialog" />
+        </div>
+      </div>
     </div>
 
-    <div class="forecasting-content">
-      <!-- Forecast Controls -->
-      <Card class="controls-card">
+    <!-- Forecast Controls -->
+    <div class="col-12">
+      <Card>
         <template #title>
-          <div class="card-title">
+          <div class="flex align-items-center gap-2">
             <i class="pi pi-chart-line"></i>
             <span>Forecast Parameters</span>
           </div>
@@ -18,39 +25,41 @@
           <div class="grid">
             <div class="col-12 md:col-3">
               <div class="field">
-                <label>Forecast Period</label>
-                <Dropdown v-model="forecastPeriod" :options="periodOptions" option-label="label" option-value="value" />
+                <label for="period">Forecast Period</label>
+                <Dropdown id="period" v-model="forecastPeriod" :options="periodOptions" optionLabel="label" optionValue="value" />
               </div>
             </div>
             <div class="col-12 md:col-3">
               <div class="field">
-                <label>Forecast Method</label>
-                <Dropdown v-model="forecastMethod" :options="methodOptions" option-label="label" option-value="value" />
+                <label for="method">Forecast Method</label>
+                <Dropdown id="method" v-model="forecastMethod" :options="methodOptions" optionLabel="label" optionValue="value" />
               </div>
             </div>
             <div class="col-12 md:col-3">
               <div class="field">
-                <label>Growth Rate (%)</label>
-                <InputNumber v-model="growthRate" :min="0" :max="100" suffix="%" />
+                <label for="growth">Growth Rate (%)</label>
+                <InputNumber id="growth" v-model="growthRate" :min="0" :max="100" suffix="%" />
               </div>
             </div>
             <div class="col-12 md:col-3">
               <div class="field">
                 <label>&nbsp;</label>
-                <Button label="Generate Forecast" icon="pi pi-refresh" @click="generateForecast" class="w-full" />
+                <Button label="Generate Forecast" icon="pi pi-refresh" @click="generateForecast" class="w-full" :loading="loading" />
               </div>
             </div>
           </div>
         </template>
       </Card>
+    </div>
 
-      <!-- Forecast Chart -->
-      <Card class="chart-card">
+    <!-- Forecast Chart -->
+    <div class="col-12">
+      <Card>
         <template #title>
-          <div class="card-title-with-action">
+          <div class="flex justify-content-between align-items-center w-full">
             <span>Budget Forecast Trend</span>
-            <div class="chart-controls">
-              <Button label="Historical" :class="{ 'p-button-outlined': !showHistorical }" @click="toggleHistorical" size="small" />
+            <div class="flex gap-2">
+              <Button label="Historical" :outlined="!showHistorical" @click="toggleHistorical" size="small" />
               <Button label="Scenarios" icon="pi pi-sitemap" @click="showScenarios = true" size="small" />
             </div>
           </div>
@@ -59,127 +68,115 @@
           <Chart type="line" :data="forecastChartData" :options="forecastChartOptions" />
         </template>
       </Card>
-
-      <!-- Forecast Details -->
-      <div class="forecast-details">
-        <Card class="forecast-table-card">
-          <template #title>
-            <span>Detailed Forecast Breakdown</span>
-          </template>
-          <template #content>
-            <DataTable :value="forecastDetails" responsive-layout="scroll">
-              <Column field="period" header="Period" sortable />
-              <Column field="category" header="Category" sortable />
-              <Column field="historical" header="Historical" sortable>
-                <template #body="{ data }">
-                  <span class="amount historical">{{ formatCurrency(data.historical) }}</span>
-                </template>
-              </Column>
-              <Column field="forecast" header="Forecast" sortable>
-                <template #body="{ data }">
-                  <span class="amount forecast">{{ formatCurrency(data.forecast) }}</span>
-                </template>
-              </Column>
-              <Column field="variance" header="Variance" sortable>
-                <template #body="{ data }">
-                  <span class="amount variance" :class="data.variance >= 0 ? 'positive' : 'negative'">
-                    {{ formatCurrency(data.variance) }}
-                  </span>
-                </template>
-              </Column>
-              <Column field="confidence" header="Confidence" sortable>
-                <template #body="{ data }">
-                  <ProgressBar :value="data.confidence" :class="getConfidenceClass(data.confidence)" />
-                  <span class="confidence-text">{{ data.confidence }}%</span>
-                </template>
-              </Column>
-            </DataTable>
-          </template>
-        </Card>
-
-        <Card class="summary-card">
-          <template #title>
-            <span>Forecast Summary</span>
-          </template>
-          <template #content>
-            <div class="forecast-summary">
-              <div class="summary-item">
-                <label>Total Forecast</label>
-                <span class="amount forecast">{{ formatCurrency(forecastSummary.total) }}</span>
-              </div>
-              <div class="summary-item">
-                <label>Growth Rate</label>
-                <span class="percentage">{{ forecastSummary.growthRate }}%</span>
-              </div>
-              <div class="summary-item">
-                <label>Confidence Level</label>
-                <span class="confidence">{{ forecastSummary.confidence }}%</span>
-              </div>
-              <div class="summary-item">
-                <label>Risk Level</label>
-                <Tag :value="forecastSummary.riskLevel" :severity="getRiskSeverity(forecastSummary.riskLevel)" />
-              </div>
-            </div>
-            
-            <div class="forecast-actions">
-              <Button label="Save Forecast" icon="pi pi-save" @click="saveForecast" />
-              <Button label="Export Report" icon="pi pi-download" outlined @click="exportForecast" />
-              <Button label="Create Budget" icon="pi pi-plus" severity="success" @click="createBudgetFromForecast" />
-            </div>
-          </template>
-        </Card>
-      </div>
     </div>
 
-    <!-- Scenario Planning Dialog -->
-    <Dialog v-model:visible="showScenarios" header="Scenario Planning" :style="{ width: '80vw' }" modal>
-      <div class="scenarios-content">
-        <div class="scenario-tabs">
-          <TabView>
-            <TabPanel header="Optimistic">
-              <div class="scenario-details">
-                <p>Best case scenario with 15% growth rate</p>
-                <Chart type="line" :data="optimisticScenario" :options="scenarioChartOptions" />
-              </div>
-            </TabPanel>
-            <TabPanel header="Realistic">
-              <div class="scenario-details">
-                <p>Most likely scenario with 8% growth rate</p>
-                <Chart type="line" :data="realisticScenario" :options="scenarioChartOptions" />
-              </div>
-            </TabPanel>
-            <TabPanel header="Pessimistic">
-              <div class="scenario-details">
-                <p>Conservative scenario with 3% growth rate</p>
-                <Chart type="line" :data="pessimisticScenario" :options="scenarioChartOptions" />
-              </div>
-            </TabPanel>
-          </TabView>
-        </div>
-      </div>
-    </Dialog>
+    <!-- Forecast Details -->
+    <div class="col-12 lg:col-8">
+      <Card>
+        <template #title>
+          <span>Detailed Forecast Breakdown</span>
+        </template>
+        <template #content>
+          <DataTable :value="forecastDetails" responsiveLayout="scroll" :loading="loading">
+            <Column field="period" header="Period" :sortable="true" />
+            <Column field="category" header="Category" :sortable="true" />
+            <Column field="historical" header="Historical" :sortable="true">
+              <template #body="{ data }">
+                <span class="text-blue-600 font-medium">{{ formatCurrency(data.historical) }}</span>
+              </template>
+            </Column>
+            <Column field="forecast" header="Forecast" :sortable="true">
+              <template #body="{ data }">
+                <span class="text-orange-600 font-medium">{{ formatCurrency(data.forecast) }}</span>
+              </template>
+            </Column>
+            <Column field="variance" header="Variance" :sortable="true">
+              <template #body="{ data }">
+                <span :class="data.variance >= 0 ? 'text-green-600' : 'text-red-600'" class="font-medium">
+                  {{ formatCurrency(data.variance) }}
+                </span>
+              </template>
+            </Column>
+            <Column field="confidence" header="Confidence" :sortable="true">
+              <template #body="{ data }">
+                <div class="flex align-items-center gap-2">
+                  <ProgressBar :value="data.confidence" class="w-full" />
+                  <span class="text-sm font-medium">{{ data.confidence }}%</span>
+                </div>
+              </template>
+            </Column>
+          </DataTable>
+        </template>
+      </Card>
+    </div>
+
+    <div class="col-12 lg:col-4">
+      <Card>
+        <template #title>
+          <span>Forecast Summary</span>
+        </template>
+        <template #content>
+          <div class="flex flex-column gap-3 mb-4">
+            <div class="p-3 border-round surface-100">
+              <div class="text-sm text-color-secondary mb-1">Total Forecast</div>
+              <div class="text-xl font-bold text-orange-600">{{ formatCurrency(forecastSummary.total) }}</div>
+            </div>
+            <div class="p-3 border-round surface-100">
+              <div class="text-sm text-color-secondary mb-1">Growth Rate</div>
+              <div class="text-xl font-bold text-purple-600">{{ forecastSummary.growthRate }}%</div>
+            </div>
+            <div class="p-3 border-round surface-100">
+              <div class="text-sm text-color-secondary mb-1">Confidence Level</div>
+              <div class="text-xl font-bold text-green-600">{{ forecastSummary.confidence }}%</div>
+            </div>
+            <div class="p-3 border-round surface-100">
+              <div class="text-sm text-color-secondary mb-1">Risk Level</div>
+              <Tag :value="forecastSummary.riskLevel" :severity="getRiskSeverity(forecastSummary.riskLevel)" />
+            </div>
+          </div>
+          
+          <div class="flex flex-column gap-2">
+            <Button label="Save Forecast" icon="pi pi-save" @click="saveForecast" class="w-full" />
+            <Button label="Export Report" icon="pi pi-download" outlined @click="exportForecast" class="w-full" />
+            <Button label="Create Budget" icon="pi pi-plus" severity="success" @click="createBudgetFromForecast" class="w-full" />
+          </div>
+        </template>
+      </Card>
+    </div>
   </div>
+
+  <!-- Scenario Planning Dialog -->
+  <Dialog v-model:visible="showScenarios" header="Scenario Planning" :style="{ width: '80vw' }" :modal="true">
+    <TabView>
+      <TabPanel header="Optimistic">
+        <div class="p-3">
+          <p class="mb-3">Best case scenario with 15% growth rate</p>
+          <Chart type="line" :data="optimisticScenario" :options="scenarioChartOptions" />
+        </div>
+      </TabPanel>
+      <TabPanel header="Realistic">
+        <div class="p-3">
+          <p class="mb-3">Most likely scenario with 8% growth rate</p>
+          <Chart type="line" :data="realisticScenario" :options="scenarioChartOptions" />
+        </div>
+      </TabPanel>
+      <TabPanel header="Pessimistic">
+        <div class="p-3">
+          <p class="mb-3">Conservative scenario with 3% growth rate</p>
+          <Chart type="line" :data="pessimisticScenario" :options="scenarioChartOptions" />
+        </div>
+      </TabPanel>
+    </TabView>
+  </Dialog>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
-
-// PrimeVue Components
-import Card from 'primevue/card'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import Button from 'primevue/button'
-import Tag from 'primevue/tag'
-import Dropdown from 'primevue/dropdown'
-import InputNumber from 'primevue/inputnumber'
-import Chart from 'primevue/chart'
-import ProgressBar from 'primevue/progressbar'
-import Dialog from 'primevue/dialog'
-import TabView from 'primevue/tabview'
-import TabPanel from 'primevue/tabpanel'
+import { budgetForecastService } from '@/api/budgetForecastService'
 
 const toast = useToast()
+const loading = ref(false)
 
 const forecastPeriod = ref('next_year')
 const forecastMethod = ref('linear')
@@ -322,12 +319,41 @@ const toggleHistorical = () => {
   showHistorical.value = !showHistorical.value
 }
 
-const generateForecast = () => {
-  toast.add({ severity: 'info', summary: 'Generating Forecast', detail: 'Forecast is being calculated...' })
+const generateForecast = async () => {
+  try {
+    loading.value = true
+    const result = await budgetForecastService.generateForecast(
+      forecastPeriod.value,
+      forecastMethod.value,
+      growthRate.value
+    )
+    forecastDetails.value = result.forecast_details
+    toast.add({ severity: 'success', summary: 'Forecast Generated', detail: 'Forecast has been calculated successfully' })
+  } catch (error) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to generate forecast' })
+  } finally {
+    loading.value = false
+  }
 }
 
-const saveForecast = () => {
-  toast.add({ severity: 'success', summary: 'Forecast Saved', detail: 'Forecast has been saved successfully' })
+const saveForecast = async () => {
+  try {
+    const forecastData = {
+      name: `Forecast ${new Date().toLocaleDateString()}`,
+      period: forecastPeriod.value,
+      method: forecastMethod.value,
+      growth_rate: growthRate.value,
+      total_forecast: forecastSummary.value.total,
+      confidence_level: forecastSummary.value.confidence,
+      risk_level: forecastSummary.value.riskLevel,
+      status: 'Active',
+      forecast_details: forecastDetails.value
+    }
+    await budgetForecastService.createForecast(forecastData)
+    toast.add({ severity: 'success', summary: 'Forecast Saved', detail: 'Forecast has been saved successfully' })
+  } catch (error) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to save forecast' })
+  }
 }
 
 const exportForecast = () => {
@@ -338,56 +364,16 @@ const createBudgetFromForecast = () => {
   toast.add({ severity: 'success', summary: 'Budget Created', detail: 'New budget created from forecast data' })
 }
 
+const showNewForecastDialog = () => {
+  toast.add({ severity: 'info', summary: 'New Forecast', detail: 'New forecast dialog would open here' })
+}
+
 onMounted(() => {
   generateForecast()
 })
 </script>
 
 <style scoped>
-.budget-forecasts {
-  padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.dashboard-header {
-  margin-bottom: 2rem;
-}
-
-.dashboard-header h1 {
-  font-size: 2rem;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0 0 0.5rem 0;
-}
-
-.card-title {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-weight: 600;
-}
-
-.card-title-with-action {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-}
-
-.chart-controls {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.controls-card {
-  margin-bottom: 2rem;
-}
-
-.chart-card {
-  margin-bottom: 2rem;
-}
-
 .field {
   margin-bottom: 1rem;
 }
@@ -396,75 +382,5 @@ onMounted(() => {
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 600;
-}
-
-.forecast-details {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 1.5rem;
-}
-
-.forecast-summary {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
-
-.summary-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  padding: 1rem;
-  background: #f8f9fa;
-  border-radius: 0.5rem;
-}
-
-.summary-item label {
-  font-size: 0.875rem;
-  color: #6b7280;
-  font-weight: 600;
-}
-
-.amount.historical { color: #3b82f6; }
-.amount.forecast { color: #f59e0b; }
-.amount.variance.positive { color: #10b981; }
-.amount.variance.negative { color: #ef4444; }
-
-.percentage { color: #8b5cf6; font-weight: 600; }
-.confidence { color: #10b981; font-weight: 600; }
-
-.confidence-text {
-  margin-left: 0.5rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-}
-
-.forecast-actions {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.scenario-details {
-  padding: 1rem 0;
-}
-
-.progress-success :deep(.p-progressbar-value) { background: #10b981; }
-.progress-warning :deep(.p-progressbar-value) { background: #f59e0b; }
-.progress-danger :deep(.p-progressbar-value) { background: #ef4444; }
-
-@media (max-width: 768px) {
-  .forecast-details {
-    grid-template-columns: 1fr;
-  }
-  
-  .forecast-summary {
-    grid-template-columns: 1fr;
-  }
-  
-  .chart-controls {
-    flex-direction: column;
-  }
 }
 </style>

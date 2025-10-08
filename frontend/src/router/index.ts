@@ -229,6 +229,24 @@ const mainAppRoute: AppRouteRecordRaw = {
       component: () => import('@/modules/general-ledger/views/BudgetActual.vue'),
       meta: { title: 'Budget vs Actual' }
     },
+    {
+      path: 'gl/recurring',
+      name: 'RecurringJournals',
+      component: () => import('@/modules/general-ledger/views/RecurringJournals.vue'),
+      meta: { title: 'Recurring Journal Entries' }
+    },
+    {
+      path: 'gl/journal-entries',
+      name: 'JournalEntries',
+      component: () => import('@/modules/accounting/views/JournalEntryView.vue'),
+      meta: { title: 'Journal Entries' }
+    },
+    {
+      path: 'gl/accounts',
+      name: 'GLAccounts',
+      component: () => import('@/modules/general-ledger/views/ChartOfAccounts.vue'),
+      meta: { title: 'Chart of Accounts' }
+    },
     // Accounting
     {
       path: 'accounting/journal-entry',
@@ -274,6 +292,12 @@ const mainAppRoute: AppRouteRecordRaw = {
       meta: { title: 'AP Reports' }
     },
     {
+      path: 'ap/bills',
+      name: 'APBills',
+      component: () => import('@/modules/accounts-payable/views/BillsView.vue'),
+      meta: { title: 'AP Bills' }
+    },
+    {
       path: 'ap/vendors',
       name: 'APVendors',
       component: () => import('@/modules/accounts-payable/views/VendorsView.vue'),
@@ -301,7 +325,7 @@ const mainAppRoute: AppRouteRecordRaw = {
       path: 'ap/payments',
       name: 'APPayments',
       component: () => import('@/modules/accounts-payable/views/payments/PaymentsView.vue'),
-      meta: { title: 'Payments' }
+      meta: { title: 'AP Payments' }
     },
     {
       path: 'ap/payment-management',
@@ -358,12 +382,54 @@ const mainAppRoute: AppRouteRecordRaw = {
       component: () => import('@/modules/accounts-receivable/views/CustomersView.vue'),
       meta: { title: 'Customers' }
     },
+    {
+      path: 'ar/analytics',
+      name: 'ARAnalytics',
+      component: () => import('@/modules/accounts-receivable/ARAnalyticsView.vue'),
+      meta: { title: 'AR Analytics' }
+    },
+    {
+      path: 'ar/reports',
+      name: 'ARReports',
+      component: () => import('@/modules/reports/views/ARReports.vue'),
+      meta: { title: 'AR Reports' }
+    },
     // Cash Management
     {
       path: 'cash',
       name: 'CashManagement',
       component: () => import('@/modules/cash-management/views/CashManagementView.vue'),
       meta: { title: 'Cash Management' }
+    },
+    {
+      path: 'cash/accounts',
+      name: 'CashAccounts',
+      component: () => import('@/modules/cash-management/views/BankAccounts.vue'),
+      meta: { title: 'Bank Accounts' }
+    },
+    {
+      path: 'cash/transactions',
+      name: 'CashTransactions',
+      component: () => import('@/modules/cash-management/views/Transactions.vue'),
+      meta: { title: 'Cash Transactions' }
+    },
+    {
+      path: 'cash/reconciliation',
+      name: 'CashReconciliation',
+      component: () => import('@/modules/cash-management/views/Reconciliation.vue'),
+      meta: { title: 'Bank Reconciliation' }
+    },
+    {
+      path: 'cash/forecasting',
+      name: 'CashForecasting',
+      component: () => import('@/modules/cash-management/views/CashFlowForecastingView.vue'),
+      meta: { title: 'Cash Flow Forecasting' }
+    },
+    {
+      path: 'cash/banking-integration',
+      name: 'BankingIntegration',
+      component: () => import('@/modules/cash-management/views/BankingIntegrationView.vue'),
+      meta: { title: 'Banking Integration' }
     },
     // Inventory
     {
@@ -422,6 +488,24 @@ const mainAppRoute: AppRouteRecordRaw = {
       component: () => import('@/modules/budget/views/Forecasts.vue'),
       meta: { title: 'Budget Forecasting' }
     },
+    {
+      path: 'budget/plans',
+      name: 'BudgetPlans',
+      component: () => import('@/modules/budget/views/BudgetPlanningView.vue'),
+      meta: { title: 'Budget Plans' }
+    },
+    {
+      path: 'budget/forecasts',
+      name: 'BudgetForecasts',
+      component: () => import('@/modules/budget/views/Forecasts.vue'),
+      meta: { title: 'Budget Forecasts' }
+    },
+    {
+      path: 'budget/scenarios',
+      name: 'BudgetScenarios',
+      component: () => import('@/modules/budget/views/Scenarios.vue'),
+      meta: { title: 'Budget Scenarios' }
+    },
     // HRM Module - Lazy loaded
     ...hrmRoutes,
     // Payroll - Lazy loaded
@@ -471,7 +555,7 @@ const mainAppRoute: AppRouteRecordRaw = {
     {
       path: 'tax/compliance',
       name: 'TaxCompliance',
-      component: () => import('@/modules/tax/views/TaxComplianceDashboard.vue'),
+      component: () => import('@/modules/tax/views/TaxCompliance.vue'),
       meta: { title: 'Tax Compliance' }
     },
     {
@@ -626,7 +710,7 @@ const mainAppRoute: AppRouteRecordRaw = {
         },
         {
           path: 'tax-rates',
-          name: 'TaxRates',
+          name: 'SettingsTaxRates',
           component: () => import('@/modules/settings/views/TaxRateSettings.vue'),
           meta: { title: 'Tax Rate Management' }
         },

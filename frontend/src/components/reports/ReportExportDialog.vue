@@ -1,10 +1,10 @@
 <template>
   <Dialog 
-    v-model:visible="visible"
+    :visible="visible"
     :header="title || 'Export Report'"
     :modal="true"
     :style="{ width: '500px' }"
-    @hide="handleClose"
+    @update:visible="emit('update:visible', $event)"
   >
     <div class="export-options">
       <div class="field">

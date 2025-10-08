@@ -76,20 +76,24 @@
       <template #content>
         <DataTable :value="budgets" :loading="loading" paginator :rows="10">
           <Column field="name" header="Budget Name" sortable />
-          <Column field="fiscal_year" header="Fiscal Year" sortable />
-          <Column field="total_amount" header="Total Amount" sortable>
+          <Column field="type" header="Type" sortable>
             <template #body="{ data }">
-              ${{ formatCurrency(data.total_amount) }}
+              <Tag :value="data.type" severity="info" />
             </template>
           </Column>
-          <Column field="start_date" header="Start Date" sortable>
+          <Column field="amount" header="Amount" sortable>
             <template #body="{ data }">
-              {{ formatDate(data.start_date) }}
+              ${{ formatCurrency(data.amount) }}
             </template>
           </Column>
-          <Column field="end_date" header="End Date" sortable>
+          <Column field="period_start" header="Start Date" sortable>
             <template #body="{ data }">
-              {{ formatDate(data.end_date) }}
+              {{ formatDate(data.period_start) }}
+            </template>
+          </Column>
+          <Column field="period_end" header="End Date" sortable>
+            <template #body="{ data }">
+              {{ formatDate(data.period_end) }}
             </template>
           </Column>
           <Column field="status" header="Status" sortable>
@@ -118,20 +122,20 @@
         </div>
         <div class="col-12 md:col-6">
           <div class="field">
-            <label>Fiscal Year</label>
-            <InputNumber v-model="budget.fiscal_year" class="w-full" />
+            <label>Budget Type</label>
+            <Dropdown v-model="budget.type" :options="[{label: 'Operational', value: 'OPERATIONAL'}, {label: 'Capital', value: 'CAPITAL'}, {label: 'Project', value: 'PROJECT'}]" optionLabel="label" optionValue="value" class="w-full" />
           </div>
         </div>
         <div class="col-12 md:col-6">
           <div class="field">
             <label>Start Date</label>
-            <Calendar v-model="budget.start_date" class="w-full" />
+            <Calendar v-model="budget.period_start" class="w-full" />
           </div>
         </div>
         <div class="col-12 md:col-6">
           <div class="field">
             <label>End Date</label>
-            <Calendar v-model="budget.end_date" class="w-full" />
+            <Calendar v-model="budget.period_end" class="w-full" />
           </div>
         </div>
         <div class="col-12">
@@ -150,24 +154,19 @@
       </div>
       
       <DataTable :value="budget.line_items" class="mb-4">
-        <Column field="account_code" header="Account Code">
-          <template #body="{ data, index }">
-            <InputText v-model="data.account_code" class="w-full" />
-          </template>
-        </Column>
-        <Column field="account_name" header="Account Name">
-          <template #body="{ data, index }">
-            <InputText v-model="data.account_name" class="w-full" />
-          </template>
-        </Column>
         <Column field="category" header="Category">
           <template #body="{ data, index }">
             <InputText v-model="data.category" class="w-full" />
           </template>
         </Column>
-        <Column field="budgeted_amount" header="Amount">
+        <Column field="description" header="Description">
           <template #body="{ data, index }">
-            <InputNumber v-model="data.budgeted_amount" mode="currency" currency="USD" class="w-full" />
+            <InputText v-model="data.description" class="w-full" />
+          </template>
+        </Column>
+        <Column field="amount" header="Amount">
+          <template #body="{ data, index }">
+            <InputNumber v-model="data.amount" mode="currency" currency="USD" class="w-full" />
           </template>
         </Column>
         <Column header="Actions">
@@ -188,7 +187,25 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useToast } from 'primevue/usetoast';
-import budgetService, { type Budget, type BudgetLineItem } from '@/services/budgetService';
+import { budgetService } from '@/api/budgetService';
+
+interface Budget {
+  id?: number
+  name: string
+  type: string
+  amount: number
+  period_start: string
+  period_end: string
+  status: string
+  description?: string
+  line_items: BudgetLineItem[]
+}
+
+interface BudgetLineItem {
+  category: string
+  description?: string
+  amount: number
+}
 
 const toast = useToast();
 const loading = ref(false);
@@ -197,10 +214,12 @@ const budgetDialog = ref(false);
 const budgets = ref<Budget[]>([]);
 const budget = ref<Budget>({
   name: '',
+  type: 'OPERATIONAL',
+  amount: 0,
+  period_start: new Date().toISOString().split('T')[0],
+  period_end: new Date(Date.now() + 365*24*60*60*1000).toISOString().split('T')[0],
+  status: 'DRAFT',
   description: '',
-  fiscal_year: new Date().getFullYear(),
-  start_date: '',
-  end_date: '',
   line_items: []
 });
 
@@ -214,10 +233,12 @@ const stats = ref({
 const showCreateDialog = () => {
   budget.value = {
     name: '',
+    type: 'OPERATIONAL',
+    amount: 0,
+    period_start: new Date().toISOString().split('T')[0],
+    period_end: new Date(Date.now() + 365*24*60*60*1000).toISOString().split('T')[0],
+    status: 'DRAFT',
     description: '',
-    fiscal_year: new Date().getFullYear(),
-    start_date: '',
-    end_date: '',
     line_items: []
   };
   budgetDialog.value = true;
@@ -225,10 +246,9 @@ const showCreateDialog = () => {
 
 const addLineItem = () => {
   budget.value.line_items.push({
-    account_code: '',
-    account_name: '',
     category: '',
-    budgeted_amount: 0
+    description: '',
+    amount: 0
   });
 };
 
@@ -238,6 +258,7 @@ const removeLineItem = (index: number) => {
 
 const saveBudget = async () => {
   try {
+    budget.value.amount = budget.value.line_items.reduce((sum, item) => sum + item.amount, 0);
     await budgetService.createBudget(budget.value);
     toast.add({ severity: 'success', summary: 'Success', detail: 'Budget created successfully', life: 3000 });
     budgetDialog.value = false;
@@ -272,19 +293,18 @@ const loadBudgets = async () => {
   loading.value = true;
   try {
     budgets.value = await budgetService.getBudgets();
-    updateStats();
+    const summary = await budgetService.getBudgetSummary();
+    stats.value = {
+      totalBudgets: summary.total_budgets,
+      totalAmount: summary.total_amount,
+      pendingApproval: budgets.value.filter(b => b.status === 'PENDING_APPROVAL').length,
+      activeBudgets: budgets.value.filter(b => b.status === 'APPROVED').length
+    };
   } catch (error) {
     console.error('Error loading budgets:', error);
   } finally {
     loading.value = false;
   }
-};
-
-const updateStats = () => {
-  stats.value.totalBudgets = budgets.value.length;
-  stats.value.totalAmount = budgets.value.reduce((sum, b) => sum + (b.total_amount || 0), 0);
-  stats.value.pendingApproval = budgets.value.filter(b => b.status === 'draft').length;
-  stats.value.activeBudgets = budgets.value.filter(b => b.status === 'active').length;
 };
 
 const formatCurrency = (amount: number) => {
@@ -297,9 +317,10 @@ const formatDate = (date: string) => {
 
 const getStatusSeverity = (status: string) => {
   switch (status) {
-    case 'active': return 'success';
-    case 'draft': return 'warning';
-    case 'closed': return 'danger';
+    case 'APPROVED': return 'success';
+    case 'DRAFT': return 'secondary';
+    case 'PENDING_APPROVAL': return 'warning';
+    case 'REJECTED': return 'danger';
     default: return 'info';
   }
 };
