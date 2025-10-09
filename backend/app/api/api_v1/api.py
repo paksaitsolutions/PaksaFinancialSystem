@@ -6,8 +6,7 @@ from fastapi import APIRouter
 from app.api.endpoints.accounts_payable import vendor, invoice, payment, credit_memo, form_1099
 from app.modules.core_financials.accounts_payable.api import vendor_api, bill_api, payment_api
 from app.modules.core_financials.accounts_receivable.api import customer_api, invoice_api, collections_api
-from app.api.endpoints.inventory import item as inventory_item, category as inventory_category, purchase_order as inventory_purchase_order, reports as inventory_reports, forecast as inventory_forecast, location as inventory_location, transaction as inventory_transaction
-# Temporarily disabled: adjustment as inventory_adjustment, barcode as inventory_barcode, cycle_count as inventory_cycle_count
+# Use v1 inventory endpoint instead
 from app.api.endpoints.accounts_receivable import collections_ai as ar_collections_ai
 from app.api.endpoints.tax import tax_endpoints as tax_management
 from app.api.endpoints.auth import mfa as auth_mfa
@@ -50,27 +49,12 @@ api_router.include_router(customer_api.router, prefix="/ar/customers", tags=["ar
 api_router.include_router(invoice_api.router, prefix="/ar/invoices", tags=["ar-invoices"])
 api_router.include_router(collections_api.router, prefix="/ar/collections", tags=["ar-collections"])
 
-# Inventory
+# Inventory - using v1 endpoint
 try:
-    from app.api.endpoints.inventory import (
-        item as inventory_item, adjustment as inventory_adjustment, category as inventory_category,
-        purchase_order as inventory_purchase_order, reports as inventory_reports,
-        barcode as inventory_barcode, cycle_count as inventory_cycle_count,
-        forecast as inventory_forecast, location as inventory_location,
-        transaction as inventory_transaction
-    )
-    api_router.include_router(inventory_item.router, prefix="/inventory/items", tags=["inventory", "items"])
-    # Temporarily disabled: api_router.include_router(inventory_adjustment.router, prefix="/inventory/adjustments", tags=["inventory", "adjustments"])
-    api_router.include_router(inventory_category.router, prefix="/inventory/categories", tags=["inventory", "categories"])
-    api_router.include_router(inventory_purchase_order.router, prefix="/inventory/purchase-orders", tags=["inventory", "purchase-orders"])
-    api_router.include_router(inventory_reports.router, prefix="/inventory/reports", tags=["inventory", "reports"])
-    api_router.include_router(inventory_barcode.router, prefix="/inventory/barcode", tags=["inventory", "barcode"])
-    # Temporarily disabled: api_router.include_router(inventory_cycle_count.router, prefix="/inventory/cycle-counts", tags=["inventory", "cycle-counts"])
-    api_router.include_router(inventory_forecast.router, prefix="/inventory/forecast", tags=["inventory", "forecast"])
-    api_router.include_router(inventory_location.router, prefix="/inventory/locations", tags=["inventory", "locations"])
-    api_router.include_router(inventory_transaction.router, prefix="/inventory/transactions", tags=["inventory", "transactions"])
+    from app.api.v1.endpoints import inventory as inventory_v1
+    api_router.include_router(inventory_v1.router, prefix="/inventory", tags=["inventory"])
 except ImportError as e:
-    print(f"Warning: Could not import inventory modules: {e}")
+    print(f"Warning: Could not import inventory v1 module: {e}")
 
 # Operations
 try:

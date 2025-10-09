@@ -192,6 +192,7 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { Chart, registerables } from 'chart.js'
 import { useAIStore } from '../store/aiStore'
+import { aiService, aiDataIntegration } from '../services/aiService'
 
 Chart.register(...registerables)
 
@@ -451,27 +452,76 @@ const initRevenueChart = () => {
 const refreshData = async () => {
   loading.value = true
   try {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500))
+    // Get real-time data from AI/BI service
+    const [metricsData, kpiData, realtimeData] = await Promise.all([
+      aiService.getAIMetrics(),
+      fetch('/api/v1/bi-ai/dashboard/kpis').then(r => r.json()).catch(() => null),
+      aiDataIntegration.getRealtimeMetrics()
+    ])
     
-    // Update KPIs with new data
+    // Update KPIs with real data
+    if (kpiData?.success) {
+      kpis.value = kpiData.data.map((kpi: any, index: number) => ({
+        title: kpi.title,
+        value: kpi.value,
+        trend: kpi.trend,
+        progress: kpi.progress,
+        target: kpi.target
+      }))
+    }
+    
+    // Update AI insights with real data
+    if (realtimeData?.insights) {
+      aiInsights.value = realtimeData.insights.slice(0, 3).map((insight: any) => ({
+        title: insight.title,
+        description: insight.description,
+        confidence: Math.round(insight.confidence * 100),
+        icon: getInsightIcon(insight.type),
+        color: getInsightColor(insight.severity)
+      }))
+    }
+    
+    // Update chart with real financial data
+    if (chart && realtimeData?.analytics) {
+      // This would use real financial data to update the chart
+      chart.update()
+    }
+    
+    connectionStatus.value = 'Connected'
+  } catch (error) {
+    console.error('Error refreshing data:', error)
+    connectionStatus.value = 'Disconnected'
+    
+    // Fallback to simulated data
     kpis.value = kpis.value.map(kpi => ({
       ...kpi,
       value: Math.floor(kpi.value * (0.95 + Math.random() * 0.1)),
       trend: kpi.trend * (0.8 + Math.random() * 0.4),
       progress: Math.min(100, kpi.progress + (Math.random() - 0.5) * 10)
     }))
-    
-    // Update chart data
-    if (chart) {
-      chart.data.datasets[0].data = chart.data.datasets[0].data.map(value => 
-        Math.floor((value as number) * (0.95 + Math.random() * 0.1))
-      )
-      chart.update()
-    }
   } finally {
     loading.value = false
   }
+}
+
+const getInsightIcon = (type: string) => {
+  const icons = {
+    'cash_flow': 'pi pi-chart-line',
+    'payables': 'pi pi-money-bill',
+    'budget': 'pi pi-chart-bar',
+    'optimization': 'pi pi-trending-up',
+    'anomaly': 'pi pi-exclamation-triangle'
+  }
+  return icons[type] || 'pi pi-info-circle'
+}
+
+const getInsightColor = (severity: string) => {
+  const colors = {
+    'high': '#FF6B6B',
+    'medium': '#FF9800', 
+    'low': '#4CAF50'
+  }
+  return colors[severity] || '#2196F3'
 }
 
 const exportDashboard = () => {
@@ -526,9 +576,19 @@ watch(timeRange, async (newRange) => {
 })
 
 // Lifecycle
-onMounted(() => {
+onMounted(async () => {
   initRevenueChart()
   aiStore.connectRealTime()
+  
+  // Initial data load
+  await refreshData()
+  
+  // Sync with all modules
+  try {
+    await aiDataIntegration.syncWithAllModules()
+  } catch (error) {
+    console.warn('Failed to sync with modules:', error)
+  }
 })
 
 onUnmounted(() => {

@@ -438,12 +438,58 @@ const mainAppRoute: AppRouteRecordRaw = {
       component: () => import('@/modules/inventory/views/InventoryManagementView.vue'),
       meta: { title: 'Inventory' }
     },
+    {
+      path: 'inventory/items',
+      name: 'InventoryItems',
+      component: () => import('@/modules/inventory/views/ItemsView.vue'),
+      meta: { title: 'Inventory Items' }
+    },
+    {
+      path: 'inventory/locations',
+      name: 'InventoryLocations',
+      component: () => import('@/modules/inventory/views/LocationsView.vue'),
+      meta: { title: 'Inventory Locations' }
+    },
+    {
+      path: 'inventory/adjustments',
+      name: 'InventoryAdjustments',
+      component: () => import('@/modules/inventory/views/AdjustmentsView.vue'),
+      meta: { title: 'Inventory Adjustments' }
+    },
+    {
+      path: 'inventory/reports',
+      name: 'InventoryReports',
+      component: () => import('@/modules/inventory/views/ReportsView.vue'),
+      meta: { title: 'Inventory Reports' }
+    },
     // Fixed Assets
     {
       path: 'fixed-assets',
       name: 'FixedAssets',
       component: () => import('@/modules/fixed-assets/views/FixedAssetsView.vue'),
       meta: { title: 'Fixed Assets' }
+    },
+    {
+      path: 'assets',
+      redirect: '/assets/management'
+    },
+    {
+      path: 'assets/management',
+      name: 'AssetsManagement',
+      component: () => import('@/modules/fixed-assets/views/FixedAssetsView.vue'),
+      meta: { title: 'Assets Management' }
+    },
+    {
+      path: 'assets/depreciation',
+      name: 'AssetsDepreciation',
+      component: () => import('@/modules/fixed-assets/views/DepreciationView.vue'),
+      meta: { title: 'Assets Depreciation' }
+    },
+    {
+      path: 'assets/maintenance',
+      name: 'AssetsMaintenance',
+      component: () => import('@/modules/fixed-assets/views/MaintenanceView.vue'),
+      meta: { title: 'Assets Maintenance' }
     },
     // Budget
     {
@@ -514,6 +560,42 @@ const mainAppRoute: AppRouteRecordRaw = {
       name: 'Payroll',
       component: () => import(/* webpackChunkName: "payroll-module" */ '@/modules/payroll/views/AnalyticsDashboard.vue'),
       meta: { title: 'Payroll' }
+    },
+    {
+      path: 'payroll/employees',
+      name: 'PayrollEmployees',
+      component: () => import('@/modules/payroll/views/EmployeeManagementView.vue'),
+      meta: { title: 'Payroll Employees' }
+    },
+    {
+      path: 'payroll/payruns',
+      name: 'PayrollPayruns',
+      component: () => import('@/modules/payroll/views/PayRunListView.vue'),
+      meta: { title: 'Payroll Runs' }
+    },
+    {
+      path: 'payroll/payslips',
+      name: 'PayrollPayslips',
+      component: () => import('@/modules/payroll/views/PayslipsView.vue'),
+      meta: { title: 'Payslips' }
+    },
+    {
+      path: 'payroll/deductions',
+      name: 'PayrollDeductions',
+      component: () => import('@/modules/payroll/views/DeductionsView.vue'),
+      meta: { title: 'Payroll Deductions' }
+    },
+    {
+      path: 'payroll/taxes',
+      name: 'PayrollTaxes',
+      component: () => import('@/modules/payroll/views/TaxesView.vue'),
+      meta: { title: 'Payroll Taxes' }
+    },
+    {
+      path: 'payroll/reports',
+      name: 'PayrollReports',
+      component: () => import('@/modules/payroll/views/ReportsView.vue'),
+      meta: { title: 'Payroll Reports' }
     },
     // Tax Management - Lazy loaded
     {
@@ -612,6 +694,30 @@ const mainAppRoute: AppRouteRecordRaw = {
       name: 'AuditReports',
       component: () => import('@/modules/reports/views/AuditReportsView.vue'),
       meta: { title: 'Audit Reports' }
+    },
+    {
+      path: 'reports/income-statement',
+      name: 'IncomeStatement',
+      component: () => import('@/modules/reports/views/IncomeStatementView.vue'),
+      meta: { title: 'Income Statement' }
+    },
+    {
+      path: 'reports/cash-flow',
+      name: 'CashFlowStatement',
+      component: () => import('@/modules/reports/views/CashFlowView.vue'),
+      meta: { title: 'Cash Flow Statement' }
+    },
+    {
+      path: 'reports/ap-aging',
+      name: 'APAging',
+      component: () => import('@/modules/reports/views/AgedReportsView.vue'),
+      meta: { title: 'AP Aging Report' }
+    },
+    {
+      path: 'reports/ar-aging',
+      name: 'ARAging',
+      component: () => import('@/modules/reports/views/AgedReportsView.vue'),
+      meta: { title: 'AR Aging Report' }
     },
     // Approvals
     {

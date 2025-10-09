@@ -309,9 +309,10 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, reactive, onMounted, watch } from 'vue'
 import { useToast } from 'primevue/usetoast'
+import { inventoryService, type InventoryItem } from '@/services/inventoryService'
 import Card from 'primevue/card'
 import TabView from 'primevue/tabview'
 import TabPanel from 'primevue/tabpanel'
@@ -393,18 +394,26 @@ const valuationMethods = [
   { label: 'Standard Cost', value: 'standard' }
 ]
 
-const categories = ref([
-  { id: 1, name: 'Electronics' },
-  { id: 2, name: 'Components' },
-  { id: 3, name: 'Accessories' },
-  { id: 4, name: 'Raw Materials' }
-])
+const categories = ref([])
+const locations = ref([])
 
-const locations = ref([
-  { id: 1, name: 'Main Warehouse' },
-  { id: 2, name: 'Retail Store' },
-  { id: 3, name: 'Production Floor' }
-])
+const loadCategories = async () => {
+  try {
+    const response = await inventoryService.getCategories()
+    categories.value = response
+  } catch (error) {
+    console.error('Error loading categories:', error)
+  }
+}
+
+const loadLocations = async () => {
+  try {
+    const response = await inventoryService.getLocations()
+    locations.value = response
+  } catch (error) {
+    console.error('Error loading locations:', error)
+  }
+}
 
 // Methods
 const validateForm = () => {
@@ -430,8 +439,25 @@ const saveItem = async () => {
   
   saving.value = true
   try {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    const itemData: InventoryItem = {
+      item_code: form.sku,
+      item_name: form.name,
+      description: form.description,
+      category_id: form.category_id,
+      unit_of_measure: form.unit_of_measure,
+      cost_price: form.unit_cost,
+      selling_price: form.standard_cost,
+      reorder_level: form.reorder_point,
+      maximum_level: form.reorder_quantity,
+      barcode: form.barcode,
+      is_active: form.status === 'active'
+    }
+    
+    if (isEdit.value && props.item?.id) {
+      await inventoryService.updateItem(props.item.id, itemData)
+    } else {
+      await inventoryService.createItem(itemData)
+    }
     
     toast.add({ 
       severity: 'success', 
@@ -439,7 +465,7 @@ const saveItem = async () => {
       detail: `Item ${isEdit.value ? 'updated' : 'created'} successfully` 
     })
     
-    emit('save', form)
+    emit('save', itemData)
   } catch (error) {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to save item' })
     console.error('Error saving item:', error)
@@ -467,7 +493,17 @@ const onImageSelect = (event) => {
 // Initialize form with item data if editing
 const initializeForm = () => {
   if (props.item) {
-    Object.assign(form, props.item)
+    form.sku = props.item.item_code || ''
+    form.name = props.item.item_name || ''
+    form.description = props.item.description || ''
+    form.category_id = props.item.category_id || null
+    form.unit_of_measure = props.item.unit_of_measure || 'EA'
+    form.unit_cost = props.item.cost_price || 0
+    form.standard_cost = props.item.selling_price || 0
+    form.reorder_point = props.item.reorder_level || 0
+    form.reorder_quantity = props.item.maximum_level || 0
+    form.barcode = props.item.barcode || ''
+    form.status = props.item.is_active ? 'active' : 'inactive'
   }
 }
 
@@ -480,6 +516,8 @@ watch(() => props.item, () => {
 // Lifecycle
 onMounted(() => {
   initializeForm()
+  loadCategories()
+  loadLocations()
 })
 </script>
 

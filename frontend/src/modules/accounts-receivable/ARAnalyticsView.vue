@@ -491,10 +491,6 @@ const drillDownAging = () => {
   router.push('/ar/reports/aging-detail')
 }
 
-const refreshData = () => {
-  alert('Refreshing AI analytics data...')
-}
-
 const exportReport = () => {
   alert('Exporting analytics report...')
 }

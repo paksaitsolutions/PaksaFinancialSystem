@@ -317,30 +317,21 @@ const store = usePayrollAnalyticsStore();
 const trendPeriod = ref<'monthly' | 'quarterly' | 'yearly'>('monthly');
 const selectedDepartment = ref<string | null>(null);
 
-// Mock data - replace with actual API calls
-const departments = ref([
-  { id: 'dept1', name: 'Engineering' },
-  { id: 'dept2', name: 'Marketing' },
-  { id: 'dept3', name: 'Sales' },
-  { id: 'dept4', name: 'HR' },
-]);
+// Departments data
+const departments = ref([]);
 
-// Summary data - replace with actual computed properties from store
-const summary = computed(() => ({
-  totalPayroll: 1250000,
-  employeeCount: 42,
-  averageSalary: 65000,
-  benefitsCost: 250000,
-  taxWithheld: 375000,
+// Summary data from store
+const summary = computed(() => store.summary || {
+  totalPayroll: 0,
+  employeeCount: 0,
+  averageSalary: 0,
+  benefitsCost: 0,
+  taxWithheld: 0,
   periodLabel: 'Current Month',
   trend: 'up',
-  changePercentage: 4.2,
-  anomalies: {
-    high: 2,
-    medium: 5,
-    low: 3
-  }
-}));
+  changePercentage: 0,
+  anomalies: { high: 0, medium: 0, low: 0 }
+});
 
 // Chart data - replace with actual computed properties from store
 const trendChartData = computed(() => {
@@ -500,9 +491,20 @@ function getSeverity(severity: string) {
   }
 }
 
+// Load departments
+const loadDepartments = async () => {
+  try {
+    const depts = await payrollService.getDepartments();
+    departments.value = depts.map(dept => ({ id: dept, name: dept }));
+  } catch (error) {
+    console.error('Error loading departments:', error);
+  }
+};
+
 // Lifecycle hooks
 onMounted(() => {
   // Initial data load
+  loadDepartments();
   refreshAll();
 });
 </script>

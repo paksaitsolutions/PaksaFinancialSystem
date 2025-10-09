@@ -35,6 +35,8 @@ class InventoryItem(Base):
     selling_price = Column(Decimal(15, 2))
     reorder_level = Column(Integer, default=0)
     maximum_level = Column(Integer)
+    barcode = Column(String(100))
+    quantity_on_hand = Column(Integer, default=0)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

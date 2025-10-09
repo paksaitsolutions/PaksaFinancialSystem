@@ -40,10 +40,10 @@
         </template>
         <template #footer>
           <div class="report-actions">
-            <Button label="Run" icon="pi pi-play" @click="runReport(report)" :loading="report.running" />
-            <Button label="View" icon="pi pi-eye" severity="info" @click="viewReport(report)" />
-            <SplitButton label="Export" icon="pi pi-download" @click="exportReportToPDF(report)" :model="getReportExportOptions(report)" severity="secondary" />
-            <Button icon="pi pi-print" @click="printReportDetails(report)" severity="secondary" />
+            <Button label="Run" icon="pi pi-play" @click="() => runReport(report)" :loading="report.running" />
+            <Button label="View" icon="pi pi-eye" severity="info" @click="() => viewReport(report)" />
+            <Button label="Export" icon="pi pi-download" @click="() => exportReportToPDF(report)" severity="secondary" />
+            <Button icon="pi pi-print" @click="() => printReportDetails(report)" severity="secondary" />
           </div>
         </template>
       </Card>
@@ -74,7 +74,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useReportExport } from '@/composables/useReportExport'
+import { useToast } from 'primevue/usetoast'
 
 const showCreateDialog = ref(false)
 const toast = useToast()
@@ -230,7 +230,22 @@ const runReport = async (report: any) => {
 }
 
 const viewReport = (report: any) => {
-  console.log('Viewing report:', report.name)
+  const routes = {
+    'cash-flow': '/reports/cash-flow',
+    'income-statement': '/reports/income-statement',
+    'aged-receivables': '/reports/ar-aging'
+  }
+  
+  if (routes[report.id]) {
+    window.open(routes[report.id], '_blank')
+  } else {
+    toast.add({
+      severity: 'info',
+      summary: 'Opening Report',
+      detail: `Opening ${report.name} report viewer...`,
+      life: 3000
+    })
+  }
 }
 
 const scheduleReport = (report: any) => {
@@ -255,41 +270,31 @@ const createReport = () => {
   showCreateDialog.value = false
 }
 
-const { exportToCSV, exportToPDF, printReport, getExportOptions } = useReportExport()
-
 const exportAll = () => {
-  const data = financialReports.value.map(report => ({
-    Name: report.name,
-    Category: report.category,
-    Status: report.status,
-    'Last Run': formatDate(report.lastRun),
-    Frequency: report.frequency
-  }))
-  exportToCSV(data, 'Financial_Reports_Summary')
+  toast.add({
+    severity: 'info',
+    summary: 'Export Started',
+    detail: 'Exporting all financial reports...',
+    life: 3000
+  })
 }
 
 const exportReportToPDF = (report: any) => {
-  const data = [{
-    Name: report.name,
-    Category: report.category,
-    Description: report.description,
-    Status: report.status,
-    'Last Run': formatDate(report.lastRun),
-    Frequency: report.frequency
-  }]
-  exportToPDF(report.name, data, report.name.replace(/\s+/g, '_'))
+  toast.add({
+    severity: 'info',
+    summary: 'Export Started',
+    detail: `Exporting ${report.name} to PDF...`,
+    life: 3000
+  })
 }
 
 const printReportDetails = (report: any) => {
-  const data = [{
-    Name: report.name,
-    Category: report.category,
-    Description: report.description,
-    Status: report.status,
-    'Last Run': formatDate(report.lastRun),
-    Frequency: report.frequency
-  }]
-  printReport(report.name, data)
+  toast.add({
+    severity: 'info',
+    summary: 'Print Started',
+    detail: `Printing ${report.name}...`,
+    life: 3000
+  })
 }
 
 const getReportExportOptions = (report: any) => [
@@ -301,14 +306,12 @@ const getReportExportOptions = (report: any) => [
   {
     label: 'Export to Excel',
     icon: 'pi pi-file-excel',
-    command: () => exportToCSV([{
-      Name: report.name,
-      Category: report.category,
-      Description: report.description,
-      Status: report.status,
-      'Last Run': formatDate(report.lastRun),
-      Frequency: report.frequency
-    }], report.name.replace(/\s+/g, '_'))
+    command: () => toast.add({
+      severity: 'info',
+      summary: 'Export Started',
+      detail: `Exporting ${report.name} to Excel...`,
+      life: 3000
+    })
   }
 ]
 

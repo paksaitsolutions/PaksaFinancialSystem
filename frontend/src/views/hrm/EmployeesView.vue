@@ -11,14 +11,17 @@
     <Card>
       <template #content>
         <DataTable :value="employees" :loading="loading" paginator :rows="10">
-          <Column field="employeeId" header="ID" sortable />
-          <Column field="name" header="Name" sortable />
-          <Column field="email" header="Email" sortable />
-          <Column field="department" header="Department" sortable />
-          <Column field="position" header="Position" sortable />
-          <Column field="status" header="Status" sortable>
+          <Column field="employee_id" header="ID" sortable />
+          <Column header="Name" sortable>
             <template #body="{ data }">
-              <Tag :value="data.status" :severity="getStatusSeverity(data.status)" />
+              {{ data.first_name }} {{ data.last_name }}
+            </template>
+          </Column>
+          <Column field="email" header="Email" sortable />
+          <Column field="job_title" header="Position" sortable />
+          <Column header="Status" sortable>
+            <template #body="{ data }">
+              <Tag :value="data.is_active ? 'Active' : 'Inactive'" :severity="data.is_active ? 'success' : 'danger'" />
             </template>
           </Column>
           <Column header="Actions">
@@ -31,38 +34,14 @@
       </template>
     </Card>
 
-    <Dialog v-model:visible="employeeDialog" header="Employee Details" :modal="true" :style="{width: '500px'}">
-      <div class="field">
-        <label>Name</label>
-        <InputText v-model="employee.name" class="w-full" :class="{'p-invalid': submitted && !employee.name}" />
-        <small class="p-error" v-if="submitted && !employee.name">Name is required.</small>
-      </div>
-      <div class="field">
-        <label>Email</label>
-        <InputText v-model="employee.email" class="w-full" :class="{'p-invalid': submitted && !employee.email}" />
-        <small class="p-error" v-if="submitted && !employee.email">Email is required.</small>
-      </div>
-      <div class="field">
-        <label>Phone</label>
-        <InputText v-model="employee.phone" class="w-full" />
-      </div>
-      <div class="field">
-        <label>Department</label>
-        <Dropdown v-model="employee.department" :options="departments" placeholder="Select Department" class="w-full" />
-      </div>
-      <div class="field">
-        <label>Position</label>
-        <InputText v-model="employee.position" class="w-full" />
-      </div>
-      <div class="field">
-        <label>Status</label>
-        <Dropdown v-model="employee.status" :options="statuses" optionLabel="label" optionValue="value" class="w-full" />
-      </div>
-      <template #footer>
-        <Button label="Cancel" class="p-button-text" @click="hideDialog" />
-        <Button label="Save" @click="saveEmployee" />
-      </template>
-    </Dialog>
+    <EmployeeForm 
+      v-model:visible="employeeDialog" 
+      :employee="employee" 
+      :departments="departmentsList"
+      :saving="saving"
+      @save="saveEmployee" 
+      @cancel="hideDialog"
+    />
 
     <Dialog v-model:visible="deleteEmployeeDialog" header="Confirm" :modal="true" :style="{width: '450px'}">
       <div class="flex align-items-center">
@@ -80,44 +59,21 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
-import { hrmService, type Employee } from '@/services/hrmService'
+import { hrmService, type Employee, type Department } from '@/services/hrmService'
+import EmployeeForm from '@/components/shared/EmployeeForm.vue'
 
 const toast = useToast()
 const loading = ref(false)
 const employeeDialog = ref(false)
 const deleteEmployeeDialog = ref(false)
-const submitted = ref(false)
+const saving = ref(false)
 
 const employees = ref<Employee[]>([])
-const employee = ref<Employee>({
-  employeeId: '',
-  name: '',
-  email: '',
-  phone: '',
-  department: '',
-  position: '',
-  status: 'active'
-})
-
-const departments = ref(['IT', 'HR', 'Finance', 'Sales', 'Marketing', 'Operations'])
-const statuses = ref([
-  { label: 'Active', value: 'active' },
-  { label: 'Inactive', value: 'inactive' },
-  { label: 'On Leave', value: 'on_leave' },
-  { label: 'Terminated', value: 'terminated' }
-])
+const employee = ref<Employee | null>(null)
+const departmentsList = ref<Department[]>([])
 
 const openNew = () => {
-  employee.value = {
-    employeeId: `EMP${Date.now()}`,
-    name: '',
-    email: '',
-    phone: '',
-    department: '',
-    position: '',
-    status: 'active'
-  }
-  submitted.value = false
+  employee.value = null
   employeeDialog.value = true
 }
 
@@ -128,25 +84,24 @@ const editEmployee = (emp: Employee) => {
 
 const hideDialog = () => {
   employeeDialog.value = false
-  submitted.value = false
 }
 
-const saveEmployee = async () => {
-  submitted.value = true
-  if (employee.value.name && employee.value.email) {
-    try {
-      if (employee.value.id) {
-        await hrmService.updateEmployee(employee.value.id, employee.value)
-        toast.add({ severity: 'success', summary: 'Success', detail: 'Employee updated', life: 3000 })
-      } else {
-        await hrmService.createEmployee(employee.value)
-        toast.add({ severity: 'success', summary: 'Success', detail: 'Employee created', life: 3000 })
-      }
-      employeeDialog.value = false
-      await loadEmployees()
-    } catch (error: any) {
-      toast.add({ severity: 'error', summary: 'Error', detail: error.message || 'Operation failed', life: 3000 })
+const saveEmployee = async (employeeData: any) => {
+  saving.value = true
+  try {
+    if (employee.value?.id) {
+      await hrmService.updateEmployee(employee.value.id, employeeData)
+      toast.add({ severity: 'success', summary: 'Success', detail: 'Employee updated', life: 3000 })
+    } else {
+      await hrmService.createEmployee(employeeData)
+      toast.add({ severity: 'success', summary: 'Success', detail: 'Employee created', life: 3000 })
     }
+    employeeDialog.value = false
+    await loadEmployees()
+  } catch (error: any) {
+    toast.add({ severity: 'error', summary: 'Error', detail: error.message || 'Operation failed', life: 3000 })
+  } finally {
+    saving.value = false
   }
 }
 
@@ -168,38 +123,46 @@ const deleteEmployee = async () => {
   }
 }
 
-const getStatusSeverity = (status: string) => {
-  switch (status) {
-    case 'active':
-      return 'success'
-    case 'inactive':
-      return 'danger'
-    case 'on_leave':
-      return 'warning'
-    default:
-      return 'info'
-  }
-}
+
 
 const loadEmployees = async () => {
   loading.value = true
   try {
-    employees.value = await hrmService.getEmployees()
+    const response = await hrmService.getEmployees()
+    employees.value = response.data
   } catch (error: any) {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load employees', life: 3000 })
     // Fallback to mock data for demo
     employees.value = [
-      { id: '1', employeeId: 'EMP001', name: 'John Doe', email: 'john@company.com', phone: '123-456-7890', department: 'IT', position: 'Software Engineer', status: 'active' },
-      { id: '2', employeeId: 'EMP002', name: 'Jane Smith', email: 'jane@company.com', phone: '123-456-7891', department: 'HR', position: 'HR Manager', status: 'active' },
-      { id: '3', employeeId: 'EMP003', name: 'Mike Johnson', email: 'mike@company.com', phone: '123-456-7892', department: 'Finance', position: 'Financial Analyst', status: 'on_leave' }
+      { id: '1', employee_id: 'EMP001', first_name: 'John', last_name: 'Doe', email: 'john@company.com', phone_number: '123-456-7890', job_title: 'Software Engineer', is_active: true },
+      { id: '2', employee_id: 'EMP002', first_name: 'Jane', last_name: 'Smith', email: 'jane@company.com', phone_number: '123-456-7891', job_title: 'HR Manager', is_active: true },
+      { id: '3', employee_id: 'EMP003', first_name: 'Mike', last_name: 'Johnson', email: 'mike@company.com', phone_number: '123-456-7892', job_title: 'Financial Analyst', is_active: false }
     ]
   } finally {
     loading.value = false
   }
 }
 
+const loadDepartments = async () => {
+  try {
+    const response = await hrmService.getDepartments()
+    departmentsList.value = response.data
+  } catch (error) {
+    console.error('Error loading departments:', error)
+    departmentsList.value = [
+      { id: '1', name: 'IT' },
+      { id: '2', name: 'HR' },
+      { id: '3', name: 'Finance' },
+      { id: '4', name: 'Sales' },
+      { id: '5', name: 'Marketing' },
+      { id: '6', name: 'Operations' }
+    ]
+  }
+}
+
 onMounted(() => {
   loadEmployees()
+  loadDepartments()
 })
 </script>
 

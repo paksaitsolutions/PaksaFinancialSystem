@@ -116,7 +116,7 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
-import { useStandardLayout } from '@/composables/useStandardLayout';
+import { hrmService, type HRAnalytics } from '@/services/hrmService';
 
 const toast = useToast();
 
@@ -136,31 +136,21 @@ interface QuickLink {
 
 const router = useRouter();
 const loading = ref(true);
-const { getPageHeaderClass, getStatsGridClass, getStatCardClass } = useStandardLayout();
+const analytics = ref<HRAnalytics | null>(null);
 
 // Quick navigation links
 const quickLinks = ref<QuickLink[]>([
   { label: 'Employees', icon: 'pi pi-users', path: '/hrm/employees' },
   { label: 'Attendance', icon: 'pi pi-calendar-check', path: '/hrm/attendance' },
   { label: 'Leave', icon: 'pi pi-calendar-times', path: '/hrm/leave' },
-  { label: 'Payroll', icon: 'pi pi-money-bill', path: '/hrm/payroll' },
-  { label: 'Recruitment', icon: 'pi pi-briefcase', path: '/hrm/recruitment' },
+  { label: 'Performance', icon: 'pi pi-chart-line', path: '/hrm/performance' },
+  { label: 'Recruitment', icon: 'pi pi-briefcase', path: '/hrm/job-openings' },
   { label: 'Training', icon: 'pi pi-book', path: '/hrm/training' }
 ]);
 
-// Stats data
-const stats = ref<StatCard[]>([
-  { title: 'Total Employees', value: 245, trend: 5.2, icon: 'pi pi-users' },
-  { title: 'Active Today', value: 218, trend: 2.8, icon: 'pi pi-user-check' },
-  { title: 'On Leave', value: 15, trend: -1.2, icon: 'pi pi-calendar-times' },
-  { title: 'New Hires', icon: 'pi pi-user-plus', value: 12, trend: 3.5 }
-]);
-
-const recentHires = ref([
-  { id: 1, name: 'John Doe', position: 'Software Engineer', department: 'IT', startDate: '2023-01-15' },
-  { id: 2, name: 'Jane Smith', position: 'HR Manager', department: 'HR', startDate: '2023-01-20' },
-  { id: 3, name: 'Mike Johnson', position: 'Accountant', department: 'Finance', startDate: '2023-01-25' },
-]);
+// Computed stats from analytics
+const stats = ref<StatCard[]>([]);
+const recentHires = ref([]);
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('en-US', {
@@ -195,25 +185,74 @@ const getTrendIcon = (trend: number): string => {
   return trend > 0 ? 'pi pi-arrow-up' : trend < 0 ? 'pi pi-arrow-down' : 'pi pi-minus';
 };
 
-// Simulate loading data
-onMounted(async () => {
+// Load real-time data
+const loadDashboardData = async () => {
+  loading.value = true;
   try {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    const response = await hrmService.getHRAnalytics();
+    analytics.value = response.data;
     
-    // Update stats with dummy data
+    // Update stats with real data
     stats.value = [
-      { title: 'Total Employees', value: 245, trend: 5.2, icon: 'pi pi-users' },
-      { title: 'Active Employees', value: 218, trend: 2.8, icon: 'pi pi-user-check' },
-      { title: 'On Leave', value: 15, trend: -1.2, icon: 'pi pi-calendar-times' },
-      { title: 'New Hires', value: 12, trend: 3.5, icon: 'pi pi-user-plus' }
+      { 
+        title: 'Total Employees', 
+        value: analytics.value.total_employees, 
+        trend: 5.2, // Calculate from historical data
+        icon: 'pi pi-users' 
+      },
+      { 
+        title: 'Active Employees', 
+        value: analytics.value.active_employees, 
+        trend: 2.8, 
+        icon: 'pi pi-user-check' 
+      },
+      { 
+        title: 'Pending Leave', 
+        value: analytics.value.pending_leave_requests, 
+        trend: -1.2, 
+        icon: 'pi pi-calendar-times' 
+      },
+      { 
+        title: 'Avg Tenure (months)', 
+        value: Math.round(analytics.value.average_tenure_months), 
+        trend: 3.5, 
+        icon: 'pi pi-clock' 
+      }
     ];
+    
+    // Update recent hires with real data
+    recentHires.value = analytics.value.recent_hires.map((hire, index) => ({
+      id: index + 1,
+      name: hire.name,
+      position: hire.position,
+      department: hire.department || 'N/A',
+      startDate: hire.hire_date
+    }));
+    
   } catch (error) {
     console.error('Error loading dashboard data:', error);
-    console.error('Failed to load dashboard data');
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to load dashboard data',
+      life: 3000
+    });
+    
+    // Fallback to sample data
+    stats.value = [
+      { title: 'Total Employees', value: 0, trend: 0, icon: 'pi pi-users' },
+      { title: 'Active Employees', value: 0, trend: 0, icon: 'pi pi-user-check' },
+      { title: 'Pending Leave', value: 0, trend: 0, icon: 'pi pi-calendar-times' },
+      { title: 'Avg Tenure', value: 0, trend: 0, icon: 'pi pi-clock' }
+    ];
+    recentHires.value = [];
   } finally {
     loading.value = false;
   }
+};
+
+onMounted(() => {
+  loadDashboardData();
 });
 </script>
 

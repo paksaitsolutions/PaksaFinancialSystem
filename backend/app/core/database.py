@@ -48,6 +48,8 @@ def init_db():
     # Import all models to ensure they are registered
     from app.models import user  # noqa
     from app.models import tax_return  # noqa
+    from app.models.tax_models import TaxRate, TaxTransaction, TaxExemption, TaxReturn, TaxJurisdiction  # noqa
+    from app.models.payroll_models import Employee, PayRun, PayRunEmployee, Payslip, PayrollItem, EmployeePayrollItem  # noqa
     try:
         from app.models.gl_models import (  # Import GL models
             ChartOfAccounts, JournalEntry, JournalEntryLine, 
@@ -59,7 +61,7 @@ def init_db():
     except ImportError as e:
         print(f"Warning: Could not import advanced models: {e}")
     
-    print("✅ Tax return model imported")
+    print("✅ Tax and Payroll models imported")
     
     # Create all tables
     Base.metadata.create_all(bind=engine)

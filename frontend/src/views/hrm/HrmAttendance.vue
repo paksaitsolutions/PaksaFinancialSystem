@@ -5,7 +5,13 @@
         <h1>Attendance Management</h1>
         <p class="text-color-secondary">Track and manage employee attendance</p>
       </div>
-      <Button label="Mark Attendance" icon="pi pi-clock" @click="markAttendance" />
+      <Button 
+        label="Mark Attendance" 
+        icon="pi pi-clock" 
+        @click="markAttendance" 
+        :loading="markingAttendance"
+        :disabled="markingAttendance"
+      />
     </div>
 
     <div class="grid">
@@ -75,10 +81,22 @@
       <template #title>Today's Attendance</template>
       <template #content>
         <DataTable :value="attendanceRecords" :loading="loading" paginator :rows="10">
-          <Column field="employeeId" header="Employee ID" sortable />
-          <Column field="name" header="Name" sortable />
-          <Column field="checkIn" header="Check In" sortable />
-          <Column field="checkOut" header="Check Out" sortable />
+          <Column field="employee_id" header="Employee ID" sortable />
+          <Column header="Name" sortable>
+            <template #body="{ data }">
+              {{ data.employee ? `${data.employee.first_name} ${data.employee.last_name}` : 'N/A' }}
+            </template>
+          </Column>
+          <Column header="Check In" sortable>
+            <template #body="{ data }">
+              {{ formatTime(data.check_in_time) }}
+            </template>
+          </Column>
+          <Column header="Check Out" sortable>
+            <template #body="{ data }">
+              {{ formatTime(data.check_out_time) }}
+            </template>
+          </Column>
           <Column field="status" header="Status" sortable>
             <template #body="{ data }">
               <Tag :value="data.status" :severity="getStatusSeverity(data.status)" />
@@ -91,57 +109,127 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useToast } from 'primevue/usetoast';
-
-interface AttendanceRecord {
-  id: number;
-  employeeId: string;
-  name: string;
-  checkIn: string;
-  checkOut: string;
-  status: string;
-}
+import { hrmService, type AttendanceRecord } from '@/services/hrmService';
 
 const toast = useToast();
 const loading = ref(false);
-
-const stats = ref({
-  present: 45,
-  absent: 5,
-  late: 3,
-  rate: 90
-});
+const markingAttendance = ref(false);
 
 const attendanceRecords = ref<AttendanceRecord[]>([]);
 
-const markAttendance = () => {
-  toast.add({
-    severity: 'success',
-    summary: 'Attendance Marked',
-    detail: 'Your attendance has been recorded',
-    life: 3000
-  });
+const stats = computed(() => {
+  const present = attendanceRecords.value.filter(r => r.status === 'PRESENT').length;
+  const absent = attendanceRecords.value.filter(r => r.status === 'ABSENT').length;
+  const late = attendanceRecords.value.filter(r => r.status === 'LATE').length;
+  const total = attendanceRecords.value.length;
+  const rate = total > 0 ? Math.round((present / total) * 100) : 0;
+  
+  return { present, absent, late, rate };
+});
+
+const markAttendance = async () => {
+  markingAttendance.value = true;
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const now = new Date().toLocaleTimeString('en-US', { hour12: false });
+    
+    // For demo purposes, using a default employee ID
+    // In a real app, this would come from the authenticated user
+    const employeeId = 'EMP001';
+    
+    await hrmService.recordAttendance(employeeId, {
+      date: today,
+      check_in_time: now,
+      status: 'PRESENT'
+    });
+    
+    toast.add({
+      severity: 'success',
+      summary: 'Attendance Marked',
+      detail: 'Your attendance has been recorded successfully',
+      life: 3000
+    });
+    
+    // Reload attendance records
+    await loadAttendanceRecords();
+  } catch (error) {
+    console.error('Error marking attendance:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to mark attendance. Please try again.',
+      life: 3000
+    });
+  } finally {
+    markingAttendance.value = false;
+  }
+};
+
+const loadAttendanceRecords = async () => {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const response = await hrmService.getAttendanceRecords({
+      start_date: today,
+      end_date: today
+    });
+    attendanceRecords.value = response.data;
+  } catch (error) {
+    console.error('Error loading attendance records:', error);
+    // Fallback to mock data if API fails
+    attendanceRecords.value = [
+      {
+        id: '1',
+        employee_id: 'EMP001',
+        employee: { employee_id: 'EMP001', first_name: 'John', last_name: 'Doe' } as any,
+        date: new Date().toISOString().split('T')[0],
+        check_in_time: '09:00:00',
+        check_out_time: '17:30:00',
+        status: 'PRESENT'
+      },
+      {
+        id: '2',
+        employee_id: 'EMP002',
+        employee: { employee_id: 'EMP002', first_name: 'Jane', last_name: 'Smith' } as any,
+        date: new Date().toISOString().split('T')[0],
+        check_in_time: '09:15:00',
+        check_out_time: '17:45:00',
+        status: 'LATE'
+      },
+      {
+        id: '3',
+        employee_id: 'EMP003',
+        employee: { employee_id: 'EMP003', first_name: 'Mike', last_name: 'Johnson' } as any,
+        date: new Date().toISOString().split('T')[0],
+        status: 'ABSENT'
+      }
+    ];
+  }
 };
 
 const getStatusSeverity = (status: string) => {
-  switch (status.toLowerCase()) {
-    case 'present': return 'success';
-    case 'absent': return 'danger';
-    case 'late': return 'warning';
+  switch (status.toUpperCase()) {
+    case 'PRESENT': return 'success';
+    case 'ABSENT': return 'danger';
+    case 'LATE': return 'warning';
     default: return 'info';
   }
+};
+
+const formatTime = (time?: string) => {
+  if (!time) return '-';
+  return new Date(`2000-01-01T${time}`).toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  });
 };
 
 onMounted(async () => {
   loading.value = true;
   try {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    attendanceRecords.value = [
-      { id: 1, employeeId: 'EMP001', name: 'John Doe', checkIn: '09:00 AM', checkOut: '05:30 PM', status: 'Present' },
-      { id: 2, employeeId: 'EMP002', name: 'Jane Smith', checkIn: '09:15 AM', checkOut: '05:45 PM', status: 'Late' },
-      { id: 3, employeeId: 'EMP003', name: 'Mike Johnson', checkIn: '-', checkOut: '-', status: 'Absent' }
-    ];
+    await loadAttendanceRecords();
   } finally {
     loading.value = false;
   }

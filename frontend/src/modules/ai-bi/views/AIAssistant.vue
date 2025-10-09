@@ -136,7 +136,6 @@
 import { ref, onMounted, nextTick, computed, onUnmounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import Chart from 'primevue/chart'
-// import { useAIStore } from '../store/aiStore'
 
 interface Message {
   id: number
@@ -154,7 +153,8 @@ interface QuickAction {
   query: string
 }
 
-const aiStore = useAIStore()
+// AI store will be initialized later
+let aiStore: any = null
 const messagesContainer = ref<HTMLElement | null>(null)
 const userInput = ref('')
 const isProcessing = ref(false)
@@ -473,13 +473,23 @@ const scrollToBottom = () => {
 // Initialize AI connection
 const toast = useToast()
 
-onMounted(() => {
+onMounted(async () => {
   scrollToBottom()
-  // aiStore.connectRealTime()
+  
+  // Try to initialize AI store
+  try {
+    const { useAIStore } = await import('../store/aiStore')
+    aiStore = useAIStore()
+    aiStore.connectRealTime()
+  } catch (error) {
+    console.warn('AI Store not available:', error)
+  }
 })
 
 onUnmounted(() => {
-  // aiStore.disconnectRealTime()
+  if (aiStore) {
+    aiStore.disconnectRealTime()
+  }
 })
 </script>
 

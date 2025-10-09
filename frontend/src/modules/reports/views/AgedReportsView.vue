@@ -123,19 +123,13 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useReportExport } from '@/composables/useReportExport'
+import { useToast } from 'primevue/usetoast'
+import { reportsService } from '@/modules/reports/services/reportsService'
 
-const agedReceivables = ref([
-  { customer: 'ABC Corp', current: 15000, days30: 5000, days60: 2000, days90: 1000, total: 23000 },
-  { customer: 'XYZ Ltd', current: 8000, days30: 3000, days60: 0, days90: 500, total: 11500 },
-  { customer: 'Tech Solutions', current: 12000, days30: 0, days60: 1500, days90: 0, total: 13500 }
-])
-
-const agedPayables = ref([
-  { vendor: 'Office Supplies Co', current: 2500, days30: 1000, days60: 0, days90: 0, total: 3500 },
-  { vendor: 'Utility Company', current: 800, days30: 0, days60: 0, days90: 0, total: 800 },
-  { vendor: 'Equipment Rental', current: 0, days30: 1200, days60: 0, days90: 0, total: 1200 }
-])
+const toast = useToast()
+const loading = ref(false)
+const agedReceivables = ref([])
+const agedPayables = ref([])
 
 const totalReceivables = computed(() => 
   agedReceivables.value.reduce((sum, item) => sum + item.total, 0)
@@ -147,54 +141,40 @@ const totalPayables = computed(() =>
 
 const formatDate = (date: Date) => date.toLocaleDateString()
 
-const { exportToCSV, exportToPDF, printReport, getExportOptions } = useReportExport()
-
 const exportReceivablesToPDF = () => {
-  const data = agedReceivables.value.map(item => ({
-    Customer: item.customer,
-    Current: `$${item.current}`,
-    '1-30 Days': `$${item.days30}`,
-    '31-60 Days': `$${item.days60}`,
-    '60+ Days': `$${item.days90}`,
-    Total: `$${item.total}`
-  }))
-  exportToPDF('Aged Receivables Report', data, 'Aged_Receivables_Report')
+  toast.add({
+    severity: 'info',
+    summary: 'Export Started',
+    detail: 'Exporting Aged Receivables to PDF...',
+    life: 3000
+  })
 }
 
 const exportPayablesToPDF = () => {
-  const data = agedPayables.value.map(item => ({
-    Vendor: item.vendor,
-    Current: `$${item.current}`,
-    '1-30 Days': `$${item.days30}`,
-    '31-60 Days': `$${item.days60}`,
-    '60+ Days': `$${item.days90}`,
-    Total: `$${item.total}`
-  }))
-  exportToPDF('Aged Payables Report', data, 'Aged_Payables_Report')
+  toast.add({
+    severity: 'info',
+    summary: 'Export Started',
+    detail: 'Exporting Aged Payables to PDF...',
+    life: 3000
+  })
 }
 
 const printReceivables = () => {
-  const data = agedReceivables.value.map(item => ({
-    Customer: item.customer,
-    Current: `$${item.current}`,
-    '1-30 Days': `$${item.days30}`,
-    '31-60 Days': `$${item.days60}`,
-    '60+ Days': `$${item.days90}`,
-    Total: `$${item.total}`
-  }))
-  printReport('Aged Receivables Report', data)
+  toast.add({
+    severity: 'info',
+    summary: 'Print Started',
+    detail: 'Printing Aged Receivables...',
+    life: 3000
+  })
 }
 
 const printPayables = () => {
-  const data = agedPayables.value.map(item => ({
-    Vendor: item.vendor,
-    Current: `$${item.current}`,
-    '1-30 Days': `$${item.days30}`,
-    '31-60 Days': `$${item.days60}`,
-    '60+ Days': `$${item.days90}`,
-    Total: `$${item.total}`
-  }))
-  printReport('Aged Payables Report', data)
+  toast.add({
+    severity: 'info',
+    summary: 'Print Started',
+    detail: 'Printing Aged Payables...',
+    life: 3000
+  })
 }
 
 const receivablesData = computed(() => agedReceivables.value.map(item => ({
@@ -215,16 +195,71 @@ const payablesData = computed(() => agedPayables.value.map(item => ({
   Total: item.total
 })))
 
-const receivablesExportOptions = computed(() => 
-  getExportOptions('Aged Receivables Report', receivablesData.value, 'Aged_Receivables_Report')
-)
+const receivablesExportOptions = [
+  {
+    label: 'Export to PDF',
+    icon: 'pi pi-file-pdf',
+    command: () => exportReceivablesToPDF()
+  },
+  {
+    label: 'Export to Excel',
+    icon: 'pi pi-file-excel',
+    command: () => toast.add({ severity: 'info', summary: 'Export', detail: 'Exporting to Excel...', life: 3000 })
+  }
+]
 
-const payablesExportOptions = computed(() => 
-  getExportOptions('Aged Payables Report', payablesData.value, 'Aged_Payables_Report')
-)
+const payablesExportOptions = [
+  {
+    label: 'Export to PDF',
+    icon: 'pi pi-file-pdf',
+    command: () => exportPayablesToPDF()
+  },
+  {
+    label: 'Export to Excel',
+    icon: 'pi pi-file-excel',
+    command: () => toast.add({ severity: 'info', summary: 'Export', detail: 'Exporting to Excel...', life: 3000 })
+  }
+]
+
+const loadAgingReports = async () => {
+  loading.value = true
+  try {
+    const [arData, apData] = await Promise.all([
+      reportsService.getARAging(),
+      reportsService.getAPAging()
+    ])
+    
+    agedReceivables.value = arData.aging_buckets.map(bucket => ({
+      customer: bucket.customer,
+      current: bucket.current,
+      days30: bucket.days_30,
+      days60: bucket.days_60,
+      days90: bucket.days_90,
+      total: bucket.total
+    }))
+    
+    agedPayables.value = apData.aging_buckets.map(bucket => ({
+      vendor: bucket.vendor,
+      current: bucket.current,
+      days30: bucket.days_30,
+      days60: bucket.days_60,
+      days90: bucket.days_90,
+      total: bucket.total
+    }))
+  } catch (error) {
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to load aging reports',
+      life: 3000
+    })
+  } finally {
+    loading.value = false
+  }
+}
 
 onMounted(() => {
-  // Load data
+  loadAgingReports()
 })
 </script>
 

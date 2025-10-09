@@ -214,6 +214,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { formatCurrency } from '@/utils/formatters'
+import taxService from '@/services/taxService'
 import Card from 'primevue/card'
 import Button from 'primevue/button'
 import DataTable from 'primevue/datatable'
@@ -222,65 +223,94 @@ import Tag from 'primevue/tag'
 
 const router = useRouter()
 const toast = useToast()
+const loading = ref(false)
 
 // KPI Data
 const kpis = ref({
-  totalLiability: 125750.50,
-  liabilityChange: 8.2,
-  activeTaxCodes: 24,
-  pendingReturns: 3,
-  daysUntilDue: 15,
-  complianceScore: 98
+  totalLiability: 0,
+  liabilityChange: 0,
+  activeTaxCodes: 0,
+  pendingReturns: 0,
+  daysUntilDue: 0,
+  complianceScore: 0
 })
 
 // Recent Activity
-const recentActivity = ref([
-  {
-    id: 1,
-    type: 'calculation',
-    description: 'Sales tax calculated for Q4 2024',
-    date: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    status: 'completed'
-  },
-  {
-    id: 2,
-    type: 'filing',
-    description: 'VAT return filed for December',
-    date: new Date(Date.now() - 4 * 60 * 60 * 1000),
-    status: 'submitted'
-  },
-  {
-    id: 3,
-    type: 'exemption',
-    description: 'Tax exemption certificate updated',
-    date: new Date(Date.now() - 6 * 60 * 60 * 1000),
-    status: 'approved'
-  }
-])
+const recentActivity = ref([])
 
 // Upcoming Deadlines
-const upcomingDeadlines = ref([
-  {
-    id: 1,
-    description: 'Sales Tax Return - Q4 2024',
-    jurisdiction: 'California',
-    dueDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
-    daysRemaining: 15,
-    status: 'pending'
-  },
-  {
-    id: 2,
-    description: 'VAT Return - January 2025',
-    jurisdiction: 'Federal',
-    dueDate: new Date(Date.now() + 28 * 24 * 60 * 60 * 1000),
-    daysRemaining: 28,
-    status: 'draft'
-  }
-])
+const upcomingDeadlines = ref([])
 
 // Methods
-const refreshData = () => {
-  toast.add({ severity: 'info', summary: 'Refreshing', detail: 'Tax data refreshed successfully' })
+const loadDashboardData = async () => {
+  loading.value = true
+  try {
+    const endDate = new Date()
+    const startDate = new Date()
+    startDate.setMonth(startDate.getMonth() - 1)
+
+    // Load tax summary
+    const summary = await taxService.getTaxSummary({
+      start_date: startDate.toISOString().split('T')[0],
+      end_date: endDate.toISOString().split('T')[0]
+    })
+
+    // Load tax rates
+    const rates = await taxService.getTaxRates({ active_only: true })
+    
+    // Load recent transactions
+    const transactions = await taxService.getTaxTransactions({ limit: 5 })
+    
+    // Update KPIs
+    kpis.value = {
+      totalLiability: summary.summary.total_tax_amount,
+      liabilityChange: 8.2, // Calculate from historical data
+      activeTaxCodes: rates.length,
+      pendingReturns: 3, // From tax returns API
+      daysUntilDue: 15, // Calculate from due dates
+      complianceScore: 98 // Calculate compliance score
+    }
+
+    // Update recent activity from transactions
+    recentActivity.value = transactions.slice(0, 3).map(t => ({
+      id: t.id,
+      type: 'calculation',
+      description: `${t.entity_type} tax calculated - ${formatCurrency(t.tax_amount)}`,
+      date: new Date(t.transaction_date),
+      status: 'completed'
+    }))
+
+    // Mock upcoming deadlines (replace with real API)
+    upcomingDeadlines.value = [
+      {
+        id: 1,
+        description: 'Sales Tax Return - Q4 2024',
+        jurisdiction: 'California',
+        dueDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
+        daysRemaining: 15,
+        status: 'pending'
+      },
+      {
+        id: 2,
+        description: 'VAT Return - January 2025',
+        jurisdiction: 'Federal',
+        dueDate: new Date(Date.now() + 28 * 24 * 60 * 60 * 1000),
+        daysRemaining: 28,
+        status: 'draft'
+      }
+    ]
+
+  } catch (error) {
+    console.error('Error loading dashboard data:', error)
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load tax data' })
+  } finally {
+    loading.value = false
+  }
+}
+
+const refreshData = async () => {
+  await loadDashboardData()
+  toast.add({ severity: 'success', summary: 'Refreshed', detail: 'Tax data refreshed successfully' })
 }
 
 const formatDate = (date: Date) => {
@@ -323,7 +353,7 @@ const viewDeadline = (deadline: any) => {
 }
 
 onMounted(() => {
-  // Load dashboard data
+  loadDashboardData()
 })
 </script>
 

@@ -69,7 +69,7 @@ function createApiClient(baseURL: string): AxiosInstance {
     (response: AxiosResponse) => {
       const config = response.config as RequestConfig;
       const { showSuccess, successMessage } = config;
-      const { showSuccess: showSuccessNotification } = useNotifications();
+      const { success: showSuccessNotification } = useNotifications();
       
       // Show success message if enabled
       if (showSuccess) {
@@ -82,7 +82,7 @@ function createApiClient(baseURL: string): AxiosInstance {
     async (error: AxiosError) => {
       const config = error.config as RequestConfig;
       const { showError = true, errorMessage } = config || {};
-      const { showError: showErrorNotification } = useNotifications();
+      const { error: showErrorNotification } = useNotifications();
       const authStore = useAuthStore();
       
       // Default error message

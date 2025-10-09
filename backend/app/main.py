@@ -24,6 +24,7 @@ from pathlib import Path
 from app.core.database import init_db, get_db, engine
 from app.models.base import Base
 from app.models.user import User
+from app.models.ai_bi_models import AIInsight, AIRecommendation, AIAnomaly, AIPrediction, AIModelMetrics
 from app.core.config.settings import settings
 
 # Import routers
@@ -59,8 +60,20 @@ async def lifespan(app: FastAPI):
     try:
         init_db()
         print("Database initialized successfully")
+        
+        # Initialize AI/BI mock data
+        try:
+            from app.db.init_ai_bi_data import init_ai_bi_mock_data
+            from app.core.database import SessionLocal
+            db = SessionLocal()
+            init_ai_bi_mock_data(db)
+            db.close()
+            print("AI/BI mock data initialized successfully")
+        except Exception as ai_error:
+            print(f"AI/BI data initialization failed: {ai_error}")
+        
         print(
-            "All 15 modules operational: GL, AP, AR, Budget, Cash, HRM, Inventory, Payroll, Tax, Fixed Assets, Reports, Admin, AI Assistant"
+            "All 15 modules operational: GL, AP, AR, Budget, Cash, HRM, Inventory, Payroll, Tax, Fixed Assets, Reports, Admin, AI/BI Assistant"
         )
     except Exception as e:
         print(f"Database initialization failed: {e}")
@@ -145,6 +158,30 @@ app.include_router(financial_enhanced_router, prefix="/api/v1/financial", tags=[
 # Include HRM endpoints
 from app.api.endpoints.hrm import router as hrm_router
 app.include_router(hrm_router, prefix="/api/v1/hrm", tags=["hrm"])
+
+# Include WebSocket endpoints
+from app.api.websockets import router as websocket_router
+app.include_router(websocket_router)
+
+# Include AI/BI endpoints
+try:
+    from app.ai.api.ai_endpoints import router as ai_router
+    app.include_router(ai_router, prefix="/api/v1", tags=["ai"])
+except ImportError as e:
+    print(f"Warning: Could not import AI router: {e}")
+
+try:
+    from app.api.endpoints.bi_ai.bi_ai_endpoints import router as bi_ai_router
+    app.include_router(bi_ai_router, prefix="/api/v1/bi-ai", tags=["bi-ai"])
+except ImportError as e:
+    print(f"Warning: Could not import BI-AI router: {e}")
+
+# Include comprehensive AI/BI endpoints
+try:
+    from app.api.endpoints.ai_bi_comprehensive import router as ai_bi_comprehensive_router
+    app.include_router(ai_bi_comprehensive_router, prefix="/api/v1/bi-ai", tags=["ai-bi-comprehensive"])
+except ImportError as e:
+    print(f"Warning: Could not import comprehensive AI-BI router: {e}")
 
 # Default tenant for demo
 DEFAULT_TENANT_ID = "12345678-1234-5678-9012-123456789012"
@@ -710,7 +747,8 @@ async def get_payroll_runs(db=Depends(get_db), user=Depends(get_current_user)):
 
 @app.get("/api/v1/payroll/payslips")
 async def get_payslips(db=Depends(get_db), user=Depends(get_current_user)):
-    service = PayrollService(db, user["tenant_id"])
+    tenant_id = user.get("tenant_id", DEFAULT_TENANT_ID)
+    service = PayrollService(db, tenant_id)
     return await service.get_employee_payslips()
 
 

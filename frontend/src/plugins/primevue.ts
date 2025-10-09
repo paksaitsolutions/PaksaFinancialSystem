@@ -30,6 +30,9 @@ import AutoComplete from 'primevue/autocomplete'
 import ConfirmDialog from 'primevue/confirmdialog'
 import TabView from 'primevue/tabview'
 import TabPanel from 'primevue/tabpanel'
+import FileUpload from 'primevue/fileupload'
+import Message from 'primevue/message'
+import Toast from 'primevue/toast'
 
 export default {
   install(app: App) {
@@ -66,5 +69,8 @@ export default {
     app.component('ConfirmDialog', ConfirmDialog)
     app.component('TabView', TabView)
     app.component('TabPanel', TabPanel)
+    app.component('FileUpload', FileUpload)
+    app.component('Message', Message)
+    app.component('Toast', Toast)
   }
 }

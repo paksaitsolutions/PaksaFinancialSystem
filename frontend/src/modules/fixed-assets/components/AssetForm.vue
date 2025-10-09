@@ -13,7 +13,7 @@
       
       <div class="col-12 md:col-6">
         <InputText
-          v-model="assetData.name"
+          v-model="assetData.asset_name"
           placeholder="Asset Name"
           :class="{ 'p-invalid': errors.name }"
           class="w-full"
@@ -25,8 +25,10 @@
     <div class="grid">
       <div class="col-12 md:col-6">
         <Dropdown
-          v-model="assetData.category"
+          v-model="assetData.asset_category"
           :options="categories"
+          optionLabel="name"
+          optionValue="value"
           placeholder="Category"
           :class="{ 'p-invalid': errors.category }"
           class="w-full"
@@ -45,10 +47,10 @@
     
     <div class="grid">
       <div class="col-12 md:col-6">
-        <Calendar
+        <InputText
           v-model="assetData.purchase_date"
+          type="date"
           placeholder="Purchase Date"
-          dateFormat="yy-mm-dd"
           :class="{ 'p-invalid': errors.purchase_date }"
           class="w-full"
         />
@@ -131,7 +133,7 @@
       />
       <Button 
         label="Save Asset"
-        type="submit"
+        @click="submit"
         :disabled="loading"
         :loading="loading"
       />
@@ -139,101 +141,106 @@
   </form>
 </template>
 
-<script>
-export default {
-  name: 'AssetForm',
-  
-  props: {
-    asset: {
-      type: Object,
-      default: () => ({})
-    },
-    loading: {
-      type: Boolean,
-      default: false
-    }
-  },
-  
-  emits: ['submit', 'cancel'],
-  
-  data: () => ({
-    errors: {},
-    assetData: {
-      asset_number: '',
-      name: '',
-      description: '',
-      category: '',
-      location: '',
-      purchase_date: null,
-      purchase_cost: 0,
-      salvage_value: 0,
-      useful_life_years: 5,
-      depreciation_method: 'straight_line',
-      vendor_name: ''
-    },
-    categories: [
-      'IT Equipment',
-      'Office Furniture',
-      'Vehicles',
-      'Machinery',
-      'Buildings',
-      'Other'
-    ],
-    depreciationMethods: [
-      { title: 'Straight Line', value: 'straight_line' },
-      { title: 'Declining Balance', value: 'declining_balance' },
-      { title: 'Units of Production', value: 'units_of_production' }
+<script setup lang="ts">
+import { ref, reactive, watch, onMounted } from 'vue'
+import { fixedAssetsService, type FixedAsset } from '@/services/fixedAssetsService'
+
+interface Props {
+  asset?: FixedAsset
+  loading?: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  asset: () => ({} as FixedAsset),
+  loading: false
+})
+
+const emit = defineEmits<{
+  submit: [asset: FixedAsset]
+  cancel: []
+}>()
+
+const errors = ref<Record<string, string>>({})
+const categories = ref<{name: string, value: string}[]>([])
+
+const assetData = reactive<Partial<FixedAsset>>({
+  asset_number: '',
+  asset_name: '',
+  asset_category: '',
+  location: '',
+  purchase_date: '',
+  purchase_cost: 0,
+  salvage_value: 0,
+  useful_life_years: 5,
+  depreciation_method: 'straight_line'
+})
+
+const depreciationMethods = [
+  { title: 'Straight Line', value: 'straight_line' },
+  { title: 'Declining Balance', value: 'declining_balance' },
+  { title: 'Units of Production', value: 'units_of_production' }
+]
+
+const loadCategories = async () => {
+  try {
+    categories.value = await fixedAssetsService.getCategories()
+  } catch (error) {
+    console.error('Error loading categories:', error)
+    // Fallback categories
+    categories.value = [
+      { name: 'IT Equipment', value: 'IT Equipment' },
+      { name: 'Office Furniture', value: 'Office Furniture' },
+      { name: 'Vehicles', value: 'Vehicles' },
+      { name: 'Machinery', value: 'Machinery' },
+      { name: 'Buildings', value: 'Buildings' },
+      { name: 'Other', value: 'Other' }
     ]
-  }),
-  
-  watch: {
-    asset: {
-      handler(newAsset) {
-        if (newAsset) {
-          this.assetData = { ...newAsset }
-        }
-      },
-      immediate: true,
-      deep: true
-    }
-  },
-  
-  methods: {
-    validateForm() {
-      this.errors = {}
-      
-      if (!this.assetData.asset_number) {
-        this.errors.asset_number = 'Asset number is required'
-      }
-      
-      if (!this.assetData.name) {
-        this.errors.name = 'Name is required'
-      }
-      
-      if (!this.assetData.category) {
-        this.errors.category = 'Category is required'
-      }
-      
-      if (!this.assetData.purchase_date) {
-        this.errors.purchase_date = 'Purchase date is required'
-      }
-      
-      if (!this.assetData.purchase_cost || this.assetData.purchase_cost <= 0) {
-        this.errors.purchase_cost = 'Cost is required and must be positive'
-      }
-      
-      if (!this.assetData.useful_life_years || this.assetData.useful_life_years <= 0) {
-        this.errors.useful_life_years = 'Useful life is required and must be positive'
-      }
-      
-      return Object.keys(this.errors).length === 0
-    },
-    
-    submit() {
-      if (this.validateForm()) {
-        this.$emit('submit', { ...this.assetData })
-      }
-    }
   }
 }
+
+watch(() => props.asset, (newAsset) => {
+  if (newAsset && Object.keys(newAsset).length > 0) {
+    Object.assign(assetData, newAsset)
+  }
+}, { immediate: true, deep: true })
+
+const validateForm = () => {
+  errors.value = {}
+  
+  if (!assetData.asset_number) {
+    errors.value.asset_number = 'Asset number is required'
+  }
+  
+  if (!assetData.asset_name) {
+    errors.value.name = 'Name is required'
+  }
+  
+  if (!assetData.asset_category) {
+    errors.value.category = 'Category is required'
+  }
+  
+  if (!assetData.purchase_date) {
+    errors.value.purchase_date = 'Purchase date is required'
+  }
+  
+  if (!assetData.purchase_cost || assetData.purchase_cost <= 0) {
+    errors.value.purchase_cost = 'Cost is required and must be positive'
+  }
+  
+  if (!assetData.useful_life_years || assetData.useful_life_years <= 0) {
+    errors.value.useful_life_years = 'Useful life is required and must be positive'
+  }
+  
+  return Object.keys(errors.value).length === 0
+}
+
+const submit = () => {
+  if (validateForm()) {
+    emit('submit', { ...assetData } as FixedAsset)
+  }
+}
+
+onMounted(() => {
+  loadCategories()
+})
 </script>

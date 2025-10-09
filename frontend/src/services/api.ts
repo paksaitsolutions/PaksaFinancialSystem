@@ -67,4 +67,5 @@ export const journalEntriesApi = {
   delete: (id: string) => api.delete(`/api/v1/gl/journal-entries/${id}`)
 }
 
+export { api }
 export default api

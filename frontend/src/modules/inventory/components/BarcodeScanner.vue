@@ -100,11 +100,11 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { formatCurrency } from '@/utils/formatters'
-import { apiClient } from '@/utils/apiClient'
+import { inventoryService } from '@/services/inventoryService'
 import Card from 'primevue/card'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
@@ -144,10 +144,15 @@ const lookupItem = async () => {
   foundItem.value = null;
   
   try {
-    const response = await apiClient.get('/api/v1/inventory/barcode/lookup', {
-      params: { code: barcodeInput.value.trim() }
-    });
-    foundItem.value = response.data;
+    const item = await inventoryService.lookupByBarcode(barcodeInput.value.trim());
+    foundItem.value = {
+      sku: item.item_code,
+      name: item.item_name,
+      barcode: item.barcode,
+      quantity_on_hand: item.quantity_on_hand || 0,
+      quantity_available: item.quantity_on_hand || 0,
+      unit_cost: item.cost_price || 0
+    };
   } catch (err) {
     if (err.response?.status === 404) {
       error.value = 'Item not found. Please check the barcode/SKU and try again.'

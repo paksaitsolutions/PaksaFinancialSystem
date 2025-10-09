@@ -2,13 +2,13 @@
   <div class="inventory-list">
     <Card>
       <template #title>
-        <div class="flex justify-content-between align-items-center">
-          <div>
+        <div class="header-content">
+          <div class="header-text">
             <h2 class="m-0">Inventory Items</h2>
             <p class="text-600 mt-1 mb-0">Manage your inventory items and stock levels</p>
           </div>
-          <div class="flex gap-2">
-            <Button icon="pi pi-qrcode" label="Scan Barcode" severity="info" @click="showBarcodeScanner = true" />
+          <div class="header-actions">
+            <Button icon="pi pi-qrcode" label="Scan" severity="info" @click="showBarcodeScanner = true" />
             <Button icon="pi pi-upload" label="Import" severity="secondary" @click="showImportDialog = true" />
             <Button icon="pi pi-plus" label="Add Item" @click="openCreateDialog" />
           </div>
@@ -37,9 +37,9 @@
             <Dropdown v-model="filters.category" :options="categoryOptions" optionLabel="label" optionValue="value" placeholder="Category" class="w-full" showClear @change="fetchItems" />
           </div>
           <div class="col-12 md:col-2">
-            <div class="flex gap-2">
-              <Button icon="pi pi-filter-slash" label="Clear" severity="secondary" outlined @click="clearFilters" />
-              <Button icon="pi pi-download" severity="help" outlined @click="exportItems" />
+            <div class="flex flex-wrap gap-2">
+              <Button icon="pi pi-filter-slash" label="Clear" severity="secondary" outlined @click="clearFilters" class="flex-shrink-0" />
+              <Button icon="pi pi-download" severity="help" outlined @click="exportItems" class="flex-shrink-0" />
             </div>
           </div>
         </div>
@@ -58,6 +58,8 @@
           selectionMode="multiple"
           responsiveLayout="scroll"
           class="p-datatable-sm"
+          :scrollable="true"
+          scrollHeight="400px"
           @page="onPage"
           @sort="onSort"
         >
@@ -161,13 +163,13 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { debounce } from '@/utils/debounce'
 import { formatCurrency } from '@/utils/formatters'
-import { apiClient } from '@/utils/apiClient'
+import { inventoryService, type InventoryItem } from '@/services/inventoryService'
 import Card from 'primevue/card'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
@@ -244,80 +246,53 @@ const statusOptions = [
   { label: 'Discontinued', value: 'discontinued' }
 ]
 
-const categoryOptions = ref([
-  { label: 'Electronics', value: 'electronics' },
-  { label: 'Components', value: 'components' },
-  { label: 'Accessories', value: 'accessories' }
-])
+const categoryOptions = ref([])
+
+const loadCategories = async () => {
+  try {
+    const categories = await inventoryService.getCategories()
+    categoryOptions.value = categories.map(cat => ({
+      label: cat.name,
+      value: cat.id
+    }))
+  } catch (error) {
+    console.error('Error loading categories:', error)
+  }
+}
 
 // Methods
 const fetchItems = async () => {
   loading.value = true
   try {
     const params = {
-      page: pagination.page,
-      page_size: pagination.itemsPerPage,
-      sort_by: pagination.sortBy,
-      sort_order: pagination.sortDesc ? 'desc' : 'asc'
+      skip: (pagination.page - 1) * pagination.itemsPerPage,
+      limit: pagination.itemsPerPage
     }
     
     // Add filters
-    if (filters.name) params.name = filters.name
-    if (filters.sku) params.sku = filters.sku
+    if (filters.name) params.search = filters.name
+    if (filters.sku) params.search = filters.sku
     if (filters.status) params.status = filters.status
-    if (filters.category) params.category = filters.category
+    if (filters.category) params.category_id = filters.category
     
-    // Simulate API response
-    const mockData = {
-      data: [
-        {
-          id: 1,
-          sku: 'WDG-001',
-          barcode: '1234567890123',
-          name: 'Widget Pro Max',
-          status: 'active',
-          quantity_on_hand: 150,
-          unit_cost: 25.99,
-          reorder_point: 50,
-          unit_of_measure: 'EA'
-        },
-        {
-          id: 2,
-          sku: 'CMP-002',
-          barcode: '2345678901234',
-          name: 'Component X',
-          status: 'active',
-          quantity_on_hand: 8,
-          unit_cost: 45.50,
-          reorder_point: 20,
-          unit_of_measure: 'EA'
-        },
-        {
-          id: 3,
-          sku: 'ASM-003',
-          barcode: '3456789012345',
-          name: 'Assembly Kit',
-          status: 'inactive',
-          quantity_on_hand: 0,
-          unit_cost: 125.00,
-          reorder_point: 10,
-          unit_of_measure: 'KIT'
-        }
-      ],
-      meta: {
-        pagination: {
-          total: 3,
-          page: 1,
-          pages: 1
-        }
-      }
-    }
-    
-    items.value = mockData.data
-    pagination.totalItems = mockData.meta.pagination.total
+    const response = await inventoryService.getItems(params)
+    items.value = response.map((item: InventoryItem) => ({
+      id: item.id,
+      sku: item.item_code,
+      barcode: item.barcode,
+      name: item.item_name,
+      status: item.is_active ? 'active' : 'inactive',
+      quantity_on_hand: item.quantity_on_hand || 0,
+      unit_cost: item.cost_price || 0,
+      reorder_point: item.reorder_level || 0,
+      unit_of_measure: item.unit_of_measure || 'EA'
+    }))
+    pagination.totalItems = response.length
   } catch (error) {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load inventory items' })
     console.error('Error fetching inventory items:', error)
+    // Fallback to empty array
+    items.value = []
   } finally {
     loading.value = false
   }
@@ -374,7 +349,7 @@ const deleteItem = async () => {
   if (!deleteDialog.item) return
   
   try {
-    // await apiClient.delete(`/api/v1/inventory/items/${deleteDialog.item.id}`)
+    await inventoryService.deleteItem(deleteDialog.item.id)
     toast.add({ severity: 'success', summary: 'Success', detail: 'Inventory item deleted successfully' })
     fetchItems()
   } catch (error) {
@@ -388,7 +363,7 @@ const deleteItem = async () => {
 
 const bulkDeleteItems = async () => {
   try {
-    // await apiClient.delete('/api/v1/inventory/items/bulk', { data: { ids: selectedItems.value.map(item => item.id) } })
+    await Promise.all(selectedItems.value.map(item => inventoryService.deleteItem(item.id)))
     toast.add({ severity: 'success', summary: 'Success', detail: `${selectedItems.value.length} items deleted successfully` })
     selectedItems.value = []
     fetchItems()
@@ -450,6 +425,7 @@ const handleItemSelected = (item) => {
 // Lifecycle hooks
 onMounted(() => {
   fetchItems()
+  loadCategories()
 })
 </script>
 
@@ -469,5 +445,31 @@ onMounted(() => {
 
 :deep(.p-tag) {
   font-size: 0.75rem;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+@media screen and (max-width: 960px) {
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
 }
 </style>

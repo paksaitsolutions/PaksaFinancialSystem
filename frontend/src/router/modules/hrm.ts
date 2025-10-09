@@ -122,6 +122,12 @@ const hrmRoutes: RouteRecordRaw[] = [
   },
   // Performance
   {
+    path: 'hrm/performance',
+    name: 'HrmPerformance',
+    component: () => import('@/views/hrm/HrmPerformance.vue'),
+    meta: { title: 'Performance Management' }
+  },
+  {
     path: 'hrm/appraisals',
     name: 'HrmAppraisals',
     component: () => import('@/views/hrm/HrmAppraisals.vue'),
