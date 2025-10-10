@@ -60,4 +60,4 @@ class JournalEntryLine(Base):
     
     # Relationships
     journal_entry = relationship("JournalEntry", back_populates="lines")
-    account = relationship("ChartOfAccounts", back_populates="journal_entries")
+    account = relationship("AccountingChartOfAccounts", back_populates="journal_entries")

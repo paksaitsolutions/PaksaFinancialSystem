@@ -10,10 +10,10 @@ from sqlalchemy.orm import relationship
 
 from app.models.base import Base
 
-class ChartOfAccounts(Base):
+class AccountingChartOfAccounts(Base):
     """Chart of accounts model."""
     
-    __tablename__ = "chart_of_accounts"
+    __tablename__ = "accounting_chart_of_accounts"
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     tenant_id = Column(UUID(as_uuid=True), nullable=False, index=True)
@@ -21,7 +21,7 @@ class ChartOfAccounts(Base):
     account_code = Column(String(20), nullable=False, index=True)
     account_name = Column(String(200), nullable=False)
     account_type = Column(String(50), nullable=False)  # asset, liability, equity, revenue, expense
-    parent_id = Column(UUID(as_uuid=True), ForeignKey("chart_of_accounts.id"))
+    parent_id = Column(UUID(as_uuid=True), ForeignKey("accounting_chart_of_accounts.id"))
     
     is_active = Column(Boolean, default=True)
     is_system = Column(Boolean, default=False)  # System accounts cannot be deleted
@@ -34,8 +34,8 @@ class ChartOfAccounts(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
-    parent = relationship("ChartOfAccounts", remote_side=[id])
-    children = relationship("ChartOfAccounts")
+    parent = relationship("AccountingChartOfAccounts", remote_side=[id])
+    children = relationship("AccountingChartOfAccounts")
     journal_entries = relationship("JournalEntryLine", back_populates="account")
 
 class FinancialPeriod(Base):
@@ -68,13 +68,13 @@ class AccountingRule(Base):
     trigger_event = Column(String(100), nullable=False)  # invoice_created, payment_received, etc.
     conditions = Column(String(1000))  # JSON conditions
     
-    debit_account_id = Column(UUID(as_uuid=True), ForeignKey("chart_of_accounts.id"))
-    credit_account_id = Column(UUID(as_uuid=True), ForeignKey("chart_of_accounts.id"))
+    debit_account_id = Column(UUID(as_uuid=True), ForeignKey("accounting_chart_of_accounts.id"))
+    credit_account_id = Column(UUID(as_uuid=True), ForeignKey("accounting_chart_of_accounts.id"))
     
     is_active = Column(Boolean, default=True)
     
     created_at = Column(DateTime, default=datetime.utcnow)
     
     # Relationships
-    debit_account = relationship("ChartOfAccounts", foreign_keys=[debit_account_id])
-    credit_account = relationship("ChartOfAccounts", foreign_keys=[credit_account_id])
+    debit_account = relationship("AccountingChartOfAccounts", foreign_keys=[debit_account_id])
+    credit_account = relationship("AccountingChartOfAccounts", foreign_keys=[credit_account_id])

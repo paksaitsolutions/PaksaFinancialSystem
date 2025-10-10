@@ -10,7 +10,7 @@ import uuid
 from app.core.database import Base
 
 
-class ChartOfAccounts(Base):
+class GLChartOfAccounts(Base):
     """Chart of Accounts model with hierarchical structure."""
     
     __tablename__ = "chart_of_accounts"
@@ -33,8 +33,8 @@ class ChartOfAccounts(Base):
     created_by = Column(String(255))
     
     # Relationships
-    parent_account = relationship("ChartOfAccounts", remote_side=[id])
-    child_accounts = relationship("ChartOfAccounts", back_populates="parent_account")
+    parent_account = relationship("GLChartOfAccounts", remote_side=[id])
+    child_accounts = relationship("GLChartOfAccounts", back_populates="parent_account")
     journal_lines = relationship("JournalEntryLine", back_populates="account")
     ledger_balances = relationship("LedgerBalance", back_populates="account")
 
@@ -99,7 +99,7 @@ class JournalEntryLine(Base):
     
     # Relationships
     journal_entry = relationship("JournalEntry", back_populates="lines")
-    account = relationship("ChartOfAccounts", back_populates="journal_lines")
+    account = relationship("GLChartOfAccounts", back_populates="journal_lines")
 
 
 class LedgerBalance(Base):
@@ -119,7 +119,7 @@ class LedgerBalance(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
-    account = relationship("ChartOfAccounts", back_populates="ledger_balances")
+    account = relationship("GLChartOfAccounts", back_populates="ledger_balances")
 
 
 class TrialBalance(Base):
@@ -157,7 +157,7 @@ class TrialBalanceAccount(Base):
     
     # Relationships
     trial_balance = relationship("TrialBalance", back_populates="accounts")
-    account = relationship("ChartOfAccounts")
+    account = relationship("GLChartOfAccounts")
 
 
 class FinancialStatement(Base):
@@ -196,7 +196,7 @@ class FinancialStatementLine(Base):
     
     # Relationships
     statement = relationship("FinancialStatement", back_populates="lines")
-    account = relationship("ChartOfAccounts")
+    account = relationship("GLChartOfAccounts")
     parent_line = relationship("FinancialStatementLine", remote_side=[id])
 
 
@@ -218,7 +218,7 @@ class BudgetEntry(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
-    account = relationship("ChartOfAccounts")
+    account = relationship("GLChartOfAccounts")
 
 
 class AccountType(Base):

@@ -72,8 +72,8 @@ class IntercompanyTransaction(BaseModel):
     
     # Relationships
     currency = relationship("Currency", back_populates="intercompany_transactions")
-    source_account = relationship("ChartOfAccounts", foreign_keys=[source_account_id])
-    target_account = relationship("ChartOfAccounts", foreign_keys=[target_account_id])
+    source_account = relationship("GLChartOfAccounts", foreign_keys=[source_account_id])
+    target_account = relationship("GLChartOfAccounts", foreign_keys=[target_account_id])
     source_journal_entry = relationship("JournalEntry", foreign_keys=[source_journal_entry_id])
     target_journal_entry = relationship("JournalEntry", foreign_keys=[target_journal_entry_id])
     

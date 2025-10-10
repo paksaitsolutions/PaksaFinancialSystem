@@ -11,14 +11,14 @@ from sqlalchemy.sql import func
 from app.models.base import Base
 
 # Chart of Accounts
-class ChartOfAccounts(Base):
-    __tablename__ = 'chart_of_accounts'
+class AccountingChartOfAccountsMain(Base):
+    __tablename__ = 'accounting_chart_of_accounts_main'
     
     id = Column(Integer, primary_key=True, index=True)
     account_code = Column(String(20), unique=True, nullable=False, index=True)
     account_name = Column(String(255), nullable=False)
     account_type = Column(String(50), nullable=False)  # ASSET, LIABILITY, EQUITY, REVENUE, EXPENSE
-    parent_id = Column(Integer, ForeignKey('chart_of_accounts.id'))
+    parent_id = Column(Integer, ForeignKey('accounting_chart_of_accounts_main.id'))
     is_active = Column(Boolean, default=True)
     balance = Column(Numeric(15, 2), default=0)
     
@@ -27,7 +27,7 @@ class ChartOfAccounts(Base):
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
     
     # Relationships
-    parent = relationship("ChartOfAccounts", remote_side=[id])
+    parent = relationship("AccountingChartOfAccountsMain", remote_side=[id])
     journal_entries = relationship("JournalEntryLine", back_populates="account")
 
 # Journal Entries
@@ -56,14 +56,14 @@ class JournalEntryLine(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     journal_entry_id = Column(Integer, ForeignKey('journal_entries.id'), nullable=False)
-    account_id = Column(Integer, ForeignKey('chart_of_accounts.id'), nullable=False)
+    account_id = Column(Integer, ForeignKey('accounting_chart_of_accounts_main.id'), nullable=False)
     description = Column(String(255))
     debit_amount = Column(Numeric(15, 2), default=0)
     credit_amount = Column(Numeric(15, 2), default=0)
     
     # Relationships
     journal_entry = relationship("JournalEntry", back_populates="lines")
-    account = relationship("ChartOfAccounts", back_populates="journal_entries")
+    account = relationship("AccountingChartOfAccountsMain", back_populates="journal_entries")
 
 # Vendors (AP)
 class Vendor(Base):
@@ -107,7 +107,7 @@ class Bill(Base):
     
     # Relationships
     vendor = relationship("Vendor", back_populates="bills")
-    payments = relationship("Payment", back_populates="bill")
+    payments = relationship("AccountingPayment", back_populates="bill")
 
 # Customers (AR)
 class Customer(Base):
@@ -150,11 +150,11 @@ class Invoice(Base):
     
     # Relationships
     customer = relationship("Customer", back_populates="invoices")
-    payments = relationship("Payment", back_populates="invoice")
+    payments = relationship("AccountingPayment", back_populates="invoice")
 
 # Payments (Both AP and AR)
-class Payment(Base):
-    __tablename__ = 'payments'
+class AccountingPayment(Base):
+    __tablename__ = 'accounting_payments'
     
     id = Column(Integer, primary_key=True, index=True)
     payment_number = Column(String(50), unique=True, nullable=False)
@@ -198,7 +198,7 @@ class AccountingRule(Base):
     rule_name = Column(String(255), nullable=False)
     trigger_event = Column(String(100), nullable=False)
     conditions = Column(Text)
-    debit_account_id = Column(Integer, ForeignKey('chart_of_accounts.id'))
-    credit_account_id = Column(Integer, ForeignKey('chart_of_accounts.id'))
+    debit_account_id = Column(Integer, ForeignKey('accounting_chart_of_accounts_main.id'))
+    credit_account_id = Column(Integer, ForeignKey('accounting_chart_of_accounts_main.id'))
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=func.now())

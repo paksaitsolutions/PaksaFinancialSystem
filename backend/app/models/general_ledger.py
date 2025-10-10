@@ -4,7 +4,7 @@ from sqlalchemy.orm import relationship
 from .base import Base
 from datetime import datetime
 
-class ChartOfAccounts(Base):
+class GeneralLedgerChartOfAccounts(Base):
     __tablename__ = "chart_of_accounts"
     
     id = Column(String, primary_key=True)

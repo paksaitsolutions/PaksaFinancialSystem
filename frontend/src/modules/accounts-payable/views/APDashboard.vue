@@ -135,34 +135,38 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { apService, type APStats, type RecentBill } from '@/services/apService'
+import { useToast } from 'primevue/usetoast'
 
-const stats = ref({
+const toast = useToast()
+const stats = ref<APStats>({
   totalPayable: '0',
   overdueBills: 0,
   activeVendors: 0,
   monthlyPayments: '0'
 })
 
-const recentBills = ref([])
+const recentBills = ref<RecentBill[]>([])
 const loading = ref(false)
 
 const loadDashboardData = async () => {
   loading.value = true
   try {
-    const [statsResponse, billsResponse] = await Promise.all([
-      fetch('http://localhost:8000/api/v1/ap/dashboard/stats'),
-      fetch('http://localhost:8000/api/v1/ap/dashboard/recent-bills')
+    const [statsData, billsData] = await Promise.all([
+      apService.getDashboardStats(),
+      apService.getRecentBills()
     ])
     
-    if (statsResponse.ok) {
-      stats.value = await statsResponse.json()
-    }
-    
-    if (billsResponse.ok) {
-      recentBills.value = await billsResponse.json()
-    }
+    stats.value = statsData
+    recentBills.value = billsData
   } catch (error) {
     console.error('Error loading AP dashboard data:', error)
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to load dashboard data',
+      life: 3000
+    })
   } finally {
     loading.value = false
   }

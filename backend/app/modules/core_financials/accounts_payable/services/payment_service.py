@@ -3,7 +3,7 @@ from typing import List, Optional
 from datetime import datetime
 from decimal import Decimal
 
-from ..models import Payment, Vendor
+from ..models import APPaymentNew as Payment, Vendor
 
 class PaymentService:
     """Simplified payment service"""

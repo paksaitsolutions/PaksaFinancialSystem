@@ -102,17 +102,22 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useToast } from 'primevue/usetoast';
 import * as echarts from 'echarts';
+import { payrollService } from '@/services/payrollService';
+import { formatCurrency } from '@/utils/formatters';
 
 const router = useRouter();
+const toast = useToast();
 const payrollChart = ref<HTMLElement | null>(null);
+const loading = ref(false);
 
 // Stats data
 const stats = ref([
-  { title: 'Total Payroll', value: '$124,500', trend: 5.2 },
-  { title: 'Employees', value: '87', trend: 2.3 },
-  { title: 'Avg. Salary', value: '$4,250', trend: -1.5 },
-  { title: 'Upcoming Payroll', value: '$98,200', trend: 3.8 }
+  { title: 'Total Payroll', value: '$0', trend: 0 },
+  { title: 'Employees', value: '0', trend: 0 },
+  { title: 'Avg. Salary', value: '$0', trend: 0 },
+  { title: 'Upcoming Payroll', value: '$0', trend: 0 }
 ]);
 
 // Quick actions
@@ -124,36 +129,7 @@ const quickActions = ref([
 ]);
 
 // Recent activities
-const recentActivities = ref([
-  {
-    title: 'Payroll Processed',
-    details: 'Bi-weekly payroll for 85 employees',
-    time: '2 hours ago',
-    icon: 'pi pi-check-circle',
-    color: 'green'
-  },
-  {
-    title: 'New Employee Added',
-    details: 'John Doe - Senior Developer',
-    time: '1 day ago',
-    icon: 'pi pi-user-plus',
-    color: 'blue'
-  },
-  {
-    title: 'Tax Filing',
-    details: 'Q3 2023 Tax Report submitted',
-    time: '3 days ago',
-    icon: 'pi pi-file-export',
-    color: 'purple'
-  },
-  {
-    title: 'Bonus Processed',
-    details: 'Q3 Performance Bonuses',
-    time: '1 week ago',
-    icon: 'pi pi-money-bill',
-    color: 'yellow'
-  }
-]);
+const recentActivities = ref([]);
 
 // Methods
 const startNewPayRun = () => {
@@ -177,67 +153,115 @@ const handleQuickAction = (action: { action: string }) => {
   }
 };
 
-// Initialize chart
-onMounted(() => {
-  if (payrollChart.value) {
-    const chart = echarts.init(payrollChart.value);
-    const option = {
-      tooltip: {
-        trigger: 'axis',
-        axisPointer: {
-          type: 'shadow'
-        }
-      },
-      legend: {
-        data: ['Budget', 'Actual']
-      },
-      grid: {
-        left: '3%',
-        right: '4%',
-        bottom: '3%',
-        containLabel: true
-      },
-      xAxis: {
-        type: 'category',
-        data: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']
-      },
-      yAxis: {
-        type: 'value',
-        axisLabel: {
-          formatter: '${value}'
-        }
-      },
-      series: [
-        {
-          name: 'Budget',
-          type: 'bar',
-          data: [120000, 125000, 130000, 135000, 140000, 145000],
-          itemStyle: {
-            color: '#6366F1' // indigo-500
-          }
+// Load dashboard data
+const loadDashboardData = async () => {
+  loading.value = true;
+  try {
+    const [kpiData, summaryData, activityData] = await Promise.all([
+      payrollService.getPayrollKPIs(),
+      payrollService.getPayrollSummary(6),
+      payrollService.getRecentActivity(4)
+    ]);
+    
+    // Update stats
+    stats.value = [
+      { title: 'Total Payroll', value: formatCurrency(kpiData.total_payroll), trend: kpiData.payroll_change },
+      { title: 'Employees', value: kpiData.total_employees.toString(), trend: kpiData.employee_change },
+      { title: 'Avg. Salary', value: formatCurrency(kpiData.average_salary), trend: kpiData.salary_change },
+      { title: 'Upcoming Payroll', value: formatCurrency(kpiData.upcoming_payroll), trend: 3.8 }
+    ];
+    
+    // Update recent activities
+    recentActivities.value = activityData.map(activity => ({
+      title: activity.title,
+      details: activity.details,
+      time: formatTimeAgo(new Date(activity.timestamp)),
+      icon: getActivityIcon(activity.type),
+      color: getActivityColor(activity.type)
+    }));
+    
+    // Initialize chart with real data
+    if (payrollChart.value) {
+      const chart = echarts.init(payrollChart.value);
+      const option = {
+        tooltip: {
+          trigger: 'axis',
+          axisPointer: { type: 'shadow' }
         },
-        {
-          name: 'Actual',
-          type: 'bar',
-          data: [115000, 122000, 128000, 132000, 138000, 147000],
-          itemStyle: {
-            color: '#10B981' // emerald-500
+        legend: { data: ['Budget', 'Actual'] },
+        grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+        xAxis: {
+          type: 'category',
+          data: summaryData.monthly_data.map(d => d.month)
+        },
+        yAxis: {
+          type: 'value',
+          axisLabel: { formatter: '${value}' }
+        },
+        series: [
+          {
+            name: 'Budget',
+            type: 'bar',
+            data: summaryData.monthly_data.map(d => d.budget),
+            itemStyle: { color: '#6366F1' }
+          },
+          {
+            name: 'Actual',
+            type: 'bar',
+            data: summaryData.monthly_data.map(d => d.actual),
+            itemStyle: { color: '#10B981' }
           }
-        }
-      ]
-    };
-    chart.setOption(option);
+        ]
+      };
+      chart.setOption(option);
+      
+      const handleResize = () => chart.resize();
+      window.addEventListener('resize', handleResize);
+    }
     
-    // Handle window resize
-    const handleResize = () => chart.resize();
-    window.addEventListener('resize', handleResize);
-    
-    // Cleanup
-    return () => {
-      chart.dispose();
-      window.removeEventListener('resize', handleResize);
-    };
+  } catch (error) {
+    console.error('Error loading dashboard data:', error);
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load payroll data' });
+  } finally {
+    loading.value = false;
   }
+};
+
+const formatTimeAgo = (date: Date) => {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffHours / 24);
+  
+  if (diffHours < 24) return `${diffHours} hours ago`;
+  if (diffDays === 1) return '1 day ago';
+  if (diffDays < 7) return `${diffDays} days ago`;
+  return `${Math.floor(diffDays / 7)} week${Math.floor(diffDays / 7) > 1 ? 's' : ''} ago`;
+};
+
+const getActivityIcon = (type: string) => {
+  const icons = {
+    payroll_processed: 'pi pi-check-circle',
+    employee_added: 'pi pi-user-plus',
+    tax_filing: 'pi pi-file-export',
+    bonus_processed: 'pi pi-money-bill'
+  };
+  return icons[type] || 'pi pi-circle';
+};
+
+const getActivityColor = (type: string) => {
+  const colors = {
+    payroll_processed: 'green',
+    employee_added: 'blue',
+    tax_filing: 'purple',
+    bonus_processed: 'yellow'
+  };
+  return colors[type] || 'gray';
+};
+
+// Initialize dashboard
+onMounted(() => {
+  loadDashboardData();
 });
 </script>
 

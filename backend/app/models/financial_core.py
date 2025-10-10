@@ -8,21 +8,21 @@ from datetime import datetime
 import uuid
 from decimal import Decimal
 
-class ChartOfAccounts(BaseModel, AuditMixin):
-    __tablename__ = "chart_of_accounts"
+class FinancialCoreChartOfAccounts(BaseModel, AuditMixin):
+    __tablename__ = "financial_core_chart_of_accounts"
     __table_args__ = {'extend_existing': True}
     
     account_code = Column(String(20), unique=True, nullable=False, index=True)
     account_name = Column(String(255), nullable=False)
     account_type = Column(String(50), nullable=False)  # Asset, Liability, Equity, Revenue, Expense
-    parent_id = Column(String, ForeignKey("chart_of_accounts.id"))
+    parent_id = Column(String, ForeignKey("financial_core_chart_of_accounts.id"))
     is_system_account = Column(Boolean, default=False)
     normal_balance = Column(String(10), nullable=False)  # Debit, Credit
     current_balance = Column(Numeric(15, 2), default=0)
     
     # Relationships
-    parent = relationship("ChartOfAccounts", remote_side=[id])
-    children = relationship("ChartOfAccounts", back_populates="parent")
+    parent = relationship("FinancialCoreChartOfAccounts", remote_side=[id])
+    children = relationship("FinancialCoreChartOfAccounts", back_populates="parent")
     journal_lines = relationship("JournalEntryLine", back_populates="account")
     
     @validates('account_type')
@@ -74,7 +74,7 @@ class JournalEntryLine(BaseModel):
     __table_args__ = {'extend_existing': True}
     
     journal_entry_id = Column(String, ForeignKey("journal_entries.id"), nullable=False)
-    account_id = Column(String, ForeignKey("chart_of_accounts.id"), nullable=False)
+    account_id = Column(String, ForeignKey("financial_core_chart_of_accounts.id"), nullable=False)
     description = Column(String(255))
     debit_amount = Column(Numeric(15, 2), default=0)
     credit_amount = Column(Numeric(15, 2), default=0)
@@ -82,7 +82,7 @@ class JournalEntryLine(BaseModel):
     
     # Relationships
     journal_entry = relationship("JournalEntry", back_populates="lines")
-    account = relationship("ChartOfAccounts", back_populates="journal_lines")
+    account = relationship("FinancialCoreChartOfAccounts", back_populates="journal_lines")
     
     @validates('debit_amount', 'credit_amount')
     def validate_amounts(self, key, amount):
@@ -211,8 +211,9 @@ class CustomerPayment(BaseModel, AuditMixin):
 
 # Currency model moved to app.models.currency - avoiding duplicate table definition
 
-class ExchangeRate(BaseModel):
-    __tablename__ = "exchange_rates"
+class FinancialCoreExchangeRate(BaseModel):
+    __tablename__ = "financial_core_exchange_rates"
+    __table_args__ = {'extend_existing': True}
     
     from_currency = Column(String(3), nullable=False)
     to_currency = Column(String(3), nullable=False)
@@ -261,7 +262,7 @@ class PeriodClose(BaseModel, AuditMixin):
 class BankReconciliation(BaseModel, AuditMixin):
     __tablename__ = "bank_reconciliations"
     
-    bank_account_id = Column(String, ForeignKey("chart_of_accounts.id"), nullable=False)
+    bank_account_id = Column(String, ForeignKey("financial_core_chart_of_accounts.id"), nullable=False)
     statement_date = Column(DateTime, nullable=False)
     statement_balance = Column(Numeric(15, 2), nullable=False)
     book_balance = Column(Numeric(15, 2), nullable=False)
@@ -272,7 +273,7 @@ class BankReconciliation(BaseModel, AuditMixin):
     adjustment_entries = Column(Text)  # JSON array of adjustment entry IDs
     
     # Relationships
-    bank_account = relationship("ChartOfAccounts")
+    bank_account = relationship("FinancialCoreChartOfAccounts")
 
 class FinancialPeriod(BaseModel, AuditMixin):
     __tablename__ = "financial_periods"
@@ -290,7 +291,7 @@ Index('idx_journal_entry_date', JournalEntry.entry_date)
 Index('idx_journal_entry_status', JournalEntry.status)
 Index('idx_bill_due_date', Bill.due_date)
 Index('idx_invoice_due_date', Invoice.due_date)
-Index('idx_account_code', ChartOfAccounts.account_code)
-Index('idx_exchange_rate_date', ExchangeRate.rate_date)
+Index('idx_account_code', FinancialCoreChartOfAccounts.account_code)
+Index('idx_financial_core_exchange_rate_date', FinancialCoreExchangeRate.rate_date)
 Index('idx_tax_rate_effective', TaxRate.effective_date)
 Index('idx_period_close_dates', PeriodClose.period_start, PeriodClose.period_end)

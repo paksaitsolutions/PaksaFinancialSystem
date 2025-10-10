@@ -146,6 +146,85 @@
               <label for="is_active">Active</label>
             </div>
           </div>
+          
+          <!-- Module Permissions -->
+          <div class="col-12" v-if="!viewMode">
+            <Divider />
+            <div class="flex align-items-center justify-content-between mb-3">
+              <h3 class="m-0">Module Permissions</h3>
+              <div class="flex gap-2">
+                <Button 
+                  label="Select All" 
+                  icon="pi pi-check" 
+                  @click="selectAllPermissions"
+                  class="p-button-sm p-button-outlined"
+                />
+                <Button 
+                  label="Clear All" 
+                  icon="pi pi-times" 
+                  @click="clearAllPermissions"
+                  class="p-button-sm p-button-outlined p-button-secondary"
+                />
+              </div>
+            </div>
+            <div class="grid">
+              <div class="col-12 md:col-6 lg:col-4" v-for="module in availableModules" :key="module.code">
+                <Card class="h-full">
+                  <template #title>
+                    <div class="flex align-items-center justify-content-between">
+                      <div class="flex align-items-center gap-2">
+                        <i :class="module.icon" class="text-primary"></i>
+                        <span class="text-sm">{{ module.name }}</span>
+                      </div>
+                      <div class="field-checkbox">
+                        <Checkbox
+                          :id="`select_all_${module.code}`"
+                          :modelValue="isModuleFullySelected(module)"
+                          @update:modelValue="toggleModuleSelection(module, $event)"
+                          :binary="true"
+                        />
+                        <label :for="`select_all_${module.code}`" class="text-xs text-500">All</label>
+                      </div>
+                    </div>
+                  </template>
+                  <template #content>
+                    <div class="flex flex-column gap-2">
+                      <div class="field-checkbox" v-for="permission in module.permissions" :key="permission.code">
+                        <Checkbox
+                          :id="`${module.code}_${permission.code}`"
+                          v-model="editedRole.permissions"
+                          :value="`${module.code}.${permission.code}`"
+                        />
+                        <label :for="`${module.code}_${permission.code}`" class="text-sm">{{ permission.name }}</label>
+                      </div>
+                    </div>
+                  </template>
+                </Card>
+              </div>
+            </div>
+          </div>
+          
+          <!-- View Mode Permissions -->
+          <div class="col-12" v-else>
+            <Divider />
+            <h3>Assigned Permissions</h3>
+            <div class="grid">
+              <div class="col-12" v-for="module in getAssignedModules()" :key="module.code">
+                <div class="flex align-items-center gap-2 mb-2">
+                  <i :class="module.icon" class="text-primary"></i>
+                  <span class="font-medium">{{ module.name }}</span>
+                </div>
+                <div class="flex flex-wrap gap-1 ml-4">
+                  <Tag 
+                    v-for="permission in module.assignedPermissions" 
+                    :key="permission"
+                    :value="permission"
+                    class="text-xs"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </form>
       
@@ -213,7 +292,8 @@ const editedRole = ref({
   name: '',
   code: '',
   description: '',
-  is_active: true
+  is_active: true,
+  permissions: []
 })
 
 const defaultRole = () => ({
@@ -221,17 +301,183 @@ const defaultRole = () => ({
   name: '',
   code: '',
   description: '',
-  is_active: true
+  is_active: true,
+  permissions: []
 })
+
+// Available modules and permissions
+const availableModules = ref([
+  {
+    code: 'gl',
+    name: 'General Ledger',
+    icon: 'pi pi-book',
+    permissions: [
+      { code: 'view', name: 'View' },
+      { code: 'create', name: 'Create' },
+      { code: 'edit', name: 'Edit' },
+      { code: 'delete', name: 'Delete' },
+      { code: 'approve', name: 'Approve Entries' }
+    ]
+  },
+  {
+    code: 'ap',
+    name: 'Accounts Payable',
+    icon: 'pi pi-credit-card',
+    permissions: [
+      { code: 'view', name: 'View' },
+      { code: 'create', name: 'Create' },
+      { code: 'edit', name: 'Edit' },
+      { code: 'delete', name: 'Delete' },
+      { code: 'approve', name: 'Approve Payments' }
+    ]
+  },
+  {
+    code: 'ar',
+    name: 'Accounts Receivable',
+    icon: 'pi pi-money-bill',
+    permissions: [
+      { code: 'view', name: 'View' },
+      { code: 'create', name: 'Create' },
+      { code: 'edit', name: 'Edit' },
+      { code: 'delete', name: 'Delete' },
+      { code: 'approve', name: 'Approve Invoices' }
+    ]
+  },
+  {
+    code: 'cash',
+    name: 'Cash Management',
+    icon: 'pi pi-wallet',
+    permissions: [
+      { code: 'view', name: 'View' },
+      { code: 'create', name: 'Create' },
+      { code: 'edit', name: 'Edit' },
+      { code: 'delete', name: 'Delete' },
+      { code: 'reconcile', name: 'Bank Reconciliation' }
+    ]
+  },
+  {
+    code: 'budget',
+    name: 'Budget Management',
+    icon: 'pi pi-chart-line',
+    permissions: [
+      { code: 'view', name: 'View' },
+      { code: 'create', name: 'Create' },
+      { code: 'edit', name: 'Edit' },
+      { code: 'delete', name: 'Delete' },
+      { code: 'approve', name: 'Approve Budgets' }
+    ]
+  },
+  {
+    code: 'inventory',
+    name: 'Inventory',
+    icon: 'pi pi-box',
+    permissions: [
+      { code: 'view', name: 'View' },
+      { code: 'create', name: 'Create' },
+      { code: 'edit', name: 'Edit' },
+      { code: 'delete', name: 'Delete' },
+      { code: 'adjust', name: 'Inventory Adjustments' }
+    ]
+  },
+  {
+    code: 'assets',
+    name: 'Fixed Assets',
+    icon: 'pi pi-building',
+    permissions: [
+      { code: 'view', name: 'View' },
+      { code: 'create', name: 'Create' },
+      { code: 'edit', name: 'Edit' },
+      { code: 'delete', name: 'Delete' },
+      { code: 'depreciate', name: 'Run Depreciation' }
+    ]
+  },
+  {
+    code: 'tax',
+    name: 'Tax Management',
+    icon: 'pi pi-percentage',
+    permissions: [
+      { code: 'view', name: 'View' },
+      { code: 'create', name: 'Create' },
+      { code: 'edit', name: 'Edit' },
+      { code: 'delete', name: 'Delete' },
+      { code: 'file', name: 'File Returns' }
+    ]
+  },
+  {
+    code: 'payroll',
+    name: 'Payroll',
+    icon: 'pi pi-users',
+    permissions: [
+      { code: 'view', name: 'View' },
+      { code: 'create', name: 'Create' },
+      { code: 'edit', name: 'Edit' },
+      { code: 'delete', name: 'Delete' },
+      { code: 'process', name: 'Process Payroll' }
+    ]
+  },
+  {
+    code: 'reports',
+    name: 'Reports',
+    icon: 'pi pi-chart-bar',
+    permissions: [
+      { code: 'view', name: 'View' },
+      { code: 'generate', name: 'Generate' },
+      { code: 'schedule', name: 'Schedule' },
+      { code: 'export', name: 'Export' }
+    ]
+  },
+  {
+    code: 'ai',
+    name: 'AI/BI Analytics',
+    icon: 'pi pi-eye',
+    permissions: [
+      { code: 'view', name: 'View' },
+      { code: 'analyze', name: 'Run Analysis' },
+      { code: 'configure', name: 'Configure Models' }
+    ]
+  },
+  {
+    code: 'admin',
+    name: 'Administration',
+    icon: 'pi pi-cog',
+    permissions: [
+      { code: 'users', name: 'User Management' },
+      { code: 'roles', name: 'Role Management' },
+      { code: 'settings', name: 'System Settings' },
+      { code: 'backup', name: 'Backup & Restore' }
+    ]
+  }
+])
 
 const fetchRoles = async () => {
   loading.value = true
   try {
-    // Mock data
+    // Mock data with permissions
     roles.value = [
-      { id: 1, name: 'Administrator', code: 'admin', description: 'Full system access', is_active: true },
-      { id: 2, name: 'Manager', code: 'manager', description: 'Management access', is_active: true },
-      { id: 3, name: 'User', code: 'user', description: 'Basic user access', is_active: true }
+      { 
+        id: 1, 
+        name: 'Administrator', 
+        code: 'admin', 
+        description: 'Full system access', 
+        is_active: true,
+        permissions: availableModules.value.flatMap(m => m.permissions.map(p => `${m.code}.${p.code}`))
+      },
+      { 
+        id: 2, 
+        name: 'Manager', 
+        code: 'manager', 
+        description: 'Management access', 
+        is_active: true,
+        permissions: ['gl.view', 'gl.create', 'gl.edit', 'ap.view', 'ap.create', 'ar.view', 'ar.create', 'reports.view', 'reports.generate']
+      },
+      { 
+        id: 3, 
+        name: 'User', 
+        code: 'user', 
+        description: 'Basic user access', 
+        is_active: true,
+        permissions: ['gl.view', 'ap.view', 'ar.view', 'reports.view']
+      }
     ]
   } catch (error) {
     toast.add({ 
@@ -245,6 +491,68 @@ const fetchRoles = async () => {
   }
 }
 
+const getAssignedModules = () => {
+  if (!editedRole.value.permissions) return []
+  
+  const assignedModules = []
+  
+  availableModules.value.forEach(module => {
+    const modulePermissions = editedRole.value.permissions
+      .filter(p => p.startsWith(`${module.code}.`))
+      .map(p => p.split('.')[1])
+    
+    if (modulePermissions.length > 0) {
+      assignedModules.push({
+        ...module,
+        assignedPermissions: modulePermissions
+      })
+    }
+  })
+  
+  return assignedModules
+}
+
+const isModuleFullySelected = (module) => {
+  if (!editedRole.value.permissions) return false
+  
+  const modulePermissions = module.permissions.map(p => `${module.code}.${p.code}`)
+  return modulePermissions.every(permission => 
+    editedRole.value.permissions.includes(permission)
+  )
+}
+
+const toggleModuleSelection = (module, selectAll) => {
+  if (!editedRole.value.permissions) {
+    editedRole.value.permissions = []
+  }
+  
+  const modulePermissions = module.permissions.map(p => `${module.code}.${p.code}`)
+  
+  if (selectAll) {
+    // Add all module permissions
+    modulePermissions.forEach(permission => {
+      if (!editedRole.value.permissions.includes(permission)) {
+        editedRole.value.permissions.push(permission)
+      }
+    })
+  } else {
+    // Remove all module permissions
+    editedRole.value.permissions = editedRole.value.permissions.filter(
+      permission => !modulePermissions.includes(permission)
+    )
+  }
+}
+
+const selectAllPermissions = () => {
+  editedRole.value.permissions = availableModules.value.flatMap(module => 
+    module.permissions.map(permission => `${module.code}.${permission.code}`)
+  )
+}
+
+const clearAllPermissions = () => {
+  editedRole.value.permissions = []
+}
+
 const saveRole = async () => {
   submitted.value = true
   
@@ -255,7 +563,12 @@ const saveRole = async () => {
   saving.value = true
   
   try {
-    if (editMode.value) {
+    if (editMode.value && !viewMode.value) {
+      // Update existing role
+      const index = roles.value.findIndex(r => r.id === editedRole.value.id)
+      if (index !== -1) {
+        roles.value[index] = { ...editedRole.value }
+      }
       toast.add({ 
         severity: 'success', 
         summary: 'Success', 

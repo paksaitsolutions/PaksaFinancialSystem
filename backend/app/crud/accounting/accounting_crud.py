@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.db.query_helper import QueryHelper
-from app.models.accounting import ChartOfAccounts, JournalEntry, JournalEntryLine, AccountingRule
+from app.models.accounting import AccountingChartOfAccountsMain, JournalEntry, JournalEntryLine, AccountingRule
 from app.models.financial_core import FinancialPeriod
 from app.models.base import BaseModel
 from app.schemas.accounting.accounting_schemas import (
@@ -24,7 +24,7 @@ class AccountingCRUD:
     """CRUD operations for accounting."""
     
     def __init__(self):
-        self.coa_helper = QueryHelper(ChartOfAccounts)
+        self.coa_helper = QueryHelper(AccountingChartOfAccountsMain)
         self.journal_helper = QueryHelper(JournalEntry)
     
     # Chart of Accounts
@@ -34,7 +34,7 @@ class AccountingCRUD:
         *, 
         tenant_id: UUID, 
         obj_in: ChartOfAccountsCreate
-    ) -> ChartOfAccounts:
+    ) -> AccountingChartOfAccountsMain:
         """Create chart of accounts entry."""
         # Calculate level based on parent
         level = 1
@@ -43,7 +43,7 @@ class AccountingCRUD:
             if parent:
                 level = parent.level + 1
         
-        account = ChartOfAccounts(
+        account = AccountingChartOfAccountsMain(
             tenant_id=tenant_id,
             level=level,
             **obj_in.dict()
@@ -54,10 +54,10 @@ class AccountingCRUD:
         await db.refresh(account)
         return account
     
-    async def get_account(self, db: AsyncSession, *, tenant_id: UUID, id: UUID) -> Optional[ChartOfAccounts]:
+    async def get_account(self, db: AsyncSession, *, tenant_id: UUID, id: UUID) -> Optional[AccountingChartOfAccountsMain]:
         """Get account by ID."""
-        query = select(ChartOfAccounts).where(
-            and_(ChartOfAccounts.id == id, ChartOfAccounts.tenant_id == tenant_id)
+        query = select(AccountingChartOfAccountsMain).where(
+            and_(AccountingChartOfAccountsMain.id == id, AccountingChartOfAccountsMain.tenant_id == tenant_id)
         )
         result = await db.execute(query)
         return result.scalars().first()
@@ -68,7 +68,7 @@ class AccountingCRUD:
         *,
         tenant_id: UUID,
         active_only: bool = True
-    ) -> List[ChartOfAccounts]:
+    ) -> List[AccountingChartOfAccountsMain]:
         """Get chart of accounts for tenant."""
         filters = {"tenant_id": tenant_id}
         if active_only:
@@ -110,7 +110,7 @@ class AccountingCRUD:
         ]
         
         for account_data in default_accounts:
-            account = ChartOfAccounts(
+            account = AccountingChartOfAccountsMain(
                 tenant_id=tenant_id,
                 is_system=True,
                 **account_data

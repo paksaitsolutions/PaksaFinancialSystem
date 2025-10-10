@@ -1,44 +1,26 @@
-import { apiClient } from '@/utils/apiClient'
+import { api } from '@/utils/api'
 
 export interface FixedAsset {
-  id?: string
+  id: number
   asset_number: string
   asset_name: string
-  asset_category?: string
+  description?: string
+  asset_category: string
+  location?: string
   purchase_date: string
   purchase_cost: number
-  salvage_value?: number
-  useful_life_years?: number
-  depreciation_method?: string
-  location?: string
-  status?: string
-  accumulated_depreciation?: number
-  current_value?: number
-  created_at?: string
-}
-
-export interface AssetDepreciation {
-  id?: string
-  asset_id: string
-  depreciation_date: string
-  depreciation_amount: number
+  salvage_value: number
+  useful_life_years: number
+  depreciation_method: 'straight_line' | 'declining_balance' | 'units_of_production'
   accumulated_depreciation: number
-  book_value: number
-  notes?: string
-  created_at?: string
-}
-
-export interface AssetMaintenance {
-  id?: string
-  asset_id: string
-  maintenance_date: string
-  maintenance_type?: string
-  description?: string
-  cost?: number
-  vendor?: string
-  next_maintenance_date?: string
-  created_by?: string
-  created_at?: string
+  current_value: number
+  status: 'active' | 'maintenance' | 'disposed' | 'sold'
+  vendor_name?: string
+  warranty_expiry?: string
+  last_maintenance?: string
+  next_maintenance?: string
+  created_at: string
+  updated_at: string
 }
 
 export interface AssetStats {
@@ -50,92 +32,221 @@ export interface AssetStats {
   maintenance_due: number
 }
 
-export interface AssetDisposal {
-  disposal_date: string
-  disposal_amount: number
-  disposal_reason: string
+export interface MaintenanceRecord {
+  id: number
+  asset_id: number
+  asset_name: string
+  maintenance_type: 'preventive' | 'corrective' | 'emergency'
+  description: string
+  scheduled_date: string
+  completed_date?: string
+  status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled'
+  estimated_cost?: number
+  actual_cost?: number
+  vendor_name?: string
+  notes?: string
+  created_by: string
+  created_at: string
 }
 
-export interface AssetsListParams {
-  skip?: number
-  limit?: number
-  category?: string
-  status?: string
+export interface AssetCategory {
+  id: number
+  name: string
+  description?: string
+  default_useful_life: number
+  default_depreciation_method: string
+  default_salvage_rate: number
+  asset_count: number
+}
+
+export interface DepreciationEntry {
+  id: number
+  asset_id: number
+  period_date: string
+  depreciation_amount: number
+  accumulated_depreciation: number
+  book_value: number
+  created_at: string
+}
+
+export interface AssetDisposal {
+  id: number
+  asset_id: number
+  disposal_date: string
+  disposal_method: 'sale' | 'scrap' | 'donation' | 'trade'
+  disposal_amount: number
+  disposal_reason: string
+  gain_loss: number
+  notes?: string
+  created_by: string
+  created_at: string
 }
 
 class FixedAssetsService {
-  private baseUrl = '/api/v1/fixed-assets'
-
   // Assets
-  async getAssets(params: AssetsListParams = {}) {
-    const response = await apiClient.get(`${this.baseUrl}/assets`, { params })
+  async getAssets(params?: {
+    page?: number
+    limit?: number
+    search?: string
+    category?: string
+    status?: string
+  }): Promise<{ assets: FixedAsset[], total: number }> {
+    const response = await api.get('/fixed-assets/assets', { params })
     return response.data
   }
 
-  async getAsset(id: string) {
-    const response = await apiClient.get(`${this.baseUrl}/assets/${id}`)
+  async getAsset(id: number): Promise<FixedAsset> {
+    const response = await api.get(`/fixed-assets/assets/${id}`)
     return response.data
   }
 
-  async createAsset(asset: Omit<FixedAsset, 'id' | 'created_at' | 'current_value'>) {
-    const response = await apiClient.post(`${this.baseUrl}/assets`, asset)
+  async createAsset(asset: Omit<FixedAsset, 'id' | 'accumulated_depreciation' | 'current_value' | 'created_at' | 'updated_at'>): Promise<FixedAsset> {
+    const response = await api.post('/fixed-assets/assets', asset)
     return response.data
   }
 
-  async updateAsset(id: string, asset: Partial<FixedAsset>) {
-    const response = await apiClient.put(`${this.baseUrl}/assets/${id}`, asset)
+  async updateAsset(id: number, asset: Partial<FixedAsset>): Promise<FixedAsset> {
+    const response = await api.put(`/fixed-assets/assets/${id}`, asset)
     return response.data
   }
 
-  async deleteAsset(id: string) {
-    const response = await apiClient.delete(`${this.baseUrl}/assets/${id}`)
-    return response.data
-  }
-
-  async disposeAsset(id: string, disposal: AssetDisposal) {
-    const response = await apiClient.post(`${this.baseUrl}/assets/${id}/dispose`, disposal)
-    return response.data
-  }
-
-  // Depreciation
-  async getAssetDepreciation(assetId: string) {
-    const response = await apiClient.get(`${this.baseUrl}/assets/${assetId}/depreciation`)
-    return response.data
-  }
-
-  async createDepreciationEntry(assetId: string, depreciation: Omit<AssetDepreciation, 'id' | 'asset_id' | 'created_at'>) {
-    const response = await apiClient.post(`${this.baseUrl}/assets/${assetId}/depreciation`, depreciation)
-    return response.data
-  }
-
-  // Maintenance
-  async getMaintenanceRecords(params: { asset_id?: string; upcoming_days?: number; skip?: number; limit?: number } = {}) {
-    const response = await apiClient.get(`${this.baseUrl}/maintenance`, { params })
-    return response.data
-  }
-
-  async createMaintenanceRecord(maintenance: Omit<AssetMaintenance, 'id' | 'created_by' | 'created_at'>) {
-    const response = await apiClient.post(`${this.baseUrl}/maintenance`, maintenance)
-    return response.data
-  }
-
-  async updateMaintenanceRecord(id: string, maintenance: Partial<AssetMaintenance>) {
-    const response = await apiClient.put(`${this.baseUrl}/maintenance/${id}`, maintenance)
-    return response.data
+  async deleteAsset(id: number): Promise<void> {
+    await api.delete(`/fixed-assets/assets/${id}`)
   }
 
   // Statistics
-  async getAssetStats() {
-    const response = await apiClient.get(`${this.baseUrl}/stats`)
+  async getAssetStats(): Promise<AssetStats> {
+    const response = await api.get('/fixed-assets/stats')
     return response.data
   }
 
   // Categories
-  async getCategories() {
-    const response = await apiClient.get(`${this.baseUrl}/categories`)
+  async getCategories(): Promise<{ name: string, value: string }[]> {
+    const response = await api.get('/fixed-assets/categories')
+    return response.data.map((cat: AssetCategory) => ({
+      name: cat.name,
+      value: cat.name
+    }))
+  }
+
+  async createCategory(category: Omit<AssetCategory, 'id' | 'asset_count'>): Promise<AssetCategory> {
+    const response = await api.post('/fixed-assets/categories', category)
+    return response.data
+  }
+
+  async updateCategory(id: number, category: Partial<AssetCategory>): Promise<AssetCategory> {
+    const response = await api.put(`/fixed-assets/categories/${id}`, category)
+    return response.data
+  }
+
+  async deleteCategory(id: number): Promise<void> {
+    await api.delete(`/fixed-assets/categories/${id}`)
+  }
+
+  // Maintenance
+  async getMaintenanceRecords(assetId?: number): Promise<MaintenanceRecord[]> {
+    const params = assetId ? { asset_id: assetId } : {}
+    const response = await api.get('/fixed-assets/maintenance', { params })
+    return response.data
+  }
+
+  async createMaintenanceRecord(maintenance: Omit<MaintenanceRecord, 'id' | 'asset_name' | 'created_by' | 'created_at'>): Promise<MaintenanceRecord> {
+    const response = await api.post('/fixed-assets/maintenance', maintenance)
+    return response.data
+  }
+
+  async updateMaintenanceRecord(id: number, maintenance: Partial<MaintenanceRecord>): Promise<MaintenanceRecord> {
+    const response = await api.put(`/fixed-assets/maintenance/${id}`, maintenance)
+    return response.data
+  }
+
+  async getUpcomingMaintenance(days: number = 30): Promise<MaintenanceRecord[]> {
+    const response = await api.get(`/fixed-assets/maintenance/upcoming?days=${days}`)
+    return response.data
+  }
+
+  // Depreciation
+  async getDepreciationSchedule(assetId: number): Promise<DepreciationEntry[]> {
+    const response = await api.get(`/fixed-assets/assets/${assetId}/depreciation`)
+    return response.data
+  }
+
+  async calculateDepreciation(assetId: number, periodDate: string): Promise<DepreciationEntry> {
+    const response = await api.post(`/fixed-assets/assets/${assetId}/depreciation`, {
+      period_date: periodDate
+    })
+    return response.data
+  }
+
+  async runMonthlyDepreciation(): Promise<{ processed: number, total_amount: number }> {
+    const response = await api.post('/fixed-assets/depreciation/run-monthly')
+    return response.data
+  }
+
+  // Disposal
+  async disposeAsset(id: number, disposal: {
+    disposal_date: string
+    disposal_method: string
+    disposal_amount: number
+    disposal_reason: string
+    notes?: string
+  }): Promise<AssetDisposal> {
+    const response = await api.post(`/fixed-assets/assets/${id}/dispose`, disposal)
+    return response.data
+  }
+
+  async getDisposalHistory(): Promise<AssetDisposal[]> {
+    const response = await api.get('/fixed-assets/disposals')
+    return response.data
+  }
+
+  // Reports
+  async getAssetValuationReport(): Promise<{
+    by_category: { category: string, count: number, cost: number, current_value: number }[]
+    by_status: { status: string, count: number, value: number }[]
+    total_cost: number
+    total_current_value: number
+    total_depreciation: number
+  }> {
+    const response = await api.get('/fixed-assets/reports/valuation')
+    return response.data
+  }
+
+  async getDepreciationReport(year: number): Promise<{
+    monthly_depreciation: { month: string, amount: number }[]
+    by_category: { category: string, amount: number }[]
+    total_annual_depreciation: number
+  }> {
+    const response = await api.get(`/fixed-assets/reports/depreciation?year=${year}`)
+    return response.data
+  }
+
+  async getMaintenanceReport(): Promise<{
+    upcoming: MaintenanceRecord[]
+    overdue: MaintenanceRecord[]
+    completed_this_month: MaintenanceRecord[]
+    total_maintenance_cost: number
+  }> {
+    const response = await api.get('/fixed-assets/reports/maintenance')
+    return response.data
+  }
+
+  // Import/Export
+  async importAssets(file: File): Promise<{ success: number, errors: string[] }> {
+    const formData = new FormData()
+    formData.append('file', file)
+    const response = await api.post('/fixed-assets/import', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    return response.data
+  }
+
+  async exportAssets(format: 'csv' | 'excel' = 'csv'): Promise<Blob> {
+    const response = await api.get(`/fixed-assets/export?format=${format}`, {
+      responseType: 'blob'
+    })
     return response.data
   }
 }
 
 export const fixedAssetsService = new FixedAssetsService()
-export default fixedAssetsService

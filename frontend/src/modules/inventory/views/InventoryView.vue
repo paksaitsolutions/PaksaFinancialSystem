@@ -139,7 +139,7 @@
                   </div>
                   <div>
                     <div class="font-medium text-900">{{ transaction.item_name }}</div>
-                    <div class="text-sm text-500">{{ transaction.type }} • {{ formatDate(transaction.created_at) }}</div>
+                    <div class="text-sm text-500">{{ transaction.type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) }} • {{ formatDate(new Date(transaction.created_at)) }}</div>
                   </div>
                 </div>
                 <div class="text-right">
@@ -192,22 +192,25 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useToast } from 'primevue/usetoast'
 import Chart from 'primevue/chart'
 import Card from 'primevue/card'
 import Button from 'primevue/button'
 import Tag from 'primevue/tag'
+import { inventoryService } from '@/services/inventoryService'
 
 const router = useRouter()
+const toast = useToast()
 const loading = ref(false)
 
 // KPI Data
 const kpis = ref({
-  totalItems: 1247,
-  totalItemsChange: 8.2,
-  lowStock: 23,
-  outOfStock: 5,
-  totalValue: 2847392.50,
-  totalValueChange: 12.4
+  totalItems: 0,
+  totalItemsChange: 0,
+  lowStock: 0,
+  outOfStock: 0,
+  totalValue: 0,
+  totalValueChange: 0
 })
 
 // Chart Data
@@ -286,61 +289,76 @@ const doughnutOptions = ref({
 })
 
 // Recent Transactions
-const recentTransactions = ref([
-  {
-    id: 1,
-    item_name: 'Widget Pro Max',
-    type: 'Stock In',
-    quantity: 50,
-    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000)
-  },
-  {
-    id: 2,
-    item_name: 'Component X',
-    type: 'Stock Out',
-    quantity: -25,
-    created_at: new Date(Date.now() - 4 * 60 * 60 * 1000)
-  },
-  {
-    id: 3,
-    item_name: 'Assembly Kit',
-    type: 'Adjustment',
-    quantity: 10,
-    created_at: new Date(Date.now() - 6 * 60 * 60 * 1000)
-  }
-])
+const recentTransactions = ref([])
 
 // Stock Alerts
-const stockAlerts = ref([
-  {
-    id: 1,
-    item_name: 'Critical Component A',
-    message: 'Stock below reorder point (5 units remaining)',
-    severity: 'high'
-  },
-  {
-    id: 2,
-    item_name: 'Widget Standard',
-    message: 'Low stock warning (12 units remaining)',
-    severity: 'medium'
-  },
-  {
-    id: 3,
-    item_name: 'Spare Part B',
-    message: 'Out of stock - reorder immediately',
-    severity: 'critical'
-  }
-])
+const stockAlerts = ref([])
 
 // Methods
 const loadDashboardData = async () => {
   loading.value = true
   try {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    // Load actual data here
+    const [kpiData, movementsData, transactionsData, alertsData] = await Promise.all([
+      inventoryService.getDashboardKPIs(),
+      inventoryService.getStockMovements(6),
+      inventoryService.getRecentTransactions(5),
+      inventoryService.getStockAlerts()
+    ])
+    
+    kpis.value = {
+      totalItems: kpiData.total_items,
+      totalItemsChange: kpiData.total_items_change,
+      lowStock: kpiData.low_stock_count,
+      outOfStock: kpiData.out_of_stock_count,
+      totalValue: kpiData.total_value,
+      totalValueChange: kpiData.total_value_change
+    }
+    
+    // Update chart data
+    chartData.value = {
+      labels: movementsData.map(m => new Date(m.date).toLocaleDateString('en-US', { month: 'short' })),
+      datasets: [
+        {
+          label: 'Stock In',
+          data: movementsData.map(m => m.stock_in),
+          borderColor: '#10B981',
+          backgroundColor: 'rgba(16, 185, 129, 0.1)',
+          tension: 0.4,
+          fill: true
+        },
+        {
+          label: 'Stock Out',
+          data: movementsData.map(m => m.stock_out),
+          borderColor: '#EF4444',
+          backgroundColor: 'rgba(239, 68, 68, 0.1)',
+          tension: 0.4
+        }
+      ]
+    }
+    
+    // Update doughnut data
+    const totalItems = kpiData.total_items
+    const inStock = totalItems - kpiData.low_stock_count - kpiData.out_of_stock_count
+    doughnutData.value = {
+      labels: ['In Stock', 'Low Stock', 'Out of Stock'],
+      datasets: [{
+        data: [inStock, kpiData.low_stock_count, kpiData.out_of_stock_count],
+        backgroundColor: ['#10B981', '#F59E0B', '#EF4444'],
+        borderWidth: 0
+      }]
+    }
+    
+    recentTransactions.value = transactionsData
+    stockAlerts.value = alertsData
+    
   } catch (error) {
     console.error('Error loading dashboard data:', error)
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to load dashboard data',
+      life: 3000
+    })
   } finally {
     loading.value = false
   }
@@ -364,9 +382,10 @@ const formatDate = (date) => {
 
 const getTransactionIcon = (type) => {
   const icons = {
-    'Stock In': 'pi pi-arrow-down',
-    'Stock Out': 'pi pi-arrow-up',
-    'Adjustment': 'pi pi-pencil'
+    'stock_in': 'pi pi-arrow-down',
+    'stock_out': 'pi pi-arrow-up',
+    'adjustment': 'pi pi-pencil',
+    'transfer': 'pi pi-arrow-right'
   }
   return icons[type] || 'pi pi-circle'
 }

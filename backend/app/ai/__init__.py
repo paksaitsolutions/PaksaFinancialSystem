@@ -7,16 +7,27 @@ from typing import Dict, Type
 
 from ..services.ai.assistant import assistant
 from ..services.ai.module_interface import AIModule
-from ..modules.hrm.ai_integration import HRMAIModule
-from ..modules.finance.ai_integration import FinanceAIModule
-from ..modules.inventory.ai_integration import InventoryAIModule
 
-# Dictionary of available AI modules
-AVAILABLE_MODULES: Dict[str, Type[AIModule]] = {
-    'hrm': HRMAIModule,
-    'finance': FinanceAIModule,
-    'inventory': InventoryAIModule,
-}
+# Import AI modules with error handling
+AVAILABLE_MODULES: Dict[str, Type[AIModule]] = {}
+
+try:
+    from ..modules.hrm.ai_integration import HRMAIModule
+    AVAILABLE_MODULES['hrm'] = HRMAIModule
+except ImportError as e:
+    print(f"Warning: Could not import HRM AI module: {e}")
+
+try:
+    from ..modules.finance.ai_integration import FinanceAIModule
+    AVAILABLE_MODULES['finance'] = FinanceAIModule
+except ImportError as e:
+    print(f"Warning: Could not import Finance AI module: {e}")
+
+try:
+    from ..modules.inventory.ai_integration import InventoryAIModule
+    AVAILABLE_MODULES['inventory'] = InventoryAIModule
+except ImportError as e:
+    print(f"Warning: Could not import Inventory AI module: {e}")
 
 def initialize_ai_assistant() -> None:
     """

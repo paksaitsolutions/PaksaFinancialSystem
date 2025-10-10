@@ -19,7 +19,7 @@ from app.models.base import Base
 
 
 
-from app.models.gl_models import JournalEntry, JournalEntryStatus, ChartOfAccounts
+from app.models.gl_models import JournalEntry, JournalEntryStatus, GLChartOfAccounts
 
 class RecurrenceFrequency(str, Enum):
     """Frequency of recurring journal entries."""
@@ -337,7 +337,7 @@ class AllocationDestination(Base):
     
     # Relationships
     allocation_rule = relationship("AllocationRule", back_populates="destinations")
-    account = relationship("ChartOfAccounts")
+    account = relationship("GLChartOfAccounts")
     
     # Indexes
     __table_args__ = (

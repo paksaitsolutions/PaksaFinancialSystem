@@ -1,102 +1,79 @@
-import axios from 'axios'
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
-
-const apiClient = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-})
-
-// Add auth token to requests
-apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token') || sessionStorage.getItem('token')
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
-  }
-  return config
-})
-
-export interface Transaction {
-  id: string
-  account_id: string
-  transaction_date: string
-  posted_date?: string
-  transaction_type: string
-  status: string
-  amount: number
-  reference_number?: string
-  check_number?: string
-  memo?: string
-  notes?: string
-  category_id?: string
-  payment_method?: string
-  payee?: string
-  running_balance?: number
-  is_reconciled: boolean
-  created_at: string
-  updated_at: string
-}
+import { api } from '@/utils/api'
 
 export interface BankAccount {
   id: string
   name: string
   account_number: string
-  account_type: string
-  status: string
   bank_name: string
+  account_type: 'checking' | 'savings' | 'money_market' | 'credit_line'
   current_balance: number
   available_balance: number
+  currency: string
+  is_active: boolean
 }
 
-export interface CreateTransactionRequest {
+export interface CashTransaction {
+  id: string
   account_id: string
   transaction_date: string
-  transaction_type: string
+  transaction_type: 'deposit' | 'withdrawal' | 'transfer_in' | 'transfer_out'
   amount: number
-  memo?: string
-  payee?: string
-  payment_method?: string
+  memo: string
+  reference: string
+  account?: BankAccount
+}
+
+export interface CashFlowForecast {
+  period: string
+  projected_inflow: number
+  projected_outflow: number
+  net_cash_flow: number
+  ending_balance: number
+  confidence_level: number
+}
+
+export interface CashDashboard {
+  total_balance: number
+  account_count: number
+  monthly_inflow: number
+  monthly_outflow: number
+  cash_flow_trend: number[]
+  liquidity_ratio: number
 }
 
 export const cashService = {
-  async getTransactions(params?: {
-    account_id?: string
-    start_date?: string
-    end_date?: string
-    transaction_type?: string
-    status?: string
-    search?: string
-    skip?: number
-    limit?: number
-  }) {
-    const response = await apiClient.get('/api/v1/cash-management/transactions', { params })
+  async getDashboard(): Promise<CashDashboard> {
+    const response = await api.get('/cash/dashboard')
     return response.data
   },
 
-  async createTransaction(data: CreateTransactionRequest) {
-    const response = await apiClient.post('/api/v1/cash-management/transactions', data)
+  async getBankAccounts(): Promise<BankAccount[]> {
+    const response = await api.get('/cash/accounts')
     return response.data
   },
 
-  async getTransaction(id: string) {
-    const response = await apiClient.get(`/api/v1/cash-management/transactions/${id}`)
+  async createBankAccount(account: Omit<BankAccount, 'id'>): Promise<BankAccount> {
+    const response = await api.post('/cash/accounts', account)
     return response.data
   },
 
-  async getBankAccounts() {
-    const response = await apiClient.get('/api/v1/cash-management/accounts')
+  async getTransactions(params?: { limit?: number }): Promise<CashTransaction[]> {
+    const response = await api.get('/cash/transactions', { params })
     return response.data
   },
 
-  async createBankAccount(data: any) {
-    const response = await apiClient.post('/api/v1/cash-management/accounts', data)
+  async createTransaction(transaction: Omit<CashTransaction, 'id'>): Promise<CashTransaction> {
+    const response = await api.post('/cash/transactions', transaction)
     return response.data
   },
 
-  async getDashboard() {
-    const response = await apiClient.get('/api/v1/cash-management/dashboard')
+  async getCashFlowForecast(days: number = 30): Promise<CashFlowForecast[]> {
+    const response = await api.get(`/cash/forecast?days=${days}`)
+    return response.data
+  },
+
+  async reconcileAccount(accountId: string, statementData: any): Promise<{ success: boolean }> {
+    const response = await api.post(`/cash/accounts/${accountId}/reconcile`, statementData)
     return response.data
   }
 }

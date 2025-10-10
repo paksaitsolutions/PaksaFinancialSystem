@@ -1,159 +1,302 @@
-import { apiClient } from '@/utils/apiClient'
+import { api } from '@/utils/api'
 
 export interface InventoryItem {
-  id?: string
-  item_code: string
-  item_name: string
-  description?: string
-  category_id?: string
-  unit_of_measure?: string
-  cost_price?: number
-  selling_price?: number
-  reorder_level?: number
-  maximum_level?: number
-  barcode?: string
-  quantity_on_hand?: number
-  is_active?: boolean
-  created_at?: string
-  updated_at?: string
-}
-
-export interface InventoryCategory {
-  id?: string
-  code: string
+  id: number
+  sku: string
   name: string
   description?: string
-  parent_id?: string
-  is_active?: boolean
-  created_at?: string
-  updated_at?: string
-}
-
-export interface InventoryLocation {
-  id?: string
-  location_code: string
+  category_id: number
+  category_name: string
+  location_id: number
   location_name: string
-  address?: string
-  location_type?: string
-  is_active?: boolean
-  created_at?: string
+  quantity: number
+  unit_price: number
+  total_value: number
+  reorder_point: number
+  max_stock: number
+  unit_of_measure: string
+  barcode?: string
+  supplier_id?: number
+  supplier_name?: string
+  last_updated: string
+  status: 'in_stock' | 'low_stock' | 'out_of_stock'
 }
 
 export interface InventoryTransaction {
-  id?: string
-  item_id: string
-  location_id: string
-  transaction_type: 'in' | 'out' | 'adjustment'
+  id: number
+  item_id: number
+  item_name: string
+  item_sku: string
+  type: 'stock_in' | 'stock_out' | 'adjustment' | 'transfer'
   quantity: number
-  unit_cost?: number
+  unit_price?: number
   total_value?: number
-  reference?: string
+  reference_number?: string
   notes?: string
-  transaction_date?: string
-  created_by?: string
+  location_from?: string
+  location_to?: string
+  created_by: string
+  created_at: string
 }
 
-export interface InventoryAdjustment {
-  id?: string
-  adjustment_number: string
-  adjustment_date: string
-  reason?: string
-  total_adjustment_value?: number
-  status?: string
-  created_by?: string
-  approved_by?: string
-  created_at?: string
+export interface StockAlert {
+  id: number
+  item_id: number
+  item_name: string
+  item_sku: string
+  alert_type: 'low_stock' | 'out_of_stock' | 'overstock' | 'expiring'
+  severity: 'low' | 'medium' | 'high' | 'critical'
+  message: string
+  current_quantity: number
+  threshold_quantity?: number
+  created_at: string
+  acknowledged: boolean
 }
 
-export interface ItemsListParams {
-  skip?: number
-  limit?: number
-  search?: string
-  category_id?: string
-  status?: string
+export interface InventoryKPIs {
+  total_items: number
+  total_items_change: number
+  low_stock_count: number
+  out_of_stock_count: number
+  total_value: number
+  total_value_change: number
+  turnover_ratio: number
+  avg_days_to_sell: number
+}
+
+export interface InventoryCategory {
+  id: number
+  name: string
+  description?: string
+  parent_id?: number
+  item_count: number
+  total_value: number
+}
+
+export interface InventoryLocation {
+  id: number
+  name: string
+  code: string
+  type: 'warehouse' | 'store' | 'office' | 'other'
+  address?: string
+  manager?: string
+  capacity?: number
+  item_count: number
+  total_value: number
+}
+
+export interface StockMovement {
+  date: string
+  stock_in: number
+  stock_out: number
+  adjustments: number
+  net_change: number
+}
+
+export interface InventoryForecast {
+  item_id: number
+  item_name: string
+  current_stock: number
+  predicted_demand: number
+  suggested_reorder: number
+  days_until_stockout: number
+  confidence_score: number
 }
 
 class InventoryService {
-  private baseUrl = '/api/v1/inventory'
-
-  // Items
-  async getItems(params: ItemsListParams = {}) {
-    const response = await apiClient.get(`${this.baseUrl}/items`, { params })
+  // Dashboard
+  async getDashboardKPIs(): Promise<InventoryKPIs> {
+    const response = await api.get('/inventory/dashboard/kpis')
     return response.data
   }
 
-  async getItem(id: string) {
-    const response = await apiClient.get(`${this.baseUrl}/items/${id}`)
+  async getStockMovements(days: number = 30): Promise<StockMovement[]> {
+    const response = await api.get(`/inventory/dashboard/movements?days=${days}`)
     return response.data
   }
 
-  async createItem(item: Omit<InventoryItem, 'id' | 'created_at' | 'updated_at'>) {
-    const response = await apiClient.post(`${this.baseUrl}/items`, item)
+  async getRecentTransactions(limit: number = 10): Promise<InventoryTransaction[]> {
+    const response = await api.get(`/inventory/transactions/recent?limit=${limit}`)
     return response.data
   }
 
-  async updateItem(id: string, item: Partial<InventoryItem>) {
-    const response = await apiClient.put(`${this.baseUrl}/items/${id}`, item)
+  async getStockAlerts(acknowledged: boolean = false): Promise<StockAlert[]> {
+    const response = await api.get(`/inventory/alerts?acknowledged=${acknowledged}`)
     return response.data
   }
 
-  async deleteItem(id: string) {
-    const response = await apiClient.delete(`${this.baseUrl}/items/${id}`)
+  // Items Management
+  async getItems(params?: {
+    page?: number
+    limit?: number
+    search?: string
+    category_id?: number
+    location_id?: number
+    status?: string
+  }): Promise<{ items: InventoryItem[], total: number }> {
+    const response = await api.get('/inventory/items', { params })
+    return response.data
+  }
+
+  async getItem(id: number): Promise<InventoryItem> {
+    const response = await api.get(`/inventory/items/${id}`)
+    return response.data
+  }
+
+  async createItem(item: Omit<InventoryItem, 'id' | 'total_value' | 'last_updated' | 'status'>): Promise<InventoryItem> {
+    const response = await api.post('/inventory/items', item)
+    return response.data
+  }
+
+  async updateItem(id: number, item: Partial<InventoryItem>): Promise<InventoryItem> {
+    const response = await api.put(`/inventory/items/${id}`, item)
+    return response.data
+  }
+
+  async deleteItem(id: number): Promise<void> {
+    await api.delete(`/inventory/items/${id}`)
+  }
+
+  // Stock Adjustments
+  async adjustStock(adjustments: {
+    item_id: number
+    quantity: number
+    type: 'increase' | 'decrease' | 'set'
+    reason: string
+    notes?: string
+  }[]): Promise<InventoryTransaction[]> {
+    const response = await api.post('/inventory/adjustments', { adjustments })
+    return response.data
+  }
+
+  async transferStock(transfer: {
+    item_id: number
+    quantity: number
+    from_location_id: number
+    to_location_id: number
+    notes?: string
+  }): Promise<InventoryTransaction> {
+    const response = await api.post('/inventory/transfers', transfer)
     return response.data
   }
 
   // Categories
-  async getCategories() {
-    const response = await apiClient.get(`${this.baseUrl}/categories`)
+  async getCategories(): Promise<InventoryCategory[]> {
+    const response = await api.get('/inventory/categories')
     return response.data
   }
 
-  async createCategory(category: Omit<InventoryCategory, 'id' | 'created_at' | 'updated_at'>) {
-    const response = await apiClient.post(`${this.baseUrl}/categories`, category)
+  async createCategory(category: Omit<InventoryCategory, 'id' | 'item_count' | 'total_value'>): Promise<InventoryCategory> {
+    const response = await api.post('/inventory/categories', category)
     return response.data
+  }
+
+  async updateCategory(id: number, category: Partial<InventoryCategory>): Promise<InventoryCategory> {
+    const response = await api.put(`/inventory/categories/${id}`, category)
+    return response.data
+  }
+
+  async deleteCategory(id: number): Promise<void> {
+    await api.delete(`/inventory/categories/${id}`)
   }
 
   // Locations
-  async getLocations() {
-    const response = await apiClient.get(`${this.baseUrl}/locations`)
+  async getLocations(): Promise<InventoryLocation[]> {
+    const response = await api.get('/inventory/locations')
     return response.data
   }
 
-  async createLocation(location: Omit<InventoryLocation, 'id' | 'created_at'>) {
-    const response = await apiClient.post(`${this.baseUrl}/locations`, location)
+  async createLocation(location: Omit<InventoryLocation, 'id' | 'item_count' | 'total_value'>): Promise<InventoryLocation> {
+    const response = await api.post('/inventory/locations', location)
     return response.data
+  }
+
+  async updateLocation(id: number, location: Partial<InventoryLocation>): Promise<InventoryLocation> {
+    const response = await api.put(`/inventory/locations/${id}`, location)
+    return response.data
+  }
+
+  async deleteLocation(id: number): Promise<void> {
+    await api.delete(`/inventory/locations/${id}`)
   }
 
   // Transactions
-  async getTransactions(params: { item_id?: string; skip?: number; limit?: number } = {}) {
-    const response = await apiClient.get(`${this.baseUrl}/transactions`, { params })
+  async getTransactions(params?: {
+    page?: number
+    limit?: number
+    item_id?: number
+    type?: string
+    date_from?: string
+    date_to?: string
+  }): Promise<{ transactions: InventoryTransaction[], total: number }> {
+    const response = await api.get('/inventory/transactions', { params })
     return response.data
   }
 
-  async createTransaction(transaction: Omit<InventoryTransaction, 'id' | 'created_by'>) {
-    const response = await apiClient.post(`${this.baseUrl}/transactions`, transaction)
+  // Alerts
+  async acknowledgeAlert(id: number): Promise<void> {
+    await api.put(`/inventory/alerts/${id}/acknowledge`)
+  }
+
+  async acknowledgeAlerts(ids: number[]): Promise<void> {
+    await api.put('/inventory/alerts/acknowledge', { alert_ids: ids })
+  }
+
+  // Reports & Analytics
+  async getInventoryValuation(): Promise<{
+    by_category: { category: string, value: number, percentage: number }[]
+    by_location: { location: string, value: number, percentage: number }[]
+    total_value: number
+  }> {
+    const response = await api.get('/inventory/reports/valuation')
     return response.data
   }
 
-  // Adjustments
-  async getAdjustments(params: { skip?: number; limit?: number } = {}) {
-    const response = await apiClient.get(`${this.baseUrl}/adjustments`, { params })
+  async getStockLevelsReport(): Promise<{
+    in_stock: number
+    low_stock: number
+    out_of_stock: number
+    overstock: number
+    items: InventoryItem[]
+  }> {
+    const response = await api.get('/inventory/reports/stock-levels')
     return response.data
   }
 
-  async createAdjustment(adjustment: Omit<InventoryAdjustment, 'id' | 'created_by' | 'created_at'>) {
-    const response = await apiClient.post(`${this.baseUrl}/adjustments`, adjustment)
+  async getInventoryForecast(days: number = 30): Promise<InventoryForecast[]> {
+    const response = await api.get(`/inventory/reports/forecast?days=${days}`)
     return response.data
   }
 
-  // Barcode lookup
-  async lookupByBarcode(code: string) {
-    const response = await apiClient.get(`${this.baseUrl}/barcode/lookup`, {
-      params: { code }
+  // Barcode Operations
+  async searchByBarcode(barcode: string): Promise<InventoryItem | null> {
+    try {
+      const response = await api.get(`/inventory/items/barcode/${barcode}`)
+      return response.data
+    } catch (error) {
+      if (error.response?.status === 404) {
+        return null
+      }
+      throw error
+    }
+  }
+
+  // Import/Export
+  async importItems(file: File): Promise<{ success: number, errors: string[] }> {
+    const formData = new FormData()
+    formData.append('file', file)
+    const response = await api.post('/inventory/import', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    return response.data
+  }
+
+  async exportItems(format: 'csv' | 'excel' = 'csv'): Promise<Blob> {
+    const response = await api.get(`/inventory/export?format=${format}`, {
+      responseType: 'blob'
     })
     return response.data
   }
 }
 
 export const inventoryService = new InventoryService()
-export default inventoryService

@@ -292,6 +292,12 @@ const mainAppRoute: AppRouteRecordRaw = {
       meta: { title: 'Import Bills' }
     },
     {
+      path: 'ap/batch-payments',
+      name: 'BatchPayments',
+      component: () => import('@/modules/accounts-payable/views/BatchPayments.vue'),
+      meta: { title: 'Batch Payments' }
+    },
+    {
       path: 'ap/reports',
       name: 'APReports',
       component: () => import('@/modules/accounts-payable/views/APReports.vue'),

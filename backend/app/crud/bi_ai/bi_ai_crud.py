@@ -420,5 +420,178 @@ class BIAICRUD:
         for dashboard in dashboards:
             dashboard.is_default = False
 
+    # Additional methods for AI endpoints
+    async def get_recommendations(
+        self,
+        db: AsyncSession,
+        *,
+        tenant_id: UUID,
+        limit: int = 20
+    ) -> List[Dict[str, Any]]:
+        """Get AI recommendations."""
+        recommendations = [
+            {
+                "id": "rec_1",
+                "title": "Optimize Payment Terms",
+                "description": "Extend payment terms with top 3 vendors to improve cash flow by 15%",
+                "type": "cash_flow",
+                "priority": "High",
+                "confidence": 0.94,
+                "estimated_impact": 25000,
+                "action_items": ["Review vendor contracts", "Negotiate payment terms"],
+                "module": "accounts_payable"
+            },
+            {
+                "id": "rec_2",
+                "title": "Review Expense Categories",
+                "description": "Office supplies spending increased 35% - investigate and set budget alerts",
+                "type": "cost_control",
+                "priority": "Medium",
+                "confidence": 0.87,
+                "estimated_impact": 5000,
+                "action_items": ["Analyze spending patterns", "Set budget alerts"],
+                "module": "budget"
+            }
+        ]
+        return recommendations[:limit]
+    
+    async def generate_new_recommendations(
+        self,
+        db: AsyncSession,
+        *,
+        tenant_id: UUID
+    ) -> List[Dict[str, Any]]:
+        """Generate new AI recommendations."""
+        return await self.get_recommendations(db, tenant_id=tenant_id, limit=10)
+    
+    async def apply_recommendation(
+        self,
+        db: AsyncSession,
+        *,
+        tenant_id: UUID,
+        recommendation_id: str
+    ) -> bool:
+        """Apply AI recommendation."""
+        # Mock application - in real implementation, this would execute the recommendation
+        return True
+    
+    async def dismiss_recommendation(
+        self,
+        db: AsyncSession,
+        *,
+        tenant_id: UUID,
+        recommendation_id: str
+    ) -> bool:
+        """Dismiss AI recommendation."""
+        # Mock dismissal - in real implementation, this would mark as dismissed
+        return True
+    
+    async def get_recommendation_details(
+        self,
+        db: AsyncSession,
+        *,
+        tenant_id: UUID,
+        recommendation_id: str
+    ) -> Dict[str, Any]:
+        """Get recommendation details."""
+        return {
+            "id": recommendation_id,
+            "title": "Detailed Recommendation",
+            "description": "Detailed analysis and recommendation details",
+            "impact": "Operational improvement",
+            "success": True
+        }
+    
+    async def get_anomalies(
+        self,
+        db: AsyncSession,
+        *,
+        tenant_id: UUID,
+        limit: int = 30,
+        severity: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        """Get detected anomalies."""
+        anomalies = [
+            {
+                "id": "anom_1",
+                "type": "expense_spike",
+                "description": "Unusual increase in office supplies spending",
+                "severity": "medium",
+                "confidence": 0.85,
+                "timestamp": datetime.utcnow().isoformat(),
+                "affected_amount": 5000
+            }
+        ]
+        
+        if severity:
+            anomalies = [a for a in anomalies if a["severity"] == severity]
+        
+        return anomalies[:limit]
+    
+    async def get_predictions(
+        self,
+        db: AsyncSession,
+        *,
+        tenant_id: UUID,
+        limit: int = 20,
+        prediction_type: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        """Get AI predictions."""
+        predictions = [
+            {
+                "id": "pred_1",
+                "type": "cash_flow",
+                "description": "Cash flow forecast for next 30 days",
+                "confidence": 0.92,
+                "prediction_data": {"trend": "positive", "amount": 25000},
+                "timestamp": datetime.utcnow().isoformat()
+            }
+        ]
+        
+        if prediction_type:
+            predictions = [p for p in predictions if p["type"] == prediction_type]
+        
+        return predictions[:limit]
+    
+    async def get_model_performance(
+        self,
+        db: AsyncSession,
+        *,
+        tenant_id: UUID
+    ) -> List[Dict[str, Any]]:
+        """Get AI model performance metrics."""
+        return [
+            {
+                "model_name": "Cash Flow Predictor",
+                "accuracy": 0.92,
+                "last_trained": datetime.utcnow().isoformat(),
+                "predictions_made": 1250,
+                "status": "active"
+            },
+            {
+                "model_name": "Anomaly Detector",
+                "accuracy": 0.87,
+                "last_trained": datetime.utcnow().isoformat(),
+                "predictions_made": 850,
+                "status": "active"
+            }
+        ]
+    
+    async def get_financial_data(
+        self,
+        db: AsyncSession,
+        *,
+        tenant_id: UUID
+    ) -> Dict[str, Any]:
+        """Get comprehensive financial data for AI analysis."""
+        return {
+            "revenue": {"current_month": 98500, "last_month": 102000, "trend": "down"},
+            "expenses": {"current_month": 75000, "last_month": 72000, "trend": "up"},
+            "cash_flow": {"current": 45000, "projected": 52000, "trend": "positive"},
+            "accounts_receivable": 125000,
+            "accounts_payable": 85000,
+            "last_updated": datetime.utcnow().isoformat()
+        }
+
 # Create instance
 bi_ai_crud = BIAICRUD()

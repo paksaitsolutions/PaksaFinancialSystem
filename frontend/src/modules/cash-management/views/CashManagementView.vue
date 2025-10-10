@@ -186,12 +186,7 @@ const transaction = ref({
   date: new Date()
 })
 
-const accountOptions = ref([
-  { name: 'Main Checking' },
-  { name: 'Business Savings' },
-  { name: 'Payroll Account' },
-  { name: 'Tax Reserve' }
-])
+const accountOptions = ref([])
 
 const typeOptions = ref([
   { label: 'Inflow', value: 'inflow' },
@@ -218,11 +213,16 @@ const hideDialog = () => {
 const loadDashboardData = async () => {
   loading.value = true
   try {
-    dashboardData.value = await cashService.getDashboard()
-    const accountsResponse = await cashService.getBankAccounts()
-    bankAccountsData.value = accountsResponse.items || accountsResponse || []
-    const transactionsResponse = await cashService.getTransactions({ limit: 10 })
-    recentTransactionsData.value = transactionsResponse.items || transactionsResponse || []
+    const [dashboard, accounts, transactions] = await Promise.all([
+      cashService.getDashboard(),
+      cashService.getBankAccounts(),
+      cashService.getTransactions({ limit: 10 })
+    ])
+    
+    dashboardData.value = dashboard
+    bankAccountsData.value = accounts
+    recentTransactionsData.value = transactions
+    accountOptions.value = accounts.map(acc => ({ name: acc.name, id: acc.id }))
   } catch (error) {
     console.error('Error loading dashboard data:', error)
     toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 })

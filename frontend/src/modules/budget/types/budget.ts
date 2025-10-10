@@ -1,92 +1,104 @@
-export interface BudgetLineItem {
-  id: number
-  budget_id: number
-  category: string
-  description: string
-  amount: number
-  created_at?: string
-  updated_at?: string
-}
-
 export interface Budget {
-  id: number
+  id?: string
   name: string
-  amount: number
-  type: BudgetType
-  status: BudgetStatus
+  description: string
+  fiscal_year: number
   start_date: string
   end_date: string
-  description?: string
+  status: 'draft' | 'active' | 'pending_approval' | 'approved' | 'closed'
   line_items: BudgetLineItem[]
-  
-  // Approval workflow fields
-  submitted_at?: string
-  approved_at?: string
-  rejected_at?: string
-  approval_notes?: string
-  rejection_reason?: string
-  
-  // Audit fields
+  total_budget?: number
+  total_actual?: number
+  variance?: number
   created_at?: string
   updated_at?: string
-  created_by?: number
+  created_by?: string
+  approved_by?: string
+  approved_at?: string
 }
 
-export interface BudgetCreate {
-  name: string
-  amount: number
-  type: BudgetType
-  start_date: string
-  end_date: string
-  description?: string
-  line_items?: Omit<BudgetLineItem, 'id' | 'budget_id'>[]
-}
-
-export interface BudgetUpdate {
-  name?: string
-  amount?: number
-  type?: BudgetType
-  status?: BudgetStatus
-  start_date?: string
-  end_date?: string
-  description?: string
-  line_items?: Omit<BudgetLineItem, 'id' | 'budget_id'>[]
-}
-
-export type BudgetType = 'OPERATIONAL' | 'CAPITAL' | 'PROJECT' | 'DEPARTMENT'
-
-export type BudgetStatus = 'DRAFT' | 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED' | 'ARCHIVED'
-
-export interface BudgetVsActualLineItem {
+export interface BudgetLineItem {
+  id?: string
+  budget_id?: string
+  account_code: string
+  account_name: string
   category: string
-  budgetAmount: number
-  actualAmount: number
+  budgeted_amount: number
+  actual_amount: number
   variance: number
+  period_type: 'monthly' | 'quarterly' | 'annual'
+  department?: string
+  cost_center?: string
+  project_code?: string
 }
 
-export interface BudgetVsActual {
-  budgetId: string
-  period: string
-  budgetAmount: number
-  actualAmount: number
+export interface BudgetTemplate {
+  id: string
+  name: string
+  description: string
+  category: string
+  template_data: Budget
+  is_active: boolean
+  created_at: string
+}
+
+export interface BudgetAnalytics {
+  total_budgets: number
+  active_budgets: number
+  budget_utilization: number
+  variance_percentage: number
+  top_variances: BudgetVariance[]
+  budget_performance: {
+    on_track: number
+    over_budget: number
+    under_budget: number
+  }
+}
+
+export interface BudgetVariance {
+  account: string
   variance: number
-  variancePercent: number
-  lineItems: BudgetVsActualLineItem[]
+  percentage: number
+  category: string
 }
 
-export interface BudgetSummary {
-  totalBudgets: number
-  totalAmount: number
-  totalSpent: number
-  totalRemaining: number
-  byStatus: Record<BudgetStatus, number>
-  byType: Record<BudgetType, number>
+export interface BudgetForecast {
+  budget_id: string
+  forecast_period: string
+  projected_total: number
+  confidence_score: number
+  monthly_projections: MonthlyProjection[]
+  risk_factors: string[]
 }
 
-export interface BudgetFilters {
-  status?: BudgetStatus
-  type?: BudgetType
-  search?: string
-  dateFrom?: string
-  dateTo?: string
+export interface MonthlyProjection {
+  month: string
+  projected_actual: number
+  confidence: number
+  factors: string[]
+}
+
+export interface BudgetApproval {
+  budget_id: string
+  status: 'pending' | 'approved' | 'rejected'
+  approver_id: string
+  approved_at?: string
+  approval_notes?: string
+  approval_level: number
+}
+
+export interface BudgetComparison {
+  current_budget: Budget
+  previous_budget?: Budget
+  variance_analysis: {
+    total_variance: number
+    variance_percentage: number
+    category_variances: Array<{
+      category: string
+      current_amount: number
+      previous_amount: number
+      variance: number
+      percentage: number
+    }>
+  }
 }

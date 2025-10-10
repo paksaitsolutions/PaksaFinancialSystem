@@ -44,7 +44,7 @@ class Vendor(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     bills: Mapped[List["Bill"]] = relationship(back_populates="vendor")
-    payments: Mapped[List["Payment"]] = relationship(back_populates="vendor")
+    payments: Mapped[List["APPaymentNew"]] = relationship(back_populates="vendor")
 
 class Bill(Base):
     __tablename__ = 'ap_bills'
@@ -77,7 +77,7 @@ class BillLineItem(Base):
 
     bill: Mapped["Bill"] = relationship(back_populates="line_items")
 
-class Payment(Base):
+class APPaymentNew(Base):
     __tablename__ = 'ap_payments_new'  # Changed to avoid conflicts
     id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     vendor_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('ap_vendors.id'), nullable=False)
@@ -100,5 +100,5 @@ class PaymentAllocation(Base):
     bill_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('ap_bills.id'), nullable=False)
     amount_allocated: Mapped[Decimal] = mapped_column(Numeric(19, 4), nullable=False)
 
-    payment: Mapped["Payment"] = relationship(back_populates="allocations")
+    payment: Mapped["APPaymentNew"] = relationship(back_populates="allocations")
     bill: Mapped["Bill"] = relationship(back_populates="payment_allocations")

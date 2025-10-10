@@ -245,30 +245,21 @@ const upcomingDeadlines = ref([])
 const loadDashboardData = async () => {
   loading.value = true
   try {
-    const endDate = new Date()
-    const startDate = new Date()
-    startDate.setMonth(startDate.getMonth() - 1)
-
-    // Load tax summary
-    const summary = await taxService.getTaxSummary({
-      start_date: startDate.toISOString().split('T')[0],
-      end_date: endDate.toISOString().split('T')[0]
-    })
-
-    // Load tax rates
-    const rates = await taxService.getTaxRates({ active_only: true })
-    
-    // Load recent transactions
-    const transactions = await taxService.getTaxTransactions({ limit: 5 })
+    const [kpiData, rates, transactions, deadlines] = await Promise.all([
+      taxService.getTaxKPIs(),
+      taxService.getTaxRates({ active_only: true }),
+      taxService.getTaxTransactions({ limit: 5 }),
+      taxService.getUpcomingDeadlines()
+    ])
     
     // Update KPIs
     kpis.value = {
-      totalLiability: summary.summary.total_tax_amount,
-      liabilityChange: 8.2, // Calculate from historical data
-      activeTaxCodes: rates.length,
-      pendingReturns: 3, // From tax returns API
-      daysUntilDue: 15, // Calculate from due dates
-      complianceScore: 98 // Calculate compliance score
+      totalLiability: kpiData.total_liability,
+      liabilityChange: kpiData.liability_change,
+      activeTaxCodes: kpiData.active_tax_codes,
+      pendingReturns: kpiData.pending_returns,
+      daysUntilDue: kpiData.days_until_due,
+      complianceScore: kpiData.compliance_score
     }
 
     // Update recent activity from transactions
@@ -280,25 +271,15 @@ const loadDashboardData = async () => {
       status: 'completed'
     }))
 
-    // Mock upcoming deadlines (replace with real API)
-    upcomingDeadlines.value = [
-      {
-        id: 1,
-        description: 'Sales Tax Return - Q4 2024',
-        jurisdiction: 'California',
-        dueDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
-        daysRemaining: 15,
-        status: 'pending'
-      },
-      {
-        id: 2,
-        description: 'VAT Return - January 2025',
-        jurisdiction: 'Federal',
-        dueDate: new Date(Date.now() + 28 * 24 * 60 * 60 * 1000),
-        daysRemaining: 28,
-        status: 'draft'
-      }
-    ]
+    // Update upcoming deadlines
+    upcomingDeadlines.value = deadlines.map(d => ({
+      id: d.id,
+      description: d.description,
+      jurisdiction: d.jurisdiction,
+      dueDate: new Date(d.due_date),
+      daysRemaining: d.days_remaining,
+      status: d.status
+    }))
 
   } catch (error) {
     console.error('Error loading dashboard data:', error)

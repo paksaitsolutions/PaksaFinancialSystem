@@ -212,9 +212,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useToast } from 'primevue/usetoast'
+import { reportsService } from '@/services/reportsService'
 
 const router = useRouter()
-// const toast = useToast() // Commented out to avoid import issues
+const toast = useToast()
 
 // Dialog states
 const showCreateDialog = ref(false)
@@ -401,7 +403,8 @@ const activeUsers = computed(() => 12) // Mock data
 const runReport = async (report: any) => {
   report.running = true
   try {
-    await new Promise(resolve => setTimeout(resolve, 2000))
+    const execution = await reportsService.executeReport(report.id)
+    
     // Add to recent activity
     recentActivity.value.unshift({
       timestamp: new Date(),
@@ -411,9 +414,26 @@ const runReport = async (report: any) => {
       module: 'Module',
       status: 'Completed'
     })
-    console.log('Report generated successfully:', report.name)
+    
+    toast.add({
+      severity: 'success',
+      summary: 'Success',
+      detail: `Report "${report.name}" generated successfully`,
+      life: 3000
+    })
+    
+    // Optionally download the report
+    if (execution.file_url) {
+      window.open(execution.file_url, '_blank')
+    }
   } catch (error) {
-    console.error('Failed to generate report:', report.name)
+    console.error('Failed to generate report:', report.name, error)
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: `Failed to generate report "${report.name}"`,
+      life: 3000
+    })
   } finally {
     report.running = false
   }
@@ -454,12 +474,42 @@ const viewModuleReports = (module: any) => {
 const createReport = async () => {
   creating.value = true
   try {
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    const report = await reportsService.createReport({
+      name: newReport.value.name,
+      type: newReport.value.type,
+      module: newReport.value.module,
+      description: newReport.value.description,
+      is_scheduled: false
+    })
+    
     showCreateDialog.value = false
     newReport.value = { name: '', module: '', type: '', description: '' }
-    console.log('Report created successfully')
+    
+    toast.add({
+      severity: 'success',
+      summary: 'Success',
+      detail: 'Report created successfully',
+      life: 3000
+    })
+    
+    // Refresh data
+    const modulesData = await reportsService.getReportModules()
+    modules.value = modulesData.map(module => ({
+      ...module,
+      reports: module.reports.map(report => ({
+        ...report,
+        running: false
+      }))
+    }))
+    
   } catch (error) {
-    console.error('Failed to create report')
+    console.error('Failed to create report:', error)
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to create report',
+      life: 3000
+    })
   } finally {
     creating.value = false
   }
@@ -505,12 +555,50 @@ const getStatusSeverity = (status: string) => {
 onMounted(async () => {
   try {
     loading.value = true
-    // Simulate loading data
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    // Data is already loaded in refs, this simulates API call
+    
+    const [statsData, modulesData, activityData] = await Promise.all([
+      reportsService.getReportStats(),
+      reportsService.getReportModules(),
+      reportsService.getRecentActivity(10)
+    ])
+    
+    // Update modules with real data
+    modules.value = modulesData.map(module => ({
+      ...module,
+      reports: module.reports.map(report => ({
+        ...report,
+        running: false
+      }))
+    }))
+    
+    // Update recent activity
+    recentActivity.value = activityData.map(activity => ({
+      timestamp: new Date(activity.timestamp),
+      user: activity.user,
+      action: activity.action.charAt(0).toUpperCase() + activity.action.slice(1),
+      report: activity.report_name,
+      module: activity.module,
+      status: activity.status.charAt(0).toUpperCase() + activity.status.slice(1)
+    }))
+    
+    // Load scheduled reports
+    const scheduledData = await reportsService.getScheduledReports()
+    scheduledReportsList.value = scheduledData.map(schedule => ({
+      name: schedule.report_name || 'Unknown Report',
+      module: schedule.module || 'Unknown Module',
+      schedule: `${schedule.frequency} at ${schedule.time}`,
+      nextRun: new Date(schedule.next_run)
+    }))
+    
   } catch (err) {
     error.value = 'Failed to load reports data'
     console.error('Error loading reports:', err)
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to load reports data',
+      life: 3000
+    })
   } finally {
     loading.value = false
   }

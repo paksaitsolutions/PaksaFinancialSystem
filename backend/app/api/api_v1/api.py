@@ -8,7 +8,7 @@ from app.modules.core_financials.accounts_payable.api import vendor_api, bill_ap
 from app.modules.core_financials.accounts_receivable.api import customer_api, invoice_api, collections_api
 # Use v1 inventory endpoint instead
 from app.api.endpoints.accounts_receivable import collections_ai as ar_collections_ai
-from app.api.endpoints.tax import tax_endpoints as tax_management
+# from app.api.endpoints.tax import tax_endpoints as tax_management  # Commented out due to circular import
 from app.api.endpoints.auth import mfa as auth_mfa
 from app.api.endpoints.invoicing import invoice_endpoints as invoicing
 from app.api.endpoints.accounting import accounting_endpoints as accounting

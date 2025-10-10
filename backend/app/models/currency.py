@@ -61,12 +61,13 @@ class Currency(BaseModel):
     )
     
     # GL accounts using this currency
-    gl_accounts = relationship("ChartOfAccounts", back_populates="currency")
+    gl_accounts = relationship("GLChartOfAccounts", back_populates="currency")
     
     __table_args__ = (
         CheckConstraint("LENGTH(code) = 3", name="ck_currency_code_length"),
         CheckConstraint("decimal_places >= 0", name="ck_currency_decimal_places_positive"),
         UniqueConstraint('code', name='uq_currencies_code'),
+        {'extend_existing': True}
     )
     
     def __repr__(self) -> str:
@@ -84,7 +85,6 @@ class ExchangeRate(BaseModel):
     Represents an exchange rate between two currencies.
     """
     __tablename__ = "exchange_rates"
-    
     # Source and target currencies
     source_currency_id = Column(GUID(), ForeignKey("currencies.id"), nullable=False)
     target_currency_id = Column(GUID(), ForeignKey("currencies.id"), nullable=False)
@@ -128,6 +128,7 @@ class ExchangeRate(BaseModel):
         CheckConstraint("rate > 0", name="ck_exchange_rate_positive"),
         CheckConstraint("source_currency_id != target_currency_id", 
                       name="ck_exchange_rate_different_currencies"),
+        {'extend_existing': True}
     )
     
     @classmethod

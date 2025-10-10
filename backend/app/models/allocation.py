@@ -55,7 +55,7 @@ class AllocationRule(BaseModel):
     priority = Column(Integer, nullable=False, default=100)
     
     # Relationships
-    source_account = relationship("ChartOfAccounts", back_populates="allocation_rules")
+    source_account = relationship("GLChartOfAccounts", back_populates="allocation_rules")
     allocation_lines = relationship("AllocationRuleLine", back_populates="allocation_rule", cascade="all, delete-orphan")
     allocations = relationship("Allocation", back_populates="allocation_rule")
     
@@ -88,7 +88,7 @@ class AllocationRuleLine(BaseModel):
     
     # Relationships
     allocation_rule = relationship("AllocationRule", back_populates="allocation_lines")
-    target_account = relationship("ChartOfAccounts")
+    target_account = relationship("GLChartOfAccounts")
     
     def __repr__(self) -> str:
         return f"<AllocationRuleLine(id={self.id}, rule_id={self.allocation_rule_id}, percentage={self.allocation_percentage})>"
@@ -152,7 +152,7 @@ class AllocationEntry(BaseModel):
     
     # Relationships
     allocation = relationship("Allocation", back_populates="allocation_entries")
-    target_account = relationship("ChartOfAccounts")
+    target_account = relationship("GLChartOfAccounts")
     journal_entry = relationship("JournalEntry")
     
     def __repr__(self) -> str:

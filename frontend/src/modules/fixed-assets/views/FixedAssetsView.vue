@@ -297,7 +297,8 @@ const formatDate = (dateString: string) => {
 const loadAssets = async () => {
   loading.value = true
   try {
-    assets.value = await fixedAssetsService.getAssets()
+    const response = await fixedAssetsService.getAssets()
+    assets.value = response.assets || response
   } catch (error) {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load assets', life: 3000 })
     console.error('Error loading assets:', error)

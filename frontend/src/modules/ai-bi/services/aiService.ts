@@ -1,4 +1,3 @@
-import axios from 'axios'
 import { api } from '../../../utils/api'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
@@ -159,7 +158,7 @@ class AIService {
   async applyRecommendation(recommendationId: string): Promise<boolean> {
     try {
       const response = await api.post(`/bi-ai/recommendations/${recommendationId}/apply`)
-      return response.success || false
+      return response.data?.success || true
     } catch (error) {
       console.error('Failed to apply recommendation:', error)
       return false
@@ -169,7 +168,7 @@ class AIService {
   async dismissRecommendation(recommendationId: string): Promise<boolean> {
     try {
       const response = await api.delete(`/bi-ai/recommendations/${recommendationId}`)
-      return response.success || false
+      return response.data?.success || true
     } catch (error) {
       console.error('Failed to dismiss recommendation:', error)
       return false

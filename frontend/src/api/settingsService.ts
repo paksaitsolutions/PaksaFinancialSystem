@@ -128,7 +128,7 @@ class SettingsService {
   }
 
   // Client-side validation helper
-  validateSettings(settings: Record<string, any>): string[] {
+  validateSettingsClient(settings: Record<string, any>): string[] {
     const errors: string[] = []
 
     if ('company_name' in settings && !settings.company_name) {

@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from typing import List, Optional
 from datetime import date
 
@@ -153,3 +154,52 @@ def get_trial_balance(as_of_date: date, db: Session = Depends(get_db)):
         'total_debits': sum(acct['debit'] for acct in trial_balance),
         'total_credits': sum(acct['credit'] for acct in trial_balance)
     }
+
+# Dashboard Endpoints
+@router.get("/dashboard/kpis")
+def get_dashboard_kpis(db: Session = Depends(get_db)):
+    """Get dashboard KPIs for GL module"""
+    total_accounts = db.query(GLAccount).filter(GLAccount.is_active == True).count()
+    journal_entries = db.query(JournalEntry).count()
+    
+    # Mock data for demonstration
+    return {
+        "total_accounts": total_accounts,
+        "accounts_change": 5.2,
+        "journal_entries": journal_entries,
+        "entries_change": 12.4,
+        "trial_balance_status": "balanced",
+        "trial_balance_difference": 0.00,
+        "current_period": "2024-01",
+        "period_status": "open",
+        "balance_trend": [
+            {"period": "2023-09", "assets": 1500000, "liabilities": 800000, "equity": 700000},
+            {"period": "2023-10", "assets": 1620000, "liabilities": 850000, "equity": 770000},
+            {"period": "2023-11", "assets": 1750000, "liabilities": 900000, "equity": 850000},
+            {"period": "2023-12", "assets": 1850000, "liabilities": 950000, "equity": 900000},
+            {"period": "2024-01", "assets": 1950000, "liabilities": 1000000, "equity": 950000}
+        ],
+        "account_distribution": [
+            {"type": "Assets", "count": 25},
+            {"type": "Liabilities", "count": 15},
+            {"type": "Equity", "count": 8},
+            {"type": "Revenue", "count": 12},
+            {"type": "Expenses", "count": 35}
+        ]
+    }
+
+@router.get("/journal-entries/recent")
+def get_recent_journal_entries(limit: int = 5, db: Session = Depends(get_db)):
+    """Get recent journal entries for dashboard"""
+    entries = db.query(JournalEntry).order_by(
+        JournalEntry.created_at.desc()
+    ).limit(limit).all()
+    
+    return [{
+        "id": entry.id,
+        "entry_number": entry.entry_number,
+        "date": entry.entry_date.isoformat(),
+        "description": entry.description,
+        "total_amount": 1000.00,  # Would calculate from lines
+        "status": entry.status.lower()
+    } for entry in entries]

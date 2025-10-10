@@ -26,12 +26,10 @@
           <div class="flex justify-content-between align-items-center">
             <span class="p-input-icon-left">
               <i class="pi pi-search" />
-              <v-text-field
+              <InputText
                 v-model="searchTerm"
                 placeholder="Search accounts..."
-                prepend-inner-icon="mdi-magnify"
-                variant="outlined"
-                density="compact"
+                class="w-full"
               />
             </span>
             <div>
@@ -247,18 +245,15 @@
       @export="handleExport"
     />
     
-    <!-- Snackbar -->
-    <v-snackbar v-model="snackbar" :color="snackbarColor" timeout="3000">
-      {{ snackbarText }}
-    </v-snackbar>
+    <!-- Toast messages handled by PrimeVue Toast -->
   </div>
 </template>
 
 <script lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
-// Removed PrimeVue useToast - using Vuetify snackbar instead
-// Removed PrimeVue FilterMatchMode - using Vuetify components
+import { useToast } from 'primevue/usetoast';
+import { FilterMatchMode } from 'primevue/api';
 import { useGlAccountsStore, type GlAccount } from '@/modules/general-ledger/store/gl-accounts';
 import ExportDialog from '@/components/common/ExportDialog.vue';
 
@@ -280,14 +275,10 @@ export default {
   },
   setup() {
     const router = useRouter();
-    const snackbar = ref(false);
-    const snackbarText = ref('');
-    const snackbarColor = ref('success');
+    const toast = useToast();
     
-    const showSnackbar = (text: string, color = 'success') => {
-      snackbarText.value = text;
-      snackbarColor.value = color;
-      snackbar.value = true;
+    const showToast = (severity: string, summary: string, detail: string) => {
+      toast.add({ severity, summary, detail, life: 3000 });
     };
     const glAccountsStore = useGlAccountsStore();
     
@@ -381,7 +372,7 @@ export default {
         await glAccountsStore.fetchAccounts();
       } catch (error) {
         console.error('Error loading accounts:', error);
-        showSnackbar('Failed to load accounts', 'error');
+        showToast('error', 'Error', 'Failed to load accounts');
       } finally {
         loading.value = false;
       }
@@ -436,10 +427,10 @@ export default {
         clearInterval(interval);
         exportProgress.value = 100;
         
-        showSnackbar(`Exported ${filteredAccounts.value.length} accounts to ${format.toUpperCase()}`, 'success');
+        showToast('success', 'Success', `Exported ${filteredAccounts.value.length} accounts to ${format.toUpperCase()}`);
       } catch (error) {
         console.error('Export failed:', error);
-        showSnackbar('An error occurred while exporting the data', 'error');
+        showToast('error', 'Error', 'An error occurred while exporting the data');
       } finally {
         setTimeout(() => {
           exporting.value = false;
@@ -499,7 +490,7 @@ export default {
       
       // Validate form
       if (!accountForm.value.code || !accountForm.value.name || !accountForm.value.type) {
-        showSnackbar('Please fill in all required fields', 'warning');
+        showToast('warn', 'Warning', 'Please fill in all required fields');
         return;
       }
       
@@ -525,12 +516,12 @@ export default {
             data: accountData
           });
           
-          showSnackbar('Account updated successfully', 'success');
+          showToast('success', 'Success', 'Account updated successfully');
         } else {
           // Create new account
           await glAccountsStore.createAccount(accountData);
           
-          showSnackbar('Account created successfully', 'success');
+          showToast('success', 'Success', 'Account created successfully');
         }
         
         // Reset form and close dialog
@@ -539,7 +530,7 @@ export default {
         
       } catch (error) {
         console.error('Error saving account:', error);
-        showSnackbar('Failed to save account', 'error');
+        showToast('error', 'Error', 'Failed to save account');
       } finally {
         loading.value = false;
       }
@@ -560,14 +551,14 @@ export default {
       try {
         await glAccountsStore.deleteAccount(accountToDelete.value.id);
         
-        showSnackbar('Account deleted successfully', 'success');
+        showToast('success', 'Success', 'Account deleted successfully');
         
         showDeleteDialog.value = false;
         accountToDelete.value = null;
         
       } catch (error) {
         console.error('Error deleting account:', error);
-        showSnackbar('Failed to delete account', 'error');
+        showToast('error', 'Error', 'Failed to delete account');
       } finally {
         deleting.value = false;
       }
@@ -597,7 +588,7 @@ export default {
     return {
       accounts,
       loading,
-      saving,
+      // saving, // Remove undefined variable
       deleting,
       submitted,
       showAccountDialog,
@@ -619,10 +610,7 @@ export default {
       saveAccount,
       confirmDeleteAccount,
       deleteAccount,
-      snackbar,
-      snackbarText,
-      snackbarColor,
-      showSnackbar,
+      showToast,
       tableHeaders,
       filteredAccountsForTable
     };

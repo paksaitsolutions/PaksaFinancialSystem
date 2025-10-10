@@ -1,9 +1,10 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import axios from 'axios';
 import { useToast } from 'primevue/usetoast';
 import type { AxiosError } from 'axios';
 import { useI18n } from 'vue-i18n';
+import { api } from '@/utils/api';
 
 export interface GlAccount {
   id: string;
@@ -66,7 +67,7 @@ export const useGlAccountsStore = defineStore('glAccounts', () => {
     state.value.error = null;
     
     try {
-      const response = await axios.get<GlAccount[]>('/api/gl/accounts');
+      const response = await api.get<GlAccount[]>('/gl/accounts');
       state.value.accounts = response.data;
       state.value.accountTree = buildAccountTree(response.data);
       return response.data;
@@ -84,7 +85,7 @@ export const useGlAccountsStore = defineStore('glAccounts', () => {
     state.value.error = null;
     
     try {
-      const response = await axios.get<GlAccount>(`/api/gl/accounts/${id}`);
+      const response = await api.get<GlAccount>(`/gl/accounts/${id}`);
       state.value.currentAccount = response.data;
       return response.data;
     } catch (err) {
@@ -101,7 +102,7 @@ export const useGlAccountsStore = defineStore('glAccounts', () => {
     state.value.error = null;
     
     try {
-      const response = await axios.post<GlAccount>('/api/gl/accounts', accountData);
+      const response = await api.post<GlAccount>('/gl/accounts', accountData);
       await fetchAccounts(); // Refresh the list
       toast.add({
         severity: 'success',
@@ -124,7 +125,7 @@ export const useGlAccountsStore = defineStore('glAccounts', () => {
     state.value.error = null;
     
     try {
-      const response = await axios.put<GlAccount>(`/api/gl/accounts/${id}`, data);
+      const response = await api.put<GlAccount>(`/gl/accounts/${id}`, data);
       await fetchAccounts(); // Refresh the list
       toast.add({
         severity: 'success',
@@ -147,7 +148,7 @@ export const useGlAccountsStore = defineStore('glAccounts', () => {
     state.value.error = null;
     
     try {
-      await axios.delete(`/api/gl/accounts/${id}`);
+      await api.delete(`/gl/accounts/${id}`);
       await fetchAccounts(); // Refresh the list
       toast.add({
         severity: 'success',
@@ -220,6 +221,37 @@ export const useGlAccountsStore = defineStore('glAccounts', () => {
     };
   }
 
+  // Dashboard methods
+  async function getDashboardKPIs() {
+    try {
+      const response = await api.get('/gl/dashboard/kpis');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching dashboard KPIs:', error);
+      throw error;
+    }
+  }
+
+  async function getRecentJournalEntries(limit: number = 5) {
+    try {
+      const response = await api.get(`/gl/journal-entries/recent?limit=${limit}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching recent journal entries:', error);
+      throw error;
+    }
+  }
+
+  async function getTrialBalance() {
+    try {
+      const response = await api.get('/gl/trial-balance');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching trial balance:', error);
+      throw error;
+    }
+  }
+
   return {
     // State
     state,
@@ -239,6 +271,9 @@ export const useGlAccountsStore = defineStore('glAccounts', () => {
     deleteAccount,
     getAccountByNumber,
     getAccountPath,
+    getDashboardKPIs,
+    getRecentJournalEntries,
+    getTrialBalance,
     $reset
   };
 });

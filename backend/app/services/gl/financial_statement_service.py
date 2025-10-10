@@ -15,7 +15,7 @@ from app.exceptions import (
     BusinessRuleException
 )
 from app.models.gl_models import (
-    ChartOfAccounts,
+    GLChartOfAccounts,
     JournalEntryLine,
     JournalEntry,
     TrialBalance,
@@ -160,12 +160,12 @@ class FinancialStatementService(BaseService):
         """Generate balance sheet data from trial balance."""
         # Get all accounts with their balances
         accounts = self.db.query(
-            ChartOfAccounts,
+            GLChartOfAccounts,
             TrialBalanceAccount.debit_balance,
             TrialBalanceAccount.credit_balance
         ).join(
             TrialBalanceAccount,
-            ChartOfAccounts.id == TrialBalanceAccount.account_id
+            GLChartOfAccounts.id == TrialBalanceAccount.account_id
         ).filter(
             TrialBalanceAccount.trial_balance_id == trial_balance.id
         ).all()
@@ -267,15 +267,15 @@ class FinancialStatementService(BaseService):
         """Generate income statement data for the given date range."""
         # Get revenue and expense accounts with their balances
         accounts = self.db.query(
-            ChartOfAccounts,
+            GLChartOfAccounts,
             TrialBalanceAccount.debit_balance,
             TrialBalanceAccount.credit_balance
         ).join(
             TrialBalanceAccount,
-            ChartOfAccounts.id == TrialBalanceAccount.account_id
+            GLChartOfAccounts.id == TrialBalanceAccount.account_id
         ).filter(
             TrialBalanceAccount.trial_balance_id == trial_balance.id,
-            ChartOfAccounts.account_type.in_([AccountType.REVENUE, AccountType.EXPENSE])
+            GLChartOfAccounts.account_type.in_([AccountType.REVENUE, AccountType.EXPENSE])
         ).all()
         
         # Initialize sections

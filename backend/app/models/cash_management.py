@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime, Decimal, Boolean, Text, ForeignKey, Enum
+from sqlalchemy import Column, String, DateTime, Boolean, Text, ForeignKey, Enum, Numeric
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -36,8 +36,8 @@ class BankAccount(Base):
     account_type = Column(Enum(AccountType), nullable=False)
     bank_name = Column(String(255), nullable=False)
     routing_number = Column(String(50))
-    current_balance = Column(Decimal(15, 2), default=0.00)
-    available_balance = Column(Decimal(15, 2), default=0.00)
+    current_balance = Column(Numeric(15, 2), default=0.00)
+    available_balance = Column(Numeric(15, 2), default=0.00)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
@@ -52,12 +52,12 @@ class BankTransaction(Base):
     transaction_date = Column(DateTime(timezone=True), nullable=False)
     transaction_type = Column(Enum(TransactionType), nullable=False)
     status = Column(Enum(TransactionStatus), default=TransactionStatus.PENDING)
-    amount = Column(Decimal(15, 2), nullable=False)
+    amount = Column(Numeric(15, 2), nullable=False)
     reference_number = Column(String(100))
     memo = Column(Text)
     payee = Column(String(255))
     payment_method = Column(String(100))
-    running_balance = Column(Decimal(15, 2))
+    running_balance = Column(Numeric(15, 2))
     is_reconciled = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
