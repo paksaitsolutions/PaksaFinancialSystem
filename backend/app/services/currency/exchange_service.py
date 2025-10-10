@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field, validator
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.models.currency_models import ExchangeRate, Currency
+from app.models.currency import ExchangeRate, Currency
 from app.schemas.currency_schemas import ExchangeRateCreate, ExchangeRateUpdate
 
 logger = logging.getLogger(__name__)

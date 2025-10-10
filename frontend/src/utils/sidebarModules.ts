@@ -162,6 +162,8 @@ export interface SidebarModuleItem {
         { title: 'Company', icon: 'pi pi-building', to: '/settings/company' },
         { title: 'Users', icon: 'pi pi-users', to: '/settings/users' },
         { title: 'Currency', icon: 'pi pi-dollar', to: '/settings/currency' },
+        { title: 'Regions', icon: 'pi pi-globe', to: '/settings/regions' },
+        { title: 'Countries', icon: 'pi pi-flag', to: '/settings/countries' },
         { title: 'System', icon: 'pi pi-cog', to: '/settings/system' },
         { title: 'GL Settings', icon: 'pi pi-cog', to: '/settings/gl' }
       ]

@@ -544,7 +544,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
-import settingsService from '@/services/settingsService'
+import settingsService from '@/api/settingsService'
 
 const toast = useToast()
 const saving = ref(false)

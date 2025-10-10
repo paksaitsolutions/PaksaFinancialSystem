@@ -247,6 +247,12 @@ const mainAppRoute: AppRouteRecordRaw = {
       component: () => import('@/modules/general-ledger/views/ChartOfAccounts.vue'),
       meta: { title: 'Chart of Accounts' }
     },
+    {
+      path: 'gl/settings',
+      name: 'GLSettingsMain',
+      component: () => import('@/modules/general-ledger/views/GLSettingsView.vue'),
+      meta: { title: 'GL Settings' }
+    },
     // Accounting
     {
       path: 'accounting/journal-entry',
@@ -672,6 +678,24 @@ const mainAppRoute: AppRouteRecordRaw = {
       meta: { title: 'Compliance Reports' }
     },
     {
+      path: 'compliance',
+      name: 'Compliance',
+      component: () => import('@/modules/reports/views/ComplianceReportsView.vue'),
+      meta: { title: 'Compliance Management' }
+    },
+    {
+      path: 'compliance/security',
+      name: 'ComplianceSecurity',
+      component: () => import('@/modules/settings/views/SecuritySettings.vue'),
+      meta: { title: 'Security Compliance' }
+    },
+    {
+      path: 'compliance/audit',
+      name: 'ComplianceAudit',
+      component: () => import('@/modules/reports/views/AuditReportsView.vue'),
+      meta: { title: 'Audit Compliance' }
+    },
+    {
       path: 'reports/custom',
       name: 'CustomReports',
       component: () => import('@/modules/reports/views/CustomReportsView.vue'),
@@ -726,6 +750,13 @@ const mainAppRoute: AppRouteRecordRaw = {
       component: () => import('@/views/approvals/ApprovalsView.vue'),
       meta: { title: 'Approval Workflows' }
     },
+    // RBAC
+    {
+      path: 'rbac',
+      name: 'RBAC',
+      component: () => import('@/views/rbac/RoleManagementView.vue'),
+      meta: { title: 'Role-Based Access Control', requiresAdmin: true }
+    },
     // AI & Business Intelligence
     {
       path: 'ai',
@@ -751,6 +782,25 @@ const mainAppRoute: AppRouteRecordRaw = {
       component: () => import('@/modules/ai-bi/views/Reports.vue'),
       meta: { title: 'BI Analytics' }
     },
+    // Admin Dashboard
+    {
+      path: 'admin',
+      name: 'AdminDashboard',
+      component: () => import('@/modules/super-admin/views/SuperAdminView.vue'),
+      meta: { title: 'Admin Dashboard', requiresAdmin: true }
+    },
+    {
+      path: 'admin/companies',
+      name: 'AdminCompanies',
+      component: () => import('@/modules/super-admin/views/TenantManagement.vue'),
+      meta: { title: 'Company Management', requiresAdmin: true }
+    },
+    {
+      path: 'admin/analytics',
+      name: 'AdminAnalytics',
+      component: () => import('@/modules/super-admin/views/PlatformAnalytics.vue'),
+      meta: { title: 'Platform Analytics', requiresAdmin: true }
+    },
     // Super Admin
     {
       path: 'super-admin',
@@ -759,10 +809,22 @@ const mainAppRoute: AppRouteRecordRaw = {
       meta: { title: 'Super Admin', requiresAdmin: true }
     },
     {
+      path: 'admin/monitoring',
+      name: 'AdminMonitoring',
+      component: () => import('@/modules/super-admin/views/SystemMonitoring.vue'),
+      meta: { title: 'System Monitoring', requiresAdmin: true }
+    },
+    {
       path: 'super-admin/system-monitoring',
       name: 'SystemMonitoring',
       component: () => import('@/modules/super-admin/views/SystemMonitoring.vue'),
       meta: { title: 'System Monitoring', requiresAdmin: true }
+    },
+    {
+      path: 'admin/configuration',
+      name: 'AdminConfiguration',
+      component: () => import('@/modules/super-admin/views/GlobalConfiguration.vue'),
+      meta: { title: 'Global Configuration', requiresAdmin: true }
     },
     {
       path: 'super-admin/global-config',
@@ -861,6 +923,24 @@ const mainAppRoute: AppRouteRecordRaw = {
           name: 'SecuritySettings',
           component: () => import('@/modules/settings/views/SecuritySettings.vue'),
           meta: { title: 'Security Settings' }
+        },
+        {
+          path: 'gl',
+          name: 'GLSettings',
+          component: () => import('@/modules/general-ledger/views/GLSettingsView.vue'),
+          meta: { title: 'General Ledger Settings' }
+        },
+        {
+          path: 'regions',
+          name: 'RegionsManagement',
+          component: () => import('@/modules/settings/views/RegionsView.vue'),
+          meta: { title: 'Region Management' }
+        },
+        {
+          path: 'countries',
+          name: 'CountriesManagement',
+          component: () => import('@/modules/settings/views/CountriesView.vue'),
+          meta: { title: 'Country Management' }
         }
       ]
     }

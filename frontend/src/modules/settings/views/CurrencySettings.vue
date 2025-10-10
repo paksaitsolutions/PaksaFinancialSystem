@@ -41,32 +41,32 @@
     <Card class="mt-4">
       <template #title>Currency Management</template>
       <template #content>
-        <DataTable :value="currencies" paginator :rows="10" dataKey="id">
+        <DataTable :value="currencies" :loading="loading" paginator :rows="10" dataKey="id">
           <Column field="code" header="Code" sortable />
           <Column field="name" header="Name" sortable />
           <Column field="symbol" header="Symbol" sortable />
-          <Column field="rate" header="Exchange Rate" sortable>
-            <template #body="slotProps">
-              {{ slotProps.data.rate.toFixed(4) }}
-            </template>
-          </Column>
-          <Column field="isBase" header="Base Currency" sortable>
-            <template #body="slotProps">
-              <Tag v-if="slotProps.data.isBase" value="Base" severity="success" />
+          <Column field="decimal_places" header="Decimal Places" sortable />
+          <Column field="is_base_currency" header="Base Currency" sortable>
+            <template #body="{ data }">
+              <Tag v-if="data.is_base_currency" value="Base" severity="success" />
             </template>
           </Column>
           <Column field="status" header="Status" sortable>
-            <template #body="slotProps">
-              <Tag :value="slotProps.data.status" :severity="slotProps.data.status === 'Active' ? 'success' : 'danger'" />
+            <template #body="{ data }">
+              <Tag :value="data.status === 'active' ? 'Active' : 'Inactive'" :severity="data.status === 'active' ? 'success' : 'danger'" />
             </template>
           </Column>
-          <Column field="lastUpdated" header="Last Updated" sortable />
+          <Column field="updated_at" header="Last Updated" sortable>
+            <template #body="{ data }">
+              {{ formatDate(data.updated_at) }}
+            </template>
+          </Column>
           <Column header="Actions">
-            <template #body="slotProps">
+            <template #body="{ data }">
               <div class="flex gap-2">
-                <Button icon="pi pi-pencil" size="small" @click="editCurrency(slotProps.data)" />
-                <Button icon="pi pi-refresh" size="small" severity="secondary" @click="updateRate(slotProps.data)" />
-                <Button v-if="!slotProps.data.isBase" icon="pi pi-star" size="small" severity="warning" @click="setBaseCurrency(slotProps.data)" />
+                <Button icon="pi pi-pencil" size="small" @click="editCurrency(data)" />
+                <Button v-if="!data.is_base_currency" icon="pi pi-star" size="small" severity="warning" @click="setBaseCurrency(data)" />
+                <Button icon="pi pi-trash" size="small" severity="danger" @click="deleteCurrency(data)" :disabled="data.is_base_currency" />
               </div>
             </template>
           </Column>
@@ -78,7 +78,7 @@
       <div class="grid">
         <div class="col-12">
           <label>Currency Code</label>
-          <InputText v-model="newCurrency.code" class="w-full" placeholder="USD" />
+          <InputText v-model="newCurrency.code" class="w-full" placeholder="USD" maxlength="3" />
         </div>
         <div class="col-12">
           <label>Currency Name</label>
@@ -89,96 +89,197 @@
           <InputText v-model="newCurrency.symbol" class="w-full" placeholder="$" />
         </div>
         <div class="col-12">
-          <label>Exchange Rate</label>
-          <InputNumber v-model="newCurrency.rate" class="w-full" :minFractionDigits="4" />
+          <label>Decimal Places</label>
+          <InputNumber v-model="newCurrency.decimal_places" class="w-full" :min="0" :max="4" />
+        </div>
+        <div class="col-12">
+          <div class="field-checkbox">
+            <Checkbox id="isBaseCurrency" v-model="newCurrency.is_base_currency" :binary="true" />
+            <label for="isBaseCurrency">Base Currency</label>
+          </div>
         </div>
       </div>
       <template #footer>
         <Button label="Cancel" severity="secondary" @click="showAddDialog = false" />
-        <Button label="Add Currency" @click="addCurrency" />
+        <Button label="Add Currency" @click="addCurrency" :loading="saving" />
+      </template>
+    </Dialog>
+
+    <Dialog v-model:visible="showEditDialog" modal header="Edit Currency" :style="{ width: '30rem' }">
+      <div class="grid">
+        <div class="col-12">
+          <label>Currency Code</label>
+          <InputText v-model="editedCurrency.code" class="w-full" disabled />
+        </div>
+        <div class="col-12">
+          <label>Currency Name</label>
+          <InputText v-model="editedCurrency.name" class="w-full" />
+        </div>
+        <div class="col-12">
+          <label>Symbol</label>
+          <InputText v-model="editedCurrency.symbol" class="w-full" />
+        </div>
+        <div class="col-12">
+          <label>Decimal Places</label>
+          <InputNumber v-model="editedCurrency.decimal_places" class="w-full" :min="0" :max="4" />
+        </div>
+        <div class="col-12">
+          <div class="field-checkbox">
+            <Checkbox id="editIsBaseCurrency" v-model="editedCurrency.is_base_currency" :binary="true" />
+            <label for="editIsBaseCurrency">Base Currency</label>
+          </div>
+        </div>
+        <div class="col-12">
+          <div class="field-checkbox">
+            <Checkbox id="editIsActive" v-model="editedCurrency.is_active" :binary="true" />
+            <label for="editIsActive">Active</label>
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <Button label="Cancel" severity="secondary" @click="showEditDialog = false" />
+        <Button label="Update Currency" @click="updateCurrency" :loading="saving" />
       </template>
     </Dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useToast } from 'primevue/usetoast'
+import { useConfirm } from 'primevue/useconfirm'
+import currencyService, { type Currency } from '@/services/currencyService'
 
+const toast = useToast()
+const confirm = useConfirm()
+
+const loading = ref(false)
+const saving = ref(false)
 const showAddDialog = ref(false)
+const showEditDialog = ref(false)
 
-const currencies = ref([
-  {
-    id: 1,
-    code: 'USD',
-    name: 'US Dollar',
-    symbol: '$',
-    rate: 1.0000,
-    isBase: true,
-    status: 'Active',
-    lastUpdated: '2024-01-15'
-  },
-  {
-    id: 2,
-    code: 'EUR',
-    name: 'Euro',
-    symbol: '€',
-    rate: 0.8500,
-    isBase: false,
-    status: 'Active',
-    lastUpdated: '2024-01-15'
-  },
-  {
-    id: 3,
-    code: 'GBP',
-    name: 'British Pound',
-    symbol: '£',
-    rate: 0.7500,
-    isBase: false,
-    status: 'Active',
-    lastUpdated: '2024-01-15'
-  }
-])
+const currencies = ref<Currency[]>([])
 
 const newCurrency = ref({
   code: '',
   name: '',
   symbol: '',
-  rate: 1.0000
+  decimal_places: 2,
+  is_base_currency: false
+})
+
+const editedCurrency = ref({
+  id: '',
+  code: '',
+  name: '',
+  symbol: '',
+  decimal_places: 2,
+  is_base_currency: false,
+  is_active: true
 })
 
 const activeCurrencies = computed(() => 
-  currencies.value.filter(c => c.status === 'Active').length
+  currencies.value.filter(c => c.status === 'active').length
 )
 
 const baseCurrency = computed(() => 
-  currencies.value.find(c => c.isBase)
+  currencies.value.find(c => c.is_base_currency)
 )
 
-const editCurrency = (currency: any) => {
-  console.log('Edit currency:', currency)
+const loadCurrencies = async () => {
+  loading.value = true
+  try {
+    const response = await currencyService.getAllCurrencies(true)
+    currencies.value = response.data
+  } catch (error) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load currencies' })
+  } finally {
+    loading.value = false
+  }
 }
 
-const updateRate = (currency: any) => {
-  console.log('Update rate for:', currency)
+const editCurrency = (currency: Currency) => {
+  editedCurrency.value = {
+    ...currency,
+    is_active: currency.status === 'active'
+  }
+  showEditDialog.value = true
 }
 
-const setBaseCurrency = (currency: any) => {
-  currencies.value.forEach(c => c.isBase = false)
-  currency.isBase = true
+const setBaseCurrency = async (currency: Currency) => {
+  try {
+    await currencyService.updateCurrency(currency.id, { is_base_currency: true })
+    toast.add({ severity: 'success', summary: 'Success', detail: 'Base currency updated' })
+    await loadCurrencies()
+  } catch (error) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to update base currency' })
+  }
 }
 
-const addCurrency = () => {
-  const id = Math.max(...currencies.value.map(c => c.id)) + 1
-  currencies.value.push({
-    id,
-    ...newCurrency.value,
-    isBase: false,
-    status: 'Active',
-    lastUpdated: new Date().toISOString().split('T')[0]
+const addCurrency = async () => {
+  saving.value = true
+  try {
+    const currencyData = {
+      ...newCurrency.value,
+      status: 'active' as const
+    }
+    await currencyService.createCurrency(currencyData)
+    toast.add({ severity: 'success', summary: 'Success', detail: 'Currency added successfully' })
+    showAddDialog.value = false
+    newCurrency.value = { code: '', name: '', symbol: '', decimal_places: 2, is_base_currency: false }
+    await loadCurrencies()
+  } catch (error) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to add currency' })
+  } finally {
+    saving.value = false
+  }
+}
+
+const updateCurrency = async () => {
+  saving.value = true
+  try {
+    const currencyData = {
+      ...editedCurrency.value,
+      status: editedCurrency.value.is_active ? 'active' as const : 'inactive' as const
+    }
+    delete currencyData.is_active
+    delete currencyData.id
+    
+    await currencyService.updateCurrency(editedCurrency.value.id, currencyData)
+    toast.add({ severity: 'success', summary: 'Success', detail: 'Currency updated successfully' })
+    showEditDialog.value = false
+    await loadCurrencies()
+  } catch (error) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to update currency' })
+  } finally {
+    saving.value = false
+  }
+}
+
+const deleteCurrency = (currency: Currency) => {
+  confirm.require({
+    message: `Are you sure you want to delete currency "${currency.name}"?`,
+    header: 'Confirm Delete',
+    icon: 'pi pi-exclamation-triangle',
+    accept: async () => {
+      try {
+        await currencyService.deleteCurrency(currency.id)
+        toast.add({ severity: 'success', summary: 'Success', detail: 'Currency deleted successfully' })
+        await loadCurrencies()
+      } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete currency' })
+      }
+    }
   })
-  showAddDialog.value = false
-  newCurrency.value = { code: '', name: '', symbol: '', rate: 1.0000 }
 }
+
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString()
+}
+
+onMounted(() => {
+  loadCurrencies()
+})
 </script>
 
 <style scoped>

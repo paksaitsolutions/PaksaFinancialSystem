@@ -48,6 +48,7 @@ def init_db():
     # Import all models to ensure they are registered
     from app.models import user  # noqa
     from app.models import tax_return  # noqa
+    from app.models import settings  # noqa
     from app.models.tax_models import TaxRate, TaxTransaction, TaxExemption, TaxReturn, TaxJurisdiction  # noqa
     from app.models.payroll_models import Employee, PayRun, PayRunEmployee, Payslip, PayrollItem, EmployeePayrollItem  # noqa
     try:

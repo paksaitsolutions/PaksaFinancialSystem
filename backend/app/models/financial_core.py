@@ -209,14 +209,7 @@ class CustomerPayment(BaseModel, AuditMixin):
     customer = relationship("Customer", back_populates="payments")
     invoice = relationship("Invoice", back_populates="payments")
 
-class Currency(BaseModel, AuditMixin):
-    __tablename__ = "currencies"
-    
-    currency_code = Column(String(3), unique=True, nullable=False)  # USD, EUR, GBP
-    currency_name = Column(String(100), nullable=False)
-    symbol = Column(String(10))
-    is_base_currency = Column(Boolean, default=False)
-    is_active = Column(Boolean, default=True)
+# Currency model moved to app.models.currency - avoiding duplicate table definition
 
 class ExchangeRate(BaseModel):
     __tablename__ = "exchange_rates"

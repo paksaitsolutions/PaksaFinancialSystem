@@ -25,17 +25,7 @@ class Country(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
 
-class Currency(Base):
-    __tablename__ = "currencies"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    code = Column(String(3), unique=True, nullable=False, index=True)  # ISO 4217
-    name = Column(String(100), nullable=False)
-    symbol = Column(String(10))
-    decimal_places = Column(Integer, default=2)
-    is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+# Currency model moved to app.models.currency - avoiding duplicate table definition
 
 
 class Language(Base):

@@ -1,32 +1,32 @@
 <template>
-  <div class="p-4">
-    <Card>
-      <template #header>
-        <div class="flex justify-content-between align-items-center p-4">
-          <h2 class="m-0">Currency Management</h2>
-          <Button 
-            label="Add Currency" 
-            icon="pi pi-plus" 
-            @click="openCurrencyDialog"
-          />
-        </div>
-      </template>
+  <div class="currency-management">
+    <div class="flex justify-content-between align-items-center mb-4">
+      <h2 class="text-2xl font-semibold text-900 m-0">Currency Management</h2>
+      <Button 
+        label="Add Currency" 
+        icon="pi pi-plus" 
+        @click="openCurrencyDialog"
+      />
+    </div>
 
-      <template #content>
-        <TabView v-model:activeIndex="activeTabIndex">
-          <!-- Currencies Tab -->
-          <TabPanel header="Currencies">
+    <TabView v-model:activeIndex="activeTabIndex">
+      <!-- Currencies Tab -->
+      <TabPanel header="Currencies">
+        <Card>
+          <template #content>
             <DataTable
               :value="currencies"
               :loading="loading"
               :paginator="true"
               :rows="10"
               responsiveLayout="scroll"
+              class="p-datatable-sm"
             >
-              <Column field="code" header="Code"></Column>
-              <Column field="name" header="Name"></Column>
-              <Column field="symbol" header="Symbol"></Column>
-              <Column field="decimal_places" header="Decimal Places"></Column>
+              <template #empty>No currencies found.</template>
+              <Column field="code" header="Code" sortable />
+              <Column field="name" header="Name" sortable />
+              <Column field="symbol" header="Symbol" />
+              <Column field="decimal_places" header="Decimal Places" />
               <Column field="is_base" header="Type">
                 <template #body="{ data }">
                   <Tag :value="data.is_base ? 'Base' : 'Foreign'" :severity="data.is_base ? 'success' : 'secondary'" />
@@ -37,54 +37,73 @@
                   <Tag :value="data.is_active ? 'Active' : 'Inactive'" :severity="data.is_active ? 'success' : 'danger'" />
                 </template>
               </Column>
-              <Column header="Actions">
+              <Column header="Actions" style="width: 120px">
                 <template #body="{ data }">
-                  <Button 
-                    icon="pi pi-pencil" 
-                    class="p-button-text p-button-sm mr-2" 
-                    @click="editCurrency(data)"
-                  />
-                  <Button 
-                    :icon="data.is_active ? 'pi pi-pause' : 'pi pi-play'" 
-                    class="p-button-text p-button-sm" 
-                    @click="toggleCurrencyStatus(data)"
-                    :disabled="data.is_base"
-                  />
+                  <div class="flex gap-1">
+                    <Button 
+                      icon="pi pi-pencil" 
+                      class="p-button-text p-button-sm" 
+                      @click="editCurrency(data)"
+                      v-tooltip.top="'Edit Currency'"
+                    />
+                    <Button 
+                      :icon="data.is_active ? 'pi pi-pause' : 'pi pi-play'" 
+                      class="p-button-text p-button-sm" 
+                      @click="toggleCurrencyStatus(data)"
+                      :disabled="data.is_base"
+                      v-tooltip.top="data.is_active ? 'Deactivate' : 'Activate'"
+                    />
+                  </div>
                 </template>
               </Column>
             </DataTable>
-          </TabPanel>
+          </template>
+        </Card>
+      </TabPanel>
 
-          <!-- Exchange Rates Tab -->
-          <TabPanel header="Exchange Rates">
+      <!-- Exchange Rates Tab -->
+      <TabPanel header="Exchange Rates">
+        <Card>
+          <template #content>
             <div class="grid mb-4">
               <div class="col-12 md:col-4">
-                <Dropdown
-                  v-model="selectedCurrency"
-                  :options="activeCurrencies"
-                  optionLabel="name"
-                  optionValue="code"
-                  placeholder="Select Currency"
-                  @change="loadExchangeRates"
-                  class="w-full"
-                />
+                <div class="field">
+                  <label class="font-semibold">Select Currency</label>
+                  <Dropdown
+                    v-model="selectedCurrency"
+                    :options="activeCurrencies"
+                    optionLabel="name"
+                    optionValue="code"
+                    placeholder="Select Currency"
+                    @change="loadExchangeRates"
+                    class="w-full"
+                  />
+                </div>
               </div>
               <div class="col-12 md:col-4">
-                <Button 
-                  label="Add Rate" 
-                  icon="pi pi-plus" 
-                  @click="openRateDialog" 
-                  :disabled="!selectedCurrency"
-                />
+                <div class="field">
+                  <label class="font-semibold">&nbsp;</label>
+                  <Button 
+                    label="Add Rate" 
+                    icon="pi pi-plus" 
+                    @click="openRateDialog" 
+                    :disabled="!selectedCurrency"
+                    class="w-full"
+                  />
+                </div>
               </div>
               <div class="col-12 md:col-4">
-                <Button 
-                  label="Update from API" 
-                  icon="pi pi-refresh" 
-                  @click="updateRatesFromAPI" 
-                  :loading="updatingRates"
-                  severity="info"
-                />
+                <div class="field">
+                  <label class="font-semibold">&nbsp;</label>
+                  <Button 
+                    label="Update from API" 
+                    icon="pi pi-refresh" 
+                    @click="updateRatesFromAPI" 
+                    :loading="updatingRates"
+                    severity="info"
+                    class="w-full"
+                  />
+                </div>
               </div>
             </div>
 
@@ -94,13 +113,15 @@
               :paginator="true"
               :rows="10"
               responsiveLayout="scroll"
+              class="p-datatable-sm"
             >
-              <Column field="effective_date" header="Effective Date">
+              <template #empty>No exchange rates found.</template>
+              <Column field="effective_date" header="Effective Date" sortable>
                 <template #body="{ data }">
                   {{ formatDate(data.effective_date) }}
                 </template>
               </Column>
-              <Column field="rate" header="Rate">
+              <Column field="rate" header="Rate" sortable>
                 <template #body="{ data }">
                   {{ formatRate(data.rate) }}
                 </template>
@@ -110,27 +131,31 @@
                   <Tag :value="data.is_current ? 'Current' : 'Historical'" :severity="data.is_current ? 'success' : 'secondary'" />
                 </template>
               </Column>
-              <Column field="notes" header="Notes"></Column>
-              <Column header="Actions">
+              <Column field="notes" header="Notes" />
+              <Column header="Actions" style="width: 120px">
                 <template #body="{ data }">
-                  <Button 
-                    icon="pi pi-pencil" 
-                    class="p-button-text p-button-sm mr-2" 
-                    @click="editRate(data)"
-                  />
-                  <Button 
-                    icon="pi pi-check" 
-                    class="p-button-text p-button-sm" 
-                    @click="setCurrentRate(data)"
-                    :disabled="data.is_current"
-                  />
+                  <div class="flex gap-1">
+                    <Button 
+                      icon="pi pi-pencil" 
+                      class="p-button-text p-button-sm" 
+                      @click="editRate(data)"
+                      v-tooltip.top="'Edit Rate'"
+                    />
+                    <Button 
+                      icon="pi pi-check" 
+                      class="p-button-text p-button-sm p-button-success" 
+                      @click="setCurrentRate(data)"
+                      :disabled="data.is_current"
+                      v-tooltip.top="'Set as Current'"
+                    />
+                  </div>
                 </template>
               </Column>
             </DataTable>
-          </TabPanel>
-        </TabView>
-      </template>
-    </Card>
+          </template>
+        </Card>
+      </TabPanel>
+    </TabView>
     <!-- Currency Dialog -->
     <Dialog v-model:visible="currencyDialog" :header="editingCurrency ? 'Edit Currency' : 'Add Currency'" :style="{ width: '500px' }" :modal="true">
       <div class="grid">
