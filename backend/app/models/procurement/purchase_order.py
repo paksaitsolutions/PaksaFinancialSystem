@@ -19,7 +19,7 @@ class PurchaseOrder(Base):
     tenant_id = Column(UUID(as_uuid=True), nullable=False, index=True)
     
     po_number = Column(String(50), nullable=False, index=True)
-    vendor_id = Column(UUID(as_uuid=True), ForeignKey("vendor.id"), nullable=False)
+    vendor_id = Column(UUID(as_uuid=True), ForeignKey("procurement_vendor.id"), nullable=False)
     
     order_date = Column(Date, nullable=False, default=date.today)
     expected_delivery_date = Column(Date)
@@ -43,7 +43,7 @@ class PurchaseOrder(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
-    vendor = relationship("Vendor", back_populates="purchase_orders")
+    procurement_vendor = relationship("ProcurementVendor", back_populates="purchase_orders")
     items = relationship("PurchaseOrderItem", back_populates="purchase_order")
     receipts = relationship("PurchaseReceipt", back_populates="purchase_order")
 
@@ -112,7 +112,7 @@ class VendorPayment(Base):
     tenant_id = Column(UUID(as_uuid=True), nullable=False, index=True)
     
     payment_number = Column(String(50), nullable=False, index=True)
-    vendor_id = Column(UUID(as_uuid=True), ForeignKey("vendor.id"), nullable=False)
+    vendor_id = Column(UUID(as_uuid=True), ForeignKey("procurement_vendor.id"), nullable=False)
     purchase_order_id = Column(UUID(as_uuid=True), ForeignKey("purchase_order.id"))
     
     payment_date = Column(Date, nullable=False, default=date.today)

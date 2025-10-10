@@ -66,8 +66,8 @@ class JournalEntryLine(Base):
     account = relationship("AccountingChartOfAccountsMain", back_populates="journal_entries")
 
 # Vendors (AP)
-class Vendor(Base):
-    __tablename__ = 'vendors'
+class AccountingVendor(Base):
+    __tablename__ = 'accounting_vendors'
     __table_args__ = {'extend_existing': True}
     
     id = Column(Integer, primary_key=True, index=True)
@@ -86,7 +86,7 @@ class Vendor(Base):
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
     
     # Relationships
-    bills = relationship("Bill", back_populates="vendor")
+    bills = relationship("Bill", back_populates="accounting_vendor")
 
 # Bills (AP)
 class Bill(Base):
@@ -94,7 +94,7 @@ class Bill(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     bill_number = Column(String(50), unique=True, nullable=False)
-    vendor_id = Column(Integer, ForeignKey('vendors.id'), nullable=False)
+    vendor_id = Column(Integer, ForeignKey('accounting_vendors.id'), nullable=False)
     bill_date = Column(Date, nullable=False)
     due_date = Column(Date, nullable=False)
     total_amount = Column(Numeric(15, 2), nullable=False)
@@ -106,7 +106,7 @@ class Bill(Base):
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
     
     # Relationships
-    vendor = relationship("Vendor", back_populates="bills")
+    accounting_vendor = relationship("AccountingVendor", back_populates="bills")
     payments = relationship("AccountingPayment", back_populates="bill")
 
 # Customers (AR)

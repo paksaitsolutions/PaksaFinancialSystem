@@ -97,8 +97,8 @@ class JournalEntryLine(BaseModel):
         if self.debit_amount == 0 and self.credit_amount == 0:
             raise ValueError("Must have either debit or credit amount")
 
-class Vendor(BaseModel, AuditMixin):
-    __tablename__ = "vendors"
+class FinancialCoreVendor(BaseModel, AuditMixin):
+    __tablename__ = "financial_core_vendors"
     __table_args__ = {'extend_existing': True}
     
     vendor_code = Column(String(20), unique=True, nullable=False)
@@ -113,8 +113,8 @@ class Vendor(BaseModel, AuditMixin):
     current_balance = Column(Numeric(15, 2), default=0)
     
     # Relationships
-    bills = relationship("Bill", back_populates="vendor")
-    payments = relationship("VendorPayment", back_populates="vendor")
+    bills = relationship("Bill", back_populates="financial_core_vendor")
+    payments = relationship("VendorPayment", back_populates="financial_core_vendor")
 
 class Customer(BaseModel, AuditMixin):
     __tablename__ = "customers"
@@ -140,7 +140,7 @@ class Bill(BaseModel, AuditMixin):
     __table_args__ = {'extend_existing': True}
     
     bill_number = Column(String(50), unique=True, nullable=False)
-    vendor_id = Column(String, ForeignKey("vendors.id"), nullable=False)
+    vendor_id = Column(String, ForeignKey("financial_core_vendors.id"), nullable=False)
     bill_date = Column(DateTime, nullable=False)
     due_date = Column(DateTime, nullable=False)
     total_amount = Column(Numeric(15, 2), nullable=False)
@@ -149,7 +149,7 @@ class Bill(BaseModel, AuditMixin):
     description = Column(Text)
     
     # Relationships
-    vendor = relationship("Vendor", back_populates="bills")
+    financial_core_vendor = relationship("FinancialCoreVendor", back_populates="bills")
     payments = relationship("VendorPayment", back_populates="bill")
     
     @property
@@ -181,7 +181,7 @@ class VendorPayment(BaseModel, AuditMixin):
     __tablename__ = "vendor_payments"
     
     payment_number = Column(String(50), unique=True, nullable=False)
-    vendor_id = Column(String, ForeignKey("vendors.id"), nullable=False)
+    vendor_id = Column(String, ForeignKey("financial_core_vendors.id"), nullable=False)
     bill_id = Column(String, ForeignKey("bills.id"))
     payment_date = Column(DateTime, nullable=False)
     amount = Column(Numeric(15, 2), nullable=False)
@@ -190,7 +190,7 @@ class VendorPayment(BaseModel, AuditMixin):
     description = Column(Text)
     
     # Relationships
-    vendor = relationship("Vendor", back_populates="payments")
+    financial_core_vendor = relationship("FinancialCoreVendor", back_populates="payments")
     bill = relationship("Bill", back_populates="payments")
 
 class CustomerPayment(BaseModel, AuditMixin):

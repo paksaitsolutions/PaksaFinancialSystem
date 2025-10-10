@@ -39,7 +39,7 @@ class ARInvoice(Base):
     # Status and tracking
     status = Column(Enum(InvoiceStatus), default=InvoiceStatus.DRAFT, nullable=False, index=True)
     payment_terms = Column(Enum(PaymentTerms))
-    currency_id = Column(UUID(as_uuid=True), ForeignKey("currency.id"))
+    currency_id = Column(UUID(as_uuid=True), ForeignKey("currencies.id"))
     
     # Relationships
     customer = relationship("Customer", back_populates="invoices")

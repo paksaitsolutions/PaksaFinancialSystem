@@ -8,6 +8,7 @@ from typing import Any, Dict, Optional, List
 from enum import Enum
 from sqlalchemy import Column, String, DateTime, Text, Boolean, Integer
 from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy import JSON
 from sqlalchemy.orm import Session
 from app.core.database import Base
 from app.models.user import User
@@ -50,8 +51,8 @@ class AuditLog(Base):
     resource_type = Column(String(100), nullable=False)
     resource_id = Column(String(255), nullable=True)
     resource_name = Column(String(255), nullable=True)
-    old_values = Column(JSONB, nullable=True)
-    new_values = Column(JSONB, nullable=True)
+    old_values = Column(JSON, nullable=True)
+    new_values = Column(JSON, nullable=True)
     ip_address = Column(String(45), nullable=True)
     user_agent = Column(Text, nullable=True)
     endpoint = Column(String(255), nullable=True)
@@ -59,7 +60,7 @@ class AuditLog(Base):
     status_code = Column(Integer, nullable=True)
     level = Column(String(20), default=AuditLevel.MEDIUM)
     message = Column(Text, nullable=True)
-    audit_metadata = Column(JSONB, nullable=True)
+    audit_metadata = Column(JSON, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     company_id = Column(String(255), nullable=True)
     tenant_id = Column(String(255), nullable=True)

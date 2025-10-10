@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from app.models.vendor import Vendor, APInvoice, APPayment
+from app.models.vendor import MainVendor as Vendor, APInvoice, APPayment
 from typing import List
 from uuid import uuid4
 

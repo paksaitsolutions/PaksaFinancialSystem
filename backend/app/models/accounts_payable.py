@@ -4,8 +4,8 @@ from sqlalchemy.orm import relationship
 from .base import Base
 from datetime import datetime
 
-class Vendor(Base):
-    __tablename__ = "vendors"
+class APVendor(Base):
+    __tablename__ = "ap_vendors"
     __table_args__ = {'extend_existing': True}
     
     id = Column(String, primary_key=True)
@@ -28,7 +28,7 @@ class APInvoice(Base):
     
     id = Column(String, primary_key=True)
     company_id = Column(String, ForeignKey("companies.id"), nullable=False)
-    vendor_id = Column(String, ForeignKey("vendors.id"), nullable=False)
+    vendor_id = Column(String, ForeignKey("ap_vendors.id"), nullable=False)
     invoice_number = Column(String(50), nullable=False)
     invoice_date = Column(DateTime, nullable=False)
     due_date = Column(DateTime, nullable=False)
@@ -44,7 +44,7 @@ class APPayment(Base):
     
     id = Column(String, primary_key=True)
     company_id = Column(String, ForeignKey("companies.id"), nullable=False)
-    vendor_id = Column(String, ForeignKey("vendors.id"), nullable=False)
+    vendor_id = Column(String, ForeignKey("ap_vendors.id"), nullable=False)
     payment_number = Column(String(50), nullable=False)
     payment_date = Column(DateTime, nullable=False)
     payment_method = Column(String(50))
@@ -58,7 +58,7 @@ class CreditMemo(Base):
     
     id = Column(String, primary_key=True)
     company_id = Column(String, ForeignKey("companies.id"), nullable=False)
-    vendor_id = Column(String, ForeignKey("vendors.id"), nullable=False)
+    vendor_id = Column(String, ForeignKey("ap_vendors.id"), nullable=False)
     memo_number = Column(String(50), nullable=False)
     memo_date = Column(DateTime, nullable=False)
     amount = Column(Decimal(15, 2), nullable=False)
@@ -71,7 +71,7 @@ class Form1099(Base):
     
     id = Column(String, primary_key=True)
     company_id = Column(String, ForeignKey("companies.id"), nullable=False)
-    vendor_id = Column(String, ForeignKey("vendors.id"), nullable=False)
+    vendor_id = Column(String, ForeignKey("ap_vendors.id"), nullable=False)
     tax_year = Column(Integer, nullable=False)
     total_payments = Column(Decimal(15, 2), default=0)
     form_type = Column(String(20), default="1099-NEC")

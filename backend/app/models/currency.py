@@ -60,8 +60,8 @@ class Currency(BaseModel):
         back_populates="source_currency"
     )
     
-    # GL accounts using this currency
-    gl_accounts = relationship("GLChartOfAccounts", back_populates="currency")
+    # GL accounts using this currency (removed to avoid circular dependency)
+    # gl_accounts = relationship("GLChartOfAccounts", back_populates="currency")
     
     __table_args__ = (
         CheckConstraint("LENGTH(code) = 3", name="ck_currency_code_length"),

@@ -38,7 +38,7 @@ class APInvoice(Base):
     # Status and tracking
     status = Column(Enum(InvoiceStatus), default=InvoiceStatus.DRAFT, nullable=False, index=True)
     payment_terms = Column(Enum(PaymentTerms))
-    currency_id = Column(UUID(as_uuid=True), ForeignKey("currency.id"))
+    currency_id = Column(UUID(as_uuid=True), ForeignKey("currencies.id"))
     
     # Approval
     requires_approval = Column(Boolean, default=False)
@@ -48,7 +48,6 @@ class APInvoice(Base):
     # Relationships
     vendor = relationship("Vendor", back_populates="invoices")
     currency = relationship("Currency")
-    approved_by = relationship("User")
     line_items = relationship("APInvoiceLineItem", back_populates="invoice", cascade="all, delete-orphan")
     payments = relationship("APPayment", secondary="ap_invoice_payment", back_populates="invoices")
     

@@ -39,7 +39,7 @@ class Customer(Base):
     # Payment information
     payment_terms = Column(Enum(PaymentTerms), default=PaymentTerms.NET_30)
     credit_limit = Column(Numeric(precision=18, scale=2), default=0)
-    currency_id = Column(UUID(as_uuid=True), ForeignKey("currency.id"))
+    currency_id = Column(UUID(as_uuid=True), ForeignKey("currencies.id"))
     
     # Notes
     notes = Column(Text)

@@ -38,7 +38,7 @@ class Vendor(Base):
     
     # Payment information
     payment_terms = Column(Enum(PaymentTerms), default=PaymentTerms.NET_30)
-    currency_id = Column(UUID(as_uuid=True), ForeignKey("currency.id"))
+    currency_id = Column(UUID(as_uuid=True), ForeignKey("currencies.id"))
     default_account_id = Column(UUID(as_uuid=True), ForeignKey("gl_account.id"))
     
     # 1099 reporting
@@ -49,8 +49,8 @@ class Vendor(Base):
     notes = Column(Text)
     
     # Relationships
-    currency = relationship("Currency")
-    default_account = relationship("GLAccount")
+    # currency = relationship("Currency")  # Removed to avoid join condition issues
+    # default_account = relationship("GLAccount")  # Removed to avoid join condition issues
     contacts = relationship("VendorContact", back_populates="vendor", cascade="all, delete-orphan")
     invoices = relationship("APInvoice", back_populates="vendor")
     

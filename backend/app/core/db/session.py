@@ -94,7 +94,7 @@ async def init_db():
         from app.models.user import User
         from app.models.gl_account import GLAccount
         from app.models.journal_entry import JournalEntry, JournalEntryLine
-        from app.models.vendor import Vendor, APInvoice, APPayment
+        from app.models.vendor import MainVendor as Vendor, APInvoice, APPayment
         from app.models.customer import Customer, ARInvoice, ARPayment
         from app.models.budget import Budget, BudgetLineItem
         from app.models.cash_account import CashAccount, CashTransaction
@@ -119,7 +119,7 @@ async def seed_database():
         async with get_db_context() as db:
             from app.models.user import User
             from app.models.gl_account import GLAccount
-            from app.models.vendor import Vendor
+            from app.models.vendor import MainVendor as Vendor
             from app.models.customer import Customer
             from app.models.cash_account import CashAccount
             from app.core.security import get_password_hash
