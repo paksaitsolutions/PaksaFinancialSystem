@@ -21,9 +21,9 @@ class FinancialCoreChartOfAccounts(BaseModel, AuditMixin):
     current_balance = Column(Numeric(15, 2), default=0)
     
     # Relationships
-    parent = relationship("FinancialCoreChartOfAccounts", remote_side=[id])
+    parent = relationship("FinancialCoreChartOfAccounts", remote_side="FinancialCoreChartOfAccounts.id")
     children = relationship("FinancialCoreChartOfAccounts", back_populates="parent")
-    journal_lines = relationship("JournalEntryLine", back_populates="account")
+    # Remove relationship - use unified models instead
     
     @validates('account_type')
     def validate_account_type(self, key, account_type):
@@ -38,64 +38,11 @@ class FinancialCoreChartOfAccounts(BaseModel, AuditMixin):
             raise ValueError("Normal balance must be 'Debit' or 'Credit'")
         return normal_balance
 
-class JournalEntry(BaseModel, AuditMixin):
-    __tablename__ = "journal_entries"
-    __table_args__ = {'extend_existing': True}
-    
-    entry_number = Column(String(50), unique=True, nullable=False)
-    description = Column(Text, nullable=False)
-    reference = Column(String(100))
-    entry_date = Column(DateTime, nullable=False)
-    status = Column(String(20), default='draft')  # draft, pending, approved, posted
-    total_debit = Column(Numeric(15, 2), default=0)
-    total_credit = Column(Numeric(15, 2), default=0)
-    approved_by = Column(String)
-    posted_by = Column(String)
-    approved_at = Column(DateTime)
-    posted_at = Column(DateTime)
-    
-    # Relationships
-    lines = relationship("JournalEntryLine", back_populates="journal_entry", cascade="all, delete-orphan")
-    
-    @validates('status')
-    def validate_status(self, key, status):
-        valid_statuses = ['draft', 'pending', 'approved', 'posted']
-        if status not in valid_statuses:
-            raise ValueError(f"Status must be one of: {valid_statuses}")
-        return status
-    
-    def validate_balanced_entry(self):
-        """Ensure journal entry is balanced"""
-        if abs(self.total_debit - self.total_credit) > Decimal('0.01'):
-            raise ValueError("Journal entry must be balanced (debits = credits)")
+# Import JournalEntry from unified models
+from app.models.core_models import JournalEntry
 
-class JournalEntryLine(BaseModel):
-    __tablename__ = "journal_entry_lines"
-    __table_args__ = {'extend_existing': True}
-    
-    journal_entry_id = Column(String, ForeignKey("journal_entries.id"), nullable=False)
-    account_id = Column(String, ForeignKey("financial_core_chart_of_accounts.id"), nullable=False)
-    description = Column(String(255))
-    debit_amount = Column(Numeric(15, 2), default=0)
-    credit_amount = Column(Numeric(15, 2), default=0)
-    line_number = Column(Integer, nullable=False)
-    
-    # Relationships
-    journal_entry = relationship("JournalEntry", back_populates="lines")
-    account = relationship("FinancialCoreChartOfAccounts", back_populates="journal_lines")
-    
-    @validates('debit_amount', 'credit_amount')
-    def validate_amounts(self, key, amount):
-        if amount < 0:
-            raise ValueError("Amounts cannot be negative")
-        return amount
-    
-    def validate_debit_credit_exclusive(self):
-        """Ensure only debit OR credit is entered, not both"""
-        if self.debit_amount > 0 and self.credit_amount > 0:
-            raise ValueError("Cannot have both debit and credit amounts")
-        if self.debit_amount == 0 and self.credit_amount == 0:
-            raise ValueError("Must have either debit or credit amount")
+# Use unified JournalEntryLine from core_models
+from app.models.core_models import JournalEntryLine
 
 class FinancialCoreVendor(BaseModel, AuditMixin):
     __tablename__ = "financial_core_vendors"
@@ -113,29 +60,12 @@ class FinancialCoreVendor(BaseModel, AuditMixin):
     current_balance = Column(Numeric(15, 2), default=0)
     
     # Relationships
-    bills = relationship("Bill", back_populates="financial_core_vendor")
+    bills = relationship("FinancialCoreBill", back_populates="financial_core_vendor")
     payments = relationship("VendorPayment", back_populates="financial_core_vendor")
 
-class Customer(BaseModel, AuditMixin):
-    __tablename__ = "customers"
-    __table_args__ = {'extend_existing': True}
-    
-    customer_code = Column(String(20), unique=True, nullable=False)
-    customer_name = Column(String(255), nullable=False)
-    contact_person = Column(String(255))
-    email = Column(String(255))
-    phone = Column(String(50))
-    address = Column(Text)
-    tax_id = Column(String(50))
-    payment_terms = Column(String(50))
-    credit_limit = Column(Numeric(15, 2), default=0)
-    current_balance = Column(Numeric(15, 2), default=0)
-    
-    # Relationships
-    invoices = relationship("Invoice", back_populates="customer")
-    payments = relationship("CustomerPayment", back_populates="customer")
+# Customer model moved to core_models.py - using unified Customer class
 
-class Bill(BaseModel, AuditMixin):
+class FinancialCoreBill(BaseModel, AuditMixin):
     __tablename__ = "bills"
     __table_args__ = {'extend_existing': True}
     
@@ -156,12 +86,12 @@ class Bill(BaseModel, AuditMixin):
     def remaining_amount(self):
         return self.total_amount - self.paid_amount
 
-class Invoice(BaseModel, AuditMixin):
+class FinancialCoreInvoice(BaseModel, AuditMixin):
     __tablename__ = "invoices"
     __table_args__ = {'extend_existing': True}
     
     invoice_number = Column(String(50), unique=True, nullable=False)
-    customer_id = Column(String, ForeignKey("customers.id"), nullable=False)
+    customer_id = Column(String, nullable=False)
     invoice_date = Column(DateTime, nullable=False)
     due_date = Column(DateTime, nullable=False)
     total_amount = Column(Numeric(15, 2), nullable=False)
@@ -169,8 +99,7 @@ class Invoice(BaseModel, AuditMixin):
     status = Column(String(20), default='pending')  # pending, partial, paid, overdue
     description = Column(Text)
     
-    # Relationships
-    customer = relationship("Customer", back_populates="invoices")
+    # Relationships handled by unified models
     payments = relationship("CustomerPayment", back_populates="invoice")
     
     @property
@@ -191,13 +120,13 @@ class VendorPayment(BaseModel, AuditMixin):
     
     # Relationships
     financial_core_vendor = relationship("FinancialCoreVendor", back_populates="payments")
-    bill = relationship("Bill", back_populates="payments")
+    bill = relationship("FinancialCoreBill", back_populates="payments")
 
 class CustomerPayment(BaseModel, AuditMixin):
     __tablename__ = "customer_payments"
     
     payment_number = Column(String(50), unique=True, nullable=False)
-    customer_id = Column(String, ForeignKey("customers.id"), nullable=False)
+    customer_id = Column(String, nullable=False)
     invoice_id = Column(String, ForeignKey("invoices.id"))
     payment_date = Column(DateTime, nullable=False)
     amount = Column(Numeric(15, 2), nullable=False)
@@ -205,9 +134,8 @@ class CustomerPayment(BaseModel, AuditMixin):
     reference = Column(String(100))
     description = Column(Text)
     
-    # Relationships
-    customer = relationship("Customer", back_populates="payments")
-    invoice = relationship("Invoice", back_populates="payments")
+    # Relationships handled by unified models
+    invoice = relationship("FinancialCoreInvoice", back_populates="payments")
 
 # Currency model moved to app.models.currency - avoiding duplicate table definition
 
@@ -227,23 +155,7 @@ class FinancialCoreExchangeRate(BaseModel):
             raise ValueError("Exchange rate must be positive")
         return rate
 
-class TaxRate(BaseModel, AuditMixin):
-    __tablename__ = "tax_rates"
-    __table_args__ = {'extend_existing': True}
-    
-    tax_code = Column(String(20), unique=True, nullable=False)
-    tax_name = Column(String(100), nullable=False)
-    rate_percentage = Column(Numeric(5, 4), nullable=False)  # 8.25% = 8.2500
-    tax_type = Column(String(50), nullable=False)  # sales, vat, income, property
-    jurisdiction = Column(String(100))  # state, country, city
-    effective_date = Column(DateTime, nullable=False)
-    expiry_date = Column(DateTime)
-    
-    @validates('rate_percentage')
-    def validate_rate(self, key, rate):
-        if rate < 0 or rate > 100:
-            raise ValueError("Tax rate must be between 0 and 100")
-        return rate
+# TaxRate moved to core_models.py for unified definition
 
 class PeriodClose(BaseModel, AuditMixin):
     __tablename__ = "period_closes"
@@ -289,9 +201,9 @@ class FinancialPeriod(BaseModel, AuditMixin):
 # Indexes for performance
 Index('idx_journal_entry_date', JournalEntry.entry_date)
 Index('idx_journal_entry_status', JournalEntry.status)
-Index('idx_bill_due_date', Bill.due_date)
-Index('idx_invoice_due_date', Invoice.due_date)
+Index('idx_bill_due_date', FinancialCoreBill.due_date)
+Index('idx_invoice_due_date', FinancialCoreInvoice.due_date)
 Index('idx_account_code', FinancialCoreChartOfAccounts.account_code)
 Index('idx_financial_core_exchange_rate_date', FinancialCoreExchangeRate.rate_date)
-Index('idx_tax_rate_effective', TaxRate.effective_date)
+# Tax rate index moved to core_models.py
 Index('idx_period_close_dates', PeriodClose.period_start, PeriodClose.period_end)

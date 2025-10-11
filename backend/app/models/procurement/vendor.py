@@ -47,4 +47,4 @@ class ProcurementVendor(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
-    purchase_orders = relationship("PurchaseOrder", back_populates="procurement_vendor")
+    purchase_orders = relationship("PurchaseOrder", foreign_keys="PurchaseOrder.vendor_id", primaryjoin="ProcurementVendor.id == PurchaseOrder.vendor_id", overlaps="purchase_orders,vendor")

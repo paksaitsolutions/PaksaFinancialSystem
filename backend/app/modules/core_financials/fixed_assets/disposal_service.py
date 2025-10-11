@@ -16,7 +16,8 @@ class AssetDisposalService:
         disposal_request: AssetDisposalRequest,
         user_id: int
     ) -> AssetDisposalResult:
-        """Initiate asset disposal with gain/loss calculation"""
+        """Initiate asset disposal with GL integration"""
+        from app.services.fixed_assets_gl_service import FixedAssetsGLService
         
         # Get asset
         result = await db.execute(select(FixedAsset).where(FixedAsset.id == asset_id))
@@ -40,6 +41,18 @@ class AssetDisposalService:
         asset.disposal_amount = disposal_request.disposal_amount
         asset.disposal_reason = disposal_request.disposal_reason
         
+        # Post to GL using sync session (convert async to sync)
+        from sqlalchemy.orm import sessionmaker
+        sync_session = sessionmaker(bind=db.bind.sync_engine)()
+        gl_service = FixedAssetsGLService(sync_session)
+        journal_entry = gl_service.post_asset_disposal_to_gl(
+            asset=asset,
+            disposal_amount=disposal_request.disposal_amount,
+            disposal_date=disposal_request.disposal_date
+        )
+        sync_session.commit()
+        sync_session.close()
+        
         db.add(asset)
         await db.commit()
         
@@ -49,6 +62,7 @@ class AssetDisposalService:
             disposal_amount=disposal_request.disposal_amount,
             gain_loss=gain_loss,
             disposal_date=disposal_request.disposal_date,
+            journal_entry_id=journal_entry.id,
             status="completed"
         )
     

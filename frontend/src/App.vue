@@ -1,8 +1,10 @@
 <template>
-  <component :is="layout" v-if="layout">
-    <router-view />
-  </component>
-  <router-view v-else />
+  <div id="app" data-theme="light">
+    <component :is="layout" v-if="layout">
+      <router-view />
+    </component>
+    <router-view v-else />
+  </div>
 </template>
 
 <script setup lang="ts">

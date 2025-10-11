@@ -10,8 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.db.query_helper import QueryHelper
-from app.models.accounts_payable.credit_memo import APCreditMemo, APCreditApplication
-from app.models.accounts_payable.invoice import APInvoice
+from app.models import APCreditMemo, APCreditApplication, APInvoice
 from app.schemas.accounts_payable.credit_memo import CreditMemoCreate, CreditMemoUpdate, CreditMemoApplicationRequest
 
 class CreditMemoCRUD:

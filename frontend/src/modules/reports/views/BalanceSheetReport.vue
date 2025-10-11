@@ -113,9 +113,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted } from 'vue';
+import Calendar from 'primevue/calendar';
+import Dropdown from 'primevue/dropdown';
+import Button from 'primevue/button';
+import SplitButton from 'primevue/splitbutton';
+import ReportHeader from '@/components/reports/ReportHeader.vue';
 import { useReportExport } from '@/composables/useReportExport';
 import { formatCurrency } from '@/utils/formatters';
+import { reportsService } from '@/api/reportsService';
 
 const { exportToCSV, exportToPDF, printReport } = useReportExport();
 const loading = ref(false);
@@ -131,18 +137,61 @@ const currencies = [
 ];
 
 const fetchReportData = async () => {
-  const result = await generateReport('balance_sheet', {
-    asOfDate: asOfDate.value
-  });
-  
-  if (result?.report_data) {
-    reportData.value = result.report_data;
+  loading.value = true;
+  try {
+    // Mock data for now - replace with actual API call
+    reportData.value = {
+      assets: {
+        current_assets: {
+          cash: 50000,
+          accounts_receivable: 25000,
+          inventory: 15000,
+          total_current: 90000
+        },
+        fixed_assets: {
+          equipment: 100000,
+          accumulated_depreciation: -20000,
+          total_fixed: 80000
+        },
+        total_assets: 170000
+      },
+      liabilities: {
+        current_liabilities: {
+          accounts_payable: 15000,
+          accrued_expenses: 5000,
+          total_current: 20000
+        },
+        long_term_liabilities: {
+          long_term_debt: 30000,
+          total_long_term: 30000
+        },
+        total_liabilities: 50000
+      },
+      equity: {
+        retained_earnings: 70000,
+        capital_stock: 50000,
+        total_equity: 120000
+      }
+    };
+  } catch (error) {
+    console.error('Error fetching balance sheet data:', error);
+  } finally {
+    loading.value = false;
   }
 };
 
+const exportLoading = ref(false);
+
 const handleExport = async (format: string) => {
-  if (reportData.value) {
-    await exportReport(reportData.value.id, format);
+  exportLoading.value = true;
+  try {
+    if (format === 'pdf') {
+      exportBalanceSheetToPDF();
+    } else if (format === 'excel') {
+      exportBalanceSheetToExcel();
+    }
+  } finally {
+    exportLoading.value = false;
   }
 };
 
@@ -174,28 +223,69 @@ const exportBalanceSheetToExcel = () => {
 const formatDataForExport = () => {
   const data = []
   
-  // Assets
+  // Assets Section
   data.push({ Section: 'ASSETS', Account: '', Amount: '' })
-  data.push({ Section: 'Current Assets', Account: '', Amount: '' })
+  data.push({ Section: '', Account: '', Amount: '' }) // Empty row
   
+  // Current Assets
+  data.push({ Section: 'Current Assets:', Account: '', Amount: '' })
   Object.entries(reportData.value.assets.current_assets).forEach(([key, value]) => {
     if (key !== 'total_current') {
-      data.push({ Section: '', Account: formatAccountName(key), Amount: formatCurrency(value, currency.value) })
+      data.push({ Section: '', Account: `  ${formatAccountName(key)}`, Amount: formatCurrency(value, currency.value) })
     }
   })
-  
   data.push({ Section: '', Account: 'Total Current Assets', Amount: formatCurrency(reportData.value.assets.current_assets.total_current, currency.value) })
+  data.push({ Section: '', Account: '', Amount: '' }) // Empty row
   
   // Fixed Assets
-  data.push({ Section: 'Fixed Assets', Account: '', Amount: '' })
+  data.push({ Section: 'Fixed Assets:', Account: '', Amount: '' })
   Object.entries(reportData.value.assets.fixed_assets).forEach(([key, value]) => {
     if (key !== 'total_fixed') {
-      data.push({ Section: '', Account: formatAccountName(key), Amount: formatCurrency(value, currency.value) })
+      data.push({ Section: '', Account: `  ${formatAccountName(key)}`, Amount: formatCurrency(value, currency.value) })
     }
   })
-  
   data.push({ Section: '', Account: 'Total Fixed Assets', Amount: formatCurrency(reportData.value.assets.fixed_assets.total_fixed, currency.value) })
+  data.push({ Section: '', Account: '', Amount: '' }) // Empty row
   data.push({ Section: '', Account: 'TOTAL ASSETS', Amount: formatCurrency(reportData.value.assets.total_assets, currency.value) })
+  
+  data.push({ Section: '', Account: '', Amount: '' }) // Empty row
+  data.push({ Section: '', Account: '', Amount: '' }) // Empty row
+  
+  // Liabilities & Equity Section
+  data.push({ Section: 'LIABILITIES & EQUITY', Account: '', Amount: '' })
+  data.push({ Section: '', Account: '', Amount: '' }) // Empty row
+  
+  // Current Liabilities
+  data.push({ Section: 'Current Liabilities:', Account: '', Amount: '' })
+  Object.entries(reportData.value.liabilities.current_liabilities).forEach(([key, value]) => {
+    if (key !== 'total_current') {
+      data.push({ Section: '', Account: `  ${formatAccountName(key)}`, Amount: formatCurrency(value, currency.value) })
+    }
+  })
+  data.push({ Section: '', Account: 'Total Current Liabilities', Amount: formatCurrency(reportData.value.liabilities.current_liabilities.total_current, currency.value) })
+  data.push({ Section: '', Account: '', Amount: '' }) // Empty row
+  
+  // Long-term Liabilities
+  data.push({ Section: 'Long-term Liabilities:', Account: '', Amount: '' })
+  Object.entries(reportData.value.liabilities.long_term_liabilities).forEach(([key, value]) => {
+    if (key !== 'total_long_term') {
+      data.push({ Section: '', Account: `  ${formatAccountName(key)}`, Amount: formatCurrency(value, currency.value) })
+    }
+  })
+  data.push({ Section: '', Account: 'Total Long-term Liabilities', Amount: formatCurrency(reportData.value.liabilities.long_term_liabilities.total_long_term, currency.value) })
+  data.push({ Section: '', Account: 'Total Liabilities', Amount: formatCurrency(reportData.value.liabilities.total_liabilities, currency.value) })
+  data.push({ Section: '', Account: '', Amount: '' }) // Empty row
+  
+  // Equity
+  data.push({ Section: 'Equity:', Account: '', Amount: '' })
+  Object.entries(reportData.value.equity).forEach(([key, value]) => {
+    if (key !== 'total_equity') {
+      data.push({ Section: '', Account: `  ${formatAccountName(key)}`, Amount: formatCurrency(value, currency.value) })
+    }
+  })
+  data.push({ Section: '', Account: 'Total Equity', Amount: formatCurrency(reportData.value.equity.total_equity, currency.value) })
+  data.push({ Section: '', Account: '', Amount: '' }) // Empty row
+  data.push({ Section: '', Account: 'TOTAL LIABILITIES & EQUITY', Amount: formatCurrency(reportData.value.liabilities.total_liabilities + reportData.value.equity.total_equity, currency.value) })
   
   return data
 }

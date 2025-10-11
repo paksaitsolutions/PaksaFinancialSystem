@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.db.query_helper import QueryHelper
-from app.models.hrm.employee import Employee
+from app.models import Employee
 from app.models.hrm.leave import LeaveRequest, LeaveBalance, LeavePolicy
 from app.models.hrm.attendance import AttendanceRecord
 from app.models.hrm.performance import PerformanceReview

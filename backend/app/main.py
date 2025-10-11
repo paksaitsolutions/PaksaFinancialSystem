@@ -183,6 +183,13 @@ try:
 except ImportError as e:
     print(f"Warning: Could not import comprehensive AI-BI router: {e}")
 
+# Include missing API endpoints
+from app.api.endpoints.bi_ai import router as bi_ai_router
+app.include_router(bi_ai_router, prefix="/bi-ai", tags=["bi-ai"])
+
+from app.api.endpoints.gl_accounts import router as gl_accounts_router
+app.include_router(gl_accounts_router, prefix="/gl", tags=["gl"])
+
 # Default tenant for demo
 DEFAULT_TENANT_ID = "12345678-1234-5678-9012-123456789012"
 
@@ -860,6 +867,53 @@ async def get_recent_transactions():
         {"date": "2024-01-12", "description": "Utility Bill", "amount": -320},
         {"date": "2024-01-11", "description": "Service Revenue", "amount": 3200}
     ]
+
+# Notifications endpoints (inline for testing)
+@app.get("/api/v1/notifications")
+async def get_notifications_inline():
+    return {
+        "notifications": [
+            {
+                "id": "1",
+                "title": "New Invoice Created",
+                "message": "Invoice INV-001 has been created and is pending approval",
+                "type": "info",
+                "priority": "medium",
+                "is_read": False,
+                "action_url": "/ar/invoices/1",
+                "created_at": datetime.utcnow().isoformat()
+            },
+            {
+                "id": "2", 
+                "title": "Payment Overdue",
+                "message": "Payment for Bill BILL-002 is 5 days overdue",
+                "type": "warning",
+                "priority": "high",
+                "is_read": False,
+                "action_url": "/ap/bills/2",
+                "created_at": datetime.utcnow().isoformat()
+            },
+            {
+                "id": "3",
+                "title": "Cash Flow Alert",
+                "message": "Cash balance is below minimum threshold",
+                "type": "error",
+                "priority": "urgent",
+                "is_read": True,
+                "action_url": "/cash/dashboard",
+                "created_at": datetime.utcnow().isoformat()
+            }
+        ],
+        "unread_count": 2
+    }
+
+@app.post("/api/v1/notifications/mark-all-read")
+async def mark_all_notifications_read_inline():
+    return {"success": True}
+
+@app.post("/api/v1/notifications/{notification_id}/read")
+async def mark_notification_read_inline(notification_id: str):
+    return {"success": True}
 
 # Admin endpoints
 @app.get("/api/v1/admin/system-status")

@@ -738,6 +738,12 @@ const mainAppRoute: AppRouteRecordRaw = {
       meta: { title: 'Cash Flow Statement' }
     },
     {
+      path: 'reports/balance-sheet',
+      name: 'BalanceSheet',
+      component: () => import('@/modules/reports/views/BalanceSheetReport.vue'),
+      meta: { title: 'Balance Sheet' }
+    },
+    {
       path: 'reports/ap-aging',
       name: 'APAging',
       component: () => import('@/modules/reports/views/AgedReportsView.vue'),
@@ -855,6 +861,13 @@ const mainAppRoute: AppRouteRecordRaw = {
       name: 'SystemHealthDashboard',
       component: () => import('@/modules/super-admin/views/SystemHealthDashboard.vue'),
       meta: { title: 'System Health Dashboard', requiresAdmin: true }
+    },
+    // Notifications
+    {
+      path: 'notifications',
+      name: 'Notifications',
+      component: () => import('@/views/NotificationsView.vue'),
+      meta: { title: 'Notifications' }
     },
     // Settings
     {

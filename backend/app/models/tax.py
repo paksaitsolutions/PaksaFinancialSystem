@@ -4,23 +4,7 @@ from sqlalchemy.orm import relationship
 from .base import Base
 from datetime import datetime
 
-class TaxRate(Base):
-    __tablename__ = "tax_rates"
-    __table_args__ = {'extend_existing': True}
-    
-    id = Column(String, primary_key=True)
-    company_id = Column(String, ForeignKey("companies.id"), nullable=False)
-    tax_name = Column(String(255), nullable=False)
-    tax_code = Column(String(20), unique=True, nullable=False)
-    rate_percentage = Column(Decimal(5, 4), nullable=False)
-    tax_type = Column(String(50))  # sales, income, property, etc.
-    jurisdiction = Column(String(100))
-    effective_date = Column(DateTime, nullable=False)
-    expiry_date = Column(DateTime)
-    is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    
-    policies = relationship("TaxPolicy", back_populates="tax_rate")
+# TaxRate moved to core_models.py for unified definition
 
 class TaxJurisdiction(Base):
     __tablename__ = "tax_jurisdictions"
@@ -78,7 +62,8 @@ class TaxPolicy(Base):
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     
-    tax_rate = relationship("TaxRate", back_populates="policies")
+    # Relationship with unified TaxRate from core_models
+    tax_rate = relationship("TaxRate", viewonly=True)
 
 class TaxCompliance(Base):
     __tablename__ = "tax_compliance"

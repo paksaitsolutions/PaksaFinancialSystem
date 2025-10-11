@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
-from app.models.gl_account import GLAccount
-from app.models.gl_models import JournalEntry, JournalEntryLine
+from app.models import ChartOfAccounts as GLAccount
+from app.models import JournalEntry, JournalEntryLine
 from typing import List, Optional
 from uuid import uuid4
 

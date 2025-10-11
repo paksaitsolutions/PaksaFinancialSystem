@@ -9,34 +9,11 @@ from datetime import datetime
 import uuid
 from app.core.database import Base
 
+# Import unified models from core_models
+from app.models.core_models import ChartOfAccounts, JournalEntry, JournalEntryLine
 
-class GLChartOfAccounts(Base):
-    """Chart of Accounts model with hierarchical structure."""
-    
-    __tablename__ = "chart_of_accounts"
-    
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(String(255), nullable=False, index=True)
-    account_code = Column(String(20), nullable=False, index=True)
-    account_name = Column(String(255), nullable=False)
-    account_type = Column(String(50), nullable=False)  # Asset, Liability, Equity, Revenue, Expense
-    account_subtype = Column(String(100))  # Current Asset, Fixed Asset, etc.
-    parent_account_id = Column(UUID(as_uuid=True), ForeignKey("chart_of_accounts.id"))
-    level = Column(Integer, default=1)
-    is_header = Column(Boolean, default=False)
-    is_active = Column(Boolean, default=True)
-    balance = Column(Decimal(15, 2), default=0)
-    description = Column(Text)
-    tax_code = Column(String(20))
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    created_by = Column(String(255))
-    
-    # Relationships
-    parent_account = relationship("GLChartOfAccounts", remote_side=[id])
-    child_accounts = relationship("GLChartOfAccounts", back_populates="parent_account")
-    journal_lines = relationship("JournalEntryLine", back_populates="account")
-    ledger_balances = relationship("LedgerBalance", back_populates="account")
+# Create aliases for compatibility
+GLChartOfAccounts = ChartOfAccounts
 
 
 class AccountingPeriod(Base):
@@ -56,52 +33,6 @@ class AccountingPeriod(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
-class JournalEntry(Base):
-    """Journal Entry header."""
-    
-    __tablename__ = "journal_entries"
-    
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(String(255), nullable=False, index=True)
-    entry_number = Column(String(50), nullable=False, unique=True)
-    entry_date = Column(DateTime, nullable=False)
-    description = Column(Text, nullable=False)
-    reference = Column(String(100))
-    total_amount = Column(Decimal(15, 2), nullable=False)
-    status = Column(String(20), default="draft")  # draft, posted, reversed
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    created_by = Column(String(255), nullable=False)
-    posted_at = Column(DateTime)
-    posted_by = Column(String(255))
-    reversed_at = Column(DateTime)
-    reversed_by = Column(String(255))
-    reversal_entry_id = Column(UUID(as_uuid=True), ForeignKey("journal_entries.id"))
-    
-    # Relationships
-    lines = relationship("JournalEntryLine", back_populates="journal_entry", cascade="all, delete-orphan")
-    reversal_entry = relationship("JournalEntry", remote_side=[id])
-
-
-class JournalEntryLine(Base):
-    """Journal Entry line items."""
-    
-    __tablename__ = "journal_entry_lines"
-    
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    journal_entry_id = Column(UUID(as_uuid=True), ForeignKey("journal_entries.id"), nullable=False)
-    account_id = Column(UUID(as_uuid=True), ForeignKey("chart_of_accounts.id"), nullable=False)
-    description = Column(Text)
-    debit_amount = Column(Decimal(15, 2), default=0)
-    credit_amount = Column(Decimal(15, 2), default=0)
-    reference = Column(String(100))
-    line_number = Column(Integer)
-    
-    # Relationships
-    journal_entry = relationship("JournalEntry", back_populates="lines")
-    account = relationship("GLChartOfAccounts", back_populates="journal_lines")
-
-
 class LedgerBalance(Base):
     """Account balances by period for performance."""
     
@@ -117,9 +48,6 @@ class LedgerBalance(Base):
     closing_balance = Column(Decimal(15, 2), default=0)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    # Relationships
-    account = relationship("GLChartOfAccounts", back_populates="ledger_balances")
 
 
 class TrialBalance(Base):
@@ -157,7 +85,6 @@ class TrialBalanceAccount(Base):
     
     # Relationships
     trial_balance = relationship("TrialBalance", back_populates="accounts")
-    account = relationship("GLChartOfAccounts")
 
 
 class FinancialStatement(Base):
@@ -196,7 +123,6 @@ class FinancialStatementLine(Base):
     
     # Relationships
     statement = relationship("FinancialStatement", back_populates="lines")
-    account = relationship("GLChartOfAccounts")
     parent_line = relationship("FinancialStatementLine", remote_side=[id])
 
 
@@ -216,9 +142,6 @@ class BudgetEntry(Base):
     variance_percent = Column(Decimal(5, 2), default=0)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    # Relationships
-    account = relationship("GLChartOfAccounts")
 
 
 class AccountType(Base):

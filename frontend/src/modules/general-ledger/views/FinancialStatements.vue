@@ -1,60 +1,54 @@
 <template>
-  <div class="financial-statements">
-    <div class="page-header">
-      <div class="header-content">
-        <div class="header-left">
-          <Button icon="pi pi-arrow-left" class="p-button-text" @click="goBack" />
-          <div>
-            <h1>Financial Statements</h1>
-            <p class="subtitle">Generate and view key financial reports</p>
-          </div>
-        </div>
-        <div class="header-actions">
-          <Button label="Export All" icon="pi pi-download" class="p-button-outlined" @click="exportAll" />
-          <Button label="Generate Reports" icon="pi pi-refresh" class="p-button-success" @click="generateReports" :loading="generating" />
-        </div>
-      </div>
-    </div>
+  <UnifiedDashboard
+    title="Financial Statements"
+    subtitle="Generate and view key financial reports"
+    :show-back="true"
+    @back="goBack"
+  >
+    <template #actions>
+      <Button label="Export All" icon="pi pi-download" class="p-button-outlined" @click="exportAll" />
+      <Button label="Generate Reports" icon="pi pi-refresh" class="p-button-success" @click="generateReports" :loading="generating" />
+    </template>
 
-    <div class="content-container">
+    <template #content>
       <!-- Report Selection -->
-      <Card class="mb-4">
+      <Card class="parameters-card">
         <template #title>Report Parameters</template>
         <template #content>
-          <div class="grid">
+          <div class="grid parameters-grid">
             <div class="col-12 md:col-3">
-              <label class="block mb-2">Period</label>
-              <Dropdown v-model="selectedPeriod" :options="periods" optionLabel="label" optionValue="value" class="w-full" @change="onParameterChange" />
+              <label class="compact-label">Period</label>
+              <Dropdown v-model="selectedPeriod" :options="periods" optionLabel="label" optionValue="value" class="w-full compact-input" @change="onParameterChange" />
             </div>
             <div class="col-12 md:col-3">
-              <label class="block mb-2">Year</label>
-              <Dropdown v-model="selectedYear" :options="years" class="w-full" @change="onParameterChange" />
+              <label class="compact-label">Year</label>
+              <Dropdown v-model="selectedYear" :options="years" class="w-full compact-input" @change="onParameterChange" />
             </div>
             <div class="col-12 md:col-3">
-              <label class="block mb-2">Currency</label>
-              <Dropdown v-model="selectedCurrency" :options="currencies" optionLabel="name" optionValue="code" class="w-full" @change="onParameterChange" />
+              <label class="compact-label">Currency</label>
+              <Dropdown v-model="selectedCurrency" :options="currencies" optionLabel="name" optionValue="code" class="w-full compact-input" @change="onParameterChange" />
             </div>
             <div class="col-12 md:col-3">
-              <label class="block mb-2">Format</label>
-              <Dropdown v-model="selectedFormat" :options="formats" optionLabel="label" optionValue="value" class="w-full" @change="onParameterChange" />
+              <label class="compact-label">Format</label>
+              <Dropdown v-model="selectedFormat" :options="formats" optionLabel="label" optionValue="value" class="w-full compact-input" @change="onParameterChange" />
             </div>
           </div>
         </template>
       </Card>
 
       <!-- Financial Reports Grid -->
-      <div class="grid">
+      <div class="grid compact-grid">
         <!-- Balance Sheet -->
         <div class="col-12 lg:col-4">
-          <Card class="report-card h-full">
+          <Card class="report-card compact-card h-full">
             <template #title>
-              <div class="flex align-items-center justify-content-between">
+              <div class="flex align-items-center justify-content-between compact-title">
                 <span>Balance Sheet</span>
                 <Button icon="pi pi-external-link" class="p-button-text p-button-sm" @click="viewReport('balance-sheet')" />
               </div>
             </template>
             <template #content>
-              <div class="report-summary">
+              <div class="report-summary compact-summary">
                 <div class="summary-item">
                   <span class="label">Total Assets</span>
                   <span class="value text-blue-600">{{ formatCurrency(balanceSheet.totalAssets) }}</span>
@@ -68,7 +62,7 @@
                   <span class="value text-green-600">{{ formatCurrency(balanceSheet.totalEquity) }}</span>
                 </div>
               </div>
-              <div class="mt-3">
+              <div class="compact-actions">
                 <Button label="View Details" class="w-full" @click="viewReport('balance-sheet')" />
               </div>
             </template>
@@ -77,15 +71,15 @@
 
         <!-- Income Statement -->
         <div class="col-12 lg:col-4">
-          <Card class="report-card h-full">
+          <Card class="report-card compact-card h-full">
             <template #title>
-              <div class="flex align-items-center justify-content-between">
+              <div class="flex align-items-center justify-content-between compact-title">
                 <span>Income Statement</span>
                 <Button icon="pi pi-external-link" class="p-button-text p-button-sm" @click="viewReport('income-statement')" />
               </div>
             </template>
             <template #content>
-              <div class="report-summary">
+              <div class="report-summary compact-summary">
                 <div class="summary-item">
                   <span class="label">Total Revenue</span>
                   <span class="value text-green-600">{{ formatCurrency(incomeStatement.totalRevenue) }}</span>
@@ -99,7 +93,7 @@
                   <span class="value" :class="incomeStatement.netIncome >= 0 ? 'text-green-600' : 'text-red-600'">{{ formatCurrency(incomeStatement.netIncome) }}</span>
                 </div>
               </div>
-              <div class="mt-3">
+              <div class="compact-actions">
                 <Button label="View Details" class="w-full" @click="viewReport('income-statement')" />
               </div>
             </template>
@@ -108,15 +102,15 @@
 
         <!-- Cash Flow Statement -->
         <div class="col-12 lg:col-4">
-          <Card class="report-card h-full">
+          <Card class="report-card compact-card h-full">
             <template #title>
-              <div class="flex align-items-center justify-content-between">
+              <div class="flex align-items-center justify-content-between compact-title">
                 <span>Cash Flow Statement</span>
                 <Button icon="pi pi-external-link" class="p-button-text p-button-sm" @click="viewReport('cash-flow')" />
               </div>
             </template>
             <template #content>
-              <div class="report-summary">
+              <div class="report-summary compact-summary">
                 <div class="summary-item">
                   <span class="label">Operating Cash Flow</span>
                   <span class="value text-blue-600">{{ formatCurrency(cashFlow.operating) }}</span>
@@ -130,7 +124,7 @@
                   <span class="value text-orange-600">{{ formatCurrency(cashFlow.financing) }}</span>
                 </div>
               </div>
-              <div class="mt-3">
+              <div class="compact-actions">
                 <Button label="View Details" class="w-full" @click="viewReport('cash-flow')" />
               </div>
             </template>
@@ -139,17 +133,17 @@
       </div>
 
       <!-- Additional Reports -->
-      <Card class="mt-4">
+      <Card class="additional-reports-card">
         <template #title>Additional Financial Reports</template>
         <template #content>
-          <div class="grid">
+          <div class="grid compact-grid">
             <div class="col-12 md:col-6 lg:col-3" v-for="report in additionalReports" :key="report.id">
-              <div class="report-item p-3 border-round border-1 border-200 cursor-pointer hover:bg-gray-50" @click="viewReport(report.id)">
-                <div class="flex align-items-center gap-3">
-                  <i :class="report.icon" class="text-2xl text-primary"></i>
+              <div class="report-item compact-item" @click="viewReport(report.id)">
+                <div class="flex align-items-center gap-2">
+                  <i :class="report.icon" class="text-lg text-primary"></i>
                   <div>
-                    <div class="font-medium">{{ report.name }}</div>
-                    <div class="text-sm text-500">{{ report.description }}</div>
+                    <div class="font-medium text-sm">{{ report.name }}</div>
+                    <div class="text-xs text-500">{{ report.description }}</div>
                   </div>
                 </div>
               </div>
@@ -157,7 +151,7 @@
           </div>
         </template>
       </Card>
-    </div>
+    </template>
 
     <!-- Report Modal -->
     <Dialog v-model:visible="showReportModal" modal :header="currentReport?.name || 'Report'" :style="{width: '90vw', maxWidth: '1200px'}" class="report-modal">
@@ -300,12 +294,13 @@
         <Button label="Close" class="p-button-text" @click="closeReportModal" />
       </template>
     </Dialog>
-  </div>
+  </UnifiedDashboard>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { useSnackbar } from '@/composables/useSnackbar'
+import UnifiedDashboard from '@/components/ui/UnifiedDashboard.vue'
 import Dialog from 'primevue/dialog'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
@@ -849,54 +844,98 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.financial-statements {
-  padding: 0;
+/* Unified System Styles */
+.parameters-card {
+  margin-bottom: var(--spacing-md);
 }
 
-.page-header {
-  background: white;
-  border-bottom: 1px solid #e5e7eb;
-  padding: 1.5rem 2rem;
-  margin-bottom: 2rem;
+.parameters-card :deep(.p-card-body) {
+  padding: var(--spacing-md);
 }
 
-.header-content {
+.parameters-card :deep(.p-card-title) {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--spacing-sm);
+}
+
+.parameters-grid {
+  gap: var(--spacing-sm);
+}
+
+.additional-reports-card {
+  margin-top: var(--spacing-md);
+}
+
+.additional-reports-card :deep(.p-card-body) {
+  padding: var(--spacing-md);
+}
+
+.additional-reports-card :deep(.p-card-title) {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--spacing-sm);
+}
+
+.compact-card {
+  margin-bottom: 0;
+}
+
+.compact-card :deep(.p-card-body) {
+  padding: var(--spacing-md);
+}
+
+.compact-card :deep(.p-card-title) {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--spacing-sm);
+}
+
+.compact-grid {
+  gap: var(--spacing-sm);
+  margin-bottom: 0;
+}
+
+.compact-label {
+  display: block;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  margin-bottom: var(--spacing-xs);
+  color: var(--text-color-secondary);
+}
+
+.compact-input {
+  height: var(--input-height-sm);
+}
+
+.compact-title {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+}
+
+.compact-summary {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  max-width: 1200px;
-  margin: 0 auto;
+  flex-direction: column;
+  gap: var(--spacing-sm);
 }
 
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
+.compact-actions {
+  margin-top: var(--spacing-sm);
 }
 
-.header-left h1 {
-  margin: 0;
-  font-size: 1.75rem;
-  font-weight: 600;
-  color: #1f2937;
+.compact-item {
+  padding: var(--spacing-sm);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: all var(--transition-duration) ease;
+  background: var(--surface-card);
 }
 
-.subtitle {
-  margin: 0.25rem 0 0 0;
-  color: #6b7280;
-  font-size: 0.875rem;
-}
-
-.header-actions {
-  display: flex;
-  gap: 0.75rem;
-  align-items: center;
-}
-
-.content-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 2rem 2rem;
+.compact-item:hover {
+  background: var(--surface-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
 }
 
 .report-card {
@@ -907,18 +946,12 @@ onMounted(() => {
   transform: translateY(-2px);
 }
 
-.report-summary {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
 .summary-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid #f3f4f6;
+  padding: var(--spacing-sm) 0;
+  border-bottom: 1px solid var(--surface-border);
 }
 
 .summary-item:last-child {
@@ -926,26 +959,17 @@ onMounted(() => {
 }
 
 .label {
-  font-size: 0.875rem;
-  color: #6b7280;
+  font-size: var(--font-size-sm);
+  color: var(--text-color-secondary);
 }
 
 .value {
-  font-weight: 600;
-  font-size: 1rem;
-}
-
-.report-item {
-  transition: all 0.2s ease;
-}
-
-.report-item:hover {
-  background-color: #f9fafb !important;
-  transform: translateY(-1px);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-base);
 }
 
 .report-modal :deep(.p-dialog-content) {
-  padding: 1.5rem;
+  padding: var(--spacing-lg);
 }
 
 .report-content {
@@ -953,20 +977,22 @@ onMounted(() => {
 }
 
 .report-header {
-  border-bottom: 1px solid #e5e7eb;
-  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--surface-border);
+  padding-bottom: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
 }
 
 .balance-sheet-report h4,
 .income-statement-report h4,
 .cash-flow-report h4 {
-  color: #374151;
-  margin-bottom: 1rem;
-  font-weight: 600;
+  color: var(--text-color);
+  margin-bottom: var(--spacing-sm);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-lg);
 }
 
 .generic-report {
-  padding: 1rem 0;
+  padding: var(--spacing-md) 0;
 }
 
 :deep(.p-datatable) {
@@ -974,30 +1000,26 @@ onMounted(() => {
 }
 
 :deep(.p-datatable .p-datatable-thead > tr > th) {
-  background: #f9fafb;
-  font-weight: 600;
-  color: #374151;
+  background: var(--surface-section);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-color);
+  padding: var(--spacing-sm) var(--spacing-md);
+}
+
+:deep(.p-datatable .p-datatable-tbody > tr > td) {
+  padding: var(--spacing-sm) var(--spacing-md);
 }
 
 @media (max-width: 768px) {
-  .header-content {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: flex-start;
-  }
-  
-  .header-actions {
-    width: 100%;
-    justify-content: flex-end;
-  }
-  
-  .content-container {
-    padding: 0 1rem 2rem;
-  }
-  
   .report-modal :deep(.p-dialog) {
     width: 95vw !important;
-    margin: 1rem;
+    margin: var(--spacing-sm);
+  }
+  
+  .parameters-card :deep(.p-card-body),
+  .additional-reports-card :deep(.p-card-body),
+  .compact-card :deep(.p-card-body) {
+    padding: var(--spacing-sm);
   }
 }
 </style>

@@ -21,7 +21,7 @@ class TaxJurisdiction(BaseModel):
     level = Column(Enum('country', 'state', 'county', 'city', name='jurisdiction_level'), nullable=False)
     parent_id = Column(Integer, ForeignKey('tax_jurisdictions.id'))
     
-    parent = relationship("TaxJurisdiction", remote_side=[id])
+    parent = relationship("TaxJurisdiction", remote_side="TaxJurisdiction.id")
     children = relationship("TaxJurisdiction")
     tax_rates = relationship("TaxRate", back_populates="jurisdiction")
 

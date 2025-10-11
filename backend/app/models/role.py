@@ -1,6 +1,7 @@
 from typing import List, TYPE_CHECKING
-from sqlalchemy import Column, String, Text, Boolean
+from sqlalchemy import Column, String, Text, Boolean, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
+from datetime import datetime
 
 from .base import BaseModel, GUID
 
@@ -22,7 +23,6 @@ class Role(BaseModel):
     is_system = Column(Boolean, default=False, nullable=False)
     
     # Relationships
-    users = relationship("User", back_populates="role")
     permissions = relationship("RolePermission", back_populates="role")
     
     @classmethod
@@ -91,8 +91,8 @@ class RolePermission(BaseModel):
     role_id = Column(GUID(), ForeignKey('roles.id', ondelete='CASCADE'), primary_key=True)
     permission_id = Column(GUID(), ForeignKey('permissions.id', ondelete='CASCADE'), primary_key=True)
     
-    # Additional metadata
-    created_by = Column(GUID(), ForeignKey('users.id'), nullable=True)
+    # Additional metadata (removed FK to avoid circular dependency)
+    created_by = Column(GUID(), nullable=True)
     
     # Relationships
     role = relationship("Role", back_populates="permissions")
@@ -105,15 +105,15 @@ class UserPermission(BaseModel):
     """Many-to-many relationship between users and permissions."""
     __tablename__ = "user_permissions"
     
-    user_id = Column(GUID(), ForeignKey('users.id', ondelete='CASCADE'), primary_key=True)
+    user_id = Column(GUID(), primary_key=True)
     permission_id = Column(GUID(), ForeignKey('permissions.id', ondelete='CASCADE'), primary_key=True)
     
-    # Additional metadata
-    granted_by = Column(GUID(), ForeignKey('users.id'), nullable=True)
+    # Additional metadata (removed FK to avoid circular dependency)
+    granted_by = Column(GUID(), nullable=True)
     expires_at = Column(DateTime(timezone=True), nullable=True)
     
-    # Relationships
-    user = relationship("User", back_populates="permissions", foreign_keys=[user_id])
+    # Relationships (removed to avoid circular dependency)
+    # user = relationship("User", back_populates="permissions", foreign_keys=[user_id])
     permission = relationship("Permission", back_populates="user_permissions")
     
     @property

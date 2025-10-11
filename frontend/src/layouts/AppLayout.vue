@@ -45,7 +45,8 @@ const onMaskClick = () => {
   min-height: 100vh;
   position: relative;
   padding-top: 60px;
-  background: var(--surface-ground, #f8f9fa);
+  background: var(--surface-50);
+  font-family: var(--font-family);
 }
 
 /* Sidebar styles */
@@ -73,7 +74,7 @@ const onMaskClick = () => {
   margin-left: 0;
   min-height: calc(100vh - 60px);
   transition: margin-left 0.3s ease;
-  background: var(--surface-ground, #f8f9fa);
+  background: var(--surface-50);
 }
 
 .layout-main {
@@ -85,16 +86,16 @@ const onMaskClick = () => {
 
 .page-content {
   flex: 1;
-  padding: 1.5rem;
-  background: var(--surface-ground, #f8f9fa);
+  padding: var(--spacing-lg);
+  background: var(--surface-50);
   min-height: calc(100vh - 120px);
 }
 
 /* Breadcrumb styling */
 :deep(.breadcrumb-container) {
-  background: var(--surface-card, #ffffff);
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid var(--surface-border, #e5e7eb);
+  background: var(--surface-0);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: 1px solid var(--surface-200);
   margin: 0;
 }
 
@@ -141,21 +142,21 @@ const onMaskClick = () => {
 
 /* Global page styling */
 :deep(.p-card) {
-  margin-bottom: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-  border: 1px solid var(--surface-border, #e5e7eb);
+  margin-bottom: var(--spacing-lg);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--surface-200);
 }
 
 :deep(.p-card .p-card-header) {
-  background: var(--surface-card, #ffffff);
-  border-bottom: 1px solid var(--surface-border, #e5e7eb);
-  padding: 1.25rem 1.5rem;
-  border-radius: 12px 12px 0 0;
+  background: var(--surface-0);
+  border-bottom: 1px solid var(--surface-200);
+  padding: var(--spacing-lg);
+  border-radius: var(--border-radius) var(--border-radius) 0 0;
 }
 
 :deep(.p-card .p-card-content) {
-  padding: 1.5rem;
+  padding: var(--spacing-lg);
 }
 
 :deep(.p-card .p-card-title) {
@@ -167,16 +168,16 @@ const onMaskClick = () => {
 
 /* Grid system enhancements */
 :deep(.grid) {
-  margin: 0 -0.5rem;
+  margin: 0 calc(-1 * var(--spacing-sm));
 }
 
 :deep(.grid > [class*="col-"]) {
-  padding: 0 0.5rem;
+  padding: 0 var(--spacing-sm);
 }
 
 :deep(.grid .p-card) {
   height: 100%;
-  margin-bottom: 1rem;
+  margin-bottom: var(--spacing-md);
 }
 
 /* Button styling */

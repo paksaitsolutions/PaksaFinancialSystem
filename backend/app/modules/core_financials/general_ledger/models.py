@@ -28,32 +28,8 @@ class Account(BaseModel):
     children = relationship("Account")
     journal_entries = relationship("JournalEntryLine", back_populates="account")
 
-class JournalEntry(BaseModel):
-    __tablename__ = 'journal_entries'
-    
-    entry_number = Column(String(50), unique=True, nullable=False)
-    entry_date = Column(Date, nullable=False)
-    description = Column(Text, nullable=False)
-    reference = Column(String(100))
-    total_debit = Column(Numeric(15, 2), default=0)
-    total_credit = Column(Numeric(15, 2), default=0)
-    status = Column(String(20), default='draft')
-    posted_at = Column(DateTime)
-    reversed_at = Column(DateTime)
-    
-    lines = relationship("JournalEntryLine", back_populates="journal_entry", cascade="all, delete-orphan")
-
-class JournalEntryLine(BaseModel):
-    __tablename__ = 'journal_entry_lines'
-    
-    journal_entry_id = Column(Integer, ForeignKey('journal_entries.id'), nullable=False)
-    account_id = Column(Integer, ForeignKey('accounts.id'), nullable=False)
-    description = Column(Text)
-    debit_amount = Column(Numeric(15, 2), default=0)
-    credit_amount = Column(Numeric(15, 2), default=0)
-    
-    journal_entry = relationship("JournalEntry", back_populates="lines")
-    account = relationship("Account", back_populates="journal_entries")
+# Import JournalEntry and JournalEntryLine from unified models
+from app.models.core_models import JournalEntry, JournalEntryLine
 
 class FiscalPeriod(BaseModel):
     __tablename__ = 'fiscal_periods'

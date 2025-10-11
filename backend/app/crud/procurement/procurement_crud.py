@@ -12,7 +12,7 @@ from sqlalchemy.orm import selectinload
 
 from app.core.db.query_helper import QueryHelper
 from app.models.procurement.vendor import ProcurementVendor as Vendor
-from app.models.procurement.purchase_order import PurchaseOrder, PurchaseOrderItem, VendorPayment
+from app.models import PurchaseOrder, PurchaseOrderLineItem, APPayment
 from app.schemas.procurement.procurement_schemas import (
     VendorCreate, VendorUpdate, PurchaseOrderCreate, PurchaseOrderUpdate,
     VendorPaymentCreate, PurchaseAnalytics
@@ -202,7 +202,7 @@ class ProcurementCRUD:
         tenant_id: UUID,
         created_by: UUID,
         obj_in: VendorPaymentCreate
-    ) -> VendorPayment:
+    ) -> APPayment:
         """Create vendor payment."""
         # Generate payment number
         payment_number = await self._generate_payment_number(db, tenant_id)

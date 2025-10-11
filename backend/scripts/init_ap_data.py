@@ -13,8 +13,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db_session
-from app.models.accounts_payable.vendor import Vendor, VendorContact
-from app.models.accounts_payable.invoice import APInvoice, APInvoiceLineItem, APPayment
+from app.models import Vendor, VendorContact, APInvoice, APInvoiceLineItem, APPayment
 from app.models.accounts_payable.credit_memo import CreditMemo
 from app.models.enums import VendorStatus, InvoiceStatus, PaymentTerms
 

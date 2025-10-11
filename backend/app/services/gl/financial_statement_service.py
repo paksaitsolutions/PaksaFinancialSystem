@@ -14,7 +14,7 @@ from app.exceptions import (
     ValidationException,
     BusinessRuleException
 )
-from app.models.gl_models import (
+from app.models import (
     GLChartOfAccounts,
     JournalEntryLine,
     JournalEntry,
@@ -86,8 +86,8 @@ class FinancialStatementService(BaseService):
         elif statement_type == FSType.CASH_FLOW:
             if not start_date:
                 raise ValidationException("Start date is required for cash flow statement")
-            statement_data = self._generate_cash_flow_statement(
-                company_id, start_date, end_date, trial_balance
+            statement_data = self._generate_cash_flow_from_gl(
+                company_id, start_date, end_date
             )
             statement_name = name or f"Cash Flow Statement for {start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}"
         else:
@@ -157,18 +157,22 @@ class FinancialStatementService(BaseService):
         trial_balance: TrialBalance,
         as_of_date: date
     ) -> Dict[str, Any]:
-        """Generate balance sheet data from trial balance."""
-        # Get all accounts with their balances
+        """Generate balance sheet data consolidating all modules."""
+        # Get consolidated account balances from unified GL across all modules
         accounts = self.db.query(
-            GLChartOfAccounts,
-            TrialBalanceAccount.debit_balance,
-            TrialBalanceAccount.credit_balance
+            ChartOfAccounts,
+            func.sum(JournalEntryLine.debit_amount).label('total_debits'),
+            func.sum(JournalEntryLine.credit_amount).label('total_credits')
         ).join(
-            TrialBalanceAccount,
-            GLChartOfAccounts.id == TrialBalanceAccount.account_id
+            JournalEntryLine, ChartOfAccounts.id == JournalEntryLine.account_id
+        ).join(
+            JournalEntry, JournalEntryLine.journal_entry_id == JournalEntry.id
         ).filter(
-            TrialBalanceAccount.trial_balance_id == trial_balance.id
-        ).all()
+            JournalEntry.company_id == trial_balance.company_id,
+            JournalEntry.entry_date <= as_of_date,
+            JournalEntry.status == 'posted',
+            ChartOfAccounts.is_active == True
+        ).group_by(ChartOfAccounts.id, ChartOfAccounts.account_code, ChartOfAccounts.account_name, ChartOfAccounts.account_type).all()
         
         # Initialize sections
         assets = {
@@ -189,21 +193,24 @@ class FinancialStatementService(BaseService):
             "lines": []
         }
         
-        # Categorize accounts
+        # Categorize accounts from all modules (AP, AR, Cash, Payroll, etc.)
         for account, debit_bal, credit_bal in accounts:
-            if account.account_type in [AccountType.ASSET, AccountType.EXPENSE]:
+            if account.account_type in ['Asset']:
                 balance = debit_bal - credit_bal
                 section = assets
-            elif account.account_type in [AccountType.LIABILITY, AccountType.REVENUE]:
+            elif account.account_type in ['Liability']:
                 balance = credit_bal - debit_bal
-                section = liabilities if account.account_type == AccountType.LIABILITY else equity
+                section = liabilities
+            elif account.account_type in ['Equity', 'Revenue']:
+                balance = credit_bal - debit_bal
+                section = equity
             else:
                 continue
             
             section["lines"].append({
                 "account_id": str(account.id),
-                "account_code": account.code,
-                "account_name": account.name,
+                "account_code": account.account_code,
+                "account_name": account.account_name,
                 "amount": float(balance),
                 "order": len(section["lines"]) + 1
             })
@@ -264,19 +271,23 @@ class FinancialStatementService(BaseService):
         end_date: date,
         trial_balance: TrialBalance
     ) -> Dict[str, Any]:
-        """Generate income statement data for the given date range."""
-        # Get revenue and expense accounts with their balances
+        """Generate income statement data consolidating all modules."""
+        # Get revenue and expense accounts with consolidated balances from all modules
         accounts = self.db.query(
-            GLChartOfAccounts,
-            TrialBalanceAccount.debit_balance,
-            TrialBalanceAccount.credit_balance
+            ChartOfAccounts,
+            func.sum(JournalEntryLine.debit_amount).label('total_debits'),
+            func.sum(JournalEntryLine.credit_amount).label('total_credits')
         ).join(
-            TrialBalanceAccount,
-            GLChartOfAccounts.id == TrialBalanceAccount.account_id
+            JournalEntryLine, ChartOfAccounts.id == JournalEntryLine.account_id
+        ).join(
+            JournalEntry, JournalEntryLine.journal_entry_id == JournalEntry.id
         ).filter(
-            TrialBalanceAccount.trial_balance_id == trial_balance.id,
-            GLChartOfAccounts.account_type.in_([AccountType.REVENUE, AccountType.EXPENSE])
-        ).all()
+            JournalEntry.company_id == company_id,
+            JournalEntry.entry_date.between(start_date, end_date),
+            JournalEntry.status == 'posted',
+            ChartOfAccounts.account_type.in_(['Revenue', 'Expense']),
+            ChartOfAccounts.is_active == True
+        ).group_by(ChartOfAccounts.id, ChartOfAccounts.account_code, ChartOfAccounts.account_name, ChartOfAccounts.account_type).all()
         
         # Initialize sections
         revenue = {
@@ -296,12 +307,12 @@ class FinancialStatementService(BaseService):
         total_expenses = Decimal('0')
         
         for account, debit_bal, credit_bal in accounts:
-            if account.account_type == AccountType.REVENUE:
+            if account.account_type == 'Revenue':
                 amount = credit_bal - debit_bal
                 revenue["lines"].append({
                     "account_id": str(account.id),
-                    "account_code": account.code,
-                    "account_name": account.name,
+                    "account_code": account.account_code,
+                    "account_name": account.account_name,
                     "amount": float(amount),
                     "order": len(revenue["lines"]) + 1
                 })
@@ -310,8 +321,8 @@ class FinancialStatementService(BaseService):
                 amount = debit_bal - credit_bal
                 expenses["lines"].append({
                     "account_id": str(account.id),
-                    "account_code": account.code,
-                    "account_name": account.name,
+                    "account_code": account.account_code,
+                    "account_name": account.account_name,
                     "amount": float(amount),
                     "order": len(expenses["lines"]) + 1
                 })
@@ -528,3 +539,130 @@ class FinancialStatementService(BaseService):
         from app.models.company import Company
         company = self.db.query(Company).filter(Company.id == company_id).first()
         return company.default_currency if company else "USD"
+    
+    def _generate_cash_flow_from_gl(self, company_id: UUID, start_date: date, end_date: date) -> Dict[str, Any]:
+        """Generate cash flow statement consolidating all modules through GL journal entries"""
+        # Get cash accounts from unified chart of accounts
+        cash_accounts = self.db.query(ChartOfAccounts).filter(
+            ChartOfAccounts.company_id == company_id,
+            ChartOfAccounts.account_type == 'Asset',
+            ChartOfAccounts.account_subtype.in_(['Cash', 'Bank']),
+            ChartOfAccounts.is_active == True
+        ).all()
+        
+        cash_account_ids = [acc.id for acc in cash_accounts]
+        
+        # Operating cash flows from all modules (AR, AP, Payroll, etc.)
+        operating_flows = self.db.query(
+            JournalEntry.source_module,
+            JournalEntryLine.description,
+            func.sum(JournalEntryLine.debit_amount - JournalEntryLine.credit_amount).label('amount')
+        ).join(JournalEntry).filter(
+            JournalEntry.company_id == company_id,
+            JournalEntry.entry_date.between(start_date, end_date),
+            JournalEntry.status == 'posted',
+            JournalEntryLine.account_id.in_(cash_account_ids),
+            JournalEntry.source_module.in_(['AR', 'AP', 'PAYROLL', 'CASH'])
+        ).group_by(JournalEntry.source_module, JournalEntryLine.description).all()
+        
+        # Investing cash flows (Fixed Assets, Investments)
+        investing_flows = self.db.query(
+            JournalEntryLine.description,
+            func.sum(JournalEntryLine.debit_amount - JournalEntryLine.credit_amount).label('amount')
+        ).join(JournalEntry).join(ChartOfAccounts, JournalEntryLine.account_id == ChartOfAccounts.id).filter(
+            JournalEntry.company_id == company_id,
+            JournalEntry.entry_date.between(start_date, end_date),
+            JournalEntry.status == 'posted',
+            or_(
+                JournalEntryLine.account_id.in_(cash_account_ids),
+                ChartOfAccounts.account_subtype.in_(['Fixed Assets', 'Investments'])
+            )
+        ).group_by(JournalEntryLine.description).all()
+        
+        # Financing cash flows (Loans, Equity transactions)
+        financing_flows = self.db.query(
+            JournalEntryLine.description,
+            func.sum(JournalEntryLine.debit_amount - JournalEntryLine.credit_amount).label('amount')
+        ).join(JournalEntry).join(ChartOfAccounts, JournalEntryLine.account_id == ChartOfAccounts.id).filter(
+            JournalEntry.company_id == company_id,
+            JournalEntry.entry_date.between(start_date, end_date),
+            JournalEntry.status == 'posted',
+            or_(
+                JournalEntryLine.account_id.in_(cash_account_ids),
+                and_(ChartOfAccounts.account_type.in_(['Liability', 'Equity']),
+                     ChartOfAccounts.account_subtype.in_(['Long-term Debt', 'Capital']))
+            )
+        ).group_by(JournalEntryLine.description).all()
+        
+        # Build sections with module source information
+        operating = {
+            "name": "Operating Activities",
+            "order": 1,
+            "lines": [{
+                "description": f"{flow.source_module}: {flow.description}",
+                "amount": float(flow.amount),
+                "order": i + 1
+            } for i, flow in enumerate(operating_flows)]
+        }
+        
+        investing = {
+            "name": "Investing Activities", 
+            "order": 2,
+            "lines": [{
+                "description": flow.description,
+                "amount": float(flow.amount),
+                "order": i + 1
+            } for i, flow in enumerate(investing_flows)]
+        }
+        
+        financing = {
+            "name": "Financing Activities",
+            "order": 3, 
+            "lines": [{
+                "description": flow.description,
+                "amount": float(flow.amount),
+                "order": i + 1
+            } for i, flow in enumerate(financing_flows)]
+        }
+        
+        # Calculate totals and add total lines
+        total_operating = sum(line["amount"] for line in operating["lines"])
+        total_investing = sum(line["amount"] for line in investing["lines"])
+        total_financing = sum(line["amount"] for line in financing["lines"])
+        net_cash_flow = total_operating + total_investing + total_financing
+        
+        # Add total lines to each section
+        operating["lines"].append({
+            "description": "Net Cash from Operating Activities",
+            "amount": total_operating,
+            "is_total": True,
+            "order": len(operating["lines"]) + 1
+        })
+        
+        investing["lines"].append({
+            "description": "Net Cash from Investing Activities",
+            "amount": total_investing,
+            "is_total": True,
+            "order": len(investing["lines"]) + 1
+        })
+        
+        financing["lines"].append({
+            "description": "Net Cash from Financing Activities",
+            "amount": total_financing,
+            "is_total": True,
+            "order": len(financing["lines"]) + 1
+        })
+        
+        return {
+            "sections": [operating, investing, financing],
+            "metadata": {
+                "start_date": start_date.isoformat(),
+                "end_date": end_date.isoformat(),
+                "currency": self._get_company_currency(company_id),
+                "total_operating": total_operating,
+                "total_investing": total_investing,
+                "total_financing": total_financing,
+                "net_cash_flow": net_cash_flow,
+                "modules_included": ["AR", "AP", "PAYROLL", "CASH", "GL"]
+            }
+        }

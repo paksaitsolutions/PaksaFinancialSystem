@@ -1,58 +1,22 @@
-"""
-Complete tax models for the financial system.
-"""
-import uuid
-from datetime import date, datetime
-from decimal import Decimal
+# Import unified tax models from core_models to eliminate duplicates
+from app.models.core_models import TaxRate
+
+# TaxRate is now unified in core_models.py
+# Additional tax models remain here for extended functionality
+
+from app.models.base import Base
 from sqlalchemy import Column, String, Boolean, ForeignKey, Date, DateTime, Numeric, Text, Integer, JSON
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from enum import Enum
-
-from app.models.base import Base
-
-class TaxType(str, Enum):
-    SALES = "sales"
-    VAT = "vat"
-    GST = "gst"
-    INCOME = "income"
-    PROPERTY = "property"
-    EXCISE = "excise"
-    CUSTOMS = "customs"
+import uuid
+from datetime import date, datetime
 
 class TaxStatus(str, Enum):
     ACTIVE = "active"
     INACTIVE = "inactive"
     PENDING = "pending"
     EXPIRED = "expired"
-
-class TaxRate(Base):
-    """Tax rate configuration."""
-    
-    __tablename__ = "tax_rates"
-    __table_args__ = {'extend_existing': True}
-    
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    name = Column(String(100), nullable=False, index=True)
-    code = Column(String(20), unique=True, nullable=False, index=True)
-    rate = Column(Numeric(precision=8, scale=4), nullable=False)
-    tax_type = Column(String(20), nullable=False, index=True)
-    jurisdiction = Column(String(100), nullable=False)
-    country_code = Column(String(2), nullable=False)
-    state_code = Column(String(10))
-    city = Column(String(100))
-    effective_date = Column(Date, nullable=False, default=date.today)
-    expiry_date = Column(Date)
-    status = Column(String(20), default=TaxStatus.ACTIVE)
-    description = Column(Text)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    # Relationships
-    transactions = relationship("TaxTransaction", back_populates="tax_rate")
-    
-    def __repr__(self):
-        return f"<TaxRate {self.code}: {self.rate}%>"
 
 class TaxTransaction(Base):
     """Tax transaction records."""
@@ -81,7 +45,7 @@ class TaxTransaction(Base):
     created_by = Column(UUID(as_uuid=True))
     
     # Relationships
-    tax_rate = relationship("TaxRate", back_populates="transactions")
+    tax_rate = relationship("TaxRate", viewonly=True)
     
     def __repr__(self):
         return f"<TaxTransaction {self.transaction_id}: {self.tax_amount}>"
@@ -202,8 +166,8 @@ class TaxJurisdiction(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
-    parent = relationship("TaxJurisdiction", remote_side=[id])
-    children = relationship("TaxJurisdiction")
+    parent = relationship("TaxJurisdiction", remote_side="TaxJurisdiction.id", back_populates="children")
+    children = relationship("TaxJurisdiction", back_populates="parent", overlaps="parent")
     
     def __repr__(self):
         return f"<TaxJurisdiction {self.code}: {self.name}>"
@@ -211,7 +175,7 @@ class TaxJurisdiction(Base):
 class ComplianceCheck(Base):
     """Tax compliance check records."""
     
-    __tablename__ = "compliance_checks"
+    __tablename__ = "tax_compliance_checks"
     __table_args__ = {'extend_existing': True}
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -227,7 +191,7 @@ class ComplianceCheck(Base):
 class ComplianceRule(Base):
     """Tax compliance rules."""
     
-    __tablename__ = "compliance_rules"
+    __tablename__ = "tax_compliance_rules"
     __table_args__ = {'extend_existing': True}
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -242,7 +206,7 @@ class ComplianceRule(Base):
 class ComplianceAlert(Base):
     """Tax compliance alerts."""
     
-    __tablename__ = "compliance_alerts"
+    __tablename__ = "tax_compliance_alerts"
     __table_args__ = {'extend_existing': True}
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

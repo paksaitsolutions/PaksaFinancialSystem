@@ -1,120 +1,111 @@
-import asyncio
-import uuid
-from datetime import date
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker, selectinload
+#!/usr/bin/env python3
+"""
+Test script to identify model import conflicts
+"""
+import sys
+import os
 
-# Import models
-from app.models.employee import Employee
-from app.models.department import Department
-from app.modules.core_financials.payroll.models.payroll_processing import PayrollRun, PayrollItem
+# Add the backend directory to the Python path
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-# Database URL - update this to match your configuration
-DATABASE_URL = "sqlite+aiosqlite:///./paksa_finance.db"
-
-# Create async engine and session
-engine = create_async_engine(DATABASE_URL, echo=True)
-AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
-
-async def init_db():
-    """Initialize the database with test data"""
-    async with engine.begin() as conn:
-        # Create all tables
-        from app.models.base import Base
-        await conn.run_sync(Base.metadata.create_all)
-
-async def test_models():
-    """Test the models by creating and querying data"""
-    async with AsyncSessionLocal() as session:
-        # Create a department
-        dept = Department(
-            name="Finance",
-            code="FIN",
-            description="Finance Department",
-            is_active=True
-        )
-        session.add(dept)
-        await session.commit()
-        
-        # Create an employee
-        emp = Employee(
-            first_name="John",
-            last_name="Doe",
-            email="john.doe@example.com",
-            phone="1234567890",
-            hire_date=date(2020, 1, 1),
-            employment_type="FULL_TIME",
-            job_title="Accountant",
-            department_id=dept.id,
-            is_active=True
-        )
-        session.add(emp)
-        await session.commit()
-        
-        # Create a payroll run
-        payroll_run = PayrollRun(
-            name="September 2023 Payroll",
-            start_date=date(2023, 9, 1),
-            end_date=date(2023, 9, 30),
-            status="COMPLETED",
-            payment_date=date(2023, 10, 5),
-            total_gross=5000.00,
-            total_deductions=1500.00,
-            total_net=3500.00,
-            company_id=uuid.uuid4()  # In a real app, this would be a valid company ID
-        )
-        session.add(payroll_run)
-        await session.commit()
-        
-        # Create a payroll item
-        payroll_item = PayrollItem(
-            payroll_run_id=payroll_run.id,
-            employee_id=emp.id,
-            basic_salary=4000.00,
-            gross_earnings=5000.00,
-            total_deductions=1500.00,
-            net_pay=3500.00,
-            payment_method="BANK_TRANSFER",
-            status="PAID"
-        )
-        session.add(payroll_item)
-        await session.commit()
-        
-        # Query the data
-        print("\n--- Departments ---")
-        result = await session.execute(select(Department))
-        for dept in result.scalars():
-            print(f"{dept.name} ({dept.code}): {dept.description}")
-        
-        print("\n--- Employees ---")
-        result = await session.execute(select(Employee).options(selectinload(Employee.department)))
-        for emp in result.scalars():
-            print(f"{emp.first_name} {emp.last_name} - {emp.job_title} at {emp.department.name if emp.department else 'No Department'}")
-        
-        print("\n--- Payroll Runs ---")
-        result = await session.execute(select(PayrollRun))
-        for run in result.scalars():
-            print(f"{run.name}: {run.start_date} to {run.end_date} - Status: {run.status}")
-        
-        print("\n--- Payroll Items ---")
-        result = await session.execute(select(PayrollItem).options(
-            selectinload(PayrollItem.employee),
-            selectinload(PayrollItem.payroll_run)
-        ))
-        for item in result.scalars():
-            print(f"{item.employee.first_name} {item.employee.last_name} - "
-                  f"Net Pay: ${item.net_pay} - Status: {item.status}")
-
-async def main():
+def test_model_imports():
+    """Test importing all models to identify conflicts"""
+    print("Testing model imports...")
+    
     try:
-        await init_db()
-        await test_models()
+        print("1. Testing base models...")
+        from app.models.base import Base, BaseModel, AuditMixin
+        print("   Base models imported successfully")
+        
+        print("2. Testing core unified models...")
+        from app.models.core_models import (
+            ChartOfAccounts, JournalEntry, JournalEntryLine,
+            Vendor, Customer, APInvoice, APPayment, ARInvoice, ARPayment
+        )
+        print("   Core unified models imported successfully")
+        
+        print("3. Testing model registry...")
+        from app.models import (
+            ChartOfAccounts as ImportedChartOfAccounts,
+            JournalEntry as ImportedJournalEntry,
+            APPayment as ImportedAPPayment
+        )
+        print("   Models imported from __init__.py successfully")
+        
+        print("4. Testing SQLAlchemy registry...")
+        from sqlalchemy import inspect
+        from app.core.database import engine
+        
+        # Check if there are duplicate class names in the registry
+        registry = Base.registry._class_registry
+        print(f"   Total classes in registry: {len(registry)}")
+        
+        # Look for duplicate names
+        class_names = {}
+        for key, cls in registry.items():
+            if hasattr(cls, '__name__'):
+                name = cls.__name__
+                if name in class_names:
+                    print(f"   WARNING: Duplicate class name found: {name}")
+                    print(f"      - {class_names[name]}")
+                    print(f"      - {cls}")
+                else:
+                    class_names[name] = cls
+        
+        print("5. Testing specific problematic models...")
+        # Test APPayment specifically
+        print(f"   APPayment class: {APPayment}")
+        print(f"   APPayment table name: {APPayment.__tablename__}")
+        
+        # Test JournalEntry specifically  
+        print(f"   JournalEntry class: {JournalEntry}")
+        print(f"   JournalEntry table name: {JournalEntry.__tablename__}")
+        
+        print("\nAll model imports successful!")
+        return True
+        
     except Exception as e:
-        print(f"An error occurred: {e}")
-    finally:
-        await engine.dispose()
+        print(f"\nModel import failed: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+
+def test_database_creation():
+    """Test database table creation"""
+    print("\nTesting database table creation...")
+    
+    try:
+        from app.core.database import engine
+        from app.models.base import Base
+        
+        # Try to create all tables
+        print("Creating all tables...")
+        Base.metadata.create_all(bind=engine)
+        print("All tables created successfully!")
+        return True
+        
+    except Exception as e:
+        print(f"Database creation failed: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
 
 if __name__ == "__main__":
-    import asyncio
-    asyncio.run(main())
+    print("Paksa Financial System - Model Testing")
+    print("=" * 50)
+    
+    success = True
+    
+    # Test model imports
+    if not test_model_imports():
+        success = False
+    
+    # Test database creation
+    if not test_database_creation():
+        success = False
+    
+    if success:
+        print("\nAll tests passed!")
+    else:
+        print("\nSome tests failed!")
+        sys.exit(1)

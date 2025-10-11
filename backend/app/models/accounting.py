@@ -1,195 +1,33 @@
-# -*- coding: utf-8 -*-
-"""
-Comprehensive Accounting Models
-------------------------------
-Complete models for GL, AP, AR, Budget, Tax integration
-"""
-
+# Import unified accounting models to avoid duplicates
+from app.models import (
+    ChartOfAccounts,
+    JournalEntry,
+    JournalEntryLine,
+    Vendor,
+    Customer,
+    APInvoice,
+    ARInvoice,
+    APPayment,
+    ARPayment,
+    TaxRate
+)
 from sqlalchemy import Column, Integer, String, Date, DateTime, Text, ForeignKey, Numeric, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.models.base import Base
 
-# Chart of Accounts
-class AccountingChartOfAccountsMain(Base):
-    __tablename__ = 'accounting_chart_of_accounts_main'
-    
-    id = Column(Integer, primary_key=True, index=True)
-    account_code = Column(String(20), unique=True, nullable=False, index=True)
-    account_name = Column(String(255), nullable=False)
-    account_type = Column(String(50), nullable=False)  # ASSET, LIABILITY, EQUITY, REVENUE, EXPENSE
-    parent_id = Column(Integer, ForeignKey('accounting_chart_of_accounts_main.id'))
-    is_active = Column(Boolean, default=True)
-    balance = Column(Numeric(15, 2), default=0)
-    
-    # Audit fields
-    created_at = Column(DateTime, default=func.now())
-    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
-    
-    # Relationships
-    parent = relationship("AccountingChartOfAccountsMain", remote_side=[id])
-    journal_entries = relationship("JournalEntryLine", back_populates="account")
+# Aliases for backward compatibility
+AccountingChartOfAccountsMain = ChartOfAccounts
+AccountingVendor = Vendor
+AccountingBill = APInvoice
+AccountingInvoice = ARInvoice
+AccountingPayment = APPayment
+TaxCode = TaxRate
+Invoice = ARInvoice  # Common alias for AR Invoice
+Bill = APInvoice  # Common alias for AP Invoice
+Payment = APPayment  # Common alias for Payment
 
-# Journal Entries
-class JournalEntry(Base):
-    __tablename__ = 'journal_entries'
-    
-    id = Column(Integer, primary_key=True, index=True)
-    entry_number = Column(String(50), unique=True, nullable=False)
-    entry_date = Column(Date, nullable=False)
-    description = Column(Text)
-    reference = Column(String(100))
-    total_debit = Column(Numeric(15, 2), default=0)
-    total_credit = Column(Numeric(15, 2), default=0)
-    status = Column(String(20), default='DRAFT')  # DRAFT, POSTED, REVERSED
-    
-    # Audit fields
-    created_at = Column(DateTime, default=func.now())
-    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
-    created_by = Column(Integer)
-    
-    # Relationships
-    lines = relationship("JournalEntryLine", back_populates="journal_entry", cascade="all, delete-orphan")
-
-class JournalEntryLine(Base):
-    __tablename__ = 'journal_entry_lines'
-    
-    id = Column(Integer, primary_key=True, index=True)
-    journal_entry_id = Column(Integer, ForeignKey('journal_entries.id'), nullable=False)
-    account_id = Column(Integer, ForeignKey('accounting_chart_of_accounts_main.id'), nullable=False)
-    description = Column(String(255))
-    debit_amount = Column(Numeric(15, 2), default=0)
-    credit_amount = Column(Numeric(15, 2), default=0)
-    
-    # Relationships
-    journal_entry = relationship("JournalEntry", back_populates="lines")
-    account = relationship("AccountingChartOfAccountsMain", back_populates="journal_entries")
-
-# Vendors (AP)
-class AccountingVendor(Base):
-    __tablename__ = 'accounting_vendors'
-    __table_args__ = {'extend_existing': True}
-    
-    id = Column(Integer, primary_key=True, index=True)
-    vendor_code = Column(String(20), unique=True, nullable=False)
-    vendor_name = Column(String(255), nullable=False)
-    contact_person = Column(String(100))
-    email = Column(String(100))
-    phone = Column(String(20))
-    address = Column(Text)
-    tax_id = Column(String(50))
-    payment_terms = Column(String(50))
-    is_active = Column(Boolean, default=True)
-    
-    # Audit fields
-    created_at = Column(DateTime, default=func.now())
-    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
-    
-    # Relationships
-    bills = relationship("Bill", back_populates="accounting_vendor")
-
-# Bills (AP)
-class Bill(Base):
-    __tablename__ = 'bills'
-    
-    id = Column(Integer, primary_key=True, index=True)
-    bill_number = Column(String(50), unique=True, nullable=False)
-    vendor_id = Column(Integer, ForeignKey('accounting_vendors.id'), nullable=False)
-    bill_date = Column(Date, nullable=False)
-    due_date = Column(Date, nullable=False)
-    total_amount = Column(Numeric(15, 2), nullable=False)
-    paid_amount = Column(Numeric(15, 2), default=0)
-    status = Column(String(20), default='PENDING')  # PENDING, PAID, OVERDUE, CANCELLED
-    
-    # Audit fields
-    created_at = Column(DateTime, default=func.now())
-    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
-    
-    # Relationships
-    accounting_vendor = relationship("AccountingVendor", back_populates="bills")
-    payments = relationship("AccountingPayment", back_populates="bill")
-
-# Customers (AR)
-class Customer(Base):
-    __tablename__ = 'customers'
-    __table_args__ = {'extend_existing': True}
-    
-    id = Column(Integer, primary_key=True, index=True)
-    customer_code = Column(String(20), unique=True, nullable=False)
-    customer_name = Column(String(255), nullable=False)
-    contact_person = Column(String(100))
-    email = Column(String(100))
-    phone = Column(String(20))
-    address = Column(Text)
-    credit_limit = Column(Numeric(15, 2), default=0)
-    is_active = Column(Boolean, default=True)
-    
-    # Audit fields
-    created_at = Column(DateTime, default=func.now())
-    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
-    
-    # Relationships
-    invoices = relationship("Invoice", back_populates="customer")
-
-# Invoices (AR)
-class Invoice(Base):
-    __tablename__ = 'invoices'
-    
-    id = Column(Integer, primary_key=True, index=True)
-    invoice_number = Column(String(50), unique=True, nullable=False)
-    customer_id = Column(Integer, ForeignKey('customers.id'), nullable=False)
-    invoice_date = Column(Date, nullable=False)
-    due_date = Column(Date, nullable=False)
-    total_amount = Column(Numeric(15, 2), nullable=False)
-    paid_amount = Column(Numeric(15, 2), default=0)
-    status = Column(String(20), default='PENDING')  # PENDING, PAID, OVERDUE, CANCELLED
-    
-    # Audit fields
-    created_at = Column(DateTime, default=func.now())
-    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
-    
-    # Relationships
-    customer = relationship("Customer", back_populates="invoices")
-    payments = relationship("AccountingPayment", back_populates="invoice")
-
-# Payments (Both AP and AR)
-class AccountingPayment(Base):
-    __tablename__ = 'accounting_payments'
-    
-    id = Column(Integer, primary_key=True, index=True)
-    payment_number = Column(String(50), unique=True, nullable=False)
-    payment_date = Column(Date, nullable=False)
-    amount = Column(Numeric(15, 2), nullable=False)
-    payment_method = Column(String(50))  # CASH, CHECK, BANK_TRANSFER, CREDIT_CARD
-    reference = Column(String(100))
-    
-    # Links to either bill or invoice
-    bill_id = Column(Integer, ForeignKey('bills.id'))
-    invoice_id = Column(Integer, ForeignKey('invoices.id'))
-    
-    # Audit fields
-    created_at = Column(DateTime, default=func.now())
-    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
-    
-    # Relationships
-    bill = relationship("Bill", back_populates="payments")
-    invoice = relationship("Invoice", back_populates="payments")
-
-# Tax Codes
-class TaxCode(Base):
-    __tablename__ = 'tax_codes'
-    
-    id = Column(Integer, primary_key=True, index=True)
-    code = Column(String(20), unique=True, nullable=False)
-    name = Column(String(255), nullable=False)
-    rate = Column(Numeric(5, 4), nullable=False)  # e.g., 0.0825 for 8.25%
-    tax_type = Column(String(50))  # SALES, PURCHASE, VAT, GST
-    is_active = Column(Boolean, default=True)
-    
-    # Audit fields
-    created_at = Column(DateTime, default=func.now())
-    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
-
+# AccountingRule model (not in unified models yet)
 class AccountingRule(Base):
     __tablename__ = 'accounting_rules'
     __table_args__ = {'extend_existing': True}
@@ -198,7 +36,7 @@ class AccountingRule(Base):
     rule_name = Column(String(255), nullable=False)
     trigger_event = Column(String(100), nullable=False)
     conditions = Column(Text)
-    debit_account_id = Column(Integer, ForeignKey('accounting_chart_of_accounts_main.id'))
-    credit_account_id = Column(Integer, ForeignKey('accounting_chart_of_accounts_main.id'))
+    debit_account_id = Column(Integer, ForeignKey('chart_of_accounts.id'))
+    credit_account_id = Column(Integer, ForeignKey('chart_of_accounts.id'))
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=func.now())

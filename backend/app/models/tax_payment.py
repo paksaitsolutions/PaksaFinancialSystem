@@ -37,7 +37,7 @@ class TaxPayment(Base, TimestampMixin):
     created_by = Column(PG_UUID(as_uuid=True), nullable=False)
     
     # Relationships
-    tax_return = relationship("TaxReturn", back_populates="payments")
+    tax_return = relationship("TaxReturn")
     
     def __repr__(self):
         return f"<TaxPayment {self.amount} {self.currency} - {self.status}>"

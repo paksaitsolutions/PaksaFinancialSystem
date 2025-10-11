@@ -2,8 +2,8 @@ from datetime import date
 from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
-from app.models.gl_account import GLAccount
-from app.models.gl_models import JournalEntry, JournalEntryLine
+from app.models import JournalEntry, JournalEntryLine
+from app.models import ChartOfAccounts as GLAccount
 from app.schemas.gl_schemas import TrialBalance, TrialBalanceEntry
 
 class TrialBalanceService:

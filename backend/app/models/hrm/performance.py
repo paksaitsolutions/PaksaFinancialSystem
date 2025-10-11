@@ -16,7 +16,7 @@ class PerformanceReview(Base):
     __tablename__ = "performance_review"
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.id"), nullable=False)
+    employee_id = Column(UUID(as_uuid=True), ForeignKey("employees.id"), nullable=False)
     reviewer_id = Column(UUID(as_uuid=True), nullable=False)
     
     review_period_start = Column(Date, nullable=False)
@@ -43,7 +43,7 @@ class PerformanceReview(Base):
     completed_at = Column(DateTime)
     
     # Relationships
-    employee = relationship("Employee", back_populates="performance_reviews")
+    employee = relationship("Employee")
 
 class Goal(Base):
     """Employee goal model."""
@@ -51,7 +51,7 @@ class Goal(Base):
     __tablename__ = "goal"
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.id"), nullable=False)
+    employee_id = Column(UUID(as_uuid=True), ForeignKey("employees.id"), nullable=False)
     
     title = Column(String(200), nullable=False)
     description = Column(Text)

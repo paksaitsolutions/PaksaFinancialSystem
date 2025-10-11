@@ -26,3 +26,13 @@ async def update_system_settings(
 ):
     """Update system settings"""
     return {"success": True, "message": "Settings updated successfully"}
+
+@router.put("/system/{setting_key}")
+async def update_system_setting(
+    setting_key: str,
+    setting_value: str,
+    description: str = None,
+    current_user: User = Depends(deps.get_current_active_user)
+):
+    """Update individual system setting"""
+    return {"success": True, "message": f"Setting {setting_key} updated successfully"}

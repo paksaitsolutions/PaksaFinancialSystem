@@ -35,7 +35,7 @@
       <Button 
         icon="pi pi-bell" 
         class="p-button-text p-button-rounded"
-        :badge="notificationCount.toString()"
+        :badge="unreadCount > 0 ? unreadCount.toString() : undefined"
         @click="toggleNotifications"
       />
       <Menu ref="notificationMenu" :model="notificationItems" :popup="true" />
@@ -49,9 +49,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useNotifications } from '@/composables/useNotifications'
 import InputText from 'primevue/inputtext'
 import Avatar from 'primevue/avatar'
 import Menu from 'primevue/menu'
@@ -61,18 +62,20 @@ defineEmits(['menu-toggle'])
 
 const router = useRouter()
 const authStore = useAuthStore()
+const { notifications, unreadCount, fetchNotifications, markAsRead } = useNotifications()
 const menu = ref()
 const quickMenu = ref()
 const notificationMenu = ref()
 
 const searchQuery = ref<string>('')
-const notificationCount = ref(3)
 const userName = ref('John Doe')
-// User role is not currently used but kept for future use
-// const userRole = ref('Financial Manager')
 
 const userInitials = computed((): string => {
   return userName.value?.split(' ').map(n => n[0] || '').join('').toUpperCase() || 'US'
+})
+
+onMounted(() => {
+  fetchNotifications()
 })
 
 const quickMenuItems = [
@@ -98,31 +101,40 @@ const quickMenuItems = [
   }
 ]
 
-const notificationItems = [
-  {
-    label: 'Overdue Invoices',
-    icon: 'pi pi-exclamation-triangle',
-    badge: '5',
-    command: () => router.push('/ar')
-  },
-  {
-    label: 'Pending Approvals',
-    icon: 'pi pi-clock',
-    badge: '2',
-    command: () => router.push('/ap')
-  },
-  {
-    label: 'Bank Reconciliation',
-    icon: 'pi pi-check-circle',
-    command: () => router.push('/cash')
-  },
-  { separator: true },
-  {
+const notificationItems = computed(() => {
+  const items = notifications.value.slice(0, 5).map(notification => ({
+    label: notification.title,
+    icon: getNotificationIcon(notification.type),
+    command: () => {
+      markAsRead(notification.id)
+      // Navigate based on notification type
+      if (notification.title.includes('Invoice')) router.push('/ar')
+      else if (notification.title.includes('Bill') || notification.title.includes('Approval')) router.push('/ap')
+      else if (notification.title.includes('Bank')) router.push('/cash')
+    }
+  }))
+  
+  if (items.length > 0) {
+    items.push({ separator: true })
+  }
+  
+  items.push({
     label: 'View All Notifications',
     icon: 'pi pi-bell',
-    command: () => console.log('View all notifications')
+    command: () => router.push('/notifications')
+  })
+  
+  return items
+})
+
+const getNotificationIcon = (type: string) => {
+  switch (type) {
+    case 'warning': return 'pi pi-exclamation-triangle'
+    case 'error': return 'pi pi-times-circle'
+    case 'success': return 'pi pi-check-circle'
+    default: return 'pi pi-info-circle'
   }
-]
+}
 
 const userMenuItems = [
   {
@@ -179,14 +191,15 @@ const toggleNotifications = (event: Event) => {
   left: 0;
   right: 0;
   height: 60px;
-  z-index: 1001;
-  background: #ffffff;
-  border-bottom: 1px solid #e5e7eb;
+  z-index: var(--z-fixed);
+  background: var(--surface-0);
+  border-bottom: 1px solid var(--surface-200);
   display: flex;
   align-items: center;
-  padding: 0 1rem;
-  gap: 1rem;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  padding: 0 var(--spacing-lg);
+  gap: var(--spacing-lg);
+  box-shadow: var(--shadow-sm);
+  font-family: var(--font-family);
 }
 
 @media (min-width: 992px) {
@@ -202,25 +215,26 @@ const toggleNotifications = (event: Event) => {
 .logo {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--spacing-sm);
   text-decoration: none;
-  color: #1f2937;
-  font-weight: 600;
+  color: var(--text-color);
+  font-weight: var(--font-weight-semibold);
 }
 
 .logo-icon {
-  font-size: 1.5rem;
-  color: #3b82f6;
+  font-size: var(--font-size-2xl);
+  color: var(--primary-600);
 }
 
 .logo-text {
-  font-size: 1.1rem;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
 }
 
 .search-container {
   flex: 1;
   max-width: 500px;
-  margin: 0 1rem;
+  margin: 0 var(--spacing-lg);
   position: relative;
 }
 
@@ -232,45 +246,63 @@ const toggleNotifications = (event: Event) => {
 
 .search-container .pi-search {
   position: absolute;
-  left: 0.75rem;
+  left: var(--spacing-md);
   top: 50%;
   transform: translateY(-50%);
-  color: #6b7280;
+  color: var(--text-color-secondary);
 }
 
 .search-input {
   width: 100%;
   max-width: 100%;
-  border-radius: 20px;
-  padding: 0.5rem 1rem 0.5rem 2.5rem;
+  border-radius: var(--border-radius-full);
+  padding: var(--spacing-sm) var(--spacing-lg) var(--spacing-sm) calc(var(--spacing-lg) * 2);
   height: 36px;
-  border: 1px solid #d1d5db;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  border: 1px solid var(--surface-300);
+  background: var(--surface-0);
+  color: var(--text-color);
+  font-family: var(--font-family);
+  transition: all var(--transition-fast);
 }
 
 .search-input:focus {
   outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .topbar-actions {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: var(--spacing-md);
   margin-left: auto;
 }
 
 .new-btn {
-  background: #3b82f6;
-  border-color: #3b82f6;
+  background: var(--primary-600);
+  border-color: var(--primary-600);
   color: white;
+  font-weight: var(--font-weight-medium);
+  transition: all var(--transition-fast);
+}
+
+.new-btn:hover {
+  background: var(--primary-700);
+  border-color: var(--primary-700);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 .user-avatar {
-  background: #3b82f6 !important;
+  background: var(--primary-600) !important;
   color: white !important;
   cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.user-avatar:hover {
+  background: var(--primary-700) !important;
+  transform: scale(1.05);
 }
 
 @media (min-width: 992px) {

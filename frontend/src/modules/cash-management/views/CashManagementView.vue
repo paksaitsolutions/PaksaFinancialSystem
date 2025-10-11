@@ -1,66 +1,27 @@
 <template>
-  <div class="cash-management">
-    <div class="flex justify-content-between align-items-center mb-4">
-      <div>
-        <h1>Cash Management</h1>
-        <p class="text-color-secondary">Monitor cash flow and bank account balances</p>
-      </div>
-      <Button label="Add Transaction" icon="pi pi-plus" @click="openNew" />
-    </div>
+  <UnifiedDashboard 
+    title="Cash Management" 
+    subtitle="Monitor cash flow and bank account balances"
+  >
+    <template #actions>
+      <Button label="Add Transaction" icon="pi pi-plus" class="btn-primary" @click="openNew" />
+    </template>
+    
+    <template #metrics>
+      <UnifiedMetrics :metrics="dashboardMetrics" />
+    </template>
+    
+    <template #content>
 
-    <div class="grid">
-      <div class="col-12 lg:col-3">
-        <Card>
-          <template #content>
-            <div class="metric-card">
-              <i class="pi pi-wallet text-4xl text-green-500 mb-3"></i>
-              <div class="text-2xl font-bold">${{ stats.totalCash }}</div>
-              <div class="text-color-secondary">Total Cash</div>
-            </div>
-          </template>
-        </Card>
-      </div>
-      <div class="col-12 lg:col-3">
-        <Card>
-          <template #content>
-            <div class="metric-card">
-              <i class="pi pi-bank text-4xl text-blue-500 mb-3"></i>
-              <div class="text-2xl font-bold">{{ stats.bankAccounts }}</div>
-              <div class="text-color-secondary">Bank Accounts</div>
-            </div>
-          </template>
-        </Card>
-      </div>
-      <div class="col-12 lg:col-3">
-        <Card>
-          <template #content>
-            <div class="metric-card">
-              <i class="pi pi-arrow-up text-4xl text-purple-500 mb-3"></i>
-              <div class="text-2xl font-bold">${{ stats.monthlyInflow }}</div>
-              <div class="text-color-secondary">Monthly Inflow</div>
-            </div>
-          </template>
-        </Card>
-      </div>
-      <div class="col-12 lg:col-3">
-        <Card>
-          <template #content>
-            <div class="metric-card">
-              <i class="pi pi-arrow-down text-4xl text-orange-500 mb-3"></i>
-              <div class="text-2xl font-bold">${{ stats.monthlyOutflow }}</div>
-              <div class="text-color-secondary">Monthly Outflow</div>
-            </div>
-          </template>
-        </Card>
-      </div>
-    </div>
 
-    <div class="grid">
-      <div class="col-12 lg:col-8">
+
+      <div class="content-grid">
         <Card>
-          <template #title>Recent Transactions</template>
+          <template #header>
+            <h3 class="card-title">Recent Transactions</h3>
+          </template>
           <template #content>
-            <DataTable :value="recentTransactions" :rows="10">
+            <DataTable :value="recentTransactions" :rows="10" class="compact-table">
               <Column field="date" header="Date" />
               <Column field="description" header="Description" />
               <Column field="account" header="Account" />
@@ -71,7 +32,7 @@
               </Column>
               <Column field="amount" header="Amount">
                 <template #body="{ data }">
-                  <span :class="data.type === 'inflow' ? 'text-green-600' : 'text-red-600'">
+                  <span :class="data.type === 'inflow' ? 'text-success' : 'text-error'">
                     {{ formatCurrency(data.amount) }}
                   </span>
                 </template>
@@ -79,10 +40,10 @@
             </DataTable>
           </template>
         </Card>
-      </div>
-      <div class="col-12 lg:col-4">
         <Card>
-          <template #title>Bank Accounts</template>
+          <template #header>
+            <h3 class="card-title">Bank Accounts</h3>
+          </template>
           <template #content>
             <div class="bank-accounts">
               <div v-for="account in bankAccounts" :key="account.id" class="bank-account-item">
@@ -96,36 +57,37 @@
           </template>
         </Card>
       </div>
-    </div>
 
-    <Dialog v-model:visible="transactionDialog" header="Cash Transaction" :modal="true" :style="{width: '500px'}">
-      <div class="field">
-        <label>Description</label>
-        <InputText v-model="transaction.description" class="w-full" :class="{'p-invalid': submitted && !transaction.description}" />
-        <small class="p-error" v-if="submitted && !transaction.description">Description is required.</small>
-      </div>
-      <div class="field">
-        <label>Account</label>
-        <Dropdown v-model="transaction.account" :options="accountOptions" optionLabel="name" optionValue="name" placeholder="Select Account" class="w-full" />
-      </div>
-      <div class="field">
-        <label>Type</label>
-        <Dropdown v-model="transaction.type" :options="typeOptions" optionLabel="label" optionValue="value" placeholder="Select Type" class="w-full" />
-      </div>
-      <div class="field">
-        <label>Amount</label>
-        <InputNumber v-model="transaction.amount" mode="currency" currency="USD" class="w-full" :min="0" />
-      </div>
-      <div class="field">
-        <label>Date</label>
-        <Calendar v-model="transaction.date" class="w-full" />
-      </div>
-      <template #footer>
-        <Button label="Cancel" class="p-button-text" @click="hideDialog" />
-        <Button label="Save" @click="saveTransaction" />
-      </template>
-    </Dialog>
-  </div>
+    </template>
+  </UnifiedDashboard>
+
+  <Dialog v-model:visible="transactionDialog" header="Cash Transaction" :modal="true" :style="{width: '500px'}">
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <InputText v-model="transaction.description" class="form-input" :class="{'p-invalid': submitted && !transaction.description}" />
+      <small class="p-error" v-if="submitted && !transaction.description">Description is required.</small>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Account</label>
+      <Dropdown v-model="transaction.account" :options="accountOptions" optionLabel="name" optionValue="name" placeholder="Select Account" class="form-input" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Type</label>
+      <Dropdown v-model="transaction.type" :options="typeOptions" optionLabel="label" optionValue="value" placeholder="Select Type" class="form-input" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Amount</label>
+      <InputNumber v-model="transaction.amount" mode="currency" currency="USD" class="form-input" :min="0" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Date</label>
+      <Calendar v-model="transaction.date" class="form-input" />
+    </div>
+    <template #footer>
+      <Button label="Cancel" class="btn-secondary" @click="hideDialog" />
+      <Button label="Save" class="btn-primary" @click="saveTransaction" />
+    </template>
+  </Dialog>
 </template>
 
 <script setup lang="ts">
@@ -155,6 +117,37 @@ const stats = computed(() => {
     monthlyOutflow: '0'
   }
 })
+
+const dashboardMetrics = computed(() => [
+  {
+    id: 'cash',
+    icon: 'pi pi-wallet',
+    value: `$${stats.value.totalCash}`,
+    label: 'Total Cash',
+    color: 'var(--success-500)'
+  },
+  {
+    id: 'accounts',
+    icon: 'pi pi-bank',
+    value: stats.value.bankAccounts,
+    label: 'Bank Accounts',
+    color: 'var(--primary-500)'
+  },
+  {
+    id: 'inflow',
+    icon: 'pi pi-arrow-up',
+    value: `$${stats.value.monthlyInflow}`,
+    label: 'Monthly Inflow',
+    color: 'var(--info-500)'
+  },
+  {
+    id: 'outflow',
+    icon: 'pi pi-arrow-down',
+    value: `$${stats.value.monthlyOutflow}`,
+    label: 'Monthly Outflow',
+    color: 'var(--warning-500)'
+  }
+])
 
 const recentTransactions = computed(() => {
   return recentTransactionsData.value.map(transaction => ({
@@ -280,28 +273,40 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.cash-management {
-  padding: 0;
+.content-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--spacing-lg);
 }
 
-.metric-card {
-  text-align: center;
+.card-title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-color);
+  margin: 0;
 }
 
 .bank-accounts {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--spacing-md);
 }
 
 .bank-account-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem;
-  border: 1px solid var(--surface-border);
-  border-radius: 8px;
+  padding: var(--spacing-lg);
+  border: 1px solid var(--surface-200);
+  border-radius: var(--border-radius);
   background: var(--surface-50);
+  transition: all var(--transition-fast);
+}
+
+.bank-account-item:hover {
+  background: var(--surface-100);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
 }
 
 .account-info {
@@ -309,17 +314,37 @@ onMounted(() => {
 }
 
 .account-name {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-color);
+  font-size: var(--font-size-base);
+  margin-bottom: var(--spacing-xs);
 }
 
 .account-number {
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   color: var(--text-color-secondary);
 }
 
 .account-balance {
-  font-weight: 600;
-  color: var(--primary-color);
+  font-weight: var(--font-weight-bold);
+  color: var(--primary-600);
+  font-size: var(--font-size-lg);
+}
+
+:deep(.compact-table .p-datatable-tbody td) {
+  padding: var(--spacing-sm) var(--spacing-md);
+}
+
+:deep(.compact-table .p-datatable-thead th) {
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+@media (max-width: 768px) {
+  .content-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-md);
+  }
 }
 </style>

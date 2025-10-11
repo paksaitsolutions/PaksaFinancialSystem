@@ -10,8 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.db.query_helper import QueryHelper
-from app.models.accounts_payable.invoice import APInvoice, APInvoicePayment
-from app.models.accounts_payable.payment import APPayment
+from app.models import APInvoice, APInvoicePayment, APPayment
 from app.schemas.accounts_payable.payment import PaymentCreate, PaymentUpdate
 
 class PaymentCRUD:

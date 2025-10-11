@@ -1,110 +1,56 @@
 <template>
-  <div class="dashboard">
-    <div class="dashboard-header">
-      <h1>Financial Dashboard</h1>
-      <p>Welcome to Paksa Financial System</p>
-    </div>
+  <UnifiedDashboard 
+    title="Financial Dashboard" 
+    subtitle="Welcome to Paksa Financial System"
+  >
+    <template #metrics>
+      <UnifiedMetrics :metrics="dashboardMetrics" />
+    </template>
+    
+    <template #content>
 
-    <div class="dashboard-grid">
-      <!-- Quick Stats -->
-      <div class="stats-row">
-        <Card class="stat-card">
+
+
+      <div class="content-grid">
+        <Card>
+          <template #header>
+            <h3 class="card-title">Quick Actions</h3>
+          </template>
           <template #content>
-            <div class="stat-content">
-              <div class="stat-icon bg-blue-100">
-                <i class="pi pi-dollar text-blue-600"></i>
-              </div>
-              <div class="stat-info">
-                <h3>Total Revenue</h3>
-                <p class="stat-value">${{ dashboardStats.totalRevenue.toLocaleString() }}</p>
-                <span class="stat-change positive">+12.5%</span>
-              </div>
+            <div class="actions-list">
+              <Button label="New Invoice" icon="pi pi-plus" class="action-btn" @click="$router.push('/ar')" />
+              <Button label="Record Payment" icon="pi pi-credit-card" class="action-btn btn-secondary" @click="$router.push('/ap')" />
+              <Button label="Journal Entry" icon="pi pi-book" class="action-btn" @click="$router.push('/accounting/journal-entry')" />
+              <Button label="View Reports" icon="pi pi-chart-bar" class="action-btn" @click="$router.push('/reports')" />
             </div>
           </template>
         </Card>
 
-        <Card class="stat-card">
-          <template #content>
-            <div class="stat-content">
-              <div class="stat-icon bg-green-100">
-                <i class="pi pi-chart-line text-green-600"></i>
-              </div>
-              <div class="stat-info">
-                <h3>Net Profit</h3>
-                <p class="stat-value">${{ dashboardStats.netProfit.toLocaleString() }}</p>
-                <span class="stat-change positive">+8.2%</span>
-              </div>
-            </div>
+        <Card>
+          <template #header>
+            <h3 class="card-title">Recent Transactions</h3>
           </template>
-        </Card>
-
-        <Card class="stat-card">
           <template #content>
-            <div class="stat-content">
-              <div class="stat-icon bg-orange-100">
-                <i class="pi pi-users text-orange-600"></i>
-              </div>
-              <div class="stat-info">
-                <h3>Customers</h3>
-                <p class="stat-value">{{ dashboardStats.customers.toLocaleString() }}</p>
-                <span class="stat-change positive">+5.1%</span>
-              </div>
-            </div>
-          </template>
-        </Card>
-
-        <Card class="stat-card">
-          <template #content>
-            <div class="stat-content">
-              <div class="stat-icon bg-red-100">
-                <i class="pi pi-exclamation-triangle text-red-600"></i>
-              </div>
-              <div class="stat-info">
-                <h3>Overdue</h3>
-                <p class="stat-value">${{ dashboardStats.overdue.toLocaleString() }}</p>
-                <span class="stat-change negative">-2.3%</span>
-              </div>
-            </div>
+            <DataTable :value="recentTransactions" class="compact-table">
+              <Column field="date" header="Date" />
+              <Column field="description" header="Description" />
+              <Column field="amount" header="Amount">
+                <template #body="{ data }">
+                  <span :class="data.amount >= 0 ? 'text-success' : 'text-error'">
+                    {{ formatCurrency(data.amount) }}
+                  </span>
+                </template>
+              </Column>
+            </DataTable>
           </template>
         </Card>
       </div>
-
-      <!-- Quick Actions -->
-      <Card class="quick-actions">
-        <template #title>Quick Actions</template>
-        <template #content>
-          <div class="action-grid">
-            <Button label="New Invoice" icon="pi pi-plus" @click="$router.push('/ar')" />
-            <Button label="Record Payment" icon="pi pi-credit-card" @click="$router.push('/ap')" />
-            <Button label="Journal Entry" icon="pi pi-book" @click="$router.push('/accounting/journal-entry')" />
-            <Button label="View Reports" icon="pi pi-chart-bar" @click="$router.push('/reports')" />
-          </div>
-        </template>
-      </Card>
-
-      <!-- Recent Transactions -->
-      <Card class="recent-transactions">
-        <template #title>Recent Transactions</template>
-        <template #content>
-          <DataTable :value="recentTransactions" responsiveLayout="scroll">
-            <Column field="date" header="Date" />
-            <Column field="description" header="Description" />
-            <Column field="amount" header="Amount">
-              <template #body="{ data }">
-                <span :class="data.amount >= 0 ? 'text-green-600' : 'text-red-600'">
-                  {{ formatCurrency(data.amount) }}
-                </span>
-              </template>
-            </Column>
-          </DataTable>
-        </template>
-      </Card>
-    </div>
-  </div>
+    </template>
+  </UnifiedDashboard>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 
 const recentTransactions = ref([])
 const dashboardStats = ref({
@@ -113,6 +59,37 @@ const dashboardStats = ref({
   customers: 0,
   overdue: 0
 })
+
+const dashboardMetrics = computed(() => [
+  {
+    id: 'revenue',
+    icon: 'pi pi-dollar',
+    value: `$${dashboardStats.value.totalRevenue.toLocaleString()}`,
+    label: 'Total Revenue',
+    color: 'var(--primary-500)'
+  },
+  {
+    id: 'profit',
+    icon: 'pi pi-chart-line',
+    value: `$${dashboardStats.value.netProfit.toLocaleString()}`,
+    label: 'Net Profit',
+    color: 'var(--success-500)'
+  },
+  {
+    id: 'customers',
+    icon: 'pi pi-users',
+    value: dashboardStats.value.customers.toLocaleString(),
+    label: 'Customers',
+    color: 'var(--info-500)'
+  },
+  {
+    id: 'overdue',
+    icon: 'pi pi-exclamation-triangle',
+    value: `$${dashboardStats.value.overdue.toLocaleString()}`,
+    label: 'Overdue',
+    color: 'var(--error-500)'
+  }
+])
 const loading = ref(false)
 
 const loadDashboardData = async () => {
@@ -155,104 +132,44 @@ const formatCurrency = (value: number) => {
 </script>
 
 <style scoped>
-.dashboard {
-  padding: 0;
+.content-grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: var(--spacing-lg);
 }
 
-.dashboard-header {
-  margin-bottom: 2rem;
-}
-
-.dashboard-header h1 {
-  font-size: 2rem;
-  font-weight: 600;
-  margin: 0 0 0.5rem 0;
-}
-
-.dashboard-header p {
-  color: #6b7280;
+.card-title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-color);
   margin: 0;
 }
 
-.dashboard-grid {
+.actions-list {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: var(--spacing-sm);
 }
 
-.stats-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1rem;
+.action-btn {
+  width: 100%;
+  justify-content: flex-start;
 }
 
-.stat-card {
-  border: none;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+:deep(.compact-table .p-datatable-tbody td) {
+  padding: var(--spacing-sm) var(--spacing-md);
 }
 
-.stat-content {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.stat-icon {
-  width: 3rem;
-  height: 3rem;
-  border-radius: 0.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.25rem;
-}
-
-.stat-info h3 {
-  margin: 0 0 0.25rem 0;
-  font-size: 0.875rem;
-  color: #6b7280;
-  font-weight: 500;
-}
-
-.stat-value {
-  margin: 0 0 0.25rem 0;
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #1f2937;
-}
-
-.stat-change {
-  font-size: 0.75rem;
-  font-weight: 500;
-}
-
-.stat-change.positive {
-  color: #059669;
-}
-
-.stat-change.negative {
-  color: #dc2626;
-}
-
-.quick-actions,
-.recent-transactions {
-  border: none;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.action-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
+:deep(.compact-table .p-datatable-thead th) {
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
 }
 
 @media (max-width: 768px) {
-  .stats-row {
+  .content-grid {
     grid-template-columns: 1fr;
-  }
-  
-  .action-grid {
-    grid-template-columns: 1fr;
+    gap: var(--spacing-md);
   }
 }
 </style>

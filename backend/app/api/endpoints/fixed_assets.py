@@ -5,6 +5,7 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from app.api import deps
 from app.models.user import User
+from app.database import get_db
 import io
 import csv
 
@@ -267,30 +268,45 @@ async def get_depreciation_schedule(
 async def dispose_asset(
     asset_id: int,
     disposal_data: dict,
+    db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_active_user)
 ):
-    """Dispose of an asset"""
-    asset_index = next((i for i, a in enumerate(MOCK_ASSETS) if a["id"] == asset_id), None)
-    if asset_index is None:
+    """Dispose of an asset with GL integration"""
+    from app.services.fixed_assets_gl_service import FixedAssetsGLService
+    from app.models import FixedAsset
+    from decimal import Decimal
+    
+    # Get asset from database
+    asset = db.query(FixedAsset).filter(FixedAsset.id == asset_id).first()
+    if not asset:
         raise HTTPException(status_code=404, detail="Asset not found")
     
-    asset = MOCK_ASSETS[asset_index]
-    gain_loss = disposal_data["disposal_amount"] - asset["current_value"]
+    if asset.status == "disposed":
+        raise HTTPException(status_code=400, detail="Asset already disposed")
     
-    # Update asset status
-    MOCK_ASSETS[asset_index]["status"] = "disposed"
-    MOCK_ASSETS[asset_index]["updated_at"] = datetime.now().isoformat()
+    # Initialize GL service
+    gl_service = FixedAssetsGLService(db)
     
-    disposal = {
+    # Post disposal to GL
+    journal_entry = gl_service.post_asset_disposal_to_gl(
+        asset=asset,
+        disposal_amount=Decimal(str(disposal_data["disposal_amount"])),
+        disposal_date=disposal_data.get("disposal_date")
+    )
+    
+    db.commit()
+    
+    gain_loss = disposal_data["disposal_amount"] - asset.current_value
+    
+    return {
         "id": 1,
         "asset_id": asset_id,
-        **disposal_data,
-        "gain_loss": gain_loss,
+        "journal_entry_id": journal_entry.id,
+        "gain_loss": float(gain_loss),
         "created_by": current_user.full_name,
-        "created_at": datetime.now().isoformat()
+        "created_at": datetime.now().isoformat(),
+        **disposal_data
     }
-    
-    return disposal
 
 @router.get("/reports/valuation")
 async def get_valuation_report(current_user: User = Depends(deps.get_current_active_user)):

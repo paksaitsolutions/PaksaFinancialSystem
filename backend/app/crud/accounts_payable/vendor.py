@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, or_
 from sqlalchemy.orm import selectinload
 
-from app.models.accounts_payable.vendor import Vendor, VendorContact
+from app.models import Vendor, VendorContact
 from app.schemas.accounts_payable.vendor import VendorCreate, VendorUpdate
 
 class VendorCRUD:

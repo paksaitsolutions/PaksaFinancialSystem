@@ -13,7 +13,7 @@ class AttendanceRecord(Base):
     __tablename__ = "hrm_attendance_records"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    employee_id = Column(UUID(as_uuid=True), ForeignKey('hrm_employees.id'), nullable=False)
+    employee_id = Column(UUID(as_uuid=True), ForeignKey('employees.id'), nullable=False)
     date = Column(Date, nullable=False)
     check_in_time = Column(Time, nullable=True)
     check_out_time = Column(Time, nullable=True)
@@ -26,4 +26,4 @@ class AttendanceRecord(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     
     # Relationships
-    employee = relationship("Employee", back_populates="attendance_records")
+    employee = relationship("Employee")

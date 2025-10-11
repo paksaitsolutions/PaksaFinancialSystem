@@ -29,7 +29,7 @@ class Department(Base):
     is_active = Column(Boolean, default=True, nullable=False)
     
     # Relationships
-    parent = relationship("Department", remote_side=[id], backref="sub_departments")
+    parent = relationship("Department", remote_side="Department.id", backref="sub_departments")
     employees = relationship("Employee", back_populates="department")
     manager = relationship("Employee", foreign_keys=[manager_id])
     

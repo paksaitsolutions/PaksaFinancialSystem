@@ -31,6 +31,7 @@ class BankAccount(Base):
     __tablename__ = "bank_accounts"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), nullable=False, index=True)
     name = Column(String(255), nullable=False)
     account_number = Column(String(100), nullable=False)
     account_type = Column(Enum(AccountType), nullable=False)
@@ -48,6 +49,7 @@ class BankTransaction(Base):
     __tablename__ = "bank_transactions"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), nullable=False, index=True)
     account_id = Column(UUID(as_uuid=True), ForeignKey("bank_accounts.id"), nullable=False)
     transaction_date = Column(DateTime(timezone=True), nullable=False)
     transaction_type = Column(Enum(TransactionType), nullable=False)
@@ -72,3 +74,33 @@ class CashFlowCategory(Base):
     description = Column(Text)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class BankReconciliation(Base):
+    __tablename__ = "bank_reconciliations"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    account_id = Column(UUID(as_uuid=True), ForeignKey("bank_accounts.id"), nullable=False)
+    reconciliation_date = Column(DateTime(timezone=True), nullable=False)
+    statement_ending_balance = Column(Numeric(15, 2), nullable=False)
+    book_ending_balance = Column(Numeric(15, 2), nullable=False)
+    difference = Column(Numeric(15, 2), default=0)
+    status = Column(String(20), default="in_progress")
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    completed_at = Column(DateTime(timezone=True))
+    
+    account = relationship("BankAccount")
+    items = relationship("ReconciliationItem", back_populates="reconciliation", cascade="all, delete-orphan")
+
+class ReconciliationItem(Base):
+    __tablename__ = "reconciliation_items"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    reconciliation_id = Column(UUID(as_uuid=True), ForeignKey("bank_reconciliations.id"), nullable=False)
+    transaction_id = Column(UUID(as_uuid=True), ForeignKey("bank_transactions.id"))
+    item_type = Column(String(50), nullable=False)  # outstanding_check, deposit_in_transit, bank_error, book_error
+    description = Column(Text, nullable=False)
+    amount = Column(Numeric(15, 2), nullable=False)
+    is_cleared = Column(Boolean, default=False)
+    
+    reconciliation = relationship("BankReconciliation", back_populates="items")
+    transaction = relationship("BankTransaction")

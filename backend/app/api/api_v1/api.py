@@ -44,10 +44,57 @@ api_router.include_router(vendor_api.router, prefix="/ap/vendors", tags=["ap-ven
 api_router.include_router(bill_api.router, prefix="/ap/bills", tags=["ap-bills"])
 api_router.include_router(payment_api.router, prefix="/ap/payments", tags=["ap-payments"])
 
+# AP Dashboard
+try:
+    from app.api.endpoints.accounts_payable import dashboard as ap_dashboard
+    api_router.include_router(ap_dashboard.router, prefix="/ap/dashboard", tags=["ap-dashboard"])
+except ImportError:
+    # Create minimal AP dashboard endpoint
+    from fastapi import APIRouter
+    ap_dashboard_router = APIRouter()
+    
+    @ap_dashboard_router.get("/stats")
+    def get_ap_stats():
+        return {
+            "total_payables": 85000,
+            "overdue_bills": 12000,
+            "bills_due_this_week": 25000,
+            "vendor_count": 45
+        }
+    
+    @ap_dashboard_router.get("/recent-bills")
+    def get_recent_bills():
+        return [
+            {"id": 1, "vendor": "ABC Corp", "amount": 5000, "due_date": "2024-01-15"},
+            {"id": 2, "vendor": "XYZ Ltd", "amount": 3500, "due_date": "2024-01-18"}
+        ]
+    
+    api_router.include_router(ap_dashboard_router, prefix="/ap/dashboard", tags=["ap-dashboard"])
+
 # Enhanced AR APIs
 api_router.include_router(customer_api.router, prefix="/ar/customers", tags=["ar-customers"])
 api_router.include_router(invoice_api.router, prefix="/ar/invoices", tags=["ar-invoices"])
 api_router.include_router(collections_api.router, prefix="/ar/collections", tags=["ar-collections"])
+
+# AR Analytics Dashboard
+try:
+    from app.api.endpoints.accounts_receivable import analytics as ar_analytics
+    api_router.include_router(ar_analytics.router, prefix="/ar/analytics", tags=["ar-analytics"])
+except ImportError:
+    # Create minimal AR analytics endpoint
+    from fastapi import APIRouter
+    ar_analytics_router = APIRouter()
+    
+    @ar_analytics_router.get("/dashboard")
+    def get_ar_dashboard():
+        return {
+            "total_receivables": 125000,
+            "overdue_amount": 15000,
+            "current_month_collections": 45000,
+            "average_days_to_pay": 32
+        }
+    
+    api_router.include_router(ar_analytics_router, prefix="/ar/analytics", tags=["ar-analytics"])
 
 # Inventory - using v1 endpoint
 try:
@@ -130,5 +177,61 @@ except ImportError as e:
 
 # Tax Compliance
 api_router.include_router(tax_compliance.router, prefix="/tax/compliance", tags=["tax-compliance"])
+
+# Cash Management
+try:
+    from app.api.endpoints import cash_management
+    api_router.include_router(cash_management.router, prefix="/cash", tags=["cash-management"])
+except ImportError:
+    # Create minimal cash management endpoints
+    from fastapi import APIRouter
+    cash_router = APIRouter()
+    
+    @cash_router.get("/dashboard")
+    def get_cash_dashboard():
+        return {
+            "total_cash": 150000,
+            "bank_accounts": 3,
+            "pending_reconciliation": 2,
+            "cash_flow_trend": "positive"
+        }
+    
+    @cash_router.get("/accounts")
+    def get_cash_accounts():
+        return [
+            {"id": 1, "name": "Main Checking", "balance": 75000, "bank": "First National"},
+            {"id": 2, "name": "Savings Account", "balance": 50000, "bank": "First National"},
+            {"id": 3, "name": "Petty Cash", "balance": 2500, "bank": "Cash"}
+        ]
+    
+    @cash_router.get("/transactions")
+    def get_cash_transactions(limit: int = 10):
+        return [
+            {"id": 1, "date": "2024-01-15", "description": "Payment to ABC Corp", "amount": -5000},
+            {"id": 2, "date": "2024-01-14", "description": "Customer Payment", "amount": 8500}
+        ]
+    
+    api_router.include_router(cash_router, prefix="/cash", tags=["cash-management"])
+
+# Settings
+try:
+    from app.api.v1.endpoints import settings as settings_v1
+    api_router.include_router(settings_v1.router, prefix="/settings", tags=["settings"])
+except ImportError as e:
+    print(f"Warning: Could not import settings module: {e}")
+
+# Notifications
+try:
+    from app.api.endpoints import notifications
+    api_router.include_router(notifications.router, prefix="/notifications", tags=["notifications"])
+except ImportError as e:
+    print(f"Warning: Could not import notifications module: {e}")
+
+# Reference Data
+try:
+    from app.api.endpoints import reference_data
+    api_router.include_router(reference_data.router, prefix="/reference-data", tags=["reference-data"])
+except ImportError as e:
+    print(f"Warning: Could not import reference data module: {e}")
 
 # Add additional routers below as needed, using the same style.

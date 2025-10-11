@@ -4,7 +4,7 @@ Collections AI CRUD operations.
 from typing import List, Dict, Any, Optional
 from sqlalchemy.orm import Session
 from app.crud.base_ap import CRUDBase
-from app.models.accounts_receivable import Collection
+from app.models import Collection
 from pydantic import BaseModel
 
 class CollectionsAICRUD(CRUDBase[Collection, BaseModel, BaseModel]):

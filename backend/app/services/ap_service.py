@@ -1,8 +1,9 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from app.models.vendor import MainVendor as Vendor, APInvoice, APPayment
+from app.models import Vendor, APInvoice, APPayment, JournalEntry, JournalEntryLine, ChartOfAccounts
 from typing import List
 from uuid import uuid4
+from datetime import datetime
 
 class APService:
     def __init__(self, db: AsyncSession, tenant_id: str):
@@ -33,30 +34,115 @@ class APService:
     
     async def create_invoice(self, invoice_data: dict) -> APInvoice:
         invoice = APInvoice(
-            tenant_id=self.tenant_id,
+            company_id=self.tenant_id,
             vendor_id=invoice_data['vendor_id'],
             invoice_number=invoice_data['invoice_number'],
             invoice_date=invoice_data['invoice_date'],
             due_date=invoice_data.get('due_date'),
-            total_amount=invoice_data['total_amount'],
-            description=invoice_data.get('description')
+            total_amount=invoice_data['total_amount']
         )
         self.db.add(invoice)
+        await self.db.flush()
+        
+        # Auto-generate GL journal entry
+        await self._create_ap_invoice_journal_entry(invoice, invoice_data)
+        
         await self.db.commit()
         await self.db.refresh(invoice)
         return invoice
     
+    async def _create_ap_invoice_journal_entry(self, invoice: APInvoice, invoice_data: dict):
+        """Create journal entry for AP invoice: Dr. Expense, Cr. Accounts Payable"""
+        journal_entry = JournalEntry(
+            company_id=self.tenant_id,
+            entry_number=f"AP-{invoice.invoice_number}",
+            entry_date=invoice.invoice_date,
+            description=f"AP Invoice {invoice.invoice_number}",
+            total_debit=invoice.total_amount,
+            total_credit=invoice.total_amount,
+            status='posted',
+            source_module='AP'
+        )
+        self.db.add(journal_entry)
+        await self.db.flush()
+        
+        # Debit expense account
+        expense_line = JournalEntryLine(
+            journal_entry_id=journal_entry.id,
+            account_id=invoice_data.get('expense_account_id'),
+            description=f"Expense - {invoice.invoice_number}",
+            debit_amount=invoice.total_amount,
+            credit_amount=0,
+            line_number=1
+        )
+        
+        # Credit accounts payable
+        ap_line = JournalEntryLine(
+            journal_entry_id=journal_entry.id,
+            account_id=invoice_data.get('ap_account_id'),
+            description=f"Accounts Payable - {invoice.invoice_number}",
+            debit_amount=0,
+            credit_amount=invoice.total_amount,
+            line_number=2
+        )
+        
+        self.db.add(expense_line)
+        self.db.add(ap_line)
+    
     async def create_payment(self, payment_data: dict) -> APPayment:
         payment = APPayment(
-            tenant_id=self.tenant_id,
+            company_id=self.tenant_id,
             vendor_id=payment_data['vendor_id'],
             payment_number=f"PAY-{uuid4().hex[:8].upper()}",
             payment_date=payment_data['payment_date'],
             amount=payment_data['amount'],
-            payment_method=payment_data.get('payment_method', 'Check'),
+            payment_method=payment_data.get('payment_method', 'CHECK'),
             reference=payment_data.get('reference')
         )
         self.db.add(payment)
+        await self.db.flush()
+        
+        # Auto-generate GL journal entry
+        await self._create_ap_payment_journal_entry(payment, payment_data)
+        
         await self.db.commit()
         await self.db.refresh(payment)
         return payment
+    
+    async def _create_ap_payment_journal_entry(self, payment: APPayment, payment_data: dict):
+        """Create journal entry for AP payment: Dr. Accounts Payable, Cr. Cash"""
+        journal_entry = JournalEntry(
+            company_id=self.tenant_id,
+            entry_number=f"PAY-{payment.payment_number}",
+            entry_date=payment.payment_date,
+            description=f"AP Payment {payment.payment_number}",
+            total_debit=payment.amount,
+            total_credit=payment.amount,
+            status='posted',
+            source_module='AP'
+        )
+        self.db.add(journal_entry)
+        await self.db.flush()
+        
+        # Debit accounts payable
+        ap_line = JournalEntryLine(
+            journal_entry_id=journal_entry.id,
+            account_id=payment_data.get('ap_account_id'),
+            description=f"Accounts Payable - {payment.payment_number}",
+            debit_amount=payment.amount,
+            credit_amount=0,
+            line_number=1
+        )
+        
+        # Credit cash account
+        cash_line = JournalEntryLine(
+            journal_entry_id=journal_entry.id,
+            account_id=payment_data.get('cash_account_id'),
+            description=f"Cash Payment - {payment.payment_number}",
+            debit_amount=0,
+            credit_amount=payment.amount,
+            line_number=2
+        )
+        
+        self.db.add(ap_line)
+        self.db.add(cash_line)

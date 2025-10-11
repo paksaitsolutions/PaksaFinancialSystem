@@ -11,7 +11,7 @@ from sqlalchemy import Column, String, Numeric, DateTime, ForeignKey, Text, Inde
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
-from ...core.db.base import Base
+from app.models.base import Base, TimestampMixin, SoftDeleteMixin
 
 class TaxTransactionStatus(str, Enum):
     """Status of a tax transaction."""
@@ -47,7 +47,7 @@ class TaxTransaction(Base, TimestampMixin, SoftDeleteMixin):
     # Tax details
     tax_type = Column(String(50), nullable=False, index=True)
     tax_rate_id = Column(UUID(as_uuid=True), ForeignKey("tax_rates.id"), nullable=False)
-    tax_rate = relationship("TaxRate")
+    tax_rate = relationship("TaxRate", viewonly=True)
     
     # Amounts
     taxable_amount = Column(Numeric(19, 4), nullable=False, default=0)

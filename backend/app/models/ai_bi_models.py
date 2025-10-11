@@ -7,15 +7,16 @@ from sqlalchemy.orm import relationship
 from datetime import datetime
 import uuid
 
-from app.models.base import Base
+from app.models.core_models import Company
+from app.models.base import Base, AuditMixin
 
 
-class AIInsight(Base):
+class AIInsight(Base, AuditMixin):
     __tablename__ = "ai_insights"
     __table_args__ = {'extend_existing': True}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    tenant_id = Column(UUID(as_uuid=True), nullable=False)
+    company_id = Column(UUID(as_uuid=True), nullable=False, index=True)
     title = Column(String(255), nullable=False)
     description = Column(Text, nullable=False)
     insight_type = Column(String(50), nullable=False)  # anomaly, prediction, recommendation
@@ -28,12 +29,12 @@ class AIInsight(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
-class AIRecommendation(Base):
+class AIRecommendation(Base, AuditMixin):
     __tablename__ = "ai_recommendations"
     __table_args__ = {'extend_existing': True}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    tenant_id = Column(UUID(as_uuid=True), nullable=False)
+    company_id = Column(UUID(as_uuid=True), nullable=False, index=True)
     title = Column(String(255), nullable=False)
     description = Column(Text, nullable=False)
     recommendation_type = Column(String(50), nullable=False)
@@ -48,12 +49,12 @@ class AIRecommendation(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
-class AIAnomaly(Base):
+class AIAnomaly(Base, AuditMixin):
     __tablename__ = "ai_anomalies"
     __table_args__ = {'extend_existing': True}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    tenant_id = Column(UUID(as_uuid=True), nullable=False)
+    company_id = Column(UUID(as_uuid=True), nullable=False, index=True)
     title = Column(String(255), nullable=False)
     description = Column(Text, nullable=False)
     anomaly_type = Column(String(50), nullable=False)
@@ -68,12 +69,12 @@ class AIAnomaly(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
-class AIPrediction(Base):
+class AIPrediction(Base, AuditMixin):
     __tablename__ = "ai_predictions"
     __table_args__ = {'extend_existing': True}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    tenant_id = Column(UUID(as_uuid=True), nullable=False)
+    company_id = Column(UUID(as_uuid=True), nullable=False, index=True)
     prediction_type = Column(String(50), nullable=False)  # cash_flow, revenue, expense
     module = Column(String(50), nullable=False)
     target_date = Column(DateTime, nullable=False)
@@ -87,12 +88,12 @@ class AIPrediction(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
-class AIModelMetrics(Base):
+class AIModelMetrics(Base, AuditMixin):
     __tablename__ = "ai_model_metrics"
     __table_args__ = {'extend_existing': True}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    tenant_id = Column(UUID(as_uuid=True), nullable=False)
+    company_id = Column(UUID(as_uuid=True), nullable=False, index=True)
     model_name = Column(String(100), nullable=False)
     model_type = Column(String(50), nullable=False)  # classification, regression, clustering
     version = Column(String(20), nullable=False)
@@ -108,12 +109,12 @@ class AIModelMetrics(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
-class AIAnalyticsReport(Base):
+class AIAnalyticsReport(Base, AuditMixin):
     __tablename__ = "ai_analytics_reports"
     __table_args__ = {'extend_existing': True}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    tenant_id = Column(UUID(as_uuid=True), nullable=False)
+    company_id = Column(UUID(as_uuid=True), nullable=False, index=True)
     report_name = Column(String(255), nullable=False)
     report_type = Column(String(50), nullable=False)
     module = Column(String(50), nullable=False)

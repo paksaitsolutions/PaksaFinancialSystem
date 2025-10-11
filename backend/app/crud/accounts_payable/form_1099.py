@@ -10,9 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.db.query_helper import QueryHelper
-from app.models.accounts_payable.form_1099 import Form1099, Form1099Transaction
-from app.models.accounts_payable.payment import APPayment
-from app.models.accounts_payable.vendor import Vendor
+from app.models import Form1099, Form1099Transaction, APPayment, Vendor
 from app.schemas.accounts_payable.form_1099 import Form1099Create, Form1099Update, Form1099GenerateRequest
 
 class Form1099CRUD:

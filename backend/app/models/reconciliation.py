@@ -42,7 +42,7 @@ class Reconciliation(Base):
     __tablename__ = 'reconciliations'
     
     id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
-    account_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), ForeignKey('accounts.id'), nullable=False)
+    account_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), ForeignKey('chart_of_accounts.id'), nullable=False)
     reference: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     status: Mapped[ReconciliationStatus] = mapped_column(SQLEnum(ReconciliationStatus), default=ReconciliationStatus.DRAFT, nullable=False)
     start_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
@@ -66,7 +66,7 @@ class Reconciliation(Base):
     approved_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     
     # Relationships
-    account: Mapped['Account'] = relationship('Account', back_populates='reconciliations')
+    account: Mapped['ChartOfAccounts'] = relationship('ChartOfAccounts')
     items: Mapped[List['ReconciliationItem']] = relationship('ReconciliationItem', back_populates='reconciliation', cascade='all, delete-orphan')
     
     def __repr__(self):

@@ -21,7 +21,7 @@ class MainVendor(BaseModel):
     
     # Relationships
     invoices = relationship("APInvoice", back_populates="main_vendor")
-    payments = relationship("APPayment", back_populates="main_vendor")
+    # payments relationship moved to app.models.accounts_payable.payment
 
 class APInvoice(BaseModel):
     __tablename__ = "ap_invoices"
@@ -40,17 +40,4 @@ class APInvoice(BaseModel):
     # Relationships
     main_vendor = relationship("MainVendor", back_populates="invoices")
 
-class APPayment(BaseModel):
-    __tablename__ = "ap_payments"
-    __table_args__ = {'extend_existing': True}
-    
-    tenant_id = Column(String, nullable=False, index=True)
-    vendor_id = Column(String, ForeignKey('main_vendors.id'), nullable=False)
-    payment_number = Column(String(50), nullable=False)
-    payment_date = Column(String(10), nullable=False)
-    amount = Column(Numeric(15, 2), nullable=False)
-    payment_method = Column(String(50))
-    reference = Column(String(100))
-    
-    # Relationships
-    main_vendor = relationship("MainVendor", back_populates="payments")
+# APPayment model moved to app.models.accounts_payable.payment - avoiding duplicate table definition

@@ -19,7 +19,7 @@ from app.models.base import Base
 
 
 
-from app.models.gl_models import JournalEntry, JournalEntryStatus, GLChartOfAccounts
+from app.models import JournalEntry, JournalEntryStatus, GLChartOfAccounts
 
 class RecurrenceFrequency(str, Enum):
     """Frequency of recurring journal entries."""
@@ -87,10 +87,8 @@ class RecurringJournalEntry(Base):
     )
     
     # Relationships
-    company = relationship("Company", back_populates="recurring_journal_entries")
+    company = relationship("Company")
     template = relationship("RecurringJournalTemplate", uselist=False, back_populates="recurring_entry")
-    generated_entries = relationship("JournalEntry", back_populates="recurring_journal")
-    creator = relationship("User", foreign_keys=[created_by])
     
     # Indexes
     __table_args__ = (
@@ -220,7 +218,7 @@ class AllocationRule(Base):
     )
     
     # Relationships
-    company = relationship("Company", back_populates="allocation_rules")
+    company = relationship("Company")
     destinations = relationship("AllocationDestination", back_populates="allocation_rule", cascade="all, delete-orphan")
     
     # Indexes
@@ -337,7 +335,7 @@ class AllocationDestination(Base):
     
     # Relationships
     allocation_rule = relationship("AllocationRule", back_populates="destinations")
-    account = relationship("GLChartOfAccounts")
+    account = relationship("ChartOfAccounts")
     
     # Indexes
     __table_args__ = (
