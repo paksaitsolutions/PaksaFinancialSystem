@@ -68,10 +68,13 @@ const quickMenu = ref()
 const notificationMenu = ref()
 
 const searchQuery = ref<string>('')
-const userName = ref('John Doe')
+
+const userName = computed(() => {
+  return authStore.user?.full_name || 'User'
+})
 
 const userInitials = computed((): string => {
-  return userName.value?.split(' ').map(n => n[0] || '').join('').toUpperCase() || 'US'
+  return userName.value?.split(' ').map(n => n[0] || '').join('').toUpperCase() || 'U'
 })
 
 onMounted(() => {
@@ -140,7 +143,7 @@ const userMenuItems = [
   {
     label: 'My Profile',
     icon: 'pi pi-user',
-    command: () => console.log('Navigate to profile')
+    command: () => router.push('/profile')
   },
   {
     label: 'Account Settings',
@@ -150,7 +153,7 @@ const userMenuItems = [
   {
     label: 'Help & Support',
     icon: 'pi pi-question-circle',
-    command: () => console.log('Open help')
+    command: () => router.push('/help')
   },
   { separator: true },
   {

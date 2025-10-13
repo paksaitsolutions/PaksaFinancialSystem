@@ -3,37 +3,7 @@ import { ref, computed } from 'vue';
 import type { JournalEntry, JournalEntryLine } from '@/types/accounting';
 import { useToast } from 'primevue/usetoast';
 
-// Mock data for development
-const mockJournalEntries: JournalEntry[] = [
-  {
-    id: '1',
-    reference: 'JE-2023-001',
-    date: '2023-01-15',
-    memo: 'Initial capital investment',
-    status: 'posted',
-    total_amount: 100000,
-    lines: [
-      {
-        id: '1-1',
-        account_id: '3001',
-        account_name: 'Owner\'s Equity',
-        debit: 0,
-        credit: 100000,
-        memo: 'Initial investment'
-      },
-      {
-        id: '1-2',
-        account_id: '1001',
-        account_name: 'Cash',
-        debit: 100000,
-        credit: 0,
-        memo: 'Initial investment'
-      }
-    ],
-    created_at: '2023-01-15T10:00:00Z',
-    updated_at: '2023-01-15T10:00:00Z'
-  }
-];
+import { api } from '@/utils/api';
 
 export const useJournalEntryStore = defineStore('journalEntry', () => {
   const toast = useToast();
@@ -59,12 +29,8 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
     loading.value = true;
     error.value = null;
     try {
-      // TODO: Replace with actual API call
-      // const { data } = await api.get('/api/accounting/journal-entries', { params });
-      // journalEntries.value = data;
-      
-      // Using mock data for development
-      journalEntries.value = mockJournalEntries;
+      const { data } = await api.get('/api/accounting/journal-entries', { params });
+      journalEntries.value = data;
       return journalEntries.value;
     } catch (err) {
       const message = 'Failed to fetch journal entries';
@@ -109,22 +75,13 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
     }
     
     try {
-      // TODO: Replace with actual API call
-      // const response = await api.post('/api/accounting/journal-entries', {
-      //   ...entryData,
-      //   total_amount: totalDebits,
-      //   status: 'draft' // Default status for new entries
-      // });
-      
-      const newEntry: JournalEntry = {
+      const response = await api.post('/api/accounting/journal-entries', {
         ...entryData,
-        id: Date.now().toString(),
         total_amount: totalDebits,
-        status: 'draft',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
+        status: 'draft'
+      });
       
+      const newEntry = response.data;
       journalEntries.value.push(newEntry);
       
       toast.add({
@@ -186,19 +143,12 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
     error.value = null;
     
     try {
-      // TODO: Replace with actual API call
-      // const response = await api.put(`/api/accounting/journal-entries/${entryData.id}`, {
-      //   ...entryData,
-      //   total_amount: totalDebits,
-      //   updated_at: new Date().toISOString()
-      // });
-      
-      const updatedEntry: JournalEntry = {
+      const response = await api.put(`/api/accounting/journal-entries/${entryData.id}`, {
         ...entryData,
-        total_amount: totalDebits,
-        updated_at: new Date().toISOString()
-      };
+        total_amount: totalDebits
+      });
       
+      const updatedEntry = response.data;
       const index = journalEntries.value.findIndex(e => e.id === entryData.id);
       if (index !== -1) {
         journalEntries.value[index] = updatedEntry;
@@ -247,9 +197,7 @@ export const useJournalEntryStore = defineStore('journalEntry', () => {
     error.value = null;
     
     try {
-      // TODO: Replace with actual API call
-      // await api.delete(`/api/accounting/journal-entries/${id}`);
-      
+      await api.delete(`/api/accounting/journal-entries/${id}`);
       journalEntries.value = journalEntries.value.filter(e => e.id !== id);
       
       toast.add({

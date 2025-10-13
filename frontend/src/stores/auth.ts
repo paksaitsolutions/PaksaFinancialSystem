@@ -29,48 +29,30 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isAuthenticated = computed(() => !!token.value && !!user.value);
 
-  const login = async (credentials: { email: string; password: string; remember_me?: boolean }) => {
+  const login = async (credentials: { username: string; password: string; remember_me?: boolean }) => {
     try {
-      // Mock login for demo - check credentials
-      if (credentials.email === 'admin@paksa.com' && credentials.password === 'admin123') {
-        const mockToken = 'mock-jwt-token-' + Date.now()
-        const mockUser = {
-          id: '1',
-          email: 'admin@paksa.com',
-          full_name: 'System Administrator',
-          is_active: true,
-          is_superuser: true,
-          created_at: new Date().toISOString()
-        }
-        
-        token.value = mockToken
-        user.value = mockUser
-        
-        if (credentials.remember_me) {
-          localStorage.setItem('token', token.value)
-        } else {
-          sessionStorage.setItem('token', token.value)
-        }
-        
-        // Set mock company
-        currentCompany.value = {
-          id: '1',
-          company_name: 'Paksa Financial Demo',
-          company_code: 'PAKSA',
-          default_currency: 'USD',
-          default_language: 'en',
-          timezone: 'UTC',
-          fiscal_year_start: '01-01'
-        }
-        companies.value = [currentCompany.value]
-        localStorage.setItem('currentCompany', currentCompany.value.id)
-        
-        return { access_token: mockToken, user: mockUser }
+      const response = await api.post('/auth/login', {
+        username: credentials.username,
+        password: credentials.password,
+        remember_me: credentials.remember_me
+      });
+      const { access_token, user: userData } = response.data;
+      
+      token.value = access_token;
+      user.value = userData;
+      
+      if (credentials.remember_me) {
+        localStorage.setItem('token', token.value);
       } else {
-        throw new Error('Invalid email or password')
+        sessionStorage.setItem('token', token.value);
       }
-    } catch (error) {
-      throw error
+      
+      // Load user companies after successful login
+      await loadUserCompanies();
+      
+      return { access_token, user: userData };
+    } catch (error: any) {
+      throw new Error(error.response?.data?.detail || 'Login failed');
     }
   };
 

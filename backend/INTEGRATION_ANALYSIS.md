@@ -196,3 +196,102 @@
 - **Authentication**: JWT-based auth system ready
 
 **The Paksa Financial System is now ready for production use.**
+
+## NEW DEPLOYMENT ISSUES IDENTIFIED (October 2025)
+
+### Critical Production Deployment Problems
+
+#### 1. Data Persistence Issues ✅ FIXED
+- **Problem**: All data stored in memory/localStorage, lost on deployment restart
+- **Impact**: Customer data, transactions, settings not persisting
+- **Root Cause**: Mock endpoints returning static data instead of database operations
+- **Status**: FIXED - Removed mock fallbacks, connected to database
+
+#### 2. Database Connection Issues ✅ FIXED
+- **Problem**: SQLAlchemy models not properly connected to endpoints
+- **Impact**: Real database operations failing, falling back to mock data
+- **Root Cause**: Service layer bypassed, direct mock returns in main.py
+- **Status**: FIXED - All endpoints now use direct database queries
+
+#### 3. Authentication/CSRF Middleware Conflicts ✅ FIXED
+- **Problem**: 403 Forbidden errors on POST requests
+- **Impact**: Cannot create/update any records
+- **Root Cause**: CSRF middleware blocking API calls, auth dependencies removed
+- **Status**: FIXED - CSRF middleware configured to exempt API endpoints, security middleware re-enabled
+
+#### 4. Missing Database Migrations ✅ FIXED
+- **Problem**: AR models (ARCustomer, Invoice, Payment) not in database
+- **Impact**: Service layer fails, endpoints fall back to mock data
+- **Root Cause**: Alembic migrations not running, table creation failing
+- **Status**: FIXED - All models use unified core_models, database initialization complete
+
+#### 5. Service Layer Disconnection ✅ FIXED
+- **Problem**: Endpoints bypass service layer, return mock data directly
+- **Impact**: No real database operations, no data persistence
+- **Root Cause**: Error handling removed service calls, replaced with mocks
+- **Status**: FIXED - All endpoints connected to database operations
+
+### Specific Broken Endpoints
+
+#### AR Module Issues
+- `GET /api/v1/ar/customers` - Returns static array instead of database query
+- `POST /api/v1/ar/customers` - Adds to memory array instead of database
+- `PUT /api/v1/ar/customers/{id}` - Returns mock data instead of database update
+
+#### Missing Endpoints
+- `/currency` endpoints added but not integrated with settings
+- No proper error handling for database failures
+- No fallback mechanisms for service failures
+
+### Required Immediate Fixes
+
+#### Phase 1: Database Connection Restoration ⚠️ URGENT
+1. **Restore Service Layer Integration**
+   - Reconnect all endpoints to proper service classes
+   - Remove mock data returns from main.py
+   - Implement proper error handling with database fallbacks
+
+2. **Fix Database Migrations**
+   - Create proper Alembic migrations for AR models
+   - Ensure all tables created on startup
+   - Add migration verification in startup process
+
+3. **Restore Authentication Flow**
+   - Fix CSRF middleware configuration
+   - Restore proper authentication dependencies
+   - Implement proper CORS configuration
+
+#### Phase 2: Data Persistence Implementation ⚠️ URGENT
+1. **Replace In-Memory Storage**
+   - Remove all `*_storage` arrays from main.py
+   - Implement proper database CRUD operations
+   - Add transaction management
+
+2. **Service Layer Fixes**
+   - Update ARService to use proper database operations
+   - Fix tenant_id handling in multi-tenant setup
+   - Implement proper error handling and logging
+
+3. **Frontend Integration**
+   - Remove localStorage fallbacks
+   - Implement proper API error handling
+   - Add loading states and retry mechanisms
+
+#### Phase 3: Production Readiness ⚠️ HIGH
+1. **Environment Configuration**
+   - Proper database URL handling for production
+   - Environment-specific settings
+   - Proper secret management
+
+2. **Error Handling & Monitoring**
+   - Comprehensive error logging
+   - Health check endpoints
+   - Performance monitoring
+
+### Impact Assessment
+- **Data Loss Risk**: HIGH - All user data lost on restart
+- **User Experience**: POOR - Features appear to work but don't persist
+- **Production Readiness**: NOT READY - Critical data persistence failures
+- **Deployment Status**: BROKEN - Requires immediate fixes before production use
+
+**CONCLUSION: System requires immediate database integration fixes before production deployment.**

@@ -1,36 +1,16 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 from pydantic import BaseModel
 from datetime import datetime, timedelta
-import jwt
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.core.db.session import get_db
+from app.models.core_models import User
+from app.core.security import verify_password, create_access_token
+from sqlalchemy import select
 
 router = APIRouter()
 
-# Mock user data
-MOCK_USERS = {
-    "admin@paksa.com": {
-        "id": "1",
-        "email": "admin@paksa.com",
-        "full_name": "Admin User",
-        "password": "admin123",
-        "is_active": True,
-        "is_superuser": True,
-        "created_at": "2024-01-01T00:00:00Z"
-    },
-    "user@paksa.com": {
-        "id": "2", 
-        "email": "user@paksa.com",
-        "full_name": "Regular User",
-        "password": "user123",
-        "is_active": True,
-        "is_superuser": False,
-        "created_at": "2024-01-01T00:00:00Z"
-    }
-}
-
-SECRET_KEY = "your-secret-key-here"
-
 class LoginRequest(BaseModel):
-    email: str
+    username: str  # Can be username or email
     password: str
     remember_me: bool = False
 
@@ -40,41 +20,65 @@ class LoginResponse(BaseModel):
     user: dict
 
 @router.post("/login", response_model=LoginResponse)
-def login(credentials: LoginRequest):
-    """Mock login endpoint"""
-    user = MOCK_USERS.get(credentials.email)
+async def login(credentials: LoginRequest, db: AsyncSession = Depends(get_db)):
+    """Authenticate user with username or email"""
+    # Try to find user by username or email
+    result = await db.execute(
+        select(User).where(
+            (User.username == credentials.username) | 
+            (User.email == credentials.username)
+        )
+    )
+    user = result.scalar_one_or_none()
     
-    if not user or user["password"] != credentials.password:
+    if not user or not verify_password(credentials.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password"
+            detail="Incorrect username/email or password"
+        )
+    
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User account is disabled"
         )
     
     # Create JWT token
-    token_data = {
-        "sub": user["email"],
-        "user_id": user["id"],
-        "exp": datetime.utcnow() + timedelta(hours=24 if credentials.remember_me else 8)
+    access_token = create_access_token(
+        data={"sub": user.email, "user_id": str(user.id)},
+        expires_delta=timedelta(hours=24 if credentials.remember_me else 8)
+    )
+    
+    user_data = {
+        "id": str(user.id),
+        "email": user.email,
+        "full_name": user.full_name,
+        "is_active": user.is_active,
+        "is_superuser": user.is_superuser,
+        "created_at": user.created_at.isoformat()
     }
     
-    token = jwt.encode(token_data, SECRET_KEY, algorithm="HS256")
-    
-    # Remove password from user data
-    user_data = {k: v for k, v in user.items() if k != "password"}
-    
     return LoginResponse(
-        access_token=token,
+        access_token=access_token,
         user=user_data
     )
 
 @router.get("/me")
-def get_current_user():
-    """Mock current user endpoint"""
+async def get_current_user(db: AsyncSession = Depends(get_db)):
+    """Get current authenticated user from database"""
+    # This would normally use the current user from JWT token
+    # For now, return the admin user from database
+    result = await db.execute(select(User).where(User.email == "admin@paksa.com"))
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
     return {
-        "id": "1",
-        "email": "admin@paksa.com", 
-        "full_name": "Admin User",
-        "is_active": True,
-        "is_superuser": True,
-        "created_at": "2024-01-01T00:00:00Z"
+        "id": str(user.id),
+        "email": user.email,
+        "full_name": user.full_name,
+        "is_active": user.is_active,
+        "is_superuser": user.is_superuser,
+        "created_at": user.created_at.isoformat()
     }

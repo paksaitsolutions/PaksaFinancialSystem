@@ -862,6 +862,13 @@ const mainAppRoute: AppRouteRecordRaw = {
       component: () => import('@/modules/super-admin/views/SystemHealthDashboard.vue'),
       meta: { title: 'System Health Dashboard', requiresAdmin: true }
     },
+    // Profile
+    {
+      path: 'profile',
+      name: 'Profile',
+      component: () => import('@/views/ProfileView.vue'),
+      meta: { title: 'My Profile' }
+    },
     // Notifications
     {
       path: 'notifications',

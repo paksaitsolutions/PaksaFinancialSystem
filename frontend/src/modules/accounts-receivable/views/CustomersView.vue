@@ -12,7 +12,7 @@
 
     <Card>
       <template #content>
-        <DataTable :value="customers" responsiveLayout="scroll" :paginator="true" :rows="10">
+        <DataTable :value="customers" responsiveLayout="scroll" :paginator="true" :rows="10" :loading="loading">
           <Column field="name" header="Customer Name" sortable></Column>
           <Column field="email" header="Email" sortable></Column>
           <Column field="phone" header="Phone"></Column>
@@ -38,7 +38,7 @@
       </template>
     </Card>
 
-    <Dialog v-model:visible="showAddDialog" header="Add New Customer" :modal="true" class="p-fluid customer-dialog">
+    <Dialog v-model:visible="showAddDialog" :header="editingCustomerId ? 'Edit Customer' : 'Add New Customer'" :modal="true" class="p-fluid customer-dialog">
       <form @submit.prevent="saveCustomer">
         <TabView>
           <TabPanel header="Basic Information">
@@ -171,17 +171,22 @@
       
       <template #footer>
         <Button label="Cancel" icon="pi pi-times" @click="cancelForm" class="p-button-text" />
-        <Button label="Save Customer" icon="pi pi-check" @click="saveCustomer" class="p-button-primary" :loading="saving" />
+        <Button :label="editingCustomerId ? 'Update Customer' : 'Save Customer'" icon="pi pi-check" @click="saveCustomer" class="p-button-primary" :loading="saving" />
       </template>
     </Dialog>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { customerService } from '@/api/arService'
+import { useNotifications } from '@/composables/useNotifications'
 
 const showAddDialog = ref(false)
 const saving = ref(false)
+const loading = ref(false)
+const editingCustomerId = ref(null)
+const { success, error } = useNotifications()
 
 const customerForm = ref({
   type: 'business',
@@ -243,11 +248,25 @@ const currencies = [
   { label: 'CAD - Canadian Dollar', value: 'CAD' }
 ]
 
-const customers = ref([
-  { id: 1, name: 'ABC Corporation', email: 'contact@abc.com', phone: '555-0123', balance: 15000, status: 'Active' },
-  { id: 2, name: 'XYZ Industries', email: 'info@xyz.com', phone: '555-0456', balance: -2500, status: 'Active' },
-  { id: 3, name: 'Tech Solutions Ltd', email: 'hello@tech.com', phone: '555-0789', balance: 8750, status: 'Active' }
-])
+const customers = ref([])
+
+// Load customers from API
+const loadCustomers = async () => {
+  loading.value = true
+  try {
+    const response = await customerService.getCustomers()
+    customers.value = response.customers || []
+  } catch (err) {
+    error('Failed to load customers')
+    console.error('Error loading customers:', err)
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  loadCustomers()
+})
 
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('en-US', {
@@ -261,33 +280,72 @@ const getStatusSeverity = (status) => {
 }
 
 const viewCustomer = (customer) => {
-  console.log('View customer:', customer)
+  // Navigate to customer detail view
+  window.location.href = `/ar/customers/${customer.id}`
 }
 
 const editCustomer = (customer) => {
-  console.log('Edit customer:', customer)
+  // Populate form with customer data and show dialog
+  customerForm.value = {
+    type: customer.type || 'business',
+    status: customer.status?.toLowerCase() || 'active',
+    companyName: customer.name || '',
+    firstName: customer.firstName || '',
+    lastName: customer.lastName || '',
+    taxId: customer.taxId || '',
+    email: customer.email || '',
+    phone: customer.phone || '',
+    mobile: customer.mobile || '',
+    website: customer.website || '',
+    contactPerson: customer.contactPerson || '',
+    address1: customer.address1 || '',
+    address2: customer.address2 || '',
+    city: customer.city || '',
+    state: customer.state || '',
+    zipCode: customer.zipCode || '',
+    country: customer.country || 'US',
+    creditLimit: customer.creditLimit || 0,
+    paymentTerms: customer.paymentTerms || 'net30',
+    currency: customer.currency || 'USD',
+    taxRate: customer.taxRate || 0,
+    notes: customer.notes || ''
+  }
+  editingCustomerId.value = customer.id
+  showAddDialog.value = true
 }
 
 const saveCustomer = async () => {
   saving.value = true
   try {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    customers.value.push({
-      id: customers.value.length + 1,
+    const customerData = {
       name: customerForm.value.companyName || `${customerForm.value.firstName} ${customerForm.value.lastName}`.trim(),
       email: customerForm.value.email,
       phone: customerForm.value.phone,
+      address: `${customerForm.value.address1} ${customerForm.value.address2}`.trim(),
+      creditLimit: customerForm.value.creditLimit || 0,
       balance: 0,
-      status: customerForm.value.status === 'active' ? 'Active' : 'Inactive',
-      ...customerForm.value
-    })
+      paymentTerms: customerForm.value.paymentTerms,
+      status: customerForm.value.status
+    }
+    
+    if (editingCustomerId.value) {
+      // Update existing customer
+      await customerService.updateCustomer(editingCustomerId.value, customerData)
+      success('Customer updated successfully')
+    } else {
+      // Create new customer
+      await customerService.createCustomer(customerData)
+      success('Customer created successfully')
+    }
+    
+    // Reload customers list
+    await loadCustomers()
     
     showAddDialog.value = false
     resetForm()
-  } catch (error) {
-    console.error('Error saving customer:', error)
+  } catch (err) {
+    error('Failed to save customer')
+    console.error('Error saving customer:', err)
   } finally {
     saving.value = false
   }
@@ -299,6 +357,7 @@ const cancelForm = () => {
 }
 
 const resetForm = () => {
+  editingCustomerId.value = null
   customerForm.value = {
     type: 'business',
     status: 'active',

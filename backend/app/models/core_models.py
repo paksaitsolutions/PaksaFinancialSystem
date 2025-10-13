@@ -726,6 +726,19 @@ class BudgetLineItem(Base, AuditMixin):
 # FIXED ASSETS (Unified)
 # ============================================================================
 
+class AssetCategory(Base, AuditMixin):
+    """Asset Category"""
+    __tablename__ = "asset_categories"
+    
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
+    name = Column(String(100), nullable=False)
+    description = Column(Text)
+    default_useful_life = Column(Integer, default=5)
+    default_depreciation_method = Column(String(50), default="straight_line")
+    default_salvage_rate = Column(Numeric(5, 4), default=0.1)
+    is_active = Column(Boolean, default=True)
+
 class FixedAsset(Base, AuditMixin):
     """Unified Fixed Asset"""
     __tablename__ = "fixed_assets"
@@ -734,16 +747,46 @@ class FixedAsset(Base, AuditMixin):
     company_id = Column(GUID(), nullable=False, index=True)
     asset_number = Column(String(50), unique=True, nullable=False)
     asset_name = Column(String(255), nullable=False)
-    asset_category = Column(String(100))
+    description = Column(Text)
+    category_id = Column(GUID(), ForeignKey("asset_categories.id"))
+    location = Column(String(255))
     purchase_date = Column(Date, nullable=False)
     purchase_cost = Column(Numeric(15, 2), nullable=False)
+    salvage_value = Column(Numeric(15, 2), default=0)
+    useful_life_years = Column(Integer, nullable=False)
+    depreciation_method = Column(String(50), default="straight_line")
     accumulated_depreciation = Column(Numeric(15, 2), default=0)
     current_value = Column(Numeric(15, 2))
-    depreciation_method = Column(String(50))
-    useful_life_years = Column(Integer)
-    salvage_value = Column(Numeric(15, 2))
-    location = Column(String(255))
     status = Column(String(20), default="active")
+    vendor_name = Column(String(200))
+    warranty_expiry = Column(Date)
+    serial_number = Column(String(100))
+    model_number = Column(String(100))
+    
+    # Relationships
+    category = relationship("AssetCategory", backref="assets")
+    maintenance_records = relationship("MaintenanceRecord", back_populates="asset")
+
+class MaintenanceRecord(Base, AuditMixin):
+    """Asset Maintenance Records"""
+    __tablename__ = "maintenance_records"
+    
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    asset_id = Column(GUID(), ForeignKey("fixed_assets.id"), nullable=False)
+    maintenance_type = Column(String(50), nullable=False)  # preventive, corrective, emergency
+    description = Column(Text, nullable=False)
+    scheduled_date = Column(Date, nullable=False)
+    completed_date = Column(Date)
+    status = Column(String(20), default="scheduled")  # scheduled, in_progress, completed, cancelled
+    estimated_cost = Column(Numeric(15, 2))
+    actual_cost = Column(Numeric(15, 2))
+    vendor_name = Column(String(200))
+    technician_name = Column(String(200))
+    notes = Column(Text)
+    created_by = Column(String(200))
+    
+    # Relationships
+    asset = relationship("FixedAsset", back_populates="maintenance_records")
 
 class AssetDepreciation(Base):
     """Asset Depreciation Records"""
@@ -802,3 +845,51 @@ class ExchangeRate(Base):
     rate = Column(Numeric(15, 6), nullable=False)
     rate_date = Column(Date, nullable=False)
     rate_type = Column(Enum(ExchangeRateType), default=ExchangeRateType.SPOT)
+
+class BankAccount(Base, AuditMixin):
+    """Bank Account"""
+    __tablename__ = "bank_accounts"
+    
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
+    account_name = Column(String(255), nullable=False)
+    account_number = Column(String(50), nullable=False)
+    bank_name = Column(String(255), nullable=False)
+    current_balance = Column(Numeric(15, 2), default=0)
+    is_active = Column(Boolean, default=True)
+
+class User(Base, AuditMixin):
+    """System User"""
+    __tablename__ = "users"
+    
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    username = Column(String(50), unique=True, nullable=False)
+    email = Column(String(255), unique=True, nullable=False)
+    hashed_password = Column(String(255), nullable=False)
+    full_name = Column(String(255), nullable=False)
+    is_active = Column(Boolean, default=True)
+    is_superuser = Column(Boolean, default=False)
+
+class Transaction(Base, AuditMixin):
+    """Generic Transaction for analytics"""
+    __tablename__ = "transactions"
+    
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
+    transaction_type = Column(String(50), nullable=False)
+    amount = Column(Numeric(15, 2), nullable=False)
+    description = Column(Text)
+    reference_id = Column(GUID())
+    reference_type = Column(String(50))
+
+class Notification(Base, AuditMixin):
+    """System Notifications"""
+    __tablename__ = "notifications"
+    
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    user_id = Column(GUID(), nullable=False, index=True)
+    title = Column(String(255), nullable=False)
+    message = Column(Text, nullable=False)
+    notification_type = Column(String(50), default="info")
+    is_read = Column(Boolean, default=False)
+    priority = Column(String(20), default="normal")
