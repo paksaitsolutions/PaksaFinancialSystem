@@ -1,8 +1,9 @@
 # Core FastAPI and web framework
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
-pydantic==2.11.7
+pydantic[email]==2.11.7
 pydantic-settings==2.1.0
+email-validator==2.1.0
 
 # Database and ORM
 sqlalchemy==2.0.23
