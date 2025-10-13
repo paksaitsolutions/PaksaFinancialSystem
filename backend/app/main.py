@@ -2356,15 +2356,26 @@ async def serve_root():
         "static/index.html",
         "../frontend/dist/index.html",
         "frontend/dist/index.html",
-        "dist/index.html"
+        "dist/index.html",
+        "/opt/render/project/src/frontend/dist/index.html",
+        "/opt/render/project/src/backend/static/index.html"
     ]
     
     for path in possible_paths:
         if os.path.exists(path):
             return FileResponse(path)
     
-    # Frontend not found - return 404
-    raise HTTPException(status_code=404, detail="Frontend not deployed. Please build and deploy the Vue.js frontend.")
+    # Debug: Show what files exist
+    import glob
+    debug_info = {
+        "cwd": os.getcwd(),
+        "files_in_cwd": os.listdir("."),
+        "static_exists": os.path.exists("static"),
+        "frontend_exists": os.path.exists("frontend"),
+        "dist_files": glob.glob("**/index.html", recursive=True)
+    }
+    
+    raise HTTPException(status_code=404, detail=f"Frontend not found. Debug: {debug_info}")
 
 # Catch-all route for frontend SPA
 @app.get("/{full_path:path}")
