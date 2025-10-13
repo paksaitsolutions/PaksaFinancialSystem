@@ -1,114 +1,98 @@
 <template>
-  <div class="p-4">
-    <!-- Header Section -->
-    <div class="flex justify-content-between align-items-center mb-4">
-      <div>
-        <h1 class="text-3xl font-bold m-0">HRM Dashboard</h1>
-        <p class="text-color-secondary m-0 mt-2">Manage your human resources efficiently</p>
+  <div class="hrm-dashboard">
+    <!-- Header -->
+    <div class="dashboard-header">
+      <div class="flex align-items-center">
+        <i class="pi pi-users text-3xl text-primary mr-3"></i>
+        <h1 class="dashboard-title">Human Resources Dashboard</h1>
       </div>
-      <div class="flex gap-2">
-        <Button icon="pi pi-cog" severity="secondary" @click="showSettings" />
-        <Button icon="pi pi-question-circle" severity="secondary" @click="showHelp" />
-      </div>
-    </div>
-
-    <!-- Quick Navigation Menu -->
-    <div class="grid mb-4">
-      <div class="col-12 md:col-6 lg:col-2" v-for="(item, index) in quickLinks" :key="index">
-        <Button 
-          :label="item.label" 
-          :icon="item.icon"
-          class="w-full"
-          severity="secondary"
-          @click="navigateTo(item.path)"
-        />
+      <div class="header-actions">
+        <Button label="New Employee" icon="pi pi-plus" @click="navigateTo('/hrm/employees/new')" />
+        <Button label="Reports" icon="pi pi-chart-line" severity="secondary" @click="navigateTo('/hrm/reports')" />
       </div>
     </div>
 
-    <!-- Stats Cards -->
-    <div class="grid mb-4">
-      <div class="col-12 md:col-6 lg:col-3" v-for="(stat, index) in stats" :key="index">
-        <Card>
-          <template #content>
-            <div class="flex align-items-center">
-              <div class="flex align-items-center justify-content-center w-3rem h-3rem border-circle mr-3" 
-                   :class="stat.trend >= 0 ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'">
-                <i :class="stat.icon" class="text-xl"></i>
-              </div>
-              <div>
-                <div class="text-color-secondary text-sm">{{ stat.title }}</div>
-                <div class="text-2xl font-bold">{{ formatNumber(stat.value) || 0 }}</div>
-                <div class="text-sm" :class="stat.trend >= 0 ? 'text-green-600' : 'text-red-600'">
-                  <i :class="getTrendIcon(stat.trend)" class="mr-1"></i>
-                  {{ Math.abs(stat.trend) }}% from last month
-                </div>
-              </div>
+    <!-- Metrics Cards -->
+    <div class="metrics-grid">
+      <Card v-for="(metric, i) in dashboardMetrics" :key="i" class="metric-card">
+        <template #content>
+          <div class="metric-content">
+            <div class="metric-header">
+              <i :class="metric.icon" :style="{ color: metric.color }" class="text-2xl"></i>
+              <span class="metric-value">{{ metric.value }}</span>
             </div>
-          </template>
-        </Card>
-      </div>
+            <div class="metric-label">{{ metric.label }}</div>
+          </div>
+        </template>
+      </Card>
     </div>
 
-    <!-- Main Content -->
-    <div class="grid">
-      <div class="col-12 lg:col-8">
-        <Card>
-          <template #title>
-            <div class="flex align-items-center gap-2">
-              <i class="pi pi-chart-bar text-primary"></i>
-              <span>Employee Distribution</span>
-            </div>
-          </template>
-          <template #content>
-            <div class="flex align-items-center justify-content-center" style="height: 300px;">
-              <p class="text-color-secondary">Employee distribution chart will be displayed here</p>
-            </div>
-          </template>
-        </Card>
-      </div>
+    <!-- Main Content Grid -->
+    <div class="content-grid">
+      <!-- Quick Actions -->
+      <Card class="quick-actions-card">
+        <template #header>
+          <h3 class="card-title">Quick Actions</h3>
+        </template>
+        <template #content>
+          <div class="actions-list">
+            <Button 
+              v-for="action in quickActions" 
+              :key="action.path"
+              :label="action.label" 
+              :icon="action.icon" 
+              class="action-btn" 
+              severity="secondary"
+              @click="navigateTo(action.path)" 
+            />
+          </div>
+        </template>
+      </Card>
 
-      <div class="col-12 lg:col-4">
-        <Card>
-          <template #title>
-            <div class="flex align-items-center gap-2">
-              <i class="pi pi-calendar text-primary"></i>
-              <span>Leave Balance</span>
-            </div>
-          </template>
-          <template #content>
-            <div class="flex align-items-center justify-content-center" style="height: 300px;">
-              <p class="text-color-secondary">Leave balance chart will be displayed here</p>
-            </div>
-          </template>
-        </Card>
-      </div>
+      <!-- Recent Activities -->
+      <Card class="activities-card">
+        <template #header>
+          <div class="flex justify-content-between align-items-center">
+            <h3 class="card-title">Recent Activities</h3>
+            <Button label="View All" size="small" severity="secondary" @click="viewAllActivities" />
+          </div>
+        </template>
+        <template #content>
+          <DataTable :value="recentActivities" :loading="loading" class="compact-table">
+            <Column field="date" header="Date">
+              <template #body="{ data }">
+                {{ formatDate(data.date) }}
+              </template>
+            </Column>
+            <Column field="employee" header="Employee" />
+            <Column field="action" header="Action" />
+            <Column field="status" header="Status">
+              <template #body="{ data }">
+                <Tag :value="data.status" :severity="getStatusSeverity(data.status)" />
+              </template>
+            </Column>
+          </DataTable>
+        </template>
+      </Card>
     </div>
 
-    <!-- Recent Hires -->
-    <div class="grid mt-4">
-      <div class="col-12">
-        <Card>
-          <template #title>Recent Hires</template>
-          <template #content>
-            <DataTable :value="recentHires" :loading="loading" paginator :rows="5">
-              <Column field="name" header="Name" sortable></Column>
-              <Column field="position" header="Position" sortable></Column>
-              <Column field="department" header="Department" sortable></Column>
-              <Column field="startDate" header="Start Date" sortable>
-                <template #body="{ data }">
-                  {{ formatDate(data.startDate) }}
-                </template>
-              </Column>
-              <Column header="Actions">
-                <template #body>
-                  <Button icon="pi pi-eye" size="small" />
-                </template>
-              </Column>
-            </DataTable>
-          </template>
-        </Card>
-      </div>
-    </div>
+    <!-- Department Overview -->
+    <Card class="department-overview">
+      <template #header>
+        <h3 class="card-title">Department Overview</h3>
+      </template>
+      <template #content>
+        <div class="department-grid">
+          <div v-for="dept in departments" :key="dept.id" class="department-card">
+            <div class="department-header">
+              <span class="department-name">{{ dept.name }}</span>
+              <span class="employee-count">{{ dept.employee_count }} employees</span>
+            </div>
+            <div class="department-manager">Manager: {{ dept.manager || 'Not assigned' }}</div>
+          </div>
+        </div>
+      </template>
+    </Card>
   </div>
 </template>
 
@@ -148,9 +132,23 @@ const quickLinks = ref<QuickLink[]>([
   { label: 'Training', icon: 'pi pi-book', path: '/hrm/training' }
 ]);
 
-// Computed stats from analytics
-const stats = ref<StatCard[]>([]);
-const recentHires = ref([]);
+// Dashboard data
+const dashboardMetrics = ref([
+  { id: 'employees', icon: 'pi pi-users', value: 0, label: 'Total Employees', color: 'var(--primary-500)' },
+  { id: 'active', icon: 'pi pi-user-check', value: 0, label: 'Active Employees', color: 'var(--success-500)' },
+  { id: 'leave', icon: 'pi pi-calendar-times', value: 0, label: 'Pending Leave', color: 'var(--warning-500)' },
+  { id: 'departments', icon: 'pi pi-building', value: 0, label: 'Departments', color: 'var(--info-500)' }
+])
+
+const quickActions = ref([
+  { label: 'Manage Employees', icon: 'pi pi-users', path: '/hrm/employees' },
+  { label: 'Attendance', icon: 'pi pi-calendar-check', path: '/hrm/attendance' },
+  { label: 'Leave Requests', icon: 'pi pi-calendar-times', path: '/hrm/leave' },
+  { label: 'Performance', icon: 'pi pi-chart-line', path: '/hrm/performance' }
+])
+
+const recentActivities = ref([])
+const departments = ref([])
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('en-US', {
@@ -185,71 +183,54 @@ const getTrendIcon = (trend: number): string => {
   return trend > 0 ? 'pi pi-arrow-up' : trend < 0 ? 'pi pi-arrow-down' : 'pi pi-minus';
 };
 
-// Load real-time data
 const loadDashboardData = async () => {
-  loading.value = true;
+  loading.value = true
   try {
-    const response = await hrmService.getHRAnalytics();
-    analytics.value = response.data;
+    const [employeesResponse, departmentsResponse] = await Promise.all([
+      fetch('/api/v1/hrm/employees'),
+      fetch('/api/v1/hrm/departments')
+    ])
     
-    // Update stats with real data
-    stats.value = [
-      { 
-        title: 'Total Employees', 
-        value: analytics.value.total_employees, 
-        trend: 5.2, // Calculate from historical data
-        icon: 'pi pi-users' 
-      },
-      { 
-        title: 'Active Employees', 
-        value: analytics.value.active_employees, 
-        trend: 2.8, 
-        icon: 'pi pi-user-check' 
-      },
-      { 
-        title: 'Pending Leave', 
-        value: analytics.value.pending_leave_requests, 
-        trend: -1.2, 
-        icon: 'pi pi-calendar-times' 
-      },
-      { 
-        title: 'Avg Tenure (months)', 
-        value: Math.round(analytics.value.average_tenure_months), 
-        trend: 3.5, 
-        icon: 'pi pi-clock' 
-      }
-    ];
+    if (employeesResponse.ok) {
+      const employees = await employeesResponse.json()
+      dashboardMetrics.value[0].value = employees.length
+      dashboardMetrics.value[1].value = employees.filter(e => e.status === 'active').length
+      
+      recentActivities.value = employees.slice(0, 5).map(emp => ({
+        date: new Date().toISOString(),
+        employee: emp.name,
+        action: 'Profile Updated',
+        status: 'completed'
+      }))
+    }
     
-    // Update recent hires with real data
-    recentHires.value = analytics.value.recent_hires.map((hire, index) => ({
-      id: index + 1,
-      name: hire.name,
-      position: hire.position,
-      department: hire.department || 'N/A',
-      startDate: hire.hire_date
-    }));
-    
+    if (departmentsResponse.ok) {
+      const depts = await departmentsResponse.json()
+      departments.value = depts
+      dashboardMetrics.value[3].value = depts.length
+    }
   } catch (error) {
-    console.error('Error loading dashboard data:', error);
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Failed to load dashboard data',
-      life: 3000
-    });
-    
-    // Fallback to sample data
-    stats.value = [
-      { title: 'Total Employees', value: 0, trend: 0, icon: 'pi pi-users' },
-      { title: 'Active Employees', value: 0, trend: 0, icon: 'pi pi-user-check' },
-      { title: 'Pending Leave', value: 0, trend: 0, icon: 'pi pi-calendar-times' },
-      { title: 'Avg Tenure', value: 0, trend: 0, icon: 'pi pi-clock' }
-    ];
-    recentHires.value = [];
+    console.error('Error loading dashboard data:', error)
+    dashboardMetrics.value.forEach(metric => { metric.value = 0 })
+    recentActivities.value = []
+    departments.value = []
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
+
+const viewAllActivities = () => {
+  router.push('/hrm/activities')
+}
+
+const getStatusSeverity = (status: string) => {
+  switch (status) {
+    case 'completed': return 'success'
+    case 'pending': return 'warning'
+    case 'failed': return 'danger'
+    default: return 'info'
+  }
+}
 
 onMounted(() => {
   loadDashboardData();
@@ -257,5 +238,144 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Minimal custom styles - using PrimeFlex for layout */
+.hrm-dashboard {
+  padding: 1.5rem;
+  background: var(--surface-ground);
+  min-height: 100vh;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: var(--surface-card);
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.dashboard-title {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.metric-card {
+  transition: transform 0.2s;
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+}
+
+.metric-content {
+  padding: 1.5rem;
+}
+
+.metric-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.metric-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.metric-label {
+  color: var(--text-color-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-color);
+  margin: 0;
+}
+
+.actions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.action-btn {
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.compact-table :deep(.p-datatable-tbody td) {
+  padding: 0.5rem;
+}
+
+.department-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.department-card {
+  padding: 1rem;
+  background: var(--surface-50);
+  border-radius: 6px;
+  border: 1px solid var(--surface-border);
+}
+
+.department-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.department-name {
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.employee-count {
+  font-size: 0.875rem;
+  color: var(--text-color-secondary);
+}
+
+.department-manager {
+  font-size: 0.875rem;
+  color: var(--text-color-secondary);
+}
+
+@media (max-width: 768px) {
+  .content-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+}
 </style>

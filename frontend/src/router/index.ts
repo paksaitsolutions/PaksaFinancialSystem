@@ -876,6 +876,13 @@ const mainAppRoute: AppRouteRecordRaw = {
       component: () => import('@/views/NotificationsView.vue'),
       meta: { title: 'Notifications' }
     },
+    // Help
+    {
+      path: 'help',
+      name: 'Help',
+      component: () => import('@/views/HelpView.vue'),
+      meta: { title: 'Help & Documentation' }
+    },
     // Settings
     {
       path: 'settings',

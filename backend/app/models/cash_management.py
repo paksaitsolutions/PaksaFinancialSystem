@@ -29,6 +29,7 @@ class TransactionStatus(str, enum.Enum):
 
 class BankAccount(Base):
     __tablename__ = "bank_accounts"
+    __table_args__ = {'extend_existing': True}
 
     id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     company_id = Column(GUID(), nullable=False, index=True)

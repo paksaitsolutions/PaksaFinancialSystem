@@ -119,6 +119,7 @@ class ChartOfAccounts(Base, AuditMixin):
     parent_account_id = Column(GUID(), ForeignKey("chart_of_accounts.id"))
     normal_balance = Column(String(10), nullable=False)  # Debit, Credit
     current_balance = Column(Numeric(15, 2), default=0)
+    balance = Column(Numeric(15, 2), default=0)  # Added for main.py compatibility
     is_active = Column(Boolean, default=True)
     is_system_account = Column(Boolean, default=False)
     
@@ -138,6 +139,7 @@ class JournalEntry(Base, AuditMixin):
     reference = Column(String(100))
     total_debit = Column(Numeric(15, 2), default=0)
     total_credit = Column(Numeric(15, 2), default=0)
+    total_amount = Column(Numeric(15, 2), default=0)  # Added for main.py compatibility
     status = Column(String(20), default='draft', index=True)  # draft, posted, reversed
     source_module = Column(String(20))  # GL, AP, AR, Payroll, Inventory
     
@@ -501,13 +503,14 @@ class Employee(Base, AuditMixin):
     hire_date = Column(Date, nullable=False)
     termination_date = Column(Date)
     department_id = Column(GUID(), ForeignKey("departments.id"))
+    department = Column(String(100))  # For compatibility
     position = Column(String(100))
     salary = Column(Numeric(15, 2))
     employment_type = Column(Enum(EmploymentType), default=EmploymentType.FULL_TIME)
     status = Column(String(20), default='active')
     
     # Relationships
-    department = relationship("Department", back_populates="employees", foreign_keys=[department_id])
+    department_rel = relationship("Department", back_populates="employees", foreign_keys=[department_id])
     payroll_entries = relationship("PayrollEntry", back_populates="employee")
     leave_requests = relationship("LeaveRequest", back_populates="employee")
 
@@ -520,11 +523,12 @@ class Department(Base, AuditMixin):
     department_code = Column(String(20), nullable=False, unique=True)
     department_name = Column(String(255), nullable=False)
     manager_id = Column(GUID(), ForeignKey("employees.id"))
+    employee_count = Column(Integer, default=0)  # For compatibility
     cost_center = Column(String(50))
     is_active = Column(Boolean, default=True)
     
     # Relationships
-    employees = relationship("Employee", back_populates="department", foreign_keys="Employee.department_id")
+    employees = relationship("Employee", back_populates="department_rel", foreign_keys="Employee.department_id")
     manager = relationship("Employee", foreign_keys=[manager_id])
 
 # ============================================================================
@@ -538,13 +542,17 @@ class PayrollRun(Base, AuditMixin):
     id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     company_id = Column(GUID(), nullable=False, index=True)
     run_number = Column(String(50), nullable=False, unique=True)
+    pay_period = Column(String(50))  # For compatibility
     pay_period_start = Column(Date, nullable=False)
     pay_period_end = Column(Date, nullable=False)
     pay_date = Column(Date, nullable=False)
     status = Column(String(20), default='draft')
+    total_gross_pay = Column(Numeric(15, 2), default=0)  # For compatibility
     total_gross = Column(Numeric(15, 2), default=0)
     total_deductions = Column(Numeric(15, 2), default=0)
+    total_net_pay = Column(Numeric(15, 2), default=0)  # For compatibility
     total_net = Column(Numeric(15, 2), default=0)
+    employee_count = Column(Integer, default=0)
     
     # Relationships
     entries = relationship("PayrollEntry", back_populates="payroll_run", cascade="all, delete-orphan")
@@ -563,6 +571,25 @@ class PayrollEntry(Base):
     # Relationships
     payroll_run = relationship("PayrollRun", back_populates="entries")
     employee = relationship("Employee", back_populates="payroll_entries")
+
+class Payslip(Base, AuditMixin):
+    """Payslip for individual employee"""
+    __tablename__ = "payslips"
+    
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    payroll_run_id = Column(GUID(), ForeignKey("payroll_runs.id"), nullable=False)
+    employee_id = Column(GUID(), ForeignKey("employees.id"), nullable=False)
+    pay_period = Column(String(50))
+    pay_period_start = Column(Date)
+    pay_period_end = Column(Date)
+    pay_date = Column(Date)
+    gross_pay = Column(Numeric(15, 2), default=0)
+    total_deductions = Column(Numeric(15, 2), default=0)
+    net_pay = Column(Numeric(15, 2), default=0)
+    
+    # Relationships
+    payroll_run = relationship("PayrollRun")
+    employee = relationship("Employee")
 
 class LeaveRequest(Base, AuditMixin):
     """Unified Leave Request"""
@@ -619,6 +646,18 @@ class InventoryCategory(Base, AuditMixin):
     items = relationship("InventoryItem", back_populates="category")
     parent_category = relationship("InventoryCategory", remote_side="InventoryCategory.id")
 
+class InventoryLocation(Base, AuditMixin):
+    """Inventory Location"""
+    __tablename__ = "inventory_locations"
+    
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
+    location_code = Column(String(20), nullable=False, unique=True)
+    location_name = Column(String(255), nullable=False)
+    address = Column(Text)
+    capacity = Column(Integer, default=0)
+    is_active = Column(Boolean, default=True)
+
 class PurchaseOrder(Base, AuditMixin):
     """Unified Purchase Order"""
     __tablename__ = "purchase_orders"
@@ -664,12 +703,15 @@ class TaxRate(Base, AuditMixin):
     company_id = Column(GUID(), nullable=False, index=True)
     tax_code = Column(String(20), nullable=False, unique=True)
     tax_name = Column(String(255), nullable=False)
+    rate = Column(Numeric(5, 4), nullable=False)  # For compatibility
     rate_percentage = Column(Numeric(5, 4), nullable=False)
     tax_type = Column(Enum(TaxType), nullable=False)
     jurisdiction = Column(String(100))
     effective_date = Column(Date, nullable=False)
     expiry_date = Column(Date)
     is_active = Column(Boolean, default=True)
+
+# TaxReturn already exists in tax.py and tax_models.py - removing duplicate
 
 # ============================================================================
 # FINANCIAL PERIODS & REPORTING
@@ -697,10 +739,12 @@ class Budget(Base, AuditMixin):
     company_id = Column(GUID(), nullable=False, index=True)
     budget_name = Column(String(255), nullable=False)
     budget_year = Column(Integer, nullable=False)
-    account_id = Column(GUID(), ForeignKey("chart_of_accounts.id"), nullable=False)
+    account_id = Column(GUID(), ForeignKey("chart_of_accounts.id"))
+    total_amount = Column(Numeric(15, 2), default=0)  # For compatibility
     budgeted_amount = Column(Numeric(15, 2), nullable=False)
     actual_amount = Column(Numeric(15, 2), default=0)
     variance = Column(Numeric(15, 2), default=0)
+    status = Column(String(20), default='draft')
     
     # Relationships
     account = relationship("ChartOfAccounts")
@@ -849,6 +893,7 @@ class ExchangeRate(Base):
 class BankAccount(Base, AuditMixin):
     """Bank Account"""
     __tablename__ = "bank_accounts"
+    __table_args__ = {'extend_existing': True}
     
     id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     company_id = Column(GUID(), nullable=False, index=True)
@@ -858,9 +903,12 @@ class BankAccount(Base, AuditMixin):
     current_balance = Column(Numeric(15, 2), default=0)
     is_active = Column(Boolean, default=True)
 
+# CashTransaction already exists in reconciliation_core.py - removing duplicate
+
 class User(Base, AuditMixin):
     """System User"""
     __tablename__ = "users"
+    __table_args__ = {'extend_existing': True}
     
     id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     username = Column(String(50), unique=True, nullable=False)
@@ -885,6 +933,7 @@ class Transaction(Base, AuditMixin):
 class Notification(Base, AuditMixin):
     """System Notifications"""
     __tablename__ = "notifications"
+    __table_args__ = {'extend_existing': True}
     
     id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     user_id = Column(GUID(), nullable=False, index=True)
@@ -893,3 +942,4 @@ class Notification(Base, AuditMixin):
     notification_type = Column(String(50), default="info")
     is_read = Column(Boolean, default=False)
     priority = Column(String(20), default="normal")
+    created_at = Column(DateTime, default=func.now(), nullable=False)

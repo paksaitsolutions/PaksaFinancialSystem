@@ -15,6 +15,12 @@ const hrmRoutes: RouteRecordRaw[] = [
     component: () => import('@/views/hrm/EmployeesView.vue'),
     meta: { title: 'Employee Management' }
   },
+  {
+    path: 'hrm/employees/new',
+    name: 'HrmEmployeesNew',
+    component: () => import('@/views/hrm/EmployeesView.vue'),
+    meta: { title: 'Add New Employee' }
+  },
   // Departments
   {
     path: 'hrm/departments',

@@ -243,13 +243,17 @@ class HRMService {
     is_active?: boolean
     search?: string
   }): Promise<{ data: Employee[] }> {
-    const response = await api.get(`${this.baseUrl}/employees`, { params })
-    return response
+    const response = await api.get('/api/v1/hrm/employees')
+    return { data: response.data || [] }
   }
 
-  async createEmployee(employee: Omit<Employee, 'id' | 'tenant_id' | 'full_name' | 'created_at' | 'updated_at'>): Promise<Employee> {
-    const response = await api.post(`${this.baseUrl}/employees`, employee)
-    return response.data
+  async createEmployee(employee: any): Promise<Employee> {
+    const response = await fetch('/api/v1/hrm/employees', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(employee)
+    })
+    return response.json()
   }
 
   async updateEmployee(id: string, employee: Partial<Employee>): Promise<Employee> {
@@ -270,8 +274,8 @@ class HRMService {
   async getDepartments(params?: {
     include_inactive?: boolean
   }): Promise<{ data: Department[] }> {
-    const response = await api.get(`${this.baseUrl}/departments`, { params })
-    return response
+    const response = await api.get('/api/v1/hrm/departments')
+    return { data: response.data || [] }
   }
 
   async createDepartment(department: Omit<Department, 'id' | 'tenant_id' | 'created_at' | 'updated_at'>): Promise<Department> {

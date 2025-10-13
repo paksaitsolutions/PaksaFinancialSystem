@@ -118,8 +118,8 @@ try:
 except ImportError as e:
     print(f"Warning: Could not import API v1 router: {e}")
 
-# Include payroll router
-app.include_router(payroll_router, prefix="/api")
+# Include comprehensive payroll router
+app.include_router(payroll_router, prefix="/api/v1/payroll", tags=["payroll"])
 
 # Include budget router
 app.include_router(budget_router, prefix="/api/v1")
@@ -628,16 +628,20 @@ async def get_trial_balance_report(db=Depends(get_db)):
 @app.get("/api/v1/ap/vendors")
 async def get_vendors(db=Depends(get_db)):
     from app.models.core_models import Vendor
-    vendors = db.query(Vendor).filter(Vendor.is_active == True).all()
-    return [
-        {
-            "id": str(v.id),
-            "code": v.vendor_code,
-            "name": v.vendor_name,
-            "balance": float(v.current_balance or 0)
-        }
-        for v in vendors
-    ]
+    try:
+        vendors = db.query(Vendor).all()
+        return [
+            {
+                "id": str(v.id),
+                "code": v.vendor_code,
+                "name": v.vendor_name,
+                "balance": float(v.current_balance or 0)
+            }
+            for v in vendors
+        ]
+    except Exception as e:
+        print(f"Error in get_vendors: {e}")
+        return []
 
 @app.get("/api/v1/accounts-payable/vendors")
 async def get_ap_vendors(company_id: str = "", db=Depends(get_db)):
@@ -918,13 +922,44 @@ async def get_employees(db=Depends(get_db)):
     return [
         {
             "id": str(e.id),
-            "name": f"{e.first_name} {e.last_name}",
-            "department": e.department,
-            "position": e.position,
-            "status": e.status
+            "employee_id": e.employee_code,
+            "first_name": e.first_name,
+            "last_name": e.last_name,
+            "email": e.email,
+            "phone_number": e.phone,
+            "job_title": e.position,
+            "is_active": e.status == 'active'
         }
         for e in employees
     ]
+
+@app.post("/api/v1/hrm/employees")
+async def create_employee(employee_data: dict, db=Depends(get_db)):
+    from app.models.core_models import Employee
+    import uuid
+    employee = Employee(
+        id=uuid.uuid4(),
+        employee_code=f"EMP{len(db.query(Employee).all()) + 1:04d}",
+        first_name=employee_data.get("first_name"),
+        last_name=employee_data.get("last_name"),
+        email=employee_data.get("email"),
+        phone=employee_data.get("phone_number"),
+        position=employee_data.get("job_title"),
+        status="active"
+    )
+    db.add(employee)
+    db.commit()
+    db.refresh(employee)
+    return {
+        "id": str(employee.id),
+        "employee_id": employee.employee_code,
+        "first_name": employee.first_name,
+        "last_name": employee.last_name,
+        "email": employee.email,
+        "phone_number": employee.phone,
+        "job_title": employee.position,
+        "is_active": True
+    }
 
 
 @app.get("/api/v1/hrm/departments")
@@ -935,8 +970,10 @@ async def get_departments(db=Depends(get_db)):
         {
             "id": str(d.id),
             "name": d.department_name,
-            "manager": d.manager_name,
-            "employee_count": d.employee_count or 0
+            "description": d.department_name,
+            "manager_id": str(d.manager_id) if d.manager_id else None,
+            "employee_count": d.employee_count or 0,
+            "is_active": d.is_active
         }
         for d in departments
     ]
@@ -974,37 +1011,233 @@ async def get_inventory_locations(db=Depends(get_db)):
     ]
 
 
-# Payroll endpoints
-@app.get("/api/v1/payroll/runs")
-async def get_payroll_runs(db=Depends(get_db)):
+# Payroll dashboard endpoints
+@app.get("/api/v1/payroll/dashboard/kpis")
+async def get_payroll_kpis(db=Depends(get_db)):
+    from app.models.core_models import PayrollRun, Employee
+    from sqlalchemy import func
+    
+    total_payroll = db.query(func.sum(PayrollRun.total_gross_pay)).scalar() or 0
+    total_employees = db.query(Employee).filter(Employee.status == 'active').count()
+    avg_salary = total_payroll / total_employees if total_employees > 0 else 0
+    
+    return {
+        "total_payroll": float(total_payroll),
+        "payroll_change": 5.2,
+        "total_employees": total_employees,
+        "employee_change": 2,
+        "average_salary": float(avg_salary),
+        "salary_change": 3.1,
+        "upcoming_payroll": float(total_payroll * 0.25)
+    }
+
+@app.get("/api/v1/payroll/dashboard/summary")
+async def get_payroll_summary(months: int = 6, db=Depends(get_db)):
+    from app.models.core_models import PayrollRun
+    from datetime import datetime, timedelta
+    
+    end_date = datetime.now()
+    start_date = end_date - timedelta(days=months * 30)
+    
+    runs = db.query(PayrollRun).filter(
+        PayrollRun.created_at >= start_date
+    ).all()
+    
+    monthly_data = []
+    for i in range(months):
+        month_start = end_date - timedelta(days=(i+1) * 30)
+        month_end = end_date - timedelta(days=i * 30)
+        month_runs = [r for r in runs if month_start <= r.created_at <= month_end]
+        actual = sum(float(r.total_gross_pay or 0) for r in month_runs)
+        monthly_data.append({
+            "month": month_start.strftime("%Y-%m"),
+            "budget": actual * 1.1,
+            "actual": actual
+        })
+    
+    total_actual = sum(d["actual"] for d in monthly_data)
+    return {
+        "monthly_data": list(reversed(monthly_data)),
+        "total_budget": total_actual * 1.1,
+        "total_actual": total_actual
+    }
+
+@app.get("/api/v1/payroll/dashboard/activity")
+async def get_payroll_activity(limit: int = 10, db=Depends(get_db)):
+    from app.models.core_models import PayrollRun
+    
+    runs = db.query(PayrollRun).order_by(PayrollRun.created_at.desc()).limit(limit).all()
+    return [
+        {
+            "id": i + 1,
+            "type": "payroll_run",
+            "title": f"Payroll Run {r.pay_period}",
+            "details": f"Status: {r.status}, Amount: ${r.total_gross_pay or 0:,.2f}",
+            "timestamp": r.created_at.isoformat() if r.created_at else datetime.now().isoformat(),
+            "user": "System"
+        }
+        for i, r in enumerate(runs)
+    ]
+
+@app.get("/api/v1/payroll/employees")
+async def get_payroll_employees(db=Depends(get_db)):
+    from app.models.core_models import Employee
+    employees = db.query(Employee).filter(Employee.status == 'active').all()
+    return {
+        "employees": [
+            {
+                "id": e.id,
+                "employee_number": e.employee_code,
+                "first_name": e.first_name,
+                "last_name": e.last_name,
+                "full_name": f"{e.first_name} {e.last_name}",
+                "email": e.email,
+                "phone": e.phone,
+                "department": e.department or "General",
+                "position": e.position,
+                "hire_date": e.hire_date.isoformat() if e.hire_date else None,
+                "employment_type": "full_time",
+                "status": e.status,
+                "salary_type": "salary",
+                "base_salary": float(e.salary or 0),
+                "pay_frequency": "monthly",
+                "created_at": e.created_at.isoformat() if e.created_at else None,
+                "updated_at": e.updated_at.isoformat() if e.updated_at else None
+            }
+            for e in employees
+        ],
+        "total": len(employees)
+    }
+
+@app.get("/api/v1/payroll/pay-runs")
+async def get_payroll_pay_runs(db=Depends(get_db)):
     from app.models.core_models import PayrollRun
     runs = db.query(PayrollRun).all()
-    return [
-        {
-            "id": str(r.id),
-            "period": r.pay_period,
-            "status": r.status,
-            "total_amount": float(r.total_gross_pay or 0),
-            "employee_count": r.employee_count or 0
-        }
-        for r in runs
-    ]
-
+    return {
+        "pay_runs": [
+            {
+                "id": r.id,
+                "pay_period_start": r.pay_period_start.isoformat() if r.pay_period_start else None,
+                "pay_period_end": r.pay_period_end.isoformat() if r.pay_period_end else None,
+                "pay_date": r.pay_date.isoformat() if r.pay_date else None,
+                "status": r.status,
+                "total_gross_pay": float(r.total_gross_pay or 0),
+                "total_deductions": float(r.total_deductions or 0),
+                "total_net_pay": float(r.total_net_pay or 0),
+                "employee_count": r.employee_count or 0,
+                "created_by": "System",
+                "created_at": r.created_at.isoformat() if r.created_at else None
+            }
+            for r in runs
+        ],
+        "total": len(runs)
+    }
 
 @app.get("/api/v1/payroll/payslips")
-async def get_payslips(db=Depends(get_db)):
+async def get_payroll_payslips(db=Depends(get_db)):
     from app.models.core_models import Payslip
     payslips = db.query(Payslip).all()
+    return {
+        "payslips": [
+            {
+                "id": p.id,
+                "pay_run_id": p.payroll_run_id,
+                "employee_id": p.employee_id,
+                "employee_name": f"{p.employee.first_name} {p.employee.last_name}" if p.employee else "Unknown",
+                "pay_period_start": p.pay_period_start.isoformat() if p.pay_period_start else None,
+                "pay_period_end": p.pay_period_end.isoformat() if p.pay_period_end else None,
+                "pay_date": p.pay_date.isoformat() if p.pay_date else None,
+                "gross_pay": float(p.gross_pay or 0),
+                "total_deductions": float(p.total_deductions or 0),
+                "net_pay": float(p.net_pay or 0),
+                "status": "paid",
+                "earnings": [],
+                "deductions": [],
+                "taxes": []
+            }
+            for p in payslips
+        ],
+        "total": len(payslips)
+    }
+
+@app.get("/api/v1/payroll/deductions-benefits")
+async def get_deductions_benefits(db=Depends(get_db)):
     return [
         {
-            "id": str(p.id),
-            "employee": f"{p.employee.first_name} {p.employee.last_name}" if p.employee else "Unknown",
-            "period": p.pay_period,
-            "gross_pay": float(p.gross_pay or 0),
-            "net_pay": float(p.net_pay or 0)
+            "id": 1,
+            "name": "Health Insurance",
+            "type": "deduction",
+            "category": "health",
+            "calculation_type": "fixed",
+            "amount": 200.0,
+            "is_pre_tax": True,
+            "is_mandatory": False,
+            "employer_contribution": 300.0,
+            "is_active": True
+        },
+        {
+            "id": 2,
+            "name": "401k Retirement",
+            "type": "deduction",
+            "category": "retirement",
+            "calculation_type": "percentage",
+            "percentage": 5.0,
+            "is_pre_tax": True,
+            "is_mandatory": False,
+            "employer_contribution": 3.0,
+            "is_active": True
         }
-        for p in payslips
     ]
+
+@app.get("/api/v1/payroll/tax-configurations")
+async def get_tax_configurations(db=Depends(get_db)):
+    return [
+        {
+            "id": 1,
+            "tax_type": "Federal Income Tax",
+            "jurisdiction": "Federal",
+            "rate": 22.0,
+            "threshold": 40525.0,
+            "is_active": True,
+            "effective_date": "2024-01-01"
+        },
+        {
+            "id": 2,
+            "tax_type": "Social Security",
+            "jurisdiction": "Federal",
+            "rate": 6.2,
+            "cap": 160200.0,
+            "is_active": True,
+            "effective_date": "2024-01-01"
+        }
+    ]
+
+@app.get("/api/v1/payroll/analytics")
+async def get_payroll_analytics(db=Depends(get_db)):
+    from app.models.core_models import PayrollRun, Employee
+    from sqlalchemy import func
+    
+    total_payroll = db.query(func.sum(PayrollRun.total_gross_pay)).scalar() or 0
+    avg_salary = db.query(func.avg(Employee.salary)).scalar() or 0
+    
+    return {
+        "total_payroll": float(total_payroll),
+        "average_salary": float(avg_salary),
+        "by_period": [
+            {"period": "2024-01", "amount": float(total_payroll * 0.2)},
+            {"period": "2024-02", "amount": float(total_payroll * 0.25)},
+            {"period": "2024-03", "amount": float(total_payroll * 0.3)}
+        ],
+        "by_department": [
+            {"department": "Engineering", "amount": float(total_payroll * 0.4), "employee_count": 10},
+            {"department": "Sales", "amount": float(total_payroll * 0.3), "employee_count": 8},
+            {"department": "Marketing", "amount": float(total_payroll * 0.3), "employee_count": 5}
+        ],
+        "top_earners": [
+            {"employee_name": "John Doe", "amount": 120000},
+            {"employee_name": "Jane Smith", "amount": 110000}
+        ]
+    }
 
 
 # Tax Management endpoints
@@ -1314,6 +1547,43 @@ async def create_currency(currency_data: dict, db=Depends(get_db)):
         "name": currency.currency_name,
         "symbol": currency.symbol,
         "is_active": currency.is_active
+    }
+
+# Help endpoints
+@app.get("/api/v1/help/content")
+async def get_help_content():
+    return {
+        "sections": [
+            {
+                "title": "Quick Start Guide",
+                "icon": "pi-play",
+                "items": [
+                    {"text": "Navigate to Dashboard to view financial overview", "icon": "pi-home"},
+                    {"text": "Use General Ledger for accounting entries", "icon": "pi-book"},
+                    {"text": "Manage vendors in Accounts Payable", "icon": "pi-users"},
+                    {"text": "Track customers in Accounts Receivable", "icon": "pi-user"}
+                ]
+            },
+            {
+                "title": "Module Documentation",
+                "icon": "pi-file",
+                "items": [
+                    {"text": "General Ledger - Chart of Accounts, Journal Entries", "icon": "pi-book"},
+                    {"text": "Accounts Payable - Vendor Management, Bill Processing", "icon": "pi-money-bill"},
+                    {"text": "Accounts Receivable - Customer Invoicing, Collections", "icon": "pi-credit-card"},
+                    {"text": "Budget Management - Planning and Monitoring", "icon": "pi-chart-line"}
+                ]
+            },
+            {
+                "title": "Support",
+                "icon": "pi-question-circle",
+                "items": [
+                    {"text": "Email: support@paksa.com", "icon": "pi-envelope"},
+                    {"text": "Documentation: /docs", "icon": "pi-file-pdf"},
+                    {"text": "API Reference: /redoc", "icon": "pi-code"}
+                ]
+            }
+        ]
     }
 
 # Admin endpoints

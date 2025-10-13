@@ -128,16 +128,15 @@ const deleteEmployee = async () => {
 const loadEmployees = async () => {
   loading.value = true
   try {
-    const response = await hrmService.getEmployees()
-    employees.value = response.data
+    const response = await fetch('/api/v1/hrm/employees')
+    if (response.ok) {
+      employees.value = await response.json()
+    } else {
+      employees.value = []
+    }
   } catch (error: any) {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load employees', life: 3000 })
-    // Fallback to mock data for demo
-    employees.value = [
-      { id: '1', employee_id: 'EMP001', first_name: 'John', last_name: 'Doe', email: 'john@company.com', phone_number: '123-456-7890', job_title: 'Software Engineer', is_active: true },
-      { id: '2', employee_id: 'EMP002', first_name: 'Jane', last_name: 'Smith', email: 'jane@company.com', phone_number: '123-456-7891', job_title: 'HR Manager', is_active: true },
-      { id: '3', employee_id: 'EMP003', first_name: 'Mike', last_name: 'Johnson', email: 'mike@company.com', phone_number: '123-456-7892', job_title: 'Financial Analyst', is_active: false }
-    ]
+    console.error('Error loading employees:', error)
+    employees.value = []
   } finally {
     loading.value = false
   }
@@ -145,18 +144,15 @@ const loadEmployees = async () => {
 
 const loadDepartments = async () => {
   try {
-    const response = await hrmService.getDepartments()
-    departmentsList.value = response.data
+    const response = await fetch('/api/v1/hrm/departments')
+    if (response.ok) {
+      departmentsList.value = await response.json()
+    } else {
+      departmentsList.value = []
+    }
   } catch (error) {
     console.error('Error loading departments:', error)
-    departmentsList.value = [
-      { id: '1', name: 'IT' },
-      { id: '2', name: 'HR' },
-      { id: '3', name: 'Finance' },
-      { id: '4', name: 'Sales' },
-      { id: '5', name: 'Marketing' },
-      { id: '6', name: 'Operations' }
-    ]
+    departmentsList.value = []
   }
 }
 

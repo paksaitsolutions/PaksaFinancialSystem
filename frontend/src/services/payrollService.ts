@@ -133,7 +133,7 @@ export interface PayrollReport {
 class PayrollService {
   // Dashboard
   async getPayrollKPIs(): Promise<PayrollKPIs> {
-    const response = await api.get('/payroll/dashboard/kpis')
+    const response = await api.get('/api/v1/payroll/dashboard/kpis')
     return response.data
   }
 
@@ -142,7 +142,7 @@ class PayrollService {
     total_budget: number
     total_actual: number
   }> {
-    const response = await api.get(`/payroll/dashboard/summary?months=${months}`)
+    const response = await api.get(`/api/v1/payroll/dashboard/summary?months=${months}`)
     return response.data
   }
 
@@ -154,7 +154,7 @@ class PayrollService {
     timestamp: string
     user: string
   }[]> {
-    const response = await api.get(`/payroll/dashboard/activity?limit=${limit}`)
+    const response = await api.get(`/api/v1/payroll/dashboard/activity?limit=${limit}`)
     return response.data
   }
 
@@ -166,27 +166,27 @@ class PayrollService {
     department?: string
     status?: string
   }): Promise<{ employees: Employee[], total: number }> {
-    const response = await api.get('/payroll/employees', { params })
+    const response = await api.get('/api/v1/payroll/employees', { params })
     return response.data
   }
 
   async getEmployee(id: number): Promise<Employee> {
-    const response = await api.get(`/payroll/employees/${id}`)
+    const response = await api.get(`/api/v1/payroll/employees/${id}`)
     return response.data
   }
 
   async createEmployee(employee: Omit<Employee, 'id' | 'full_name' | 'created_at' | 'updated_at'>): Promise<Employee> {
-    const response = await api.post('/payroll/employees', employee)
+    const response = await api.post('/api/v1/payroll/employees', employee)
     return response.data
   }
 
   async updateEmployee(id: number, employee: Partial<Employee>): Promise<Employee> {
-    const response = await api.put(`/payroll/employees/${id}`, employee)
+    const response = await api.put(`/api/v1/payroll/employees/${id}`, employee)
     return response.data
   }
 
   async deleteEmployee(id: number): Promise<void> {
-    await api.delete(`/payroll/employees/${id}`)
+    await api.delete(`/api/v1/payroll/employees/${id}`)
   }
 
   // Pay Runs
@@ -197,12 +197,12 @@ class PayrollService {
     start_date?: string
     end_date?: string
   }): Promise<{ pay_runs: PayRun[], total: number }> {
-    const response = await api.get('/payroll/pay-runs', { params })
+    const response = await api.get('/api/v1/payroll/pay-runs', { params })
     return response.data
   }
 
   async getPayRun(id: number): Promise<PayRun> {
-    const response = await api.get(`/payroll/pay-runs/${id}`)
+    const response = await api.get(`/api/v1/payroll/pay-runs/${id}`)
     return response.data
   }
 
@@ -212,27 +212,27 @@ class PayrollService {
     pay_date: string
     employee_ids?: number[]
   }): Promise<PayRun> {
-    const response = await api.post('/payroll/pay-runs', payRun)
+    const response = await api.post('/api/v1/payroll/pay-runs', payRun)
     return response.data
   }
 
   async processPayRun(id: number): Promise<PayRun> {
-    const response = await api.post(`/payroll/pay-runs/${id}/process`)
+    const response = await api.post(`/api/v1/payroll/pay-runs/${id}/process`)
     return response.data
   }
 
   async approvePayRun(id: number): Promise<PayRun> {
-    const response = await api.post(`/payroll/pay-runs/${id}/approve`)
+    const response = await api.post(`/api/v1/payroll/pay-runs/${id}/approve`)
     return response.data
   }
 
   async payPayRun(id: number): Promise<PayRun> {
-    const response = await api.post(`/payroll/pay-runs/${id}/pay`)
+    const response = await api.post(`/api/v1/payroll/pay-runs/${id}/pay`)
     return response.data
   }
 
   async cancelPayRun(id: number): Promise<PayRun> {
-    const response = await api.post(`/payroll/pay-runs/${id}/cancel`)
+    const response = await api.post(`/api/v1/payroll/pay-runs/${id}/cancel`)
     return response.data
   }
 
@@ -243,17 +243,17 @@ class PayrollService {
     page?: number
     limit?: number
   }): Promise<{ payslips: Payslip[], total: number }> {
-    const response = await api.get('/payroll/payslips', { params })
+    const response = await api.get('/api/v1/payroll/payslips', { params })
     return response.data
   }
 
   async getPayslip(id: number): Promise<Payslip> {
-    const response = await api.get(`/payroll/payslips/${id}`)
+    const response = await api.get(`/api/v1/payroll/payslips/${id}`)
     return response.data
   }
 
   async generatePayslipPDF(id: number): Promise<Blob> {
-    const response = await api.get(`/payroll/payslips/${id}/pdf`, {
+    const response = await api.get(`/api/v1/payroll/payslips/${id}/pdf`, {
       responseType: 'blob'
     })
     return response.data
@@ -261,37 +261,37 @@ class PayrollService {
 
   // Deductions & Benefits
   async getDeductionsBenefits(): Promise<DeductionBenefit[]> {
-    const response = await api.get('/payroll/deductions-benefits')
+    const response = await api.get('/api/v1/payroll/deductions-benefits')
     return response.data
   }
 
   async createDeductionBenefit(item: Omit<DeductionBenefit, 'id' | 'is_active'>): Promise<DeductionBenefit> {
-    const response = await api.post('/payroll/deductions-benefits', item)
+    const response = await api.post('/api/v1/payroll/deductions-benefits', item)
     return response.data
   }
 
   async updateDeductionBenefit(id: number, item: Partial<DeductionBenefit>): Promise<DeductionBenefit> {
-    const response = await api.put(`/payroll/deductions-benefits/${id}`, item)
+    const response = await api.put(`/api/v1/payroll/deductions-benefits/${id}`, item)
     return response.data
   }
 
   async deleteDeductionBenefit(id: number): Promise<void> {
-    await api.delete(`/payroll/deductions-benefits/${id}`)
+    await api.delete(`/api/v1/payroll/deductions-benefits/${id}`)
   }
 
   // Tax Configuration
   async getTaxConfigurations(): Promise<TaxConfiguration[]> {
-    const response = await api.get('/payroll/tax-configurations')
+    const response = await api.get('/api/v1/payroll/tax-configurations')
     return response.data
   }
 
   async createTaxConfiguration(config: Omit<TaxConfiguration, 'id' | 'is_active'>): Promise<TaxConfiguration> {
-    const response = await api.post('/payroll/tax-configurations', config)
+    const response = await api.post('/api/v1/payroll/tax-configurations', config)
     return response.data
   }
 
   async updateTaxConfiguration(id: number, config: Partial<TaxConfiguration>): Promise<TaxConfiguration> {
-    const response = await api.put(`/payroll/tax-configurations/${id}`, config)
+    const response = await api.put(`/api/v1/payroll/tax-configurations/${id}`, config)
     return response.data
   }
 
@@ -302,17 +302,17 @@ class PayrollService {
     employee_ids?: number[]
     department?: string
   }): Promise<PayrollReport> {
-    const response = await api.post('/payroll/reports/generate', { type, ...params })
+    const response = await api.post('/api/v1/payroll/reports/generate', { type, ...params })
     return response.data
   }
 
   async getPayrollReports(): Promise<PayrollReport[]> {
-    const response = await api.get('/payroll/reports')
+    const response = await api.get('/api/v1/payroll/reports')
     return response.data
   }
 
   async downloadReport(id: string, format: 'pdf' | 'excel' = 'pdf'): Promise<Blob> {
-    const response = await api.get(`/payroll/reports/${id}/download?format=${format}`, {
+    const response = await api.get(`/api/v1/payroll/reports/${id}/download?format=${format}`, {
       responseType: 'blob'
     })
     return response.data
@@ -330,7 +330,7 @@ class PayrollService {
     by_department: { department: string, amount: number, employee_count: number }[]
     top_earners: { employee_name: string, amount: number }[]
   }> {
-    const response = await api.get('/payroll/analytics', { params })
+    const response = await api.get('/api/v1/payroll/analytics', { params })
     return response.data
   }
 
@@ -338,14 +338,14 @@ class PayrollService {
   async importEmployees(file: File): Promise<{ success: number, errors: string[] }> {
     const formData = new FormData()
     formData.append('file', file)
-    const response = await api.post('/payroll/employees/import', formData, {
+    const response = await api.post('/api/v1/payroll/employees/import', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
     return response.data
   }
 
   async exportEmployees(format: 'csv' | 'excel' = 'csv'): Promise<Blob> {
-    const response = await api.get(`/payroll/employees/export?format=${format}`, {
+    const response = await api.get(`/api/v1/payroll/employees/export?format=${format}`, {
       responseType: 'blob'
     })
     return response.data
