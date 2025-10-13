@@ -1,0 +1,62 @@
+services:
+  # Backend API Service
+  - type: web
+    name: paksa-financial-backend
+    env: python
+    buildCommand: |
+      python install_requirements.py &&
+      cd backend &&
+      python -m alembic upgrade head
+    startCommand: |
+      cd backend &&
+      uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: paksa-financial-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: 30
+      - key: ENVIRONMENT
+        value: production
+      - key: CORS_ORIGINS
+        value: https://paksa-financial-frontend.onrender.com
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: paksa-financial-redis
+          property: connectionString
+
+  # Frontend Service
+  - type: web
+    name: paksa-financial-frontend
+    env: node
+    buildCommand: |
+      cd frontend &&
+      npm ci &&
+      npm run build
+    staticPublishPath: frontend/dist
+    envVars:
+      - key: NODE_VERSION
+        value: 18.17.0
+      - key: VITE_API_BASE_URL
+        value: https://paksa-financial-backend.onrender.com
+
+  # Database
+  - type: pserv
+    name: paksa-financial-db
+    env: postgresql
+    plan: starter
+    databaseName: paksa_financial
+    user: paksa_user
+
+  # Redis Cache
+  - type: redis
+    name: paksa-financial-redis
+    plan: starter
