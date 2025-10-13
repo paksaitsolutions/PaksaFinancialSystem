@@ -25,31 +25,31 @@ export interface ChartOfAccountCreate {
 
 export default {
   async getAccounts(companyId: string) {
-    return api.get(`/chart-of-accounts/company/${companyId}`);
+    return api.get('/api/v1/gl/accounts');
   },
 
   async getAccount(accountId: string) {
-    return api.get(`/chart-of-accounts/${accountId}`);
+    return api.get(`/api/v1/gl/accounts/${accountId}`);
   },
 
   async createAccount(companyId: string, accountData: ChartOfAccountCreate) {
-    return api.post(`/chart-of-accounts/company/${companyId}`, accountData);
+    return api.post('/api/v1/gl/accounts', accountData);
   },
 
   async updateAccount(accountId: string, accountData: Partial<ChartOfAccountCreate>) {
-    return api.put(`/chart-of-accounts/${accountId}`, accountData);
+    return api.put(`/api/v1/gl/accounts/${accountId}`, accountData);
   },
 
   async deleteAccount(accountId: string) {
-    return api.delete(`/chart-of-accounts/${accountId}`);
+    return api.delete(`/api/v1/gl/accounts/${accountId}`);
   },
 
   async getAccountTypes() {
-    return api.get('/chart-of-accounts/account-types');
+    return api.get('/reference-data/account-types');
   },
 
   async getAccountBalance(accountId: string, asOfDate?: string) {
     const params = asOfDate ? `?as_of_date=${asOfDate}` : '';
-    return api.get(`/chart-of-accounts/${accountId}/balance${params}`);
+    return api.get(`/api/v1/gl/accounts/${accountId}/balance${params}`);
   }
 };

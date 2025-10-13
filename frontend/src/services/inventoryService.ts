@@ -106,22 +106,22 @@ export interface InventoryForecast {
 class InventoryService {
   // Dashboard
   async getDashboardKPIs(): Promise<InventoryKPIs> {
-    const response = await api.get('/inventory/dashboard/kpis')
+    const response = await api.get('/api/v1/inventory/dashboard/kpis')
     return response.data
   }
 
   async getStockMovements(days: number = 30): Promise<StockMovement[]> {
-    const response = await api.get(`/inventory/dashboard/movements?days=${days}`)
+    const response = await api.get(`/api/v1/inventory/dashboard/movements?days=${days}`)
     return response.data
   }
 
   async getRecentTransactions(limit: number = 10): Promise<InventoryTransaction[]> {
-    const response = await api.get(`/inventory/transactions/recent?limit=${limit}`)
+    const response = await api.get(`/api/v1/inventory/transactions/recent?limit=${limit}`)
     return response.data
   }
 
   async getStockAlerts(acknowledged: boolean = false): Promise<StockAlert[]> {
-    const response = await api.get(`/inventory/alerts?acknowledged=${acknowledged}`)
+    const response = await api.get(`/api/v1/inventory/alerts?acknowledged=${acknowledged}`)
     return response.data
   }
 
@@ -134,27 +134,27 @@ class InventoryService {
     location_id?: number
     status?: string
   }): Promise<{ items: InventoryItem[], total: number }> {
-    const response = await api.get('/inventory/items', { params })
+    const response = await api.get('/api/v1/inventory/items', { params })
     return response.data
   }
 
   async getItem(id: number): Promise<InventoryItem> {
-    const response = await api.get(`/inventory/items/${id}`)
+    const response = await api.get(`/api/v1/inventory/items/${id}`)
     return response.data
   }
 
   async createItem(item: Omit<InventoryItem, 'id' | 'total_value' | 'last_updated' | 'status'>): Promise<InventoryItem> {
-    const response = await api.post('/inventory/items', item)
+    const response = await api.post('/api/v1/inventory/items', item)
     return response.data
   }
 
   async updateItem(id: number, item: Partial<InventoryItem>): Promise<InventoryItem> {
-    const response = await api.put(`/inventory/items/${id}`, item)
+    const response = await api.put(`/api/v1/inventory/items/${id}`, item)
     return response.data
   }
 
   async deleteItem(id: number): Promise<void> {
-    await api.delete(`/inventory/items/${id}`)
+    await api.delete(`/api/v1/inventory/items/${id}`)
   }
 
   // Stock Adjustments
@@ -182,42 +182,42 @@ class InventoryService {
 
   // Categories
   async getCategories(): Promise<InventoryCategory[]> {
-    const response = await api.get('/inventory/categories')
+    const response = await api.get('/api/v1/inventory/categories')
     return response.data
   }
 
   async createCategory(category: Omit<InventoryCategory, 'id' | 'item_count' | 'total_value'>): Promise<InventoryCategory> {
-    const response = await api.post('/inventory/categories', category)
+    const response = await api.post('/api/v1/inventory/categories', category)
     return response.data
   }
 
   async updateCategory(id: number, category: Partial<InventoryCategory>): Promise<InventoryCategory> {
-    const response = await api.put(`/inventory/categories/${id}`, category)
+    const response = await api.put(`/api/v1/inventory/categories/${id}`, category)
     return response.data
   }
 
   async deleteCategory(id: number): Promise<void> {
-    await api.delete(`/inventory/categories/${id}`)
+    await api.delete(`/api/v1/inventory/categories/${id}`)
   }
 
   // Locations
   async getLocations(): Promise<InventoryLocation[]> {
-    const response = await api.get('/inventory/locations')
+    const response = await api.get('/api/v1/inventory/locations')
     return response.data
   }
 
   async createLocation(location: Omit<InventoryLocation, 'id' | 'item_count' | 'total_value'>): Promise<InventoryLocation> {
-    const response = await api.post('/inventory/locations', location)
+    const response = await api.post('/api/v1/inventory/locations', location)
     return response.data
   }
 
   async updateLocation(id: number, location: Partial<InventoryLocation>): Promise<InventoryLocation> {
-    const response = await api.put(`/inventory/locations/${id}`, location)
+    const response = await api.put(`/api/v1/inventory/locations/${id}`, location)
     return response.data
   }
 
   async deleteLocation(id: number): Promise<void> {
-    await api.delete(`/inventory/locations/${id}`)
+    await api.delete(`/api/v1/inventory/locations/${id}`)
   }
 
   // Transactions
@@ -248,7 +248,7 @@ class InventoryService {
     by_location: { location: string, value: number, percentage: number }[]
     total_value: number
   }> {
-    const response = await api.get('/inventory/reports/valuation')
+    const response = await api.get('/api/v1/inventory/reports/valuation')
     return response.data
   }
 
@@ -259,7 +259,7 @@ class InventoryService {
     overstock: number
     items: InventoryItem[]
   }> {
-    const response = await api.get('/inventory/reports/stock-levels')
+    const response = await api.get('/api/v1/inventory/reports/stock-levels')
     return response.data
   }
 

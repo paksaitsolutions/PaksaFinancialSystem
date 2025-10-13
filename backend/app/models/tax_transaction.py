@@ -47,7 +47,7 @@ class TaxTransaction(Base, TimestampMixin, SoftDeleteMixin):
     # Tax details
     tax_type = Column(String(50), nullable=False, index=True)
     tax_rate_id = Column(GUID(), ForeignKey("tax_rates.id"), nullable=False)
-    tax_rate = relationship("TaxRate", viewonly=True)
+    tax_rate_rel = relationship("TaxRate", viewonly=True)
     
     # Amounts
     taxable_amount = Column(Numeric(19, 4), nullable=False, default=0)

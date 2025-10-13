@@ -91,38 +91,38 @@ class FixedAssetsService {
     category?: string
     status?: string
   }): Promise<{ assets: FixedAsset[], total: number }> {
-    const response = await api.get('/fixed-assets/assets', { params })
+    const response = await api.get('/api/v1/fixed-assets/assets', { params })
     return response.data
   }
 
   async getAsset(id: number): Promise<FixedAsset> {
-    const response = await api.get(`/fixed-assets/assets/${id}`)
+    const response = await api.get(`/api/v1/fixed-assets/assets/${id}`)
     return response.data
   }
 
   async createAsset(asset: Omit<FixedAsset, 'id' | 'accumulated_depreciation' | 'current_value' | 'created_at' | 'updated_at'>): Promise<FixedAsset> {
-    const response = await api.post('/fixed-assets/assets', asset)
+    const response = await api.post('/api/v1/fixed-assets/assets', asset)
     return response.data
   }
 
   async updateAsset(id: number, asset: Partial<FixedAsset>): Promise<FixedAsset> {
-    const response = await api.put(`/fixed-assets/assets/${id}`, asset)
+    const response = await api.put(`/api/v1/fixed-assets/assets/${id}`, asset)
     return response.data
   }
 
   async deleteAsset(id: number): Promise<void> {
-    await api.delete(`/fixed-assets/assets/${id}`)
+    await api.delete(`/api/v1/fixed-assets/assets/${id}`)
   }
 
   // Statistics
   async getAssetStats(): Promise<AssetStats> {
-    const response = await api.get('/fixed-assets/stats')
+    const response = await api.get('/api/v1/fixed-assets/stats')
     return response.data
   }
 
   // Categories
   async getCategories(): Promise<{ name: string, value: string }[]> {
-    const response = await api.get('/fixed-assets/categories')
+    const response = await api.get('/api/v1/fixed-assets/categories')
     return response.data.map((cat: AssetCategory) => ({
       name: cat.name,
       value: cat.name
@@ -130,38 +130,38 @@ class FixedAssetsService {
   }
 
   async createCategory(category: Omit<AssetCategory, 'id' | 'asset_count'>): Promise<AssetCategory> {
-    const response = await api.post('/fixed-assets/categories', category)
+    const response = await api.post('/api/v1/fixed-assets/categories', category)
     return response.data
   }
 
   async updateCategory(id: number, category: Partial<AssetCategory>): Promise<AssetCategory> {
-    const response = await api.put(`/fixed-assets/categories/${id}`, category)
+    const response = await api.put(`/api/v1/fixed-assets/categories/${id}`, category)
     return response.data
   }
 
   async deleteCategory(id: number): Promise<void> {
-    await api.delete(`/fixed-assets/categories/${id}`)
+    await api.delete(`/api/v1/fixed-assets/categories/${id}`)
   }
 
   // Maintenance
   async getMaintenanceRecords(assetId?: number): Promise<MaintenanceRecord[]> {
     const params = assetId ? { asset_id: assetId } : {}
-    const response = await api.get('/fixed-assets/maintenance', { params })
+    const response = await api.get('/api/v1/fixed-assets/maintenance', { params })
     return response.data
   }
 
   async createMaintenanceRecord(maintenance: Omit<MaintenanceRecord, 'id' | 'asset_name' | 'created_by' | 'created_at'>): Promise<MaintenanceRecord> {
-    const response = await api.post('/fixed-assets/maintenance', maintenance)
+    const response = await api.post('/api/v1/fixed-assets/maintenance', maintenance)
     return response.data
   }
 
   async updateMaintenanceRecord(id: number, maintenance: Partial<MaintenanceRecord>): Promise<MaintenanceRecord> {
-    const response = await api.put(`/fixed-assets/maintenance/${id}`, maintenance)
+    const response = await api.put(`/api/v1/fixed-assets/maintenance/${id}`, maintenance)
     return response.data
   }
 
   async getUpcomingMaintenance(days: number = 30): Promise<MaintenanceRecord[]> {
-    const response = await api.get(`/fixed-assets/maintenance/upcoming?days=${days}`)
+    const response = await api.get(`/api/v1/fixed-assets/maintenance/upcoming?days=${days}`)
     return response.data
   }
 
@@ -208,7 +208,7 @@ class FixedAssetsService {
     total_current_value: number
     total_depreciation: number
   }> {
-    const response = await api.get('/fixed-assets/reports/valuation')
+    const response = await api.get('/api/v1/fixed-assets/reports/valuation')
     return response.data
   }
 

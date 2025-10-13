@@ -18,37 +18,7 @@ class TaxStatus(str, Enum):
     PENDING = "pending"
     EXPIRED = "expired"
 
-class TaxTransaction(Base):
-    """Tax transaction records."""
-    
-    __tablename__ = "tax_transactions"
-    __table_args__ = {'extend_existing': True}
-    
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    transaction_id = Column(String(50), nullable=False, index=True)
-    entity_type = Column(String(20), nullable=False)  # invoice, payment, journal
-    entity_id = Column(GUID(), nullable=False, index=True)
-    tax_rate_id = Column(GUID(), ForeignKey("tax_rates.id"), nullable=False)
-    
-    # Amounts
-    taxable_amount = Column(Numeric(precision=18, scale=2), nullable=False)
-    tax_amount = Column(Numeric(precision=18, scale=2), nullable=False)
-    total_amount = Column(Numeric(precision=18, scale=2), nullable=False)
-    
-    # Transaction details
-    transaction_date = Column(Date, nullable=False, default=date.today)
-    description = Column(Text)
-    reference = Column(String(100))
-    
-    # Audit
-    created_at = Column(DateTime, default=datetime.utcnow)
-    created_by = Column(GUID())
-    
-    # Relationships
-    tax_rate = relationship("TaxRate", viewonly=True)
-    
-    def __repr__(self):
-        return f"<TaxTransaction {self.transaction_id}: {self.tax_amount}>"
+# TaxTransaction model exists in core_models.py - removed duplicate
 
 class TaxExemption(Base):
     """Tax exemption certificates."""
@@ -83,63 +53,9 @@ class TaxExemption(Base):
     def __repr__(self):
         return f"<TaxExemption {self.certificate_number}>"
 
-class TaxReturn(Base):
-    """Tax return filings."""
-    
-    __tablename__ = "tax_returns"
-    __table_args__ = {'extend_existing': True}
-    
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    return_number = Column(String(50), unique=True, nullable=False, index=True)
-    tax_type = Column(String(20), nullable=False)
-    jurisdiction = Column(String(100), nullable=False)
-    
-    # Period
-    period_start = Column(Date, nullable=False)
-    period_end = Column(Date, nullable=False)
-    due_date = Column(Date, nullable=False)
-    
-    # Amounts
-    gross_sales = Column(Numeric(precision=18, scale=2), default=0)
-    taxable_sales = Column(Numeric(precision=18, scale=2), default=0)
-    exempt_sales = Column(Numeric(precision=18, scale=2), default=0)
-    tax_collected = Column(Numeric(precision=18, scale=2), default=0)
-    tax_paid = Column(Numeric(precision=18, scale=2), default=0)
-    tax_due = Column(Numeric(precision=18, scale=2), default=0)
-    
-    # Status
-    status = Column(String(20), default="draft")  # draft, filed, paid, overdue
-    filed_date = Column(Date)
-    payment_date = Column(Date)
-    
-    # Audit
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    created_by = Column(GUID())
-    
-    # Relationships
-    line_items = relationship("TaxReturnLineItem", back_populates="tax_return", cascade="all, delete-orphan")
-    
-    def __repr__(self):
-        return f"<TaxReturn {self.return_number}>"
+# TaxReturn model exists in core_models.py - removed duplicate
 
-class TaxReturnLineItem(Base):
-    """Tax return line items."""
-    
-    __tablename__ = "tax_return_line_items"
-    __table_args__ = {'extend_existing': True}
-    
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    tax_return_id = Column(GUID(), ForeignKey("tax_returns.id"), nullable=False)
-    line_number = Column(Integer, nullable=False)
-    description = Column(String(200), nullable=False)
-    amount = Column(Numeric(precision=18, scale=2), nullable=False)
-    
-    # Relationships
-    tax_return = relationship("TaxReturn", back_populates="line_items")
-    
-    def __repr__(self):
-        return f"<TaxReturnLineItem {self.line_number}: {self.amount}>"
+# TaxReturnLineItem removed - TaxReturn in core_models doesn't support line_items
 
 class TaxJurisdiction(Base):
     """Tax jurisdiction configuration."""

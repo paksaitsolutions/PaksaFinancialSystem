@@ -143,7 +143,7 @@
 
         <div class="field">
           <div class="flex align-items-center gap-2">
-            <Checkbox v-model="form.active" inputId="active" />
+            <Checkbox v-model="form.active" inputId="active" :binary="true" />
             <label for="active">Active</label>
           </div>
         </div>
@@ -374,8 +374,6 @@ const closeDialog = () => {
 }
 
 const saveAccount = async () => {
-  if (!currentCompany.value?.id) return
-  
   // Clear errors
   Object.keys(errors).forEach(key => errors[key] = '')
   
@@ -391,16 +389,19 @@ const saveAccount = async () => {
     const accountData = {
       code: form.code,
       name: form.name,
+      type: form.type,
       account_type: form.type,
       description: form.description,
       is_active: form.active
     }
     
+    console.log('Saving account data:', accountData)
+    
     if (editingAccount.value) {
       await chartOfAccountsService.updateAccount(editingAccount.value.id, accountData)
       toast.add({ severity: 'success', summary: 'Success', detail: 'Account updated successfully' })
     } else {
-      await chartOfAccountsService.createAccount(currentCompany.value.id, accountData)
+      await chartOfAccountsService.createAccount('dummy-company-id', accountData)
       toast.add({ severity: 'success', summary: 'Success', detail: 'Account created successfully' })
     }
     
@@ -408,7 +409,8 @@ const saveAccount = async () => {
     await loadAccounts()
   } catch (error) {
     console.error('Error saving account:', error)
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to save account' })
+    console.error('Error details:', error.response?.data)
+    toast.add({ severity: 'error', summary: 'Error', detail: error.response?.data?.detail || 'Failed to save account' })
   } finally {
     saving.value = false
   }

@@ -106,7 +106,7 @@ class ExchangeRateType(str, PyEnum):
 # CORE FINANCIAL ENTITIES
 # ============================================================================
 
-class ChartOfAccounts(Base, AuditMixin):
+class ChartOfAccounts(Base):
     """Unified Chart of Accounts for all modules"""
     __tablename__ = "chart_of_accounts"
     
@@ -115,17 +115,8 @@ class ChartOfAccounts(Base, AuditMixin):
     account_code = Column(String(20), nullable=False, unique=True, index=True)
     account_name = Column(String(255), nullable=False)
     account_type = Column(String(50), nullable=False)  # Asset, Liability, Equity, Revenue, Expense
-    account_subtype = Column(String(100))
-    parent_account_id = Column(GUID(), ForeignKey("chart_of_accounts.id"))
-    normal_balance = Column(String(10), nullable=False)  # Debit, Credit
-    current_balance = Column(Numeric(15, 2), default=0)
-    balance = Column(Numeric(15, 2), default=0)  # Added for main.py compatibility
+    balance = Column(Numeric(15, 2), default=0)
     is_active = Column(Boolean, default=True)
-    is_system_account = Column(Boolean, default=False)
-    
-    # Relationships
-    parent_account = relationship("ChartOfAccounts", remote_side="ChartOfAccounts.id")
-    child_accounts = relationship("ChartOfAccounts", back_populates="parent_account")
 
 class JournalEntry(Base, AuditMixin):
     """Unified Journal Entry for all modules"""
@@ -711,7 +702,39 @@ class TaxRate(Base, AuditMixin):
     expiry_date = Column(Date)
     is_active = Column(Boolean, default=True)
 
-# TaxReturn already exists in tax.py and tax_models.py - removing duplicate
+class TaxReturn(Base, AuditMixin):
+    """Tax Return"""
+    __tablename__ = "tax_returns"
+    
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
+    return_type = Column(String(50), nullable=False)
+    tax_period = Column(String(50), nullable=False)
+    jurisdiction = Column(String(100))
+    due_date = Column(Date, nullable=False)
+    amount_due = Column(Numeric(15, 2), default=0)
+    status = Column(String(20), default="draft")
+    filed_date = Column(Date)
+    
+class TaxTransaction(Base, AuditMixin):
+    """Tax Transaction"""
+    __tablename__ = "tax_transactions"
+    
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
+    entity_type = Column(String(20), nullable=False)
+    entity_id = Column(GUID(), nullable=False)
+    entity_name = Column(String(255), nullable=False)
+    transaction_date = Column(Date, nullable=False)
+    taxable_amount = Column(Numeric(15, 2), nullable=False)
+    tax_amount = Column(Numeric(15, 2), nullable=False)
+    total_amount = Column(Numeric(15, 2), nullable=False)
+    tax_rate = Column(Numeric(5, 4), nullable=False)
+    jurisdiction_name = Column(String(100))
+    reference_number = Column(String(100))
+    description = Column(Text)
+
+# CashTransaction model exists in reconciliation_core.py - removed duplicate
 
 # ============================================================================
 # FINANCIAL PERIODS & REPORTING
@@ -930,7 +953,7 @@ class Transaction(Base, AuditMixin):
     reference_id = Column(GUID())
     reference_type = Column(String(50))
 
-class Notification(Base, AuditMixin):
+class Notification(Base):
     """System Notifications"""
     __tablename__ = "notifications"
     __table_args__ = {'extend_existing': True}
@@ -942,4 +965,5 @@ class Notification(Base, AuditMixin):
     notification_type = Column(String(50), default="info")
     is_read = Column(Boolean, default=False)
     priority = Column(String(20), default="normal")
+    action_url = Column(String(500))
     created_at = Column(DateTime, default=func.now(), nullable=False)

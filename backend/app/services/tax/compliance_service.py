@@ -11,8 +11,9 @@ import pytz
 
 from app.core.config.settings import settings
 from app.models.tax_models import (
-    ComplianceCheck, ComplianceRule, ComplianceAlert, TaxTransaction, TaxRateCompliance
+    ComplianceCheck, ComplianceRule, ComplianceAlert, TaxRateCompliance
 )
+from app.models.core_models import TaxTransaction
 from app.core.integrations.regulatory_api import RegulatoryAPIClient
 from app.core.notifications import NotificationService
 

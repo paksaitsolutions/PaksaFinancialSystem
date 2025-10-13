@@ -67,7 +67,7 @@ class AIService {
 
   async getAIMetrics(): Promise<AIMetrics> {
     try {
-      const response = await api.get('/bi-ai/analytics')
+      const response = await api.get('/api/v1/bi-ai/analytics')
       const data = response.data
       
       return {
@@ -101,7 +101,7 @@ class AIService {
 
   async getRecommendations(limit: number = 20): Promise<any[]> {
     try {
-      const response = await api.get(`/bi-ai/recommendations/generate?limit=${limit}`)
+      const response = await api.get(`/api/v1/bi-ai/recommendations/generate?limit=${limit}`)
       return response.data || []
     } catch (error) {
       console.warn('Failed to fetch AI recommendations, using fallback data:', error)
@@ -134,7 +134,7 @@ class AIService {
 
   async generateNewRecommendations(): Promise<any[]> {
     try {
-      const response = await api.post('/bi-ai/recommendations/generate')
+      const response = await api.post('/api/v1/bi-ai/recommendations/generate')
       return response.data || []
     } catch (error) {
       console.warn('Failed to generate new recommendations:', error)
@@ -147,7 +147,7 @@ class AIService {
       const params = new URLSearchParams({ limit: limit.toString() })
       if (insightType) params.append('insight_type', insightType)
       
-      const response = await api.get(`/bi-ai/insights?${params}`)
+      const response = await api.get(`/api/v1/bi-ai/insights?${params}`)
       return response.data || []
     } catch (error) {
       console.warn('Failed to fetch AI insights:', error)
@@ -157,7 +157,7 @@ class AIService {
 
   async applyRecommendation(recommendationId: string): Promise<boolean> {
     try {
-      const response = await api.post(`/bi-ai/recommendations/${recommendationId}/apply`)
+      const response = await api.post(`/api/v1/bi-ai/recommendations/${recommendationId}/apply`)
       return response.data?.success || true
     } catch (error) {
       console.error('Failed to apply recommendation:', error)
@@ -167,7 +167,7 @@ class AIService {
 
   async dismissRecommendation(recommendationId: string): Promise<boolean> {
     try {
-      const response = await api.delete(`/bi-ai/recommendations/${recommendationId}`)
+      const response = await api.delete(`/api/v1/bi-ai/recommendations/${recommendationId}`)
       return response.data?.success || true
     } catch (error) {
       console.error('Failed to dismiss recommendation:', error)
@@ -180,7 +180,7 @@ class AIService {
       const params = new URLSearchParams({ limit: limit.toString() })
       if (severity) params.append('severity', severity)
       
-      const response = await api.get(`/bi-ai/anomalies?${params}`)
+      const response = await api.get(`/api/v1/bi-ai/anomalies?${params}`)
       return response.data || []
     } catch (error) {
       console.warn('Failed to fetch anomalies:', error)
@@ -193,7 +193,7 @@ class AIService {
       const params = new URLSearchParams({ limit: limit.toString() })
       if (predictionType) params.append('prediction_type', predictionType)
       
-      const response = await api.get(`/bi-ai/predictions?${params}`)
+      const response = await api.get(`/api/v1/bi-ai/predictions?${params}`)
       return response.data || []
     } catch (error) {
       console.warn('Failed to fetch predictions:', error)
@@ -203,7 +203,7 @@ class AIService {
 
   async getModelPerformance(): Promise<any[]> {
     try {
-      const response = await api.get('/bi-ai/models/performance')
+      const response = await api.get('/api/v1/bi-ai/models/performance')
       return response.data || []
     } catch (error) {
       console.warn('Failed to fetch model performance:', error)
@@ -213,7 +213,7 @@ class AIService {
 
   async getFinancialData(): Promise<any> {
     try {
-      const response = await api.get('/bi-ai/financial-data')
+      const response = await api.get('/api/v1/bi-ai/financial-data')
       return response.data
     } catch (error) {
       console.warn('Failed to fetch financial data:', error)
@@ -223,7 +223,7 @@ class AIService {
 
   async processNLPQuery(query: string): Promise<any> {
     try {
-      const response = await api.post('/bi-ai/nlp/query', { query })
+      const response = await api.post('/api/v1/bi-ai/nlp/query', { query })
       return response.data
     } catch (error) {
       console.warn('Failed to process NLP query:', error)
@@ -240,19 +240,19 @@ export const aiDataIntegration = {
   async syncWithAllModules() {
     try {
       // Sync with GL module
-      const glData = await api.get('/gl/accounts')
+      const glData = await api.get('/api/v1/gl/accounts')
       
       // Sync with AP module  
-      const apData = await api.get('/ap/vendors')
+      const apData = await api.get('/api/v1/ap/vendors')
       
       // Sync with AR module
-      const arData = await api.get('/ar/customers')
+      const arData = await api.get('/api/v1/ar/customers')
       
       // Sync with Cash module
-      const cashData = await api.get('/cash/accounts')
+      const cashData = await api.get('/api/v1/cash/accounts')
       
       // Sync with Budget module
-      const budgetData = await api.get('/budget/budgets')
+      const budgetData = await api.get('/api/v1/budget/budgets')
       
       return {
         gl: glData.data,
@@ -271,9 +271,9 @@ export const aiDataIntegration = {
   async getRealtimeMetrics() {
     try {
       const [analytics, insights, anomalies] = await Promise.all([
-        api.get('/bi-ai/analytics'),
-        api.get('/bi-ai/insights'),
-        api.post('/bi-ai/anomalies/detect')
+        api.get('/api/v1/bi-ai/analytics'),
+        api.get('/api/v1/bi-ai/insights'),
+        api.get('/api/v1/bi-ai/anomalies')
       ])
       
       return {
