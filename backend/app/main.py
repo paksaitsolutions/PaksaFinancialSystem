@@ -2333,10 +2333,84 @@ async def get_system_status(db=Depends(get_db)):
 # Root route for frontend
 @app.get("/")
 async def serve_root():
-    try:
+    import os
+    if os.path.exists("static/index.html"):
         return FileResponse("static/index.html")
-    except:
-        return HTMLResponse("<h1>Frontend not built. Run build.sh first</h1>")
+    else:
+        return HTMLResponse("""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Paksa Financial System - Login</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 0; background: #f5f5f5; }
+                .login-container { max-width: 400px; margin: 100px auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                .logo { text-align: center; margin-bottom: 30px; color: #333; }
+                .form-group { margin-bottom: 20px; }
+                label { display: block; margin-bottom: 5px; color: #555; }
+                input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+                .btn { width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+                .btn:hover { background: #0056b3; }
+                .demo-info { margin-top: 20px; padding: 15px; background: #e7f3ff; border-radius: 4px; font-size: 14px; }
+                .api-links { margin-top: 20px; text-align: center; }
+                .api-links a { color: #007bff; text-decoration: none; margin: 0 10px; }
+            </style>
+        </head>
+        <body>
+            <div class="login-container">
+                <div class="logo">
+                    <h1>Paksa Financial System</h1>
+                    <p>Enterprise Financial Management</p>
+                </div>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="email">Email:</label>
+                        <input type="email" id="email" name="email" placeholder="Enter your email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password:</label>
+                        <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                    </div>
+                    <button type="submit" class="btn">Login</button>
+                </form>
+                <div class="demo-info">
+                    <strong>Super Admin Access:</strong><br>
+                    Use your registered super admin credentials
+                </div>
+                <div class="api-links">
+                    <a href="/docs">API Docs</a>
+                    <a href="/health">Health Check</a>
+                </div>
+            </div>
+            <script>
+                document.getElementById('loginForm').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const email = document.getElementById('email').value;
+                    const password = document.getElementById('password').value;
+                    
+                    try {
+                        const response = await fetch('/auth/login', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ email, password })
+                        });
+                        
+                        if (response.ok) {
+                            const data = await response.json();
+                            localStorage.setItem('token', data.access_token);
+                            alert('Login successful! Redirecting to dashboard...');
+                            window.location.href = '/docs'; // Redirect to API docs for now
+                        } else {
+                            alert('Login failed. Please check your credentials.');
+                        }
+                    } catch (error) {
+                        alert('Login error: ' + error.message);
+                    }
+                });
+            </script>
+        </body>
+        </html>
+        """)
 
 # Catch-all route for frontend SPA
 @app.get("/{full_path:path}")
