@@ -37,11 +37,11 @@ def initialize_ai_assistant() -> None:
     # Clear any existing modules
     assistant.modules.clear()
     
-    # Register each module
+    # Register each module directly
     for module_name, module_class in AVAILABLE_MODULES.items():
         try:
             module_instance = module_class()
-            assistant.register_module(module_name, module_instance)
+            assistant.modules[module_name] = module_instance
             print("[OK] Registered AI module: {}".format(module_name))
         except Exception as e:
             print("[ERROR] Failed to register AI module {}: {}".format(module_name, str(e)))

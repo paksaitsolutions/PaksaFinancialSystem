@@ -5,7 +5,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from sqlalchemy import Column, Date, Enum, ForeignKey, Numeric, String, Text, Boolean
 from sqlalchemy.orm import relationship
-from sqlalchemy.dialects.postgresql import UUID
+from app.models.base import GUID
 import uuid
 
 <<<<<<< HEAD:backend/app/modules/core_financials/payroll/models/payslip.py
@@ -21,7 +21,7 @@ class Payslip(PayrollBase, Base):
     __tablename__ = "payroll_payslips"
 
     id = Column(
-        UUID(as_uuid=True),
+        GUID(),
         primary_key=True,
         default=uuid.uuid4,
         index=True
@@ -29,13 +29,13 @@ class Payslip(PayrollBase, Base):
     
     # References
     employee_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_employees.id'), 
         nullable=False,
         index=True
     )
     pay_period_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_pay_periods.id'), 
         nullable=False,
         index=True
@@ -154,7 +154,7 @@ class PayslipEarning(PayrollBase, Base):
     __tablename__ = "payroll_payslip_earnings"
     
     id = Column(
-        UUID(as_uuid=True),
+        GUID(),
         primary_key=True,
         default=uuid.uuid4,
         index=True
@@ -162,7 +162,7 @@ class PayslipEarning(PayrollBase, Base):
     
     # References
     payslip_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_payslips.id'), 
         nullable=False,
         index=True
@@ -196,7 +196,7 @@ class PayslipDeduction(PayrollBase, Base):
     __tablename__ = "payroll_payslip_deductions"
     
     id = Column(
-        UUID(as_uuid=True),
+        GUID(),
         primary_key=True,
         default=uuid.uuid4,
         index=True
@@ -204,7 +204,7 @@ class PayslipDeduction(PayrollBase, Base):
     
     # References
     payslip_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_payslips.id'), 
         nullable=False,
         index=True

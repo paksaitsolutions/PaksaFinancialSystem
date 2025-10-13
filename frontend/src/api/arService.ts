@@ -43,8 +43,18 @@ export interface ARAnalytics {
 }
 
 export const analyticsService = {
-  async getDashboardAnalytics(): Promise<ARAnalytics> {
+  async getDashboardAnalytics(): Promise<{ kpis: ARAnalytics }> {
     const response = await api.get('/ar/analytics/dashboard')
+    return response.data
+  },
+
+  async getDashboardStats(): Promise<{ kpis: ARAnalytics }> {
+    const response = await api.get('/ar/dashboard/stats')
+    return response.data
+  },
+
+  async getRecentInvoices(): Promise<{ invoices: Invoice[] }> {
+    const response = await api.get('/ar/dashboard/recent-invoices')
     return response.data
   }
 }

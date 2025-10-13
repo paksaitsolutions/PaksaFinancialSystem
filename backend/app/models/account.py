@@ -13,7 +13,7 @@ from sqlalchemy import (
     Column, String, Numeric, Boolean, ForeignKey, 
     DateTime, Enum as SQLEnum, Text, JSON, UniqueConstraint, Index
 )
-from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+from app.models.base import GUID as PG_UUID
 from sqlalchemy.orm import relationship, validates
 
 <<<<<<< HEAD:backend/app/modules/core_financials/accounting/models/account.py
@@ -55,7 +55,7 @@ class Account(Base):
     __tablename__ = 'gl_accounts'
     
     # Primary Key
-    id = Column(PG_UUID(as_uuid=True), primary_key=True, index=True, default=uuid4)
+    id = Column(PG_GUID(), primary_key=True, index=True, default=uuid4)
     
     # Account Identification
     code = Column(String(50), unique=True, index=True, nullable=False)
@@ -67,7 +67,7 @@ class Account(Base):
     normal_balance = Column(SQLEnum(NormalBalance), nullable=False)
     
     # Hierarchy Management
-    parent_id = Column(PG_UUID(as_uuid=True), ForeignKey('gl_accounts.id', ondelete='RESTRICT'), index=True)
+    parent_id = Column(PG_GUID(), ForeignKey('gl_accounts.id', ondelete='RESTRICT'), index=True)
     path = Column(Text, index=True)  # Materialized path for hierarchy queries
     level = Column(Numeric(2, 0), nullable=False, default=0)  # Depth in hierarchy
     
@@ -88,8 +88,8 @@ class Account(Base):
     # Audit Fields
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-    created_by = Column(PG_UUID(as_uuid=True), nullable=False)
-    updated_by = Column(PG_UUID(as_uuid=True), nullable=False)
+    created_by = Column(PG_GUID(), nullable=False)
+    updated_by = Column(PG_GUID(), nullable=False)
     
     # Relationships
     parent = relationship('Account', remote_side=[id], backref='children', post_update=True)

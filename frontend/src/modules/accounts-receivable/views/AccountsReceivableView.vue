@@ -1,66 +1,55 @@
 <template>
-  <div class="ar-dashboard">
-    <div class="flex justify-content-between align-items-center mb-4">
-      <div>
-        <h1>Accounts Receivable</h1>
-        <p class="text-color-secondary">Manage customer invoices and payments</p>
-      </div>
-      <Button label="Create Invoice" icon="pi pi-plus" @click="openInvoiceDialog" />
-    </div>
+  <UnifiedDashboard 
+    title="Accounts Receivable" 
+    subtitle="Manage customer invoices and payments"
+  >
+    <template #actions>
+      <Button label="Create Invoice" icon="pi pi-plus" class="btn-primary" @click="openInvoiceDialog" />
+    </template>
+    
+    <template #metrics>
+      <UnifiedMetrics :metrics="dashboardMetrics" />
+    </template>
+    
+    <template #content>
 
-    <div class="grid">
-      <div class="col-12 lg:col-3">
-        <Card>
-          <template #content>
-            <div class="metric-card">
-              <i class="pi pi-receipt text-4xl text-green-500 mb-3"></i>
-              <div class="text-2xl font-bold">${{ stats.totalReceivable }}</div>
-              <div class="text-color-secondary">Total Receivable</div>
+      <Card class="mb-4">
+        <template #header>
+          <h3 class="card-title">Accounts Receivable Modules</h3>
+        </template>
+        <template #content>
+          <div class="modules-grid">
+            <div class="module-card" @click="$router.push('/ar/customers')">
+              <i class="pi pi-users" style="color: var(--primary-500)"></i>
+              <h4>Customers</h4>
+              <p>Manage customer information</p>
             </div>
-          </template>
-        </Card>
-      </div>
-      <div class="col-12 lg:col-3">
-        <Card>
-          <template #content>
-            <div class="metric-card">
-              <i class="pi pi-clock text-4xl text-orange-500 mb-3"></i>
-              <div class="text-2xl font-bold">{{ stats.overdueInvoices }}</div>
-              <div class="text-color-secondary">Overdue Invoices</div>
+            <div class="module-card" @click="$router.push('/ar/invoices')">
+              <i class="pi pi-file-edit" style="color: var(--warning-500)"></i>
+              <h4>Invoices</h4>
+              <p>Create and manage invoices</p>
             </div>
-          </template>
-        </Card>
-      </div>
-      <div class="col-12 lg:col-3">
-        <Card>
-          <template #content>
-            <div class="metric-card">
-              <i class="pi pi-users text-4xl text-blue-500 mb-3"></i>
-              <div class="text-2xl font-bold">{{ stats.activeCustomers }}</div>
-              <div class="text-color-secondary">Active Customers</div>
+            <div class="module-card" @click="$router.push('/ar/payments')">
+              <i class="pi pi-money-bill" style="color: var(--success-500)"></i>
+              <h4>Payments</h4>
+              <p>Record customer payments</p>
             </div>
-          </template>
-        </Card>
-      </div>
-      <div class="col-12 lg:col-3">
-        <Card>
-          <template #content>
-            <div class="metric-card">
-              <i class="pi pi-money-bill text-4xl text-purple-500 mb-3"></i>
-              <div class="text-2xl font-bold">${{ stats.monthlyRevenue }}</div>
-              <div class="text-color-secondary">Monthly Revenue</div>
+            <div class="module-card" @click="$router.push('/ar/reports')">
+              <i class="pi pi-chart-bar" style="color: var(--info-500)"></i>
+              <h4>Reports</h4>
+              <p>AR reports and analytics</p>
             </div>
-          </template>
-        </Card>
-      </div>
-    </div>
+          </div>
+        </template>
+      </Card>
 
-    <div class="grid">
-      <div class="col-12 lg:col-8">
+      <div class="content-grid">
         <Card>
-          <template #title>Recent Invoices</template>
+          <template #header>
+            <h3 class="card-title">Recent Invoices</h3>
+          </template>
           <template #content>
-            <DataTable :value="recentInvoices" :rows="5">
+            <DataTable :value="recentInvoices" :rows="5" class="compact-table">
               <Column field="customer" header="Customer" />
               <Column field="invoiceNumber" header="Invoice #" />
               <Column field="dueDate" header="Due Date" />
@@ -73,53 +62,53 @@
             </DataTable>
           </template>
         </Card>
-      </div>
-      <div class="col-12 lg:col-4">
         <Card>
-          <template #title>Quick Actions</template>
+          <template #header>
+            <h3 class="card-title">Quick Actions</h3>
+          </template>
           <template #content>
-            <div class="quick-actions">
-              <Button label="Add Customer" icon="pi pi-user-plus" class="w-full mb-2" @click="$router.push('/ar/customers')" />
-              <Button label="Record Payment" icon="pi pi-money-bill" class="w-full mb-2 p-button-secondary" @click="recordPayment" />
-              <Button label="Send Reminders" icon="pi pi-send" class="w-full mb-2 p-button-success" @click="sendReminders" />
-              <Button label="View Reports" icon="pi pi-chart-bar" class="w-full p-button-info" @click="$router.push('/ar/reports')" />
+            <div class="actions-list">
+              <Button label="Add Customer" icon="pi pi-user-plus" class="action-btn" @click="$router.push('/ar/customers')" />
+              <Button label="Record Payment" icon="pi pi-money-bill" class="action-btn btn-secondary" @click="recordPayment" />
+              <Button label="Send Reminders" icon="pi pi-send" class="action-btn" @click="sendReminders" />
+              <Button label="View Reports" icon="pi pi-chart-bar" class="action-btn" @click="$router.push('/ar/reports')" />
             </div>
           </template>
         </Card>
       </div>
-    </div>
+    </template>
+  </UnifiedDashboard>
 
-    <Dialog v-model:visible="invoiceDialog" header="Create Invoice" :modal="true" :style="{width: '600px'}">
-      <div class="field">
-        <label>Customer</label>
-        <Dropdown v-model="invoice.customerId" :options="customers" optionLabel="name" optionValue="id" placeholder="Select Customer" class="w-full" />
-      </div>
-      <div class="field">
-        <label>Invoice Date</label>
-        <Calendar v-model="invoice.invoiceDate" class="w-full" />
-      </div>
-      <div class="field">
-        <label>Due Date</label>
-        <Calendar v-model="invoice.dueDate" class="w-full" />
-      </div>
-      <div class="field">
-        <label>Amount</label>
-        <InputNumber v-model="invoice.amount" mode="currency" currency="USD" class="w-full" />
-      </div>
-      <div class="field">
-        <label>Description</label>
-        <Textarea v-model="invoice.description" rows="3" class="w-full" />
-      </div>
-      <template #footer>
-        <Button label="Cancel" class="p-button-text" @click="invoiceDialog = false" />
-        <Button label="Create" @click="createInvoice" />
-      </template>
-    </Dialog>
-  </div>
+  <Dialog v-model:visible="invoiceDialog" header="Create Invoice" :modal="true" :style="{width: '600px'}">
+    <div class="field">
+      <label>Customer</label>
+      <Dropdown v-model="invoice.customerId" :options="customers" optionLabel="name" optionValue="id" placeholder="Select Customer" class="w-full" />
+    </div>
+    <div class="field">
+      <label>Invoice Date</label>
+      <Calendar v-model="invoice.invoiceDate" class="w-full" />
+    </div>
+    <div class="field">
+      <label>Due Date</label>
+      <Calendar v-model="invoice.dueDate" class="w-full" />
+    </div>
+    <div class="field">
+      <label>Amount</label>
+      <InputNumber v-model="invoice.amount" mode="currency" currency="USD" class="w-full" />
+    </div>
+    <div class="field">
+      <label>Description</label>
+      <Textarea v-model="invoice.description" rows="3" class="w-full" />
+    </div>
+    <template #footer>
+      <Button label="Cancel" class="p-button-text" @click="invoiceDialog = false" />
+      <Button label="Create" @click="createInvoice" />
+    </template>
+  </Dialog>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { analyticsService, customerService, invoiceService } from '@/api/arService'
 
@@ -130,31 +119,80 @@ const dashboardData = ref(null)
 const recentInvoicesData = ref([])
 const customersData = ref([])
 
-const stats = computed(() => {
+const dashboardMetrics = computed(() => {
   if (!dashboardData.value) {
-    return {
-      totalReceivable: '0',
-      overdueInvoices: 0,
-      activeCustomers: 0,
-      monthlyRevenue: '0'
-    }
+    return [
+      {
+        id: 'receivable',
+        icon: 'pi pi-receipt',
+        value: '$0',
+        label: 'Total Receivable',
+        color: 'var(--success-500)'
+      },
+      {
+        id: 'overdue',
+        icon: 'pi pi-clock',
+        value: '0',
+        label: 'Overdue Invoices',
+        color: 'var(--warning-500)'
+      },
+      {
+        id: 'customers',
+        icon: 'pi pi-users',
+        value: '0',
+        label: 'Active Customers',
+        color: 'var(--primary-500)'
+      },
+      {
+        id: 'revenue',
+        icon: 'pi pi-money-bill',
+        value: '$0',
+        label: 'Monthly Revenue',
+        color: 'var(--info-500)'
+      }
+    ]
   }
   
   const kpis = dashboardData.value.kpis
-  return {
-    totalReceivable: formatCurrency(kpis.total_outstanding),
-    overdueInvoices: Math.floor(kpis.overdue_amount / 10000), // Estimate count
-    activeCustomers: kpis.active_customers,
-    monthlyRevenue: formatCurrency(kpis.current_month_collections)
-  }
+  return [
+    {
+      id: 'receivable',
+      icon: 'pi pi-receipt',
+      value: `$${formatCurrency(kpis.total_outstanding)}`,
+      label: 'Total Receivable',
+      color: 'var(--success-500)'
+    },
+    {
+      id: 'overdue',
+      icon: 'pi pi-clock',
+      value: Math.floor(kpis.overdue_amount / 10000),
+      label: 'Overdue Invoices',
+      color: 'var(--warning-500)'
+    },
+    {
+      id: 'customers',
+      icon: 'pi pi-users',
+      value: kpis.active_customers,
+      label: 'Active Customers',
+      color: 'var(--primary-500)'
+    },
+    {
+      id: 'revenue',
+      icon: 'pi pi-money-bill',
+      value: `$${formatCurrency(kpis.current_month_collections)}`,
+      label: 'Monthly Revenue',
+      color: 'var(--info-500)'
+    }
+  ]
 })
 
 const recentInvoices = computed(() => {
   return recentInvoicesData.value.map(invoice => ({
+    id: invoice.id,
     customer: invoice.customer?.name || 'Unknown',
     invoiceNumber: invoice.invoice_number,
     dueDate: formatDate(invoice.due_date),
-    amount: formatCurrency(invoice.total_amount),
+    amount: invoice.total_amount,
     status: invoice.status
   }))
 })
@@ -215,11 +253,11 @@ const sendReminders = () => {
 const loadData = async () => {
   loading.value = true
   try {
-    // Load dashboard analytics
-    dashboardData.value = await analyticsService.getDashboardAnalytics()
+    // Load dashboard stats
+    dashboardData.value = await analyticsService.getDashboardStats()
     
-    // Load recent invoices
-    const invoicesResponse = await invoiceService.getInvoices({ limit: 5 })
+    // Load recent invoices from dashboard endpoint
+    const invoicesResponse = await analyticsService.getRecentInvoices()
     recentInvoicesData.value = invoicesResponse.invoices || []
     
     // Load customers
@@ -236,11 +274,9 @@ const loadData = async () => {
 
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0
-  }).format(amount || 0).replace('$', '')
+  }).format(amount || 0)
 }
 
 const formatDate = (dateString) => {
@@ -267,20 +303,100 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.ar-dashboard {
-  padding: 0;
+.modules-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-lg);
 }
 
-.metric-card {
+.module-card {
   text-align: center;
+  padding: var(--spacing-lg);
+  border: 1px solid var(--surface-200);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  background: var(--surface-0);
 }
 
-.quick-actions {
+.module-card:hover {
+  background: var(--surface-50);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.module-card i {
+  font-size: 2.5rem;
+  margin-bottom: var(--spacing-md);
+  display: block;
+}
+
+.module-card h4 {
+  margin: var(--spacing-sm) 0;
+  color: var(--text-color);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+}
+
+.module-card p {
+  margin: 0;
+  color: var(--text-color-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--spacing-lg);
+}
+
+.card-title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-color);
+  margin: 0;
+}
+
+.actions-list {
   display: flex;
   flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.action-btn {
+  width: 100%;
+  justify-content: flex-start;
 }
 
 .field {
   margin-bottom: 1rem;
+}
+
+:deep(.compact-table .p-datatable-tbody td) {
+  padding: var(--spacing-sm) var(--spacing-md);
+}
+
+:deep(.compact-table .p-datatable-thead th) {
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+@media (max-width: 768px) {
+  .modules-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-md);
+  }
+  
+  .content-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .modules-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

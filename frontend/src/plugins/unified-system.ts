@@ -8,7 +8,6 @@ import UnifiedModal from '@/components/ui/UnifiedModal.vue'
 import UnifiedDashboard from '@/components/ui/UnifiedDashboard.vue'
 import UnifiedMetrics from '@/components/ui/UnifiedMetrics.vue'
 import UnifiedDataTable from '@/components/ui/UnifiedDataTable.vue'
-import UnifiedForm from '@/components/ui/UnifiedForm.vue'
 
 // Import unified styles
 import '@/styles/unified.scss'
@@ -25,7 +24,6 @@ export default {
     app.component('UnifiedDashboard', UnifiedDashboard)
     app.component('UnifiedMetrics', UnifiedMetrics)
     app.component('UnifiedDataTable', UnifiedDataTable)
-    app.component('UnifiedForm', UnifiedForm)
 
     // Global properties
     app.config.globalProperties.$unified = {

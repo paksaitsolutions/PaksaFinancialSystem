@@ -18,7 +18,7 @@ class SystemLog(BaseModel):
     message = Column(Text, nullable=False)
     module = Column(String(100), nullable=True)
     user_id = Column(GUID(), nullable=True)
-    metadata = Column(JSON, nullable=True)
+    log_metadata = Column(JSON, nullable=True)
 
 
 class LoggingService:
@@ -48,7 +48,7 @@ class LoggingService:
                 message=message,
                 module=module,
                 user_id=user_id,
-                metadata=metadata
+                log_metadata=metadata
             )
             self.db.add(log_entry)
             self.db.commit()

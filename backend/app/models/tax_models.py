@@ -6,7 +6,7 @@ from app.models.core_models import TaxRate
 
 from app.models.base import Base
 from sqlalchemy import Column, String, Boolean, ForeignKey, Date, DateTime, Numeric, Text, Integer, JSON
-from sqlalchemy.dialects.postgresql import UUID
+from app.models.base import GUID
 from sqlalchemy.orm import relationship
 from enum import Enum
 import uuid
@@ -24,11 +24,11 @@ class TaxTransaction(Base):
     __tablename__ = "tax_transactions"
     __table_args__ = {'extend_existing': True}
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     transaction_id = Column(String(50), nullable=False, index=True)
     entity_type = Column(String(20), nullable=False)  # invoice, payment, journal
-    entity_id = Column(UUID(as_uuid=True), nullable=False, index=True)
-    tax_rate_id = Column(UUID(as_uuid=True), ForeignKey("tax_rates.id"), nullable=False)
+    entity_id = Column(GUID(), nullable=False, index=True)
+    tax_rate_id = Column(GUID(), ForeignKey("tax_rates.id"), nullable=False)
     
     # Amounts
     taxable_amount = Column(Numeric(precision=18, scale=2), nullable=False)
@@ -42,7 +42,7 @@ class TaxTransaction(Base):
     
     # Audit
     created_at = Column(DateTime, default=datetime.utcnow)
-    created_by = Column(UUID(as_uuid=True))
+    created_by = Column(GUID())
     
     # Relationships
     tax_rate = relationship("TaxRate", viewonly=True)
@@ -56,10 +56,10 @@ class TaxExemption(Base):
     __tablename__ = "tax_exemptions"
     __table_args__ = {'extend_existing': True}
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     certificate_number = Column(String(50), unique=True, nullable=False, index=True)
     entity_type = Column(String(20), nullable=False)  # customer, vendor
-    entity_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    entity_id = Column(GUID(), nullable=False, index=True)
     
     # Exemption details
     exemption_type = Column(String(50), nullable=False)
@@ -89,7 +89,7 @@ class TaxReturn(Base):
     __tablename__ = "tax_returns"
     __table_args__ = {'extend_existing': True}
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     return_number = Column(String(50), unique=True, nullable=False, index=True)
     tax_type = Column(String(20), nullable=False)
     jurisdiction = Column(String(100), nullable=False)
@@ -115,7 +115,7 @@ class TaxReturn(Base):
     # Audit
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    created_by = Column(UUID(as_uuid=True))
+    created_by = Column(GUID())
     
     # Relationships
     line_items = relationship("TaxReturnLineItem", back_populates="tax_return", cascade="all, delete-orphan")
@@ -129,8 +129,8 @@ class TaxReturnLineItem(Base):
     __tablename__ = "tax_return_line_items"
     __table_args__ = {'extend_existing': True}
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    tax_return_id = Column(UUID(as_uuid=True), ForeignKey("tax_returns.id"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    tax_return_id = Column(GUID(), ForeignKey("tax_returns.id"), nullable=False)
     line_number = Column(Integer, nullable=False)
     description = Column(String(200), nullable=False)
     amount = Column(Numeric(precision=18, scale=2), nullable=False)
@@ -147,11 +147,11 @@ class TaxJurisdiction(Base):
     __tablename__ = "tax_jurisdictions"
     __table_args__ = {'extend_existing': True}
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     name = Column(String(100), nullable=False, index=True)
     code = Column(String(20), unique=True, nullable=False, index=True)
     jurisdiction_type = Column(String(20), nullable=False)  # country, state, city
-    parent_id = Column(UUID(as_uuid=True), ForeignKey("tax_jurisdictions.id"))
+    parent_id = Column(GUID(), ForeignKey("tax_jurisdictions.id"))
     
     # Configuration
     tax_id_required = Column(Boolean, default=False)
@@ -178,9 +178,9 @@ class ComplianceCheck(Base):
     __tablename__ = "tax_compliance_checks"
     __table_args__ = {'extend_existing': True}
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     check_type = Column(String(50), nullable=False)
-    entity_id = Column(UUID(as_uuid=True), nullable=False)
+    entity_id = Column(GUID(), nullable=False)
     status = Column(String(20), default="pending")
     result = Column(JSON)
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -194,7 +194,7 @@ class ComplianceRule(Base):
     __tablename__ = "tax_compliance_rules"
     __table_args__ = {'extend_existing': True}
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     name = Column(String(100), nullable=False)
     rule_type = Column(String(50), nullable=False)
     conditions = Column(JSON)
@@ -209,7 +209,7 @@ class ComplianceAlert(Base):
     __tablename__ = "tax_compliance_alerts"
     __table_args__ = {'extend_existing': True}
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     alert_type = Column(String(50), nullable=False)
     severity = Column(String(20), default="medium")
     message = Column(Text)
@@ -225,8 +225,8 @@ class TaxRateCompliance(Base):
     __tablename__ = "tax_rate_compliance"
     __table_args__ = {'extend_existing': True}
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    tax_rate_id = Column(UUID(as_uuid=True), ForeignKey("tax_rates.id"))
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    tax_rate_id = Column(GUID(), ForeignKey("tax_rates.id"))
     compliance_status = Column(String(20), default="compliant")
     last_checked = Column(DateTime, default=datetime.utcnow)
     

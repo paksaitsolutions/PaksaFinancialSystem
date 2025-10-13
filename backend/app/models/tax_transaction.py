@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import Optional
 
 from sqlalchemy import Column, String, Numeric, DateTime, ForeignKey, Text, Index, Enum as SQLAEnum
-from sqlalchemy.dialects.postgresql import UUID
+from app.models.base import GUID
 from sqlalchemy.orm import relationship
 
 from app.models.base import Base, TimestampMixin, SoftDeleteMixin
@@ -34,19 +34,19 @@ class TaxTransaction(Base, TimestampMixin, SoftDeleteMixin):
     """Stores all tax-related transactions with detailed breakdown"""
     __tablename__ = "tax_transactions"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, index=True)
+    id = Column(GUID(), primary_key=True, index=True)
     transaction_date = Column(DateTime, nullable=False, index=True)
     posting_date = Column(DateTime, nullable=True, index=True)
     document_number = Column(String(100), index=True, nullable=False)
     reference_number = Column(String(100), index=True)
     
     # Relationships
-    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id"), nullable=False)
+    company_id = Column(GUID(), ForeignKey("companies.id"), nullable=False)
     company = relationship("Company", back_populates="tax_transactions")
     
     # Tax details
     tax_type = Column(String(50), nullable=False, index=True)
-    tax_rate_id = Column(UUID(as_uuid=True), ForeignKey("tax_rates.id"), nullable=False)
+    tax_rate_id = Column(GUID(), ForeignKey("tax_rates.id"), nullable=False)
     tax_rate = relationship("TaxRate", viewonly=True)
     
     # Amounts
@@ -56,7 +56,7 @@ class TaxTransaction(Base, TimestampMixin, SoftDeleteMixin):
     
     # Jurisdiction
     jurisdiction_code = Column(String(20), index=True)
-    tax_jurisdiction_id = Column(UUID(as_uuid=True), ForeignKey("tax_jurisdictions.id"))
+    tax_jurisdiction_id = Column(GUID(), ForeignKey("tax_jurisdictions.id"))
     tax_jurisdiction = relationship("TaxJurisdiction")
     
     # Status and type
@@ -65,11 +65,11 @@ class TaxTransaction(Base, TimestampMixin, SoftDeleteMixin):
     
     # Related documents
     source_document_type = Column(String(50))  # e.g., 'invoice', 'bill', 'journal_entry'
-    source_document_id = Column(UUID(as_uuid=True), index=True)
+    source_document_id = Column(GUID(), index=True)
     
     # Audit fields
-    created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    posted_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    created_by = Column(GUID(), ForeignKey("users.id"), nullable=False)
+    posted_by = Column(GUID(), ForeignKey("users.id"), nullable=True)
     posted_at = Column(DateTime, nullable=True)
     
     notes = Column(Text, nullable=True)
@@ -88,8 +88,8 @@ class TaxTransactionComponent(Base, TimestampMixin):
     """Stores detailed tax components for each transaction"""
     __tablename__ = "tax_transaction_components"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, index=True)
-    transaction_id = Column(UUID(as_uuid=True), ForeignKey("tax_transactions.id"), nullable=False)
+    id = Column(GUID(), primary_key=True, index=True)
+    transaction_id = Column(GUID(), ForeignKey("tax_transactions.id"), nullable=False)
     
     # Tax component details
     tax_component = Column(String(100), nullable=False)  # e.g., 'State Tax', 'County Tax', 'Special District Tax'

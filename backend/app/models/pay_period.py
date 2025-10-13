@@ -4,7 +4,7 @@ Pay Period models for the Payroll module.
 from datetime import date, datetime
 from sqlalchemy import Column, Date, Enum, ForeignKey, String, Boolean, Text, Integer
 from sqlalchemy.orm import relationship
-from sqlalchemy.dialects.postgresql import UUID
+from app.models.base import GUID
 import uuid
 
 <<<<<<< HEAD:backend/app/modules/core_financials/payroll/models/pay_period.py
@@ -20,7 +20,7 @@ class PayPeriod(PayrollBase, Base):
     __tablename__ = "payroll_pay_periods"
 
     id = Column(
-        UUID(as_uuid=True),
+        GUID(),
         primary_key=True,
         default=uuid.uuid4,
         index=True

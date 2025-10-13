@@ -44,3 +44,30 @@ def import_bills(db: Session = Depends(get_db)):
 def process_batch_payments(db: Session = Depends(get_db)):
     """Process batch payments"""
     return {"message": "Batch payments processed successfully"}
+
+@router.get("/vendors")
+def get_vendors(db: Session = Depends(get_db)):
+    """Get vendors list"""
+    return {
+        "vendors": [
+            {"id": "v1", "name": "ABC Supplies", "status": "active"},
+            {"id": "v2", "name": "XYZ Services", "status": "active"}
+        ]
+    }
+
+@router.get("/payments")
+def get_payments(db: Session = Depends(get_db)):
+    """Get payments list"""
+    return {
+        "payments": [
+            {
+                "id": "1",
+                "date": "2024-01-15",
+                "vendor": {"name": "ABC Supplies"},
+                "reference": "PAY-001",
+                "amount": 1250.00,
+                "status": "paid",
+                "paymentMethod": "Bank Transfer"
+            }
+        ]
+    }

@@ -4,7 +4,7 @@ Benefits models for the Payroll module.
 from datetime import date, datetime
 from sqlalchemy import Column, Date, Enum, ForeignKey, Numeric, String, Text, Boolean, Integer
 from sqlalchemy.orm import relationship
-from sqlalchemy.dialects.postgresql import UUID
+from app.models.base import GUID
 import uuid
 
 <<<<<<< HEAD:backend/app/modules/core_financials/payroll/models/benefits.py
@@ -20,7 +20,7 @@ class BenefitPlan(PayrollBase, Base):
     __tablename__ = "payroll_benefit_plans"
 
     id = Column(
-        UUID(as_uuid=True),
+        GUID(),
         primary_key=True,
         default=uuid.uuid4,
         index=True
@@ -110,7 +110,7 @@ class EmployeeBenefit(PayrollBase, Base):
     __tablename__ = "payroll_employee_benefits"
     
     id = Column(
-        UUID(as_uuid=True),
+        GUID(),
         primary_key=True,
         default=uuid.uuid4,
         index=True
@@ -118,13 +118,13 @@ class EmployeeBenefit(PayrollBase, Base):
     
     # References
     employee_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_employees.id'), 
         nullable=False,
         index=True
     )
     benefit_plan_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_benefit_plans.id'), 
         nullable=False,
         index=True

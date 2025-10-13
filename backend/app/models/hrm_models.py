@@ -11,7 +11,7 @@ from app.models.core_models import (
 from app.models.base import Base
 from sqlalchemy import Column, String, Date, Boolean, Numeric, ForeignKey, Text, DateTime, Integer, JSON
 from sqlalchemy.orm import relationship
-from sqlalchemy.dialects.postgresql import UUID
+from app.models.base import GUID
 from datetime import date, datetime
 from enum import Enum
 import uuid
@@ -33,9 +33,9 @@ class PerformanceRating(str, Enum):
 class AttendanceRecord(Base):
     __tablename__ = "attendance_records"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    tenant_id = Column(UUID(as_uuid=True), nullable=False, index=True)
-    employee_id = Column(UUID(as_uuid=True), ForeignKey("employees.id"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4, index=True)
+    tenant_id = Column(GUID(), nullable=False, index=True)
+    employee_id = Column(GUID(), ForeignKey("employees.id"), nullable=False)
     date = Column(Date, nullable=False)
     check_in_time = Column(DateTime, nullable=True)
     check_out_time = Column(DateTime, nullable=True)
@@ -55,10 +55,10 @@ class AttendanceRecord(Base):
 class PerformanceReview(Base):
     __tablename__ = "performance_reviews"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    tenant_id = Column(UUID(as_uuid=True), nullable=False, index=True)
-    employee_id = Column(UUID(as_uuid=True), ForeignKey("employees.id"), nullable=False)
-    reviewer_id = Column(UUID(as_uuid=True), ForeignKey("employees.id"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4, index=True)
+    tenant_id = Column(GUID(), nullable=False, index=True)
+    employee_id = Column(GUID(), ForeignKey("employees.id"), nullable=False)
+    reviewer_id = Column(GUID(), ForeignKey("employees.id"), nullable=False)
     review_period_start = Column(Date, nullable=False)
     review_period_end = Column(Date, nullable=False)
     review_date = Column(Date, nullable=False)
@@ -82,9 +82,9 @@ class PerformanceReview(Base):
 class TrainingRecord(Base):
     __tablename__ = "training_records"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    tenant_id = Column(UUID(as_uuid=True), nullable=False, index=True)
-    employee_id = Column(UUID(as_uuid=True), ForeignKey("employees.id"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4, index=True)
+    tenant_id = Column(GUID(), nullable=False, index=True)
+    employee_id = Column(GUID(), ForeignKey("employees.id"), nullable=False)
     training_name = Column(String(200), nullable=False)
     training_type = Column(String(50), nullable=False)  # INTERNAL, EXTERNAL, ONLINE, etc.
     provider = Column(String(200), nullable=True)
@@ -107,8 +107,8 @@ class TrainingRecord(Base):
 class Policy(Base):
     __tablename__ = "policies"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    tenant_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4, index=True)
+    tenant_id = Column(GUID(), nullable=False, index=True)
     title = Column(String(200), nullable=False)
     category = Column(String(100), nullable=False)
     description = Column(Text, nullable=True)
@@ -118,14 +118,14 @@ class Policy(Base):
     expiry_date = Column(Date, nullable=True)
     status = Column(String(50), nullable=False, default="ACTIVE")
     approval_required = Column(Boolean, default=False)
-    approved_by = Column(UUID(as_uuid=True), ForeignKey("employees.id"), nullable=True)
+    approved_by = Column(GUID(), ForeignKey("employees.id"), nullable=True)
     approved_at = Column(DateTime, nullable=True)
     
     # Audit Fields
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-    created_by = Column(UUID(as_uuid=True), nullable=True)
-    updated_by = Column(UUID(as_uuid=True), nullable=True)
+    created_by = Column(GUID(), nullable=True)
+    updated_by = Column(GUID(), nullable=True)
     
     # Relationships
     approver = relationship("Employee", foreign_keys=[approved_by])
@@ -133,10 +133,10 @@ class Policy(Base):
 class JobOpening(Base):
     __tablename__ = "job_openings"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    tenant_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4, index=True)
+    tenant_id = Column(GUID(), nullable=False, index=True)
     title = Column(String(200), nullable=False)
-    department_id = Column(UUID(as_uuid=True), ForeignKey("departments.id"), nullable=True)
+    department_id = Column(GUID(), ForeignKey("departments.id"), nullable=True)
     description = Column(Text, nullable=False)
     requirements = Column(Text, nullable=True)
     employment_type = Column(String(50), nullable=False)
@@ -147,7 +147,7 @@ class JobOpening(Base):
     status = Column(String(50), nullable=False, default="OPEN")
     posted_date = Column(Date, nullable=False)
     closing_date = Column(Date, nullable=True)
-    hiring_manager_id = Column(UUID(as_uuid=True), ForeignKey("employees.id"), nullable=True)
+    hiring_manager_id = Column(GUID(), ForeignKey("employees.id"), nullable=True)
     
     # Audit Fields
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
@@ -161,9 +161,9 @@ class JobOpening(Base):
 class Candidate(Base):
     __tablename__ = "candidates"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    tenant_id = Column(UUID(as_uuid=True), nullable=False, index=True)
-    job_opening_id = Column(UUID(as_uuid=True), ForeignKey("job_openings.id"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4, index=True)
+    tenant_id = Column(GUID(), nullable=False, index=True)
+    job_opening_id = Column(GUID(), ForeignKey("job_openings.id"), nullable=False)
     first_name = Column(String(100), nullable=False)
     last_name = Column(String(100), nullable=False)
     email = Column(String(255), nullable=False)
@@ -185,10 +185,10 @@ class Candidate(Base):
 class Interview(Base):
     __tablename__ = "interviews"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    tenant_id = Column(UUID(as_uuid=True), nullable=False, index=True)
-    candidate_id = Column(UUID(as_uuid=True), ForeignKey("candidates.id"), nullable=False)
-    interviewer_id = Column(UUID(as_uuid=True), ForeignKey("employees.id"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4, index=True)
+    tenant_id = Column(GUID(), nullable=False, index=True)
+    candidate_id = Column(GUID(), ForeignKey("candidates.id"), nullable=False)
+    interviewer_id = Column(GUID(), ForeignKey("employees.id"), nullable=False)
     interview_type = Column(String(50), nullable=False)  # PHONE, VIDEO, IN_PERSON, TECHNICAL
     scheduled_date = Column(DateTime, nullable=False)
     duration_minutes = Column(Integer, nullable=True)

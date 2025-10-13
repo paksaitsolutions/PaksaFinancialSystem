@@ -30,8 +30,12 @@ SessionLocal = sessionmaker(
     bind=engine
 )
 
-# Create base class for models
-Base = declarative_base()
+# Import Base from core_models to ensure consistency
+try:
+    from app.models.base import Base
+except ImportError:
+    # Fallback to creating Base if import fails
+    Base = declarative_base()
 
 
 def get_db():
@@ -45,73 +49,34 @@ def get_db():
 
 def init_db():
     """Initialize database tables."""
-    # Import all models to ensure they are registered
-    from app.models import user  # noqa
-    from app.models import tax_return  # noqa
-    from app.models import settings  # noqa
-    
-    # Import models with unique names to avoid conflicts
+    # Import unified core models
     try:
-        from app.models.tax_models import TaxRate, TaxTransaction, TaxExemption, TaxJurisdiction  # noqa
-        from app.models.tax_payment import TaxPayment  # noqa - Use TaxPayment instead of Payment
-        print("[OK] Tax models imported")
-    except ImportError as e:
-        print(f"Warning: Could not import tax models: {e}")
-    
-    try:
-        from app.models.payroll_models import Employee, PayRun, PayRunEmployee, Payslip, PayrollItem, EmployeePayrollItem  # noqa
-        print("[OK] Payroll models imported")
-    except ImportError as e:
-        print(f"Warning: Could not import payroll models: {e}")
-    
-    try:
-        from app.models.gl_models import (  # Import GL models
-            GLChartOfAccounts, JournalEntry, JournalEntryLine, 
-            AccountingPeriod, LedgerBalance, TrialBalance, 
-            TrialBalanceAccount, FinancialStatement, BudgetEntry
+        from app.models.core_models import (
+            ChartOfAccounts, JournalEntry, JournalEntryLine,
+            Vendor, Customer, Employee, Department,
+            APInvoice, APPayment, ARInvoice, ARPayment,
+            PayrollRun, PayrollEntry, LeaveRequest,
+            InventoryItem, InventoryCategory, PurchaseOrder,
+            TaxRate, FinancialPeriod, Budget, FixedAsset,
+            Company, Currency, ExchangeRate
         )
-        from app.core.audit import AuditLog
-        print("[OK] GL models imported")
+        print("[OK] Core models imported")
     except ImportError as e:
-        print(f"Warning: Could not import GL models: {e}")
+        print(f"Error: Could not import core models: {e}")
+        return
+    
+    # Import additional models
+    try:
+        from app.models import user  # noqa
+        print("[OK] User models imported")
+    except ImportError as e:
+        print(f"Warning: Could not import user models: {e}")
     
     try:
-        from app.models.accounts_payable.payment import APPayment  # noqa - Use APPayment instead of Payment
-        from app.models.accounts_payable.vendor import Vendor  # noqa
-        from app.models.accounts_payable.invoice import APInvoice  # noqa
-        print("[OK] AP models imported")
+        from app.models.ai_bi_models import AIInsight, AIRecommendation, AIAnomaly, AIPrediction, AIModelMetrics  # noqa
+        print("[OK] AI/BI models imported")
     except ImportError as e:
-        print(f"Warning: Could not import AP models: {e}")
-    
-    try:
-        from app.models.accounting import Customer, Invoice as ARInvoice  # noqa
-        print("[OK] AR models imported")
-    except ImportError as e:
-        print(f"Warning: Could not import AR models: {e}")
-    
-    try:
-        from app.models.cash_management import BankAccount, BankTransaction, CashFlowCategory  # noqa
-        print("[OK] Cash models imported")
-    except ImportError as e:
-        print(f"Warning: Could not import cash models: {e}")
-    
-    try:
-        from app.models.inventory import InventoryItem, InventoryLocation, InventoryCategory, FixedAsset  # noqa
-        print("[OK] Inventory models imported")
-    except ImportError as e:
-        print(f"Warning: Could not import inventory models: {e}")
-    
-    try:
-        from app.models.inventory import FixedAsset, AssetDepreciation, AssetMaintenance  # noqa
-        print("[OK] Fixed Assets models imported")
-    except ImportError as e:
-        print(f"Warning: Could not import fixed assets models: {e}")
-    
-    try:
-        from app.models.bi_ai.dashboard import Dashboard, KPI, Anomaly, Prediction  # noqa
-        print("[OK] BI/AI models imported")
-    except ImportError as e:
-        print(f"Warning: Could not import BI/AI models: {e}")
+        print(f"Warning: Could not import AI/BI models: {e}")
     
     print("[OK] All available models imported")
     

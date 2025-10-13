@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.db.query_helper import QueryHelper
-from app.models.procurement.vendor import ProcurementVendor as Vendor
+from app.models.core_models import Vendor
 from app.models import PurchaseOrder, PurchaseOrderLineItem, APPayment
 from app.schemas.procurement.procurement_schemas import (
     VendorCreate, VendorUpdate, PurchaseOrderCreate, PurchaseOrderUpdate,

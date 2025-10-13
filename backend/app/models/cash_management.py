@@ -1,5 +1,5 @@
 from sqlalchemy import Column, String, DateTime, Boolean, Text, ForeignKey, Enum, Numeric
-from sqlalchemy.dialects.postgresql import UUID
+from app.models.base import GUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import uuid
@@ -30,8 +30,8 @@ class TransactionStatus(str, enum.Enum):
 class BankAccount(Base):
     __tablename__ = "bank_accounts"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
     name = Column(String(255), nullable=False)
     account_number = Column(String(100), nullable=False)
     account_type = Column(Enum(AccountType), nullable=False)
@@ -48,9 +48,9 @@ class BankAccount(Base):
 class BankTransaction(Base):
     __tablename__ = "bank_transactions"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), nullable=False, index=True)
-    account_id = Column(UUID(as_uuid=True), ForeignKey("bank_accounts.id"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
+    account_id = Column(GUID(), ForeignKey("bank_accounts.id"), nullable=False)
     transaction_date = Column(DateTime(timezone=True), nullable=False)
     transaction_type = Column(Enum(TransactionType), nullable=False)
     status = Column(Enum(TransactionStatus), default=TransactionStatus.PENDING)
@@ -69,7 +69,7 @@ class BankTransaction(Base):
 class CashFlowCategory(Base):
     __tablename__ = "cash_flow_categories"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     name = Column(String(100), nullable=False)
     description = Column(Text)
     is_active = Column(Boolean, default=True)
@@ -78,8 +78,8 @@ class CashFlowCategory(Base):
 class BankReconciliation(Base):
     __tablename__ = "bank_reconciliations"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    account_id = Column(UUID(as_uuid=True), ForeignKey("bank_accounts.id"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    account_id = Column(GUID(), ForeignKey("bank_accounts.id"), nullable=False)
     reconciliation_date = Column(DateTime(timezone=True), nullable=False)
     statement_ending_balance = Column(Numeric(15, 2), nullable=False)
     book_ending_balance = Column(Numeric(15, 2), nullable=False)
@@ -94,9 +94,9 @@ class BankReconciliation(Base):
 class ReconciliationItem(Base):
     __tablename__ = "reconciliation_items"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    reconciliation_id = Column(UUID(as_uuid=True), ForeignKey("bank_reconciliations.id"), nullable=False)
-    transaction_id = Column(UUID(as_uuid=True), ForeignKey("bank_transactions.id"))
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    reconciliation_id = Column(GUID(), ForeignKey("bank_reconciliations.id"), nullable=False)
+    transaction_id = Column(GUID(), ForeignKey("bank_transactions.id"))
     item_type = Column(String(50), nullable=False)  # outstanding_check, deposit_in_transit, bank_error, book_error
     description = Column(Text, nullable=False)
     amount = Column(Numeric(15, 2), nullable=False)

@@ -6,7 +6,7 @@ from decimal import Decimal
 from enum import Enum as PyEnum
 from sqlalchemy import Column, Date, DateTime, Enum, ForeignKey, Numeric, String, Text, Boolean, Integer, JSON
 from sqlalchemy.orm import relationship, validates
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from app.models.base import GUID, JSONB
 import uuid
 
 <<<<<<< HEAD:backend/app/modules/core_financials/payroll/models/payroll_calculation.py
@@ -91,7 +91,7 @@ class PayrollEarning(PayrollBase, Base):
     __tablename__ = "payroll_earnings"
 
     id = Column(
-        UUID(as_uuid=True),
+        GUID(),
         primary_key=True,
         default=uuid.uuid4,
         index=True
@@ -99,13 +99,13 @@ class PayrollEarning(PayrollBase, Base):
     
     # References
     payroll_entry_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_entries.id'), 
         nullable=False,
         index=True
     )
     earning_code_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_earning_codes.id'), 
         nullable=True,
         index=True
@@ -158,7 +158,7 @@ class PayrollDeduction(PayrollBase, Base):
     __tablename__ = "payroll_deductions"
 
     id = Column(
-        UUID(as_uuid=True),
+        GUID(),
         primary_key=True,
         default=uuid.uuid4,
         index=True
@@ -166,13 +166,13 @@ class PayrollDeduction(PayrollBase, Base):
     
     # References
     payroll_entry_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_entries.id'), 
         nullable=False,
         index=True
     )
     deduction_code_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_deduction_codes.id'), 
         nullable=True,
         index=True
@@ -223,7 +223,7 @@ class PayrollTax(PayrollBase, Base):
     __tablename__ = "payroll_taxes"
 
     id = Column(
-        UUID(as_uuid=True),
+        GUID(),
         primary_key=True,
         default=uuid.uuid4,
         index=True
@@ -231,13 +231,13 @@ class PayrollTax(PayrollBase, Base):
     
     # References
     payroll_entry_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_entries.id'), 
         nullable=False,
         index=True
     )
     tax_code_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_tax_codes.id'), 
         nullable=True,
         index=True
@@ -280,7 +280,7 @@ class PayrollBenefit(PayrollBase, Base):
     __tablename__ = "payroll_benefits"
 
     id = Column(
-        UUID(as_uuid=True),
+        GUID(),
         primary_key=True,
         default=uuid.uuid4,
         index=True
@@ -288,13 +288,13 @@ class PayrollBenefit(PayrollBase, Base):
     
     # References
     payroll_entry_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_entries.id'), 
         nullable=False,
         index=True
     )
     benefit_plan_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_benefit_plans.id'), 
         nullable=True,
         index=True

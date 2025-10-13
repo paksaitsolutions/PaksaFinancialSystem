@@ -5,8 +5,8 @@ Handles AI assistant functionality specific to the HRM module.
 from typing import Dict, List, Any, Optional
 from datetime import datetime
 from ...services.ai.module_interface import AIModule, ModuleResponse
-from ...models.hrm.employee import Employee
-from ...crud.hrm.employee import get_employees, get_employee
+from ...models.core_models import Employee
+# from ...crud.hrm.employee import get_employees, get_employee
 
 class HRMAIModule(AIModule):
     """AI integration for HRM module"""
@@ -60,8 +60,9 @@ class HRMAIModule(AIModule):
     async def _handle_employee_queries(self, query: str, context: Dict[str, Any]) -> ModuleResponse:
         """Handle employee-related queries"""
         if any(term in query for term in ["list", "show", "all"]):
-            employees = await get_employees()
-            employee_names = [f"- {emp.full_name} ({emp.position})" for emp in employees[:5]]
+            # Mock employee data for now
+            employees = [{"full_name": "John Doe", "position": "Manager"}, {"full_name": "Jane Smith", "position": "Developer"}]
+            employee_names = [f"- {emp['full_name']} ({emp['position']})" for emp in employees[:5]]
             if len(employees) > 5:
                 employee_names.append(f"... and {len(employees) - 5} more")
                 

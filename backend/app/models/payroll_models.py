@@ -15,7 +15,7 @@ PayRun = PayrollRun
 
 from app.models.base import Base
 from sqlalchemy import Column, String, Boolean, ForeignKey, Date, DateTime, Numeric, Text, Integer, JSON
-from sqlalchemy.dialects.postgresql import UUID
+from app.models.base import GUID
 from sqlalchemy.orm import relationship
 from enum import Enum
 import uuid
@@ -39,9 +39,9 @@ class PayRunEmployee(Base):
     
     __tablename__ = "payroll_run_employees"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    pay_run_id = Column(UUID(as_uuid=True), ForeignKey("payroll_runs.id"), nullable=False)
-    employee_id = Column(UUID(as_uuid=True), ForeignKey("employees.id"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    pay_run_id = Column(GUID(), ForeignKey("payroll_runs.id"), nullable=False)
+    employee_id = Column(GUID(), ForeignKey("employees.id"), nullable=False)
     
     # Pay calculations
     gross_pay = Column(Numeric(precision=18, scale=2), nullable=False)
@@ -68,10 +68,10 @@ class Payslip(Base):
     
     __tablename__ = "payroll_slips"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     payslip_number = Column(String(50), unique=True, nullable=False, index=True)
-    pay_run_id = Column(UUID(as_uuid=True), ForeignKey("payroll_runs.id"), nullable=False)
-    employee_id = Column(UUID(as_uuid=True), ForeignKey("employees.id"), nullable=False)
+    pay_run_id = Column(GUID(), ForeignKey("payroll_runs.id"), nullable=False)
+    employee_id = Column(GUID(), ForeignKey("employees.id"), nullable=False)
     
     # Pay period
     pay_period_start = Column(Date, nullable=False)
@@ -122,7 +122,7 @@ class PayrollItem(Base):
     
     __tablename__ = "payroll_items"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     name = Column(String(100), nullable=False, index=True)
     code = Column(String(20), unique=True, nullable=False, index=True)
     item_type = Column(String(20), nullable=False)  # earning, deduction, tax
@@ -154,9 +154,9 @@ class EmployeePayrollItem(Base):
     
     __tablename__ = "employee_payroll_items"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    employee_id = Column(UUID(as_uuid=True), ForeignKey("employees.id"), nullable=False)
-    payroll_item_id = Column(UUID(as_uuid=True), ForeignKey("payroll_items.id"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    employee_id = Column(GUID(), ForeignKey("employees.id"), nullable=False)
+    payroll_item_id = Column(GUID(), ForeignKey("payroll_items.id"), nullable=False)
     
     # Override values
     amount = Column(Numeric(precision=18, scale=2))

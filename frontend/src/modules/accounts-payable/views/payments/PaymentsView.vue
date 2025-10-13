@@ -38,7 +38,7 @@
         <div 
           v-for="(summary, index) in summaryCards" 
           :key="index" 
-          class="col-12 md:col-6 lg:col-3"
+          class="col-12 sm:col-6 md:col-3"
         >
           <Card class="h-full shadow-2">
             <template #title>{{ summary.title }}</template>
@@ -294,7 +294,35 @@ const hasFilters = computed<boolean>(() => {
   );
 });
 
-const payments = ref<Payment[]>([]);
+const payments = ref<Payment[]>([
+  {
+    id: '1',
+    date: '2024-01-15',
+    vendor: { name: 'Office Supplies Co.' },
+    reference: 'PAY-001',
+    amount: 1250.00,
+    status: 'paid' as PaymentStatus,
+    paymentMethod: 'Bank Transfer'
+  },
+  {
+    id: '2',
+    date: '2024-01-14',
+    vendor: { name: 'Tech Solutions Ltd.' },
+    reference: 'PAY-002',
+    amount: 3500.00,
+    status: 'pending' as PaymentStatus,
+    paymentMethod: 'Check'
+  },
+  {
+    id: '3',
+    date: '2024-01-13',
+    vendor: { name: 'Marketing Agency' },
+    reference: 'PAY-003',
+    amount: 2800.00,
+    status: 'approved' as PaymentStatus,
+    paymentMethod: 'ACH'
+  }
+]);
 
 const loadPayments = async () => {
   loading.value = true;
@@ -353,34 +381,34 @@ const filteredPayments = computed<Payment[]>(() => {
 const summaryCards = ref<SummaryCard[]>([
   { 
     title: 'Total Payments', 
-    value: '$0.00', 
+    value: '$125,430', 
     icon: 'pi pi-credit-card', 
     color: 'bg-blue-500', 
-    trend: 0,
+    trend: 12.5,
     trendLabel: 'vs last period' 
   },
   { 
     title: 'This Month', 
-    value: '$0.00', 
+    value: '$45,230', 
     icon: 'pi pi-calendar', 
     color: 'bg-green-500', 
-    trend: 0,
+    trend: 8.2,
     trendLabel: 'vs last month' 
   },
   { 
     title: 'Pending Approval', 
-    value: '0', 
+    value: '8', 
     icon: 'pi pi-clock', 
     color: 'bg-amber-500', 
-    trend: 0,
+    trend: -15.3,
     trendLabel: 'awaiting review' 
   },
   { 
     title: 'Overdue', 
-    value: '0', 
+    value: '3', 
     icon: 'pi pi-exclamation-triangle', 
     color: 'bg-red-500', 
-    trend: 0,
+    trend: -25.0,
     trendLabel: 'past due date' 
   }
 ]);

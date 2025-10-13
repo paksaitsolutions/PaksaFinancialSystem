@@ -6,7 +6,7 @@ across all modules: GL, AP, AR, Payroll, Inventory, Tax, HRM, etc.
 """
 
 from sqlalchemy import Column, String, Integer, Numeric, DateTime, Boolean, Text, ForeignKey, Date, Enum
-from sqlalchemy.dialects.postgresql import UUID
+from app.models.base import GUID
 from sqlalchemy.orm import relationship, foreign
 from sqlalchemy.sql import func
 from app.models.base import Base, BaseModel, AuditMixin
@@ -110,13 +110,13 @@ class ChartOfAccounts(Base, AuditMixin):
     """Unified Chart of Accounts for all modules"""
     __tablename__ = "chart_of_accounts"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
     account_code = Column(String(20), nullable=False, unique=True, index=True)
     account_name = Column(String(255), nullable=False)
     account_type = Column(String(50), nullable=False)  # Asset, Liability, Equity, Revenue, Expense
     account_subtype = Column(String(100))
-    parent_account_id = Column(UUID(as_uuid=True), ForeignKey("chart_of_accounts.id"))
+    parent_account_id = Column(GUID(), ForeignKey("chart_of_accounts.id"))
     normal_balance = Column(String(10), nullable=False)  # Debit, Credit
     current_balance = Column(Numeric(15, 2), default=0)
     is_active = Column(Boolean, default=True)
@@ -130,8 +130,8 @@ class JournalEntry(Base, AuditMixin):
     """Unified Journal Entry for all modules"""
     __tablename__ = "journal_entries"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
     entry_number = Column(String(50), nullable=False, unique=True)
     entry_date = Column(Date, nullable=False, index=True)
     description = Column(Text, nullable=False)
@@ -148,9 +148,9 @@ class JournalEntryLine(Base):
     """Unified Journal Entry Lines"""
     __tablename__ = "journal_entry_lines"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    journal_entry_id = Column(UUID(as_uuid=True), ForeignKey("journal_entries.id"), nullable=False)
-    account_id = Column(UUID(as_uuid=True), ForeignKey("chart_of_accounts.id"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    journal_entry_id = Column(GUID(), ForeignKey("journal_entries.id"), nullable=False)
+    account_id = Column(GUID(), ForeignKey("chart_of_accounts.id"), nullable=False)
     description = Column(String(255))
     debit_amount = Column(Numeric(15, 2), default=0)
     credit_amount = Column(Numeric(15, 2), default=0)
@@ -167,8 +167,8 @@ class Vendor(Base, AuditMixin):
     """Unified Vendor for AP and Procurement"""
     __tablename__ = "vendors"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
     vendor_code = Column(String(20), nullable=False, unique=True)
     vendor_name = Column(String(255), nullable=False)
     contact_person = Column(String(255))
@@ -190,8 +190,8 @@ class VendorContact(Base):
     """Vendor Contact Information"""
     __tablename__ = "vendor_contacts"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    vendor_id = Column(UUID(as_uuid=True), ForeignKey("vendors.id"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    vendor_id = Column(GUID(), ForeignKey("vendors.id"), nullable=False)
     contact_name = Column(String(255), nullable=False)
     title = Column(String(100))
     email = Column(String(255))
@@ -206,8 +206,8 @@ class Customer(Base, AuditMixin):
     """Unified Customer for AR and Sales"""
     __tablename__ = "customers"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
     customer_code = Column(String(20), nullable=False, unique=True)
     customer_name = Column(String(255), nullable=False)
     contact_person = Column(String(255))
@@ -228,8 +228,8 @@ class CustomerContact(Base):
     """Customer Contact Information"""
     __tablename__ = "customer_contacts"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    customer_id = Column(UUID(as_uuid=True), ForeignKey("customers.id"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    customer_id = Column(GUID(), ForeignKey("customers.id"), nullable=False)
     contact_name = Column(String(255), nullable=False)
     title = Column(String(100))
     email = Column(String(255))
@@ -244,9 +244,9 @@ class APInvoice(Base, AuditMixin):
     """Unified AP Invoice"""
     __tablename__ = "ap_invoices"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), nullable=False, index=True)
-    vendor_id = Column(UUID(as_uuid=True), ForeignKey("vendors.id"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
+    vendor_id = Column(GUID(), ForeignKey("vendors.id"), nullable=False)
     invoice_number = Column(String(50), nullable=False, unique=True)
     invoice_date = Column(Date, nullable=False, index=True)
     due_date = Column(Date, nullable=False, index=True)
@@ -265,9 +265,9 @@ class APInvoiceLineItem(Base):
     """AP Invoice Line Items"""
     __tablename__ = "ap_invoice_line_items"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    invoice_id = Column(UUID(as_uuid=True), ForeignKey("ap_invoices.id"), nullable=False)
-    account_id = Column(UUID(as_uuid=True), ForeignKey("chart_of_accounts.id"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    invoice_id = Column(GUID(), ForeignKey("ap_invoices.id"), nullable=False)
+    account_id = Column(GUID(), ForeignKey("chart_of_accounts.id"), nullable=False)
     description = Column(String(255), nullable=False)
     quantity = Column(Numeric(10, 2), default=1)
     unit_price = Column(Numeric(15, 2), nullable=False)
@@ -281,9 +281,9 @@ class APPayment(Base, AuditMixin):
     """Unified AP Payment"""
     __tablename__ = "ap_payments"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), nullable=False, index=True)
-    vendor_id = Column(UUID(as_uuid=True), ForeignKey("vendors.id"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
+    vendor_id = Column(GUID(), ForeignKey("vendors.id"), nullable=False)
     payment_number = Column(String(50), nullable=False, unique=True)
     payment_date = Column(Date, nullable=False, index=True)
     amount = Column(Numeric(15, 2), nullable=False)
@@ -299,17 +299,17 @@ class APInvoicePayment(Base):
     """AP Invoice Payment Association"""
     __tablename__ = "ap_invoice_payments"
     
-    invoice_id = Column(UUID(as_uuid=True), ForeignKey("ap_invoices.id"), primary_key=True)
-    payment_id = Column(UUID(as_uuid=True), ForeignKey("ap_payments.id"), primary_key=True)
+    invoice_id = Column(GUID(), ForeignKey("ap_invoices.id"), primary_key=True)
+    payment_id = Column(GUID(), ForeignKey("ap_payments.id"), primary_key=True)
     amount = Column(Numeric(15, 2), nullable=False)
 
 class APCreditMemo(Base, AuditMixin):
     """AP Credit Memo"""
     __tablename__ = "ap_credit_memos"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), nullable=False, index=True)
-    vendor_id = Column(UUID(as_uuid=True), ForeignKey("vendors.id"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
+    vendor_id = Column(GUID(), ForeignKey("vendors.id"), nullable=False)
     credit_memo_number = Column(String(50), nullable=False, unique=True)
     credit_date = Column(Date, nullable=False)
     amount = Column(Numeric(15, 2), nullable=False)
@@ -326,9 +326,9 @@ class APCreditApplication(Base):
     """AP Credit Memo Application"""
     __tablename__ = "ap_credit_applications"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    credit_memo_id = Column(UUID(as_uuid=True), ForeignKey("ap_credit_memos.id"), nullable=False)
-    invoice_id = Column(UUID(as_uuid=True), ForeignKey("ap_invoices.id"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    credit_memo_id = Column(GUID(), ForeignKey("ap_credit_memos.id"), nullable=False)
+    invoice_id = Column(GUID(), ForeignKey("ap_invoices.id"), nullable=False)
     amount = Column(Numeric(15, 2), nullable=False)
     notes = Column(Text)
     
@@ -340,9 +340,9 @@ class Form1099(Base, AuditMixin):
     """Form 1099 for Tax Reporting"""
     __tablename__ = "form_1099s"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), nullable=False, index=True)
-    vendor_id = Column(UUID(as_uuid=True), ForeignKey("vendors.id"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
+    vendor_id = Column(GUID(), ForeignKey("vendors.id"), nullable=False)
     tax_year = Column(Integer, nullable=False)
     form_type = Column(String(10), default="1099-NEC")
     box_1_rents = Column(Numeric(15, 2), default=0)
@@ -370,9 +370,9 @@ class Form1099Transaction(Base):
     """Form 1099 Transaction Details"""
     __tablename__ = "form_1099_transactions"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    form_1099_id = Column(UUID(as_uuid=True), ForeignKey("form_1099s.id"), nullable=False)
-    payment_id = Column(UUID(as_uuid=True), ForeignKey("ap_payments.id"))
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    form_1099_id = Column(GUID(), ForeignKey("form_1099s.id"), nullable=False)
+    payment_id = Column(GUID(), ForeignKey("ap_payments.id"))
     amount = Column(Numeric(15, 2), nullable=False)
     box_number = Column(Integer, nullable=False)
     description = Column(String(255))
@@ -389,9 +389,9 @@ class ARInvoice(Base, AuditMixin):
     """Unified AR Invoice"""
     __tablename__ = "ar_invoices"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), nullable=False, index=True)
-    customer_id = Column(UUID(as_uuid=True), ForeignKey("customers.id"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
+    customer_id = Column(GUID(), ForeignKey("customers.id"), nullable=False)
     invoice_number = Column(String(50), nullable=False, unique=True)
     invoice_date = Column(Date, nullable=False, index=True)
     due_date = Column(Date, nullable=False, index=True)
@@ -410,9 +410,9 @@ class ARInvoiceLineItem(Base):
     """AR Invoice Line Items"""
     __tablename__ = "ar_invoice_line_items"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    invoice_id = Column(UUID(as_uuid=True), ForeignKey("ar_invoices.id"), nullable=False)
-    account_id = Column(UUID(as_uuid=True), ForeignKey("chart_of_accounts.id"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    invoice_id = Column(GUID(), ForeignKey("ar_invoices.id"), nullable=False)
+    account_id = Column(GUID(), ForeignKey("chart_of_accounts.id"), nullable=False)
     description = Column(String(255), nullable=False)
     quantity = Column(Numeric(10, 2), default=1)
     unit_price = Column(Numeric(15, 2), nullable=False)
@@ -426,9 +426,9 @@ class ARPayment(Base, AuditMixin):
     """Unified AR Payment"""
     __tablename__ = "ar_payments"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), nullable=False, index=True)
-    customer_id = Column(UUID(as_uuid=True), ForeignKey("customers.id"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
+    customer_id = Column(GUID(), ForeignKey("customers.id"), nullable=False)
     payment_number = Column(String(50), nullable=False, unique=True)
     payment_date = Column(Date, nullable=False, index=True)
     amount = Column(Numeric(15, 2), nullable=False)
@@ -444,18 +444,18 @@ class ARInvoicePayment(Base):
     """AR Invoice Payment Association"""
     __tablename__ = "ar_invoice_payments"
     
-    invoice_id = Column(UUID(as_uuid=True), ForeignKey("ar_invoices.id"), primary_key=True)
-    payment_id = Column(UUID(as_uuid=True), ForeignKey("ar_payments.id"), primary_key=True)
+    invoice_id = Column(GUID(), ForeignKey("ar_invoices.id"), primary_key=True)
+    payment_id = Column(GUID(), ForeignKey("ar_payments.id"), primary_key=True)
     amount = Column(Numeric(15, 2), nullable=False)
 
 class Collection(Base, AuditMixin):
     """AR Collections Management"""
     __tablename__ = "ar_collections"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), nullable=False, index=True)
-    customer_id = Column(UUID(as_uuid=True), ForeignKey("customers.id"), nullable=False)
-    invoice_id = Column(UUID(as_uuid=True), ForeignKey("ar_invoices.id"))
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
+    customer_id = Column(GUID(), ForeignKey("customers.id"), nullable=False)
+    invoice_id = Column(GUID(), ForeignKey("ar_invoices.id"))
     amount_due = Column(Numeric(15, 2), nullable=False)
     days_overdue = Column(Integer, default=0)
     status = Column(String(20), default="open")
@@ -472,8 +472,8 @@ class CollectionActivity(Base):
     """Collection Activity Log"""
     __tablename__ = "collection_activities"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    collection_id = Column(UUID(as_uuid=True), ForeignKey("ar_collections.id"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    collection_id = Column(GUID(), ForeignKey("ar_collections.id"), nullable=False)
     activity_type = Column(String(50), nullable=False)
     activity_date = Column(DateTime, default=func.now())
     description = Column(Text)
@@ -491,8 +491,8 @@ class Employee(Base, AuditMixin):
     """Unified Employee for HRM and Payroll"""
     __tablename__ = "employees"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
     employee_code = Column(String(20), nullable=False, unique=True)
     first_name = Column(String(100), nullable=False)
     last_name = Column(String(100), nullable=False)
@@ -500,7 +500,7 @@ class Employee(Base, AuditMixin):
     phone = Column(String(50))
     hire_date = Column(Date, nullable=False)
     termination_date = Column(Date)
-    department_id = Column(UUID(as_uuid=True), ForeignKey("departments.id"))
+    department_id = Column(GUID(), ForeignKey("departments.id"))
     position = Column(String(100))
     salary = Column(Numeric(15, 2))
     employment_type = Column(Enum(EmploymentType), default=EmploymentType.FULL_TIME)
@@ -515,11 +515,11 @@ class Department(Base, AuditMixin):
     """Unified Department"""
     __tablename__ = "departments"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
     department_code = Column(String(20), nullable=False, unique=True)
     department_name = Column(String(255), nullable=False)
-    manager_id = Column(UUID(as_uuid=True), ForeignKey("employees.id"))
+    manager_id = Column(GUID(), ForeignKey("employees.id"))
     cost_center = Column(String(50))
     is_active = Column(Boolean, default=True)
     
@@ -535,8 +535,8 @@ class PayrollRun(Base, AuditMixin):
     """Unified Payroll Run"""
     __tablename__ = "payroll_runs"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
     run_number = Column(String(50), nullable=False, unique=True)
     pay_period_start = Column(Date, nullable=False)
     pay_period_end = Column(Date, nullable=False)
@@ -553,9 +553,9 @@ class PayrollEntry(Base):
     """Unified Payroll Entry"""
     __tablename__ = "payroll_entries"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    payroll_run_id = Column(UUID(as_uuid=True), ForeignKey("payroll_runs.id"), nullable=False)
-    employee_id = Column(UUID(as_uuid=True), ForeignKey("employees.id"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    payroll_run_id = Column(GUID(), ForeignKey("payroll_runs.id"), nullable=False)
+    employee_id = Column(GUID(), ForeignKey("employees.id"), nullable=False)
     gross_pay = Column(Numeric(15, 2), default=0)
     total_deductions = Column(Numeric(15, 2), default=0)
     net_pay = Column(Numeric(15, 2), default=0)
@@ -568,8 +568,8 @@ class LeaveRequest(Base, AuditMixin):
     """Unified Leave Request"""
     __tablename__ = "leave_requests"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    employee_id = Column(UUID(as_uuid=True), ForeignKey("employees.id"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    employee_id = Column(GUID(), ForeignKey("employees.id"), nullable=False)
     leave_type = Column(Enum(LeaveType), nullable=False)
     start_date = Column(Date, nullable=False)
     end_date = Column(Date, nullable=False)
@@ -588,12 +588,12 @@ class InventoryItem(Base, AuditMixin):
     """Unified Inventory Item"""
     __tablename__ = "inventory_items"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
     item_code = Column(String(50), nullable=False, unique=True)
     item_name = Column(String(255), nullable=False)
     description = Column(Text)
-    category_id = Column(UUID(as_uuid=True), ForeignKey("inventory_categories.id"))
+    category_id = Column(GUID(), ForeignKey("inventory_categories.id"))
     unit_of_measure = Column(String(20))
     unit_cost = Column(Numeric(15, 2), default=0)
     selling_price = Column(Numeric(15, 2), default=0)
@@ -608,11 +608,11 @@ class InventoryCategory(Base, AuditMixin):
     """Inventory Category"""
     __tablename__ = "inventory_categories"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
     category_code = Column(String(20), nullable=False, unique=True)
     category_name = Column(String(255), nullable=False)
-    parent_category_id = Column(UUID(as_uuid=True), ForeignKey("inventory_categories.id"))
+    parent_category_id = Column(GUID(), ForeignKey("inventory_categories.id"))
     is_active = Column(Boolean, default=True)
     
     # Relationships
@@ -623,9 +623,9 @@ class PurchaseOrder(Base, AuditMixin):
     """Unified Purchase Order"""
     __tablename__ = "purchase_orders"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), nullable=False, index=True)
-    vendor_id = Column(UUID(as_uuid=True), ForeignKey("vendors.id"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
+    vendor_id = Column(GUID(), ForeignKey("vendors.id"), nullable=False)
     po_number = Column(String(50), nullable=False, unique=True)
     po_date = Column(Date, nullable=False)
     expected_date = Column(Date)
@@ -640,9 +640,9 @@ class PurchaseOrderLineItem(Base):
     """Purchase Order Line Items"""
     __tablename__ = "purchase_order_line_items"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    purchase_order_id = Column(UUID(as_uuid=True), ForeignKey("purchase_orders.id"), nullable=False)
-    inventory_item_id = Column(UUID(as_uuid=True), ForeignKey("inventory_items.id"))
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    purchase_order_id = Column(GUID(), ForeignKey("purchase_orders.id"), nullable=False)
+    inventory_item_id = Column(GUID(), ForeignKey("inventory_items.id"))
     description = Column(String(255), nullable=False)
     quantity = Column(Numeric(10, 2), nullable=False)
     unit_price = Column(Numeric(15, 2), nullable=False)
@@ -660,8 +660,8 @@ class TaxRate(Base, AuditMixin):
     """Unified Tax Rate"""
     __tablename__ = "tax_rates"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
     tax_code = Column(String(20), nullable=False, unique=True)
     tax_name = Column(String(255), nullable=False)
     rate_percentage = Column(Numeric(5, 4), nullable=False)
@@ -679,8 +679,8 @@ class FinancialPeriod(Base, AuditMixin):
     """Unified Financial Period"""
     __tablename__ = "financial_periods"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
     period_name = Column(String(50), nullable=False)
     start_date = Column(Date, nullable=False)
     end_date = Column(Date, nullable=False)
@@ -693,11 +693,11 @@ class Budget(Base, AuditMixin):
     """Unified Budget"""
     __tablename__ = "budgets"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
     budget_name = Column(String(255), nullable=False)
     budget_year = Column(Integer, nullable=False)
-    account_id = Column(UUID(as_uuid=True), ForeignKey("chart_of_accounts.id"), nullable=False)
+    account_id = Column(GUID(), ForeignKey("chart_of_accounts.id"), nullable=False)
     budgeted_amount = Column(Numeric(15, 2), nullable=False)
     actual_amount = Column(Numeric(15, 2), default=0)
     variance = Column(Numeric(15, 2), default=0)
@@ -710,9 +710,9 @@ class BudgetLineItem(Base, AuditMixin):
     """Unified Budget Line Item"""
     __tablename__ = "budget_line_items"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    budget_id = Column(UUID(as_uuid=True), ForeignKey("budgets.id"), nullable=False)
-    account_id = Column(UUID(as_uuid=True), ForeignKey("chart_of_accounts.id"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    budget_id = Column(GUID(), ForeignKey("budgets.id"), nullable=False)
+    account_id = Column(GUID(), ForeignKey("chart_of_accounts.id"), nullable=False)
     period = Column(String(20), nullable=False)  # monthly, quarterly
     budgeted_amount = Column(Numeric(15, 2), nullable=False)
     actual_amount = Column(Numeric(15, 2), default=0)
@@ -730,8 +730,8 @@ class FixedAsset(Base, AuditMixin):
     """Unified Fixed Asset"""
     __tablename__ = "fixed_assets"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
     asset_number = Column(String(50), unique=True, nullable=False)
     asset_name = Column(String(255), nullable=False)
     asset_category = Column(String(100))
@@ -749,8 +749,8 @@ class AssetDepreciation(Base):
     """Asset Depreciation Records"""
     __tablename__ = "asset_depreciation"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    asset_id = Column(UUID(as_uuid=True), ForeignKey("fixed_assets.id"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    asset_id = Column(GUID(), ForeignKey("fixed_assets.id"), nullable=False)
     depreciation_date = Column(Date, nullable=False)
     depreciation_amount = Column(Numeric(15, 2), nullable=False)
     accumulated_depreciation = Column(Numeric(15, 2), nullable=False)
@@ -768,7 +768,7 @@ class Company(Base, AuditMixin):
     """Unified Company"""
     __tablename__ = "companies"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     company_code = Column(String(20), nullable=False, unique=True)
     company_name = Column(String(255), nullable=False)
     legal_name = Column(String(255))
@@ -785,7 +785,7 @@ class Currency(Base, AuditMixin):
     """Unified Currency"""
     __tablename__ = "currencies"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     currency_code = Column(String(3), nullable=False, unique=True)
     currency_name = Column(String(100), nullable=False)
     symbol = Column(String(10))
@@ -796,7 +796,7 @@ class ExchangeRate(Base):
     """Unified Exchange Rate"""
     __tablename__ = "exchange_rates"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     from_currency = Column(String(3), nullable=False)
     to_currency = Column(String(3), nullable=False)
     rate = Column(Numeric(15, 6), nullable=False)

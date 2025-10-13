@@ -10,7 +10,7 @@ from typing import List, Optional, Dict, Any
 from uuid import UUID, uuid4
 
 from sqlalchemy import Column, ForeignKey, Index, Text, UniqueConstraint, event
-from sqlalchemy.dialects.postgresql import UUID as PG_UUID, JSONB
+from app.models.base import GUID as PG_UUID, JSONB
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy.sql import func
 
@@ -40,7 +40,7 @@ class Reconciliation(BaseModel, Base):
     __tablename__ = "reconciliations"
     
     id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True),
+        PG_GUID(),
         primary_key=True,
         default=uuid4,
         index=True,
@@ -48,7 +48,7 @@ class Reconciliation(BaseModel, Base):
     )
     
     account_id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True),
+        PG_GUID(),
         ForeignKey("accounts.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
@@ -104,7 +104,7 @@ class Reconciliation(BaseModel, Base):
     )
     
     completed_by: Mapped[Optional[UUID]] = mapped_column(
-        PG_UUID(as_uuid=True),
+        PG_GUID(),
         nullable=True,
         comment="User who completed the reconciliation"
     )
@@ -144,7 +144,7 @@ class ReconciliationItem(BaseModel, Base):
     __tablename__ = "reconciliation_items"
     
     id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True),
+        PG_GUID(),
         primary_key=True,
         default=uuid4,
         index=True,
@@ -152,7 +152,7 @@ class ReconciliationItem(BaseModel, Base):
     )
     
     reconciliation_id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True),
+        PG_GUID(),
         ForeignKey("reconciliations.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
@@ -160,7 +160,7 @@ class ReconciliationItem(BaseModel, Base):
     )
     
     journal_entry_id: Mapped[Optional[UUID]] = mapped_column(
-        PG_UUID(as_uuid=True),
+        PG_GUID(),
         ForeignKey("journal_entries.id", ondelete="SET NULL"),
         nullable=True,
         index=True,
@@ -261,14 +261,14 @@ class ReconciliationAuditLog(BaseModel, Base):
     __tablename__ = "reconciliation_audit_logs"
     
     id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True),
+        PG_GUID(),
         primary_key=True,
         default=uuid4,
         comment="Unique identifier for the audit log entry"
     )
     
     reconciliation_id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True),
+        PG_GUID(),
         ForeignKey("reconciliations.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
@@ -276,7 +276,7 @@ class ReconciliationAuditLog(BaseModel, Base):
     )
     
     user_id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True),
+        PG_GUID(),
         nullable=False,
         index=True,
         comment="User who performed the action"
@@ -358,7 +358,7 @@ from typing import List, Optional, Dict, Any
 from uuid import UUID, uuid4
 
 from sqlalchemy import Column, ForeignKey, Index, Text, UniqueConstraint, event
-from sqlalchemy.dialects.postgresql import UUID as PG_UUID, JSONB
+from app.models.base import GUID as PG_UUID, JSONB
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy.sql import func
 
@@ -388,7 +388,7 @@ class Reconciliation(BaseModel, Base):
     __tablename__ = "reconciliations"
     
     id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True),
+        PG_GUID(),
         primary_key=True,
         default=uuid4,
         index=True,
@@ -396,7 +396,7 @@ class Reconciliation(BaseModel, Base):
     )
     
     account_id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True),
+        PG_GUID(),
         ForeignKey("accounts.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
@@ -452,7 +452,7 @@ class Reconciliation(BaseModel, Base):
     )
     
     completed_by: Mapped[Optional[UUID]] = mapped_column(
-        PG_UUID(as_uuid=True),
+        PG_GUID(),
         nullable=True,
         comment="User who completed the reconciliation"
     )
@@ -492,7 +492,7 @@ class ReconciliationItem(BaseModel, Base):
     __tablename__ = "reconciliation_items"
     
     id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True),
+        PG_GUID(),
         primary_key=True,
         default=uuid4,
         index=True,
@@ -500,7 +500,7 @@ class ReconciliationItem(BaseModel, Base):
     )
     
     reconciliation_id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True),
+        PG_GUID(),
         ForeignKey("reconciliations.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
@@ -508,7 +508,7 @@ class ReconciliationItem(BaseModel, Base):
     )
     
     journal_entry_id: Mapped[Optional[UUID]] = mapped_column(
-        PG_UUID(as_uuid=True),
+        PG_GUID(),
         ForeignKey("journal_entries.id", ondelete="SET NULL"),
         nullable=True,
         index=True,
@@ -609,14 +609,14 @@ class ReconciliationAuditLog(BaseModel, Base):
     __tablename__ = "reconciliation_audit_logs"
     
     id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True),
+        PG_GUID(),
         primary_key=True,
         default=uuid4,
         comment="Unique identifier for the audit log entry"
     )
     
     reconciliation_id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True),
+        PG_GUID(),
         ForeignKey("reconciliations.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
@@ -624,7 +624,7 @@ class ReconciliationAuditLog(BaseModel, Base):
     )
     
     user_id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True),
+        PG_GUID(),
         nullable=False,
         index=True,
         comment="User who performed the action"

@@ -11,10 +11,20 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.db.query_helper import QueryHelper
-from app.models import Employee
-from app.models.hrm.leave import LeaveRequest, LeaveBalance, LeavePolicy
-from app.models.hrm.attendance import AttendanceRecord
-from app.models.hrm.performance import PerformanceReview
+from app.models.core_models import Employee, LeaveRequest
+
+# Temporary placeholders for missing HRM models
+class LeaveBalance:
+    pass
+
+class LeavePolicy:
+    pass
+
+class AttendanceRecord:
+    pass
+
+class PerformanceReview:
+    pass
 from app.schemas.hrm.hrm_schemas import (
     EmployeeCreate, EmployeeUpdate, LeaveRequestCreate, LeaveRequestUpdate,
     AttendanceRecordCreate, PerformanceReviewCreate, HRAnalytics

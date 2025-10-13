@@ -41,8 +41,8 @@ class Reconciliation(Base):
     """
     __tablename__ = 'reconciliations'
     
-    id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
-    account_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), ForeignKey('chart_of_accounts.id'), nullable=False)
+    id: Mapped[UUID] = mapped_column(PG_UUID(), primary_key=True, default=uuid4)
+    account_id: Mapped[UUID] = mapped_column(PG_UUID(), ForeignKey('chart_of_accounts.id'), nullable=False)
     reference: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     status: Mapped[ReconciliationStatus] = mapped_column(SQLEnum(ReconciliationStatus), default=ReconciliationStatus.DRAFT, nullable=False)
     start_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
@@ -59,10 +59,10 @@ class Reconciliation(Base):
     difference: Mapped[float] = mapped_column(Numeric(19, 4), nullable=False, default=0)
     
     # Audit fields
-    created_by: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), nullable=False)
+    created_by: Mapped[UUID] = mapped_column(PG_UUID(), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
-    approved_by: Mapped[Optional[UUID]] = mapped_column(PG_UUID(as_uuid=True))
+    approved_by: Mapped[Optional[UUID]] = mapped_column(PG_UUID())
     approved_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     
     # Relationships
@@ -80,12 +80,12 @@ class ReconciliationItem(Base):
     """
     __tablename__ = 'reconciliation_items'
     
-    id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
-    reconciliation_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), ForeignKey('reconciliations.id'), nullable=False)
+    id: Mapped[UUID] = mapped_column(PG_UUID(), primary_key=True, default=uuid4)
+    reconciliation_id: Mapped[UUID] = mapped_column(PG_UUID(), ForeignKey('reconciliations.id'), nullable=False)
     
     # Reference to the journal entry (if applicable)
-    journal_entry_id: Mapped[Optional[UUID]] = mapped_column(PG_UUID(as_uuid=True), ForeignKey('journal_entries.id'))
-    journal_entry_line_id: Mapped[Optional[UUID]] = mapped_column(PG_UUID(as_uuid=True), ForeignKey('journal_entry_lines.id'))
+    journal_entry_id: Mapped[Optional[UUID]] = mapped_column(PG_UUID(), ForeignKey('journal_entries.id'))
+    journal_entry_line_id: Mapped[Optional[UUID]] = mapped_column(PG_UUID(), ForeignKey('journal_entry_lines.id'))
     
     # Statement line information (for external transactions)
     statement_line_ref: Mapped[Optional[str]] = mapped_column(String(100))
@@ -96,7 +96,7 @@ class ReconciliationItem(Base):
     # Reconciliation details
     match_type: Mapped[ReconciliationMatchType] = mapped_column(SQLEnum(ReconciliationMatchType), default=ReconciliationMatchType.MANUAL)
     is_matched: Mapped[bool] = mapped_column(default=False)
-    matched_with: Mapped[Optional[UUID]] = mapped_column(PG_UUID(as_uuid=True), ForeignKey('reconciliation_items.id'))
+    matched_with: Mapped[Optional[UUID]] = mapped_column(PG_UUID(), ForeignKey('reconciliation_items.id'))
     notes: Mapped[Optional[str]] = mapped_column(Text)
     
     # Audit fields
@@ -120,15 +120,15 @@ class ReconciliationAuditLog(Base):
     """
     __tablename__ = 'reconciliation_audit_logs'
     
-    id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
-    reconciliation_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), ForeignKey('reconciliations.id'), nullable=False)
+    id: Mapped[UUID] = mapped_column(PG_UUID(), primary_key=True, default=uuid4)
+    reconciliation_id: Mapped[UUID] = mapped_column(PG_UUID(), ForeignKey('reconciliations.id'), nullable=False)
     
     # Action details
     action: Mapped[str] = mapped_column(String(100), nullable=False)  # e.g., 'create', 'update', 'match', 'unmatch', 'approve', 'reject'
     details: Mapped[Optional[dict]] = mapped_column(JSONB)
     
     # User who performed the action
-    user_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), nullable=False)
+    user_id: Mapped[UUID] = mapped_column(PG_UUID(), nullable=False)
     
     # Timestamp
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)

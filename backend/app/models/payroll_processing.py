@@ -6,7 +6,7 @@ from decimal import Decimal
 from enum import Enum as PyEnum
 from sqlalchemy import Column, Date, DateTime, Enum, ForeignKey, Numeric, String, Text, Boolean, Integer, JSON
 from sqlalchemy.orm import relationship, validates
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from app.models.base import GUID, JSONB
 import uuid
 
 <<<<<<< HEAD:backend/app/modules/core_financials/payroll/models/payroll_processing.py
@@ -47,7 +47,7 @@ class PayrollRun(PayrollBase, Base):
     __tablename__ = "payroll_runs"
 
     id = Column(
-        UUID(as_uuid=True),
+        GUID(),
         primary_key=True,
         default=uuid.uuid4,
         index=True
@@ -60,7 +60,7 @@ class PayrollRun(PayrollBase, Base):
     
     # Pay period details
     pay_period_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_pay_periods.id'), 
         nullable=False,
         index=True
@@ -97,21 +97,21 @@ class PayrollRun(PayrollBase, Base):
     # Approval workflow
     submitted_at = Column(DateTime, nullable=True)
     submitted_by_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_employees.id'), 
         nullable=True,
         index=True
     )
     approved_at = Column(DateTime, nullable=True)
     approved_by_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_employees.id'), 
         nullable=True,
         index=True
     )
     processed_at = Column(DateTime, nullable=True)
     processed_by_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_employees.id'), 
         nullable=True,
         index=True
@@ -121,7 +121,7 @@ class PayrollRun(PayrollBase, Base):
     # Payment information
     payment_method = Column(String(50), nullable=True)  # e.g., DIRECT_DEPOSIT, CHECK, WIRE_TRANSFER
     bank_account_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_bank_accounts.id'), 
         nullable=True,
         index=True
@@ -234,7 +234,7 @@ class PayrollEntry(PayrollBase, Base):
     __tablename__ = "payroll_entries"
 
     id = Column(
-        UUID(as_uuid=True),
+        GUID(),
         primary_key=True,
         default=uuid.uuid4,
         index=True
@@ -242,19 +242,19 @@ class PayrollEntry(PayrollBase, Base):
     
     # References
     payroll_run_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_runs.id'), 
         nullable=False,
         index=True
     )
     employee_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_employees.id'), 
         nullable=False,
         index=True
     )
     timesheet_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_timesheets.id'), 
         nullable=True,
         index=True
@@ -323,7 +323,7 @@ class PayrollEntry(PayrollBase, Base):
     # Payment information
     payment_method = Column(String(50), nullable=True)  # Overrides employee default if set
     bank_account_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_bank_accounts.id'), 
         nullable=True,
         index=True

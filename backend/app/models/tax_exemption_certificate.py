@@ -2,7 +2,7 @@
 Tax Exemption Certificate model for storing customer tax exemption certificates.
 """
 from sqlalchemy import Column, String, Boolean, Date, JSON, ForeignKey, DateTime, Text
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from app.models.base import GUID, JSONB
 from sqlalchemy.sql import func
 from app.core.db.base import Base
 import uuid
@@ -15,9 +15,9 @@ class TaxExemptionCertificate(Base):
     """
     __tablename__ = "tax_exemption_certificates"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     certificate_number = Column(String(100), unique=True, nullable=False, index=True)
-    customer_id = Column(UUID(as_uuid=True), ForeignKey("customers.id"), nullable=False, index=True)
+    customer_id = Column(GUID(), ForeignKey("customers.id"), nullable=False, index=True)
     customer_tax_id = Column(String(50), nullable=True, index=True)
     customer_name = Column(String(255), nullable=False)
     
@@ -42,8 +42,8 @@ class TaxExemptionCertificate(Base):
     notes = Column(Text, nullable=True)
     
     # Audit fields
-    created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    updated_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    created_by = Column(GUID(), ForeignKey("users.id"), nullable=False)
+    updated_by = Column(GUID(), ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     

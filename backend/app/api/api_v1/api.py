@@ -88,13 +88,55 @@ except ImportError:
     @ar_analytics_router.get("/dashboard")
     def get_ar_dashboard():
         return {
-            "total_receivables": 125000,
-            "overdue_amount": 15000,
-            "current_month_collections": 45000,
-            "average_days_to_pay": 32
+            "kpis": {
+                "total_outstanding": 245750.00,
+                "overdue_amount": 45230.00,
+                "current_month_collections": 89450.00,
+                "active_customers": 127
+            }
         }
     
     api_router.include_router(ar_analytics_router, prefix="/ar/analytics", tags=["ar-analytics"])
+
+# AR Dashboard endpoints
+from fastapi import APIRouter
+ar_dashboard_router = APIRouter()
+
+@ar_dashboard_router.get("/stats")
+def get_ar_dashboard_stats():
+    return {
+        "kpis": {
+            "total_outstanding": 245750.00,
+            "overdue_amount": 45230.00,
+            "current_month_collections": 89450.00,
+            "active_customers": 127
+        }
+    }
+
+@ar_dashboard_router.get("/recent-invoices")
+def get_ar_recent_invoices():
+    return {
+        "invoices": [
+            {
+                "id": "inv_001",
+                "customer": {"name": "Acme Corporation"},
+                "invoice_number": "INV-2024-001",
+                "due_date": "2024-02-14",
+                "total_amount": 5500.00,
+                "status": "sent"
+            },
+            {
+                "id": "inv_002",
+                "customer": {"name": "Global Industries"},
+                "invoice_number": "INV-2024-002",
+                "due_date": "2024-01-25",
+                "total_amount": 3200.00,
+                "status": "paid"
+            }
+        ]
+    }
+
+api_router.include_router(ar_dashboard_router, prefix="/ar/dashboard", tags=["ar-dashboard"])
 
 # Inventory - using v1 endpoint
 try:

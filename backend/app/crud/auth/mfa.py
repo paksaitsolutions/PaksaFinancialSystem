@@ -15,7 +15,7 @@ from datetime import datetime, timedelta
 from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.auth.mfa import MFADevice, MFAAttempt
+from app.models.user import MFADevice, MFAAttempt
 from app.schemas.auth.mfa import MFADeviceCreate, MFASetupResponse
 
 class MFACRUD:

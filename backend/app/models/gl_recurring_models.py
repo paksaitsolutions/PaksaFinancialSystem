@@ -11,7 +11,8 @@ from sqlalchemy import (
     Boolean, Column, Date, DateTime, Enum as SQLEnum, ForeignKey, 
     Integer, Numeric, String, Text, UniqueConstraint, Index, JSON
 )
-from sqlalchemy.dialects.postgresql import UUID as PG_UUID, JSONB
+from app.models.base import GUID as PG_UUID
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship, validates
 
 
@@ -49,7 +50,7 @@ class RecurringJournalEntry(Base):
     """Defines a template for recurring journal entries."""
     __tablename__ = "recurring_journal_entries"
     
-    id = Column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
+    id = Column(PG_UUID(), primary_key=True, default=uuid4)
     
     # Basic information
     name = Column(String(200), nullable=False, comment="Name of the recurring entry")
@@ -73,14 +74,14 @@ class RecurringJournalEntry(Base):
     
     # Company and user references
     company_id = Column(
-        PG_UUID(as_uuid=True), 
+        PG_UUID(), 
         ForeignKey("companies.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
         comment="Company this recurring entry belongs to"
     )
     created_by = Column(
-        PG_UUID(as_uuid=True),
+        PG_UUID(),
         ForeignKey("users.id"),
         nullable=False,
         comment="User who created this recurring entry"
@@ -178,7 +179,7 @@ class RecurringJournalTemplate(Base):
     __tablename__ = "recurring_journal_templates"
     
     recurring_journal_id = Column(
-        PG_UUID(as_uuid=True),
+        PG_UUID(),
         ForeignKey("recurring_journal_entries.id", ondelete="CASCADE"),
         primary_key=True,
         comment="Reference to the parent recurring journal entry"
@@ -198,7 +199,7 @@ class AllocationRule(Base):
     """Rules for allocating amounts across multiple accounts."""
     __tablename__ = "allocation_rules"
     
-    id = Column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
+    id = Column(PG_UUID(), primary_key=True, default=uuid4)
     
     # Basic information
     name = Column(String(200), nullable=False, comment="Name of the allocation rule")
@@ -210,7 +211,7 @@ class AllocationRule(Base):
     
     # Company reference
     company_id = Column(
-        PG_UUID(as_uuid=True), 
+        PG_UUID(), 
         ForeignKey("companies.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
@@ -310,14 +311,14 @@ class AllocationDestination(Base):
     
     # Basic information
     allocation_rule_id = Column(
-        PG_UUID(as_uuid=True),
+        PG_UUID(),
         ForeignKey("allocation_rules.id", ondelete="CASCADE"),
         primary_key=True,
         comment="Reference to the allocation rule"
     )
     
     account_id = Column(
-        PG_UUID(as_uuid=True),
+        PG_UUID(),
         ForeignKey("chart_of_accounts.id"),
         primary_key=True,
         comment="Account to allocate to"

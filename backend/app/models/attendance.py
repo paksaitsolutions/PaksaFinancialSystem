@@ -5,7 +5,7 @@ from datetime import datetime, time, date, timedelta
 from decimal import Decimal
 from sqlalchemy import Column, Date, DateTime, Enum, ForeignKey, Numeric, String, Text, Boolean, Integer, Time, Interval
 from sqlalchemy.orm import relationship, validates
-from sqlalchemy.dialects.postgresql import UUID
+from app.models.base import GUID
 import uuid
 
 <<<<<<< HEAD:backend/app/modules/core_financials/payroll/models/attendance.py
@@ -21,7 +21,7 @@ class WorkSchedule(PayrollBase, Base):
     __tablename__ = "payroll_work_schedules"
 
     id = Column(
-        UUID(as_uuid=True),
+        GUID(),
         primary_key=True,
         default=uuid.uuid4,
         index=True
@@ -94,7 +94,7 @@ class WorkScheduleShift(PayrollBase, Base):
     __tablename__ = "payroll_work_schedule_shifts"
 
     id = Column(
-        UUID(as_uuid=True),
+        GUID(),
         primary_key=True,
         default=uuid.uuid4,
         index=True
@@ -102,7 +102,7 @@ class WorkScheduleShift(PayrollBase, Base):
     
     # References
     work_schedule_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_work_schedules.id'), 
         nullable=False,
         index=True
@@ -171,7 +171,7 @@ class EmployeeWorkSchedule(PayrollBase, Base):
     )
 
     id = Column(
-        UUID(as_uuid=True),
+        GUID(),
         primary_key=True,
         default=uuid.uuid4,
         index=True
@@ -179,13 +179,13 @@ class EmployeeWorkSchedule(PayrollBase, Base):
     
     # References
     employee_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_employees.id'), 
         nullable=False,
         index=True
     )
     work_schedule_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_work_schedules.id'), 
         nullable=False,
         index=True
@@ -223,7 +223,7 @@ class AttendanceRecord(PayrollBase, Base):
     )
 
     id = Column(
-        UUID(as_uuid=True),
+        GUID(),
         primary_key=True,
         default=uuid.uuid4,
         index=True
@@ -231,13 +231,13 @@ class AttendanceRecord(PayrollBase, Base):
     
     # References
     employee_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_employees.id'), 
         nullable=False,
         index=True
     )
     schedule_shift_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_work_schedule_shifts.id'), 
         nullable=True,
         index=True
@@ -270,7 +270,7 @@ class AttendanceRecord(PayrollBase, Base):
     # Approval
     is_approved = Column(Boolean, default=False, nullable=False)
     approved_by_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_employees.id'), 
         nullable=True,
         index=True

@@ -2,7 +2,7 @@
 AI/BI Module Database Models
 """
 from sqlalchemy import Column, String, Text, DateTime, Float, Integer, Boolean, JSON, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
+from app.models.base import GUID
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import uuid
@@ -15,8 +15,8 @@ class AIInsight(Base, AuditMixin):
     __tablename__ = "ai_insights"
     __table_args__ = {'extend_existing': True}
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
     title = Column(String(255), nullable=False)
     description = Column(Text, nullable=False)
     insight_type = Column(String(50), nullable=False)  # anomaly, prediction, recommendation
@@ -33,8 +33,8 @@ class AIRecommendation(Base, AuditMixin):
     __tablename__ = "ai_recommendations"
     __table_args__ = {'extend_existing': True}
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
     title = Column(String(255), nullable=False)
     description = Column(Text, nullable=False)
     recommendation_type = Column(String(50), nullable=False)
@@ -53,8 +53,8 @@ class AIAnomaly(Base, AuditMixin):
     __tablename__ = "ai_anomalies"
     __table_args__ = {'extend_existing': True}
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
     title = Column(String(255), nullable=False)
     description = Column(Text, nullable=False)
     anomaly_type = Column(String(50), nullable=False)
@@ -73,8 +73,8 @@ class AIPrediction(Base, AuditMixin):
     __tablename__ = "ai_predictions"
     __table_args__ = {'extend_existing': True}
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
     prediction_type = Column(String(50), nullable=False)  # cash_flow, revenue, expense
     module = Column(String(50), nullable=False)
     target_date = Column(DateTime, nullable=False)
@@ -92,8 +92,8 @@ class AIModelMetrics(Base, AuditMixin):
     __tablename__ = "ai_model_metrics"
     __table_args__ = {'extend_existing': True}
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
     model_name = Column(String(100), nullable=False)
     model_type = Column(String(50), nullable=False)  # classification, regression, clustering
     version = Column(String(20), nullable=False)
@@ -113,8 +113,8 @@ class AIAnalyticsReport(Base, AuditMixin):
     __tablename__ = "ai_analytics_reports"
     __table_args__ = {'extend_existing': True}
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
     report_name = Column(String(255), nullable=False)
     report_type = Column(String(50), nullable=False)
     module = Column(String(50), nullable=False)

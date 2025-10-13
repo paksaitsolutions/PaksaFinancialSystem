@@ -2,7 +2,7 @@
 Enhanced General Ledger models with enterprise features.
 """
 from sqlalchemy import Column, String, DateTime, Boolean, Text, ForeignKey, Integer, Numeric
-from sqlalchemy.dialects.postgresql import UUID
+from app.models.base import GUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.types import DECIMAL as Decimal
 from datetime import datetime
@@ -21,7 +21,7 @@ class AccountingPeriod(Base):
     
     __tablename__ = "accounting_periods"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     company_id = Column(String(255), nullable=False, index=True)
     year = Column(Integer, nullable=False)
     month = Column(Integer, nullable=False)
@@ -38,8 +38,8 @@ class LedgerBalance(Base):
     
     __tablename__ = "ledger_balances"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    account_id = Column(UUID(as_uuid=True), ForeignKey("chart_of_accounts.id"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    account_id = Column(GUID(), ForeignKey("chart_of_accounts.id"), nullable=False)
     period_year = Column(Integer, nullable=False)
     period_month = Column(Integer, nullable=False)
     opening_balance = Column(Decimal(15, 2), default=0)
@@ -55,7 +55,7 @@ class TrialBalance(Base):
     
     __tablename__ = "trial_balances"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     company_id = Column(String(255), nullable=False, index=True)
     as_of_date = Column(DateTime, nullable=False)
     total_debits = Column(Decimal(15, 2), nullable=False)
@@ -73,9 +73,9 @@ class TrialBalanceAccount(Base):
     
     __tablename__ = "trial_balance_accounts"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    trial_balance_id = Column(UUID(as_uuid=True), ForeignKey("trial_balances.id"), nullable=False)
-    account_id = Column(UUID(as_uuid=True), ForeignKey("chart_of_accounts.id"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    trial_balance_id = Column(GUID(), ForeignKey("trial_balances.id"), nullable=False)
+    account_id = Column(GUID(), ForeignKey("chart_of_accounts.id"), nullable=False)
     account_code = Column(String(20), nullable=False)
     account_name = Column(String(255), nullable=False)
     account_type = Column(String(50), nullable=False)
@@ -92,7 +92,7 @@ class FinancialStatement(Base):
     
     __tablename__ = "financial_statements"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     company_id = Column(String(255), nullable=False, index=True)
     statement_type = Column(String(50), nullable=False)  # balance_sheet, income_statement, cash_flow
     statement_name = Column(String(255), nullable=False)
@@ -112,14 +112,14 @@ class FinancialStatementLine(Base):
     
     __tablename__ = "financial_statement_lines"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    statement_id = Column(UUID(as_uuid=True), ForeignKey("financial_statements.id"), nullable=False)
-    account_id = Column(UUID(as_uuid=True), ForeignKey("chart_of_accounts.id"))
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    statement_id = Column(GUID(), ForeignKey("financial_statements.id"), nullable=False)
+    account_id = Column(GUID(), ForeignKey("chart_of_accounts.id"))
     line_number = Column(Integer)
     description = Column(String(255), nullable=False)
     amount = Column(Decimal(15, 2), default=0)
     is_total = Column(Boolean, default=False)
-    parent_line_id = Column(UUID(as_uuid=True), ForeignKey("financial_statement_lines.id"))
+    parent_line_id = Column(GUID(), ForeignKey("financial_statement_lines.id"))
     
     # Relationships
     statement = relationship("FinancialStatement", back_populates="lines")
@@ -131,9 +131,9 @@ class BudgetEntry(Base):
     
     __tablename__ = "budget_entries"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     company_id = Column(String(255), nullable=False, index=True)
-    account_id = Column(UUID(as_uuid=True), ForeignKey("chart_of_accounts.id"), nullable=False)
+    account_id = Column(GUID(), ForeignKey("chart_of_accounts.id"), nullable=False)
     budget_year = Column(Integer, nullable=False)
     budget_month = Column(Integer, nullable=False)
     budgeted_amount = Column(Decimal(15, 2), nullable=False)
@@ -149,7 +149,7 @@ class AccountType(Base):
     
     __tablename__ = "account_types"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     type_name = Column(String(100), nullable=False)
     type_code = Column(String(20), nullable=False, unique=True)
     normal_balance = Column(String(10), nullable=False)  # debit or credit
@@ -162,10 +162,10 @@ class AccountSubType(Base):
     
     __tablename__ = "account_subtypes"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     subtype_name = Column(String(100), nullable=False)
     subtype_code = Column(String(20), nullable=False, unique=True)
-    account_type_id = Column(UUID(as_uuid=True), ForeignKey("account_types.id"))
+    account_type_id = Column(GUID(), ForeignKey("account_types.id"))
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
@@ -175,7 +175,7 @@ class AccountStatus(Base):
     
     __tablename__ = "account_statuses"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     status_name = Column(String(50), nullable=False)
     status_code = Column(String(20), nullable=False, unique=True)
     is_active = Column(Boolean, default=True)
@@ -187,7 +187,7 @@ class JournalEntryStatus(Base):
     
     __tablename__ = "journal_entry_statuses"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     status_name = Column(String(50), nullable=False)
     status_code = Column(String(20), nullable=False, unique=True)
     is_active = Column(Boolean, default=True)
@@ -199,8 +199,8 @@ class FinancialStatementSection(Base):
     
     __tablename__ = "financial_statement_sections"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    statement_id = Column(UUID(as_uuid=True), ForeignKey("financial_statements.id"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    statement_id = Column(GUID(), ForeignKey("financial_statements.id"), nullable=False)
     section_name = Column(String(255), nullable=False)
     section_order = Column(Integer, default=0)
     is_total_section = Column(Boolean, default=False)
@@ -214,7 +214,7 @@ class FinancialStatementType(Base):
     
     __tablename__ = "financial_statement_types"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     type_name = Column(String(100), nullable=False)
     type_code = Column(String(20), nullable=False, unique=True)
     description = Column(Text)

@@ -3,7 +3,7 @@ User model for authentication and authorization.
 """
 from typing import TYPE_CHECKING
 from sqlalchemy import Column, String, Boolean, DateTime, Text, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
+from app.models.base import GUID
 from sqlalchemy.orm import Session, relationship
 from sqlalchemy import select
 from datetime import datetime
@@ -21,7 +21,7 @@ class User(Base):
     
     __tablename__ = "users"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     email = Column(String(255), unique=True, index=True, nullable=False)
     hashed_password = Column(String(255), nullable=False)
     first_name = Column(String(100))
@@ -72,3 +72,49 @@ class User(Base):
     
     def __repr__(self):
         return f"<User {self.email}>"
+
+class MFADevice(Base):
+    """Multi-factor authentication device model."""
+    
+    __tablename__ = "mfa_devices"
+    
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    user_id = Column(GUID(), ForeignKey("users.id"), nullable=False)
+    device_name = Column(String(100), nullable=False)
+    device_type = Column(String(20), nullable=False)  # totp, sms, email
+    secret_key = Column(String(255))  # For TOTP
+    phone_number = Column(String(20))  # For SMS
+    email = Column(String(255))  # For email
+    backup_codes = Column(Text)  # JSON array of backup codes
+    is_active = Column(Boolean, default=True)
+    is_verified = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    last_used = Column(DateTime)
+    
+    # Relationships
+    user = relationship("User", viewonly=True)
+    
+    def __repr__(self):
+        return f"<MFADevice {self.device_name} ({self.device_type})>"
+
+class MFAAttempt(Base):
+    """MFA attempt log model."""
+    
+    __tablename__ = "mfa_attempts"
+    
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    user_id = Column(GUID(), ForeignKey("users.id"), nullable=False)
+    device_id = Column(GUID(), ForeignKey("mfa_devices.id"), nullable=False)
+    attempt_type = Column(String(20), nullable=False)  # totp, sms, email, backup
+    code_used = Column(String(10))  # Partial code for logging
+    is_successful = Column(Boolean, nullable=False)
+    ip_address = Column(String(45))
+    user_agent = Column(Text)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    user = relationship("User", viewonly=True)
+    device = relationship("MFADevice", viewonly=True)
+    
+    def __repr__(self):
+        return f"<MFAAttempt {self.attempt_type} {'SUCCESS' if self.is_successful else 'FAILED'}>"

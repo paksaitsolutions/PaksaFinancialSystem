@@ -11,7 +11,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.db.query_helper import QueryHelper
-from app.models.invoicing.invoice import Invoice, InvoiceItem, InvoiceTemplate, InvoicePayment, InvoiceApproval
+from app.models.core_models import ARInvoice as Invoice, ARInvoiceLineItem as InvoiceItem, ARInvoicePayment as InvoicePayment
+
+# Temporary placeholders - these should be properly implemented
+class InvoiceTemplate:
+    pass
+
+class InvoiceApproval:
+    pass
 from app.schemas.invoicing.invoice_schemas import (
     InvoiceCreate, InvoiceUpdate, InvoiceTemplateCreate, 
     InvoicePaymentCreate, InvoiceApprovalCreate

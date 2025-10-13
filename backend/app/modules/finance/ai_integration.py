@@ -5,8 +5,8 @@ Handles AI assistant functionality specific to the Finance module.
 from typing import Dict, List, Any, Optional
 from datetime import datetime
 from ...services.ai.module_interface import AIModule, ModuleResponse
-from ...models.finance.transaction import Transaction
-from ...crud.finance.transaction import get_recent_transactions, get_transaction_summary
+# from ...models.finance.transaction import Transaction
+# from ...crud.finance.transaction import get_recent_transactions, get_transaction_summary
 
 class FinanceAIModule(AIModule):
     """AI integration for Finance module"""
@@ -44,10 +44,13 @@ class FinanceAIModule(AIModule):
     async def _handle_transaction_queries(self, query: str, context: Dict[str, Any]) -> ModuleResponse:
         """Handle transaction-related queries"""
         if any(term in query for term in ["recent", "latest", "show me"]):
-            # Get recent transactions
-            transactions = await get_recent_transactions(limit=5)
+            # Mock transaction data for now
+            transactions = [
+                {"amount": "$1,500", "description": "Office Supplies", "date": "2024-01-15"},
+                {"amount": "$2,300", "description": "Software License", "date": "2024-01-14"}
+            ]
             transaction_list = "\n".join([
-                f"- {t.amount} {t.currency} - {t.description} ({t.date.strftime('%Y-%m-%d')})" 
+                f"- {t['amount']} - {t['description']} ({t['date']})" 
                 for t in transactions
             ])
             

@@ -6,7 +6,7 @@ from decimal import Decimal
 from enum import Enum as PyEnum
 from sqlalchemy import Column, Date, DateTime, Enum, ForeignKey, Numeric, String, Text, Boolean, Integer, JSON
 from sqlalchemy.orm import relationship, validates
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from app.models.base import GUID, JSONB
 import uuid
 
 <<<<<<< HEAD:backend/app/modules/core_financials/payroll/models/payroll_components.py
@@ -31,7 +31,7 @@ class Timesheet(PayrollBase, Base):
     __tablename__ = "payroll_timesheets"
 
     id = Column(
-        UUID(as_uuid=True),
+        GUID(),
         primary_key=True,
         default=uuid.uuid4,
         index=True
@@ -40,7 +40,7 @@ class Timesheet(PayrollBase, Base):
     # Timesheet identification
     timesheet_number = Column(String(50), unique=True, index=True, nullable=False)
     employee_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_employees.id'), 
         nullable=False,
         index=True
@@ -71,7 +71,7 @@ class Timesheet(PayrollBase, Base):
     submitted_at = Column(DateTime, nullable=True)
     approved_at = Column(DateTime, nullable=True)
     approved_by_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_employees.id'), 
         nullable=True,
         index=True
@@ -123,7 +123,7 @@ class TimesheetEntry(PayrollBase, Base):
     __tablename__ = "payroll_timesheet_entries"
 
     id = Column(
-        UUID(as_uuid=True),
+        GUID(),
         primary_key=True,
         default=uuid.uuid4,
         index=True
@@ -131,7 +131,7 @@ class TimesheetEntry(PayrollBase, Base):
     
     # Parent timesheet
     timesheet_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_timesheets.id'), 
         nullable=False,
         index=True
@@ -140,13 +140,13 @@ class TimesheetEntry(PayrollBase, Base):
     # Entry details
     entry_date = Column(Date, nullable=False, index=True)
     project_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_projects.id'), 
         nullable=True,
         index=True
     )
     task_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_tasks.id'), 
         nullable=True,
         index=True
@@ -194,7 +194,7 @@ class PayrollEarning(PayrollBase, Base):
     __tablename__ = "payroll_earnings"
 
     id = Column(
-        UUID(as_uuid=True),
+        GUID(),
         primary_key=True,
         default=uuid.uuid4,
         index=True
@@ -202,7 +202,7 @@ class PayrollEarning(PayrollBase, Base):
     
     # Parent entry
     payroll_entry_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_entries.id'), 
         nullable=False,
         index=True
@@ -210,7 +210,7 @@ class PayrollEarning(PayrollBase, Base):
     
     # Earning details
     earning_code_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_earning_codes.id'), 
         nullable=False,
         index=True
@@ -227,7 +227,7 @@ class PayrollEarning(PayrollBase, Base):
     
     # GL posting
     gl_account_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_gl_accounts.id'), 
         nullable=True,
         index=True
@@ -251,7 +251,7 @@ class PayrollDeduction(PayrollBase, Base):
     __tablename__ = "payroll_deductions"
 
     id = Column(
-        UUID(as_uuid=True),
+        GUID(),
         primary_key=True,
         default=uuid.uuid4,
         index=True
@@ -259,7 +259,7 @@ class PayrollDeduction(PayrollBase, Base):
     
     # Parent entry
     payroll_entry_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_entries.id'), 
         nullable=False,
         index=True
@@ -267,7 +267,7 @@ class PayrollDeduction(PayrollBase, Base):
     
     # Deduction details
     deduction_code_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_deduction_codes.id'), 
         nullable=False,
         index=True
@@ -283,7 +283,7 @@ class PayrollDeduction(PayrollBase, Base):
     
     # GL posting
     gl_account_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_gl_accounts.id'), 
         nullable=True,
         index=True
@@ -307,7 +307,7 @@ class PayrollTax(PayrollBase, Base):
     __tablename__ = "payroll_taxes"
 
     id = Column(
-        UUID(as_uuid=True),
+        GUID(),
         primary_key=True,
         default=uuid.uuid4,
         index=True
@@ -315,7 +315,7 @@ class PayrollTax(PayrollBase, Base):
     
     # Parent entry
     payroll_entry_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_entries.id'), 
         nullable=False,
         index=True
@@ -323,7 +323,7 @@ class PayrollTax(PayrollBase, Base):
     
     # Tax details
     tax_code_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_tax_codes.id'), 
         nullable=False,
         index=True
@@ -336,13 +336,13 @@ class PayrollTax(PayrollBase, Base):
     
     # GL posting
     employee_liability_account_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_gl_accounts.id'), 
         nullable=True,
         index=True
     )
     employer_liability_account_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_gl_accounts.id'), 
         nullable=True,
         index=True
@@ -373,7 +373,7 @@ class PayrollBenefit(PayrollBase, Base):
     __tablename__ = "payroll_benefits"
 
     id = Column(
-        UUID(as_uuid=True),
+        GUID(),
         primary_key=True,
         default=uuid.uuid4,
         index=True
@@ -381,7 +381,7 @@ class PayrollBenefit(PayrollBase, Base):
     
     # Parent entry
     payroll_entry_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_entries.id'), 
         nullable=False,
         index=True
@@ -389,7 +389,7 @@ class PayrollBenefit(PayrollBase, Base):
     
     # Benefit details
     benefit_plan_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_benefit_plans.id'), 
         nullable=False,
         index=True
@@ -401,13 +401,13 @@ class PayrollBenefit(PayrollBase, Base):
     
     # GL posting
     employee_contra_account_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_gl_accounts.id'), 
         nullable=True,
         index=True
     )
     employer_contra_account_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_gl_accounts.id'), 
         nullable=True,
         index=True

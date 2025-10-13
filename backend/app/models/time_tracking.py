@@ -6,7 +6,7 @@ from decimal import Decimal
 from enum import Enum as PyEnum
 from sqlalchemy import Column, Date, DateTime, Enum, ForeignKey, Numeric, String, Text, Boolean, Integer, Time, Interval, Table
 from sqlalchemy.orm import relationship, validates
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from app.models.base import GUID, JSONB
 import uuid
 
 <<<<<<< HEAD:backend/app/modules/core_financials/payroll/models/time_tracking.py
@@ -51,7 +51,7 @@ class TimeTrackingProject(PayrollBase, Base):
     __tablename__ = "payroll_time_tracking_projects"
 
     id = Column(
-        UUID(as_uuid=True),
+        GUID(),
         primary_key=True,
         default=uuid.uuid4,
         index=True
@@ -64,7 +64,7 @@ class TimeTrackingProject(PayrollBase, Base):
     
     # Project details
     client_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_clients.id'), 
         nullable=True,
         index=True
@@ -126,7 +126,7 @@ class TimeTrackingTask(PayrollBase, Base):
     __tablename__ = "payroll_time_tracking_tasks"
 
     id = Column(
-        UUID(as_uuid=True),
+        GUID(),
         primary_key=True,
         default=uuid.uuid4,
         index=True
@@ -134,13 +134,13 @@ class TimeTrackingTask(PayrollBase, Base):
     
     # References
     project_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_time_tracking_projects.id'), 
         nullable=False,
         index=True
     )
     parent_task_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_time_tracking_tasks.id'), 
         nullable=True,
         index=True
@@ -203,7 +203,7 @@ class TimeEntry(PayrollBase, Base):
     __tablename__ = "payroll_time_entries"
 
     id = Column(
-        UUID(as_uuid=True),
+        GUID(),
         primary_key=True,
         default=uuid.uuid4,
         index=True
@@ -211,25 +211,25 @@ class TimeEntry(PayrollBase, Base):
     
     # References
     employee_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_employees.id'), 
         nullable=False,
         index=True
     )
     project_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_time_tracking_projects.id'), 
         nullable=False,
         index=True
     )
     task_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_time_tracking_tasks.id'), 
         nullable=True,
         index=True
     )
     timesheet_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_timesheets.id'), 
         nullable=True,
         index=True
@@ -263,7 +263,7 @@ class TimeEntry(PayrollBase, Base):
     
     # Approval
     approved_by_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_employees.id'), 
         nullable=True,
         index=True
@@ -279,13 +279,13 @@ class TimeEntry(PayrollBase, Base):
     
     # System fields
     created_by_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_employees.id'), 
         nullable=False,
         index=True
     )
     last_modified_by_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_employees.id'), 
         nullable=True,
         index=True
@@ -373,7 +373,7 @@ class Timesheet(PayrollBase, Base):
     __tablename__ = "payroll_timesheets"
 
     id = Column(
-        UUID(as_uuid=True),
+        GUID(),
         primary_key=True,
         default=uuid.uuid4,
         index=True
@@ -381,7 +381,7 @@ class Timesheet(PayrollBase, Base):
     
     # References
     employee_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_employees.id'), 
         nullable=False,
         index=True
@@ -411,21 +411,21 @@ class Timesheet(PayrollBase, Base):
     # Approval
     submitted_at = Column(DateTime, nullable=True)
     submitted_by_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_employees.id'), 
         nullable=True,
         index=True
     )
     approved_at = Column(DateTime, nullable=True)
     approved_by_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_employees.id'), 
         nullable=True,
         index=True
     )
     rejected_at = Column(DateTime, nullable=True)
     rejected_by_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_employees.id'), 
         nullable=True,
         index=True
@@ -435,7 +435,7 @@ class Timesheet(PayrollBase, Base):
     # Processing
     processed_at = Column(DateTime, nullable=True)
     processed_by_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_employees.id'), 
         nullable=True,
         index=True

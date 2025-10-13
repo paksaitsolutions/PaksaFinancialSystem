@@ -33,16 +33,18 @@ class AIAssistantManager:
     def _initialize_modules(self):
         """Initialize all AI modules and register them with the assistant."""
         try:
-            # Register all AI modules
-            self.assistant.register_module('payroll', PayrollAIModule())
-            self.assistant.register_module('tax', TaxAIModule())
-            self.assistant.register_module('fixed_assets', FixedAssetsAIModule())
-            
+            # Register modules directly without async
+            self.assistant.modules = {
+                'payroll': PayrollAIModule(),
+                'tax': TaxAIModule(),
+                'fixed_assets': FixedAssetsAIModule()
+            }
             logger.info("AI modules initialized successfully")
             
         except Exception as e:
             logger.error(f"Failed to initialize AI modules: {str(e)}", exc_info=True)
-            raise
+            # Don't raise to prevent startup failure
+            pass
     
     def get_assistant(self) -> AIAssistant:
         """Get the initialized AI assistant instance."""

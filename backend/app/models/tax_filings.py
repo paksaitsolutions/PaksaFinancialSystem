@@ -9,7 +9,7 @@ from sqlalchemy import (
     Numeric, String, Text, Boolean, Integer, JSON
 )
 from sqlalchemy.orm import relationship, validates
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from app.models.base import GUID, JSONB
 import uuid
 
 <<<<<<< HEAD:backend/app/modules/core_financials/payroll/models/tax_filings.py
@@ -47,7 +47,7 @@ class TaxFiling(PayrollBase, Base):
     __tablename__ = "payroll_tax_filings"
 
     id = Column(
-        UUID(as_uuid=True),
+        GUID(),
         primary_key=True,
         default=uuid.uuid4,
         index=True
@@ -56,7 +56,7 @@ class TaxFiling(PayrollBase, Base):
     # Filing identification
     filing_reference = Column(String(50), unique=True, index=True, nullable=False)
     tax_agency_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_tax_agencies.id'), 
         nullable=False,
         index=True
@@ -158,7 +158,7 @@ class TaxFilingDetail(PayrollBase, Base):
     __tablename__ = "payroll_tax_filing_details"
 
     id = Column(
-        UUID(as_uuid=True),
+        GUID(),
         primary_key=True,
         default=uuid.uuid4,
         index=True
@@ -166,7 +166,7 @@ class TaxFilingDetail(PayrollBase, Base):
     
     # Parent filing
     tax_filing_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_tax_filings.id'), 
         nullable=False,
         index=True
@@ -174,7 +174,7 @@ class TaxFilingDetail(PayrollBase, Base):
     
     # Tax code
     tax_code_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_tax_codes.id'), 
         nullable=False,
         index=True
@@ -182,7 +182,7 @@ class TaxFilingDetail(PayrollBase, Base):
     
     # Employee information
     employee_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_employees.id'), 
         nullable=False,
         index=True
@@ -214,7 +214,7 @@ class TaxPayment(PayrollBase, Base):
     __tablename__ = "payroll_tax_payments"
 
     id = Column(
-        UUID(as_uuid=True),
+        GUID(),
         primary_key=True,
         default=uuid.uuid4,
         index=True
@@ -222,7 +222,7 @@ class TaxPayment(PayrollBase, Base):
     
     # Parent filing
     tax_filing_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_tax_filings.id'), 
         nullable=False,
         index=True
@@ -246,7 +246,7 @@ class TaxPayment(PayrollBase, Base):
     
     # Bank details
     bank_account_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_bank_accounts.id'), 
         nullable=True,
         index=True
@@ -259,7 +259,7 @@ class TaxPayment(PayrollBase, Base):
     
     # GL posting
     gl_journal_entry_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_journal_entries.id'), 
         nullable=True,
         index=True

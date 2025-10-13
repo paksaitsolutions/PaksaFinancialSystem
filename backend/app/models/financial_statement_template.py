@@ -13,7 +13,7 @@ from sqlalchemy import (
     Column, String, Boolean, ForeignKey, 
     DateTime, Enum as SQLEnum, Text, JSON, UniqueConstraint, Index
 )
-from sqlalchemy.dialects.postgresql import UUID as PG_UUID, JSONB
+from app.models.base import GUID as PG_UUID, JSONB
 from sqlalchemy.orm import relationship, validates
 
 <<<<<<< HEAD:backend/app/modules/core_financials/accounting/models/financial_statement_template.py
@@ -51,7 +51,7 @@ class FinancialStatementTemplate(Base):
         {"schema": "accounting"}
     )
 
-    id = Column(PG_UUID(as_uuid=True), primary_key=True, index=True, default=uuid4)
+    id = Column(PG_GUID(), primary_key=True, index=True, default=uuid4)
     name = Column(String(255), nullable=False, index=True)
     description = Column(Text, nullable=True)
     template_type = Column(SQLEnum(TemplateType), nullable=False, index=True)
@@ -59,7 +59,7 @@ class FinancialStatementTemplate(Base):
     is_system = Column(Boolean, default=False, nullable=False)
     
     # Company this template belongs to (null for system templates)
-    company_id = Column(PG_UUID(as_uuid=True), ForeignKey("core.companies.id"), nullable=True, index=True)
+    company_id = Column(PG_GUID(), ForeignKey("core.companies.id"), nullable=True, index=True)
     
     # Structure definition
     structure = Column(JSONB, nullable=False, default=dict)
@@ -70,8 +70,8 @@ class FinancialStatementTemplate(Base):
     # Audit fields
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-    created_by = Column(PG_UUID(as_uuid=True), nullable=True)
-    updated_by = Column(PG_UUID(as_uuid=True), nullable=True)
+    created_by = Column(PG_GUID(), nullable=True)
+    updated_by = Column(PG_GUID(), nullable=True)
     
     # Relationships
     company = relationship("Company", back_populates="financial_statement_templates")
@@ -109,8 +109,8 @@ class FinancialStatementLineTemplate(Base):
         {"schema": "accounting"}
     )
     
-    id = Column(PG_UUID(as_uuid=True), primary_key=True, index=True, default=uuid4)
-    template_id = Column(PG_UUID(as_uuid=True), ForeignKey("accounting.financial_statement_templates.id"), nullable=False)
+    id = Column(PG_GUID(), primary_key=True, index=True, default=uuid4)
+    template_id = Column(PG_GUID(), ForeignKey("accounting.financial_statement_templates.id"), nullable=False)
     
     # Line item properties
     name = Column(String(255), nullable=False)
@@ -124,7 +124,7 @@ class FinancialStatementLineTemplate(Base):
     account_code = Column(String(50), nullable=True, index=True)
     
     # For section headers and organization
-    parent_id = Column(PG_UUID(as_uuid=True), ForeignKey("accounting.financial_statement_line_templates.id"), nullable=True)
+    parent_id = Column(PG_GUID(), ForeignKey("accounting.financial_statement_line_templates.id"), nullable=True)
     sort_order = Column(Integer, default=0, nullable=False)
     level = Column(Integer, default=0, nullable=False)
     

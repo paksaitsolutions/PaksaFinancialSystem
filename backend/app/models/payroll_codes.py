@@ -6,7 +6,7 @@ from decimal import Decimal
 from enum import Enum as PyEnum
 from sqlalchemy import Column, Date, DateTime, Enum, ForeignKey, Numeric, String, Text, Boolean, Integer, JSON
 from sqlalchemy.orm import relationship, validates
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from app.models.base import GUID, JSONB
 import uuid
 
 <<<<<<< HEAD:backend/app/modules/core_financials/payroll/models/payroll_codes.py
@@ -22,7 +22,7 @@ class EarningCode(PayrollBase, Base):
     __tablename__ = "payroll_earning_codes"
 
     id = Column(
-        UUID(as_uuid=True),
+        GUID(),
         primary_key=True,
         default=uuid.uuid4,
         index=True
@@ -52,7 +52,7 @@ class EarningCode(PayrollBase, Base):
     
     # GL Account mapping
     gl_account_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_gl_accounts.id'), 
         nullable=True,
         index=True
@@ -86,7 +86,7 @@ class DeductionCode(PayrollBase, Base):
     __tablename__ = "payroll_deduction_codes"
 
     id = Column(
-        UUID(as_uuid=True),
+        GUID(),
         primary_key=True,
         default=uuid.uuid4,
         index=True
@@ -126,7 +126,7 @@ class DeductionCode(PayrollBase, Base):
     
     # GL Account mapping
     gl_account_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_gl_accounts.id'), 
         nullable=True,
         index=True
@@ -160,7 +160,7 @@ class TaxCode(PayrollBase, Base):
     __tablename__ = "payroll_tax_codes"
 
     id = Column(
-        UUID(as_uuid=True),
+        GUID(),
         primary_key=True,
         default=uuid.uuid4,
         index=True
@@ -193,13 +193,13 @@ class TaxCode(PayrollBase, Base):
     
     # GL Account mapping
     employee_liability_account_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_gl_accounts.id'), 
         nullable=True,
         index=True
     )
     employer_liability_account_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_gl_accounts.id'), 
         nullable=True,
         index=True
@@ -240,7 +240,7 @@ class BenefitPlan(PayrollBase, Base):
     __tablename__ = "payroll_benefit_plans"
 
     id = Column(
-        UUID(as_uuid=True),
+        GUID(),
         primary_key=True,
         default=uuid.uuid4,
         index=True
@@ -292,13 +292,13 @@ class BenefitPlan(PayrollBase, Base):
     
     # GL Account mapping
     employee_contra_account_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_gl_accounts.id'), 
         nullable=True,
         index=True
     )
     employer_contra_account_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_gl_accounts.id'), 
         nullable=True,
         index=True
@@ -339,7 +339,7 @@ class PayPeriod(PayrollBase, Base):
     __tablename__ = "payroll_pay_periods"
 
     id = Column(
-        UUID(as_uuid=True),
+        GUID(),
         primary_key=True,
         default=uuid.uuid4,
         index=True
@@ -369,7 +369,7 @@ class PayPeriod(PayrollBase, Base):
     # Processing information
     processed_at = Column(DateTime, nullable=True)
     processed_by_id = Column(
-        UUID(as_uuid=True), 
+        GUID(), 
         ForeignKey('payroll_employees.id'), 
         nullable=True,
         index=True

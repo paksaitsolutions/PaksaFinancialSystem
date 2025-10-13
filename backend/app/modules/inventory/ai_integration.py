@@ -5,8 +5,8 @@ Handles AI assistant functionality specific to the Inventory module.
 from typing import Dict, List, Any, Optional
 from datetime import datetime
 from ...services.ai.module_interface import AIModule, ModuleResponse
-from ...models.inventory.item import InventoryItem
-from ...crud.inventory.item import get_low_stock_items, search_items
+from ...models.core_models import InventoryItem
+# from ...crud.inventory.item import get_low_stock_items, search_items
 
 class InventoryAIModule(AIModule):
     """AI integration for Inventory module"""

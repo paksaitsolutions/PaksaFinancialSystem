@@ -10,12 +10,14 @@ router = APIRouter()
 def get_ar_analytics(db: Session = Depends(get_db)):
     """Advanced AR analytics with real-time calculations"""
     return {
-        "total_outstanding": 245750.00,
-        "overdue_amount": 45230.00,
-        "current_month_collections": 89450.00,
-        "active_customers": 127,
-        "average_days_to_pay": 28.5,
-        "collection_efficiency": 94.2
+        "kpis": {
+            "total_outstanding": 245750.00,
+            "overdue_amount": 45230.00,
+            "current_month_collections": 89450.00,
+            "active_customers": 127,
+            "average_days_to_pay": 28.5,
+            "collection_efficiency": 94.2
+        }
     }
 
 @router.get("/customers")
@@ -145,5 +147,41 @@ def get_collection_forecast(db: Session = Depends(get_db)):
         "risk_factors": [
             "3 customers with payment delays",
             "Economic uncertainty in Q1"
+        ]
+    }
+
+@router.get("/dashboard/stats")
+def get_ar_dashboard_stats(db: Session = Depends(get_db)):
+    """Get AR dashboard statistics"""
+    return {
+        "kpis": {
+            "total_outstanding": 245750.00,
+            "overdue_amount": 45230.00,
+            "current_month_collections": 89450.00,
+            "active_customers": 127
+        }
+    }
+
+@router.get("/dashboard/recent-invoices")
+def get_recent_invoices_dashboard(db: Session = Depends(get_db)):
+    """Get recent invoices for dashboard"""
+    return {
+        "invoices": [
+            {
+                "id": "inv_001",
+                "customer": {"name": "Acme Corporation"},
+                "invoice_number": "INV-2024-001",
+                "due_date": "2024-02-14",
+                "total_amount": 5500.00,
+                "status": "sent"
+            },
+            {
+                "id": "inv_002",
+                "customer": {"name": "Global Industries"},
+                "invoice_number": "INV-2024-002",
+                "due_date": "2024-01-25",
+                "total_amount": 3200.00,
+                "status": "paid"
+            }
         ]
     }

@@ -1,5 +1,5 @@
 from sqlalchemy import Column, String, Boolean, Date, JSON, ForeignKey, DateTime, Text
-from sqlalchemy.dialects.postgresql import UUID
+from app.models.base import GUID
 from sqlalchemy.sql import func
 from app.core.db.base import Base
 import uuid
@@ -12,7 +12,7 @@ class TaxExemption(Base):
     """
     __tablename__ = "tax_exemptions"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     exemption_code = Column(String(50), unique=True, nullable=False, index=True)
     description = Column(Text, nullable=False)
     certificate_required = Column(Boolean, default=False)
@@ -23,8 +23,8 @@ class TaxExemption(Base):
     meta_data = Column(JSON, default=dict)
     
     # Relationships
-    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id"), nullable=True)
-    created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    company_id = Column(GUID(), ForeignKey("companies.id"), nullable=True)
+    created_by = Column(GUID(), ForeignKey("users.id"), nullable=False)
     
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())

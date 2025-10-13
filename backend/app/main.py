@@ -171,7 +171,7 @@ except ImportError as e:
     print(f"Warning: Could not import AI router: {e}")
 
 try:
-    from app.api.endpoints.bi_ai.bi_ai_endpoints import router as bi_ai_router
+    from app.api.endpoints.bi_ai import router as bi_ai_router
     app.include_router(bi_ai_router, prefix="/api/v1/bi-ai", tags=["bi-ai"])
 except ImportError as e:
     print(f"Warning: Could not import BI-AI router: {e}")

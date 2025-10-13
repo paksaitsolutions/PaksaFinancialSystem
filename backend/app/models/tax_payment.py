@@ -4,7 +4,7 @@ from typing import Optional
 from uuid import UUID, uuid4
 
 from sqlalchemy import Column, DateTime, Enum as SQLEnum, ForeignKey, Numeric, String
-from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+from app.models.base import GUID as PG_UUID
 from sqlalchemy.orm import relationship
 
 from app.core.db.base import Base
@@ -25,8 +25,8 @@ class TaxPayment(Base, TimestampMixin):
     """Model for tracking tax payments"""
     __tablename__ = "tax_payments"
 
-    id = Column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tax_return_id = Column(PG_UUID(as_uuid=True), ForeignKey("tax_returns.id"), nullable=False)
+    id = Column(PG_GUID(), primary_key=True, default=uuid4)
+    tax_return_id = Column(PG_GUID(), ForeignKey("tax_returns.id"), nullable=False)
     payment_date = Column(DateTime, nullable=False)
     amount = Column(Numeric(15, 2), nullable=False)
     currency = Column(String(3), nullable=False, default="USD")
@@ -34,7 +34,7 @@ class TaxPayment(Base, TimestampMixin):
     reference_number = Column(String(100), nullable=True)
     status = Column(SQLEnum(PaymentStatus), default=PaymentStatus.PENDING, nullable=False)
     notes = Column(String(500), nullable=True)
-    created_by = Column(PG_UUID(as_uuid=True), nullable=False)
+    created_by = Column(PG_GUID(), nullable=False)
     
     # Relationships
     tax_return = relationship("TaxReturn")
