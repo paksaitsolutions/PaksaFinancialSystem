@@ -929,6 +929,8 @@ async def get_system_status(db=Depends(get_db), user=Depends(get_current_user)):
 
 if __name__ == "__main__":
     import uvicorn
+    import os
 
-    print("🚀 Starting Paksa Financial System - Production Mode")
-    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
+    port = int(os.environ.get("PORT", 8000))
+    print(f"🚀 Starting Paksa Financial System - Production Mode on port {port}")
+    uvicorn.run(app, host="0.0.0.0", port=port, log_level="info")
