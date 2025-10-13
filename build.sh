@@ -7,7 +7,7 @@ echo "Starting build process..."
 
 # Detect platform and install requirements
 echo "Installing Python dependencies..."
-python install_requirements.py
+pip install -r requirements-minimal.txt
 
 # Navigate to backend directory
 cd backend

@@ -4,7 +4,7 @@ services:
     name: paksa-financial-backend
     env: python
     buildCommand: |
-      python install_requirements.py &&
+      pip install -r requirements-minimal.txt &&
       cd backend &&
       python -m alembic upgrade head
     startCommand: |
@@ -12,7 +12,7 @@ services:
       uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
-        value: 3.11.0
+        value: 3.10.0
       - key: DATABASE_URL
         fromDatabase:
           name: paksa-financial-db
