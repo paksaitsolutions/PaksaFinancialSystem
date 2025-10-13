@@ -125,9 +125,9 @@ DEFAULT_TENANT_ID = "12345678-1234-5678-9012-123456789012"
 # Remove duplicate implementation as we're importing it from core.security
 
 
-# Root endpoint
-@app.get("/")
-async def root():
+# API info endpoint
+@app.get("/api/info")
+async def api_info():
     return {
         "message": "Paksa Financial System - Production Environment",
         "version": "1.0.0",
@@ -2329,6 +2329,14 @@ async def get_system_status(db=Depends(get_db)):
         "last_backup": datetime.utcnow().isoformat(),
     }
 
+
+# Root route for frontend
+@app.get("/")
+async def serve_root():
+    try:
+        return FileResponse("static/index.html")
+    except:
+        return HTMLResponse("<h1>Frontend not built. Run build.sh first</h1>")
 
 # Catch-all route for frontend SPA
 @app.get("/{full_path:path}")
