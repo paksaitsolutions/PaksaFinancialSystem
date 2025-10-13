@@ -62,16 +62,8 @@ async def lifespan(app: FastAPI):
         init_db()
         print("Database initialized successfully")
         
-        # Initialize AI/BI mock data
-        try:
-            from app.db.init_ai_bi_data import init_ai_bi_mock_data
-            from app.core.database import SessionLocal
-            db = SessionLocal()
-            init_ai_bi_mock_data(db)
-            db.close()
-            print("AI/BI mock data initialized successfully")
-        except Exception as ai_error:
-            print(f"AI/BI data initialization failed: {ai_error}")
+        # Skip AI/BI initialization for memory optimization
+        print("Skipping AI/BI initialization to reduce memory usage")
         
         print(
             "All 15 modules operational: GL, AP, AR, Budget, Cash, HRM, Inventory, Payroll, Tax, Fixed Assets, Reports, Admin, AI/BI Assistant"
@@ -111,85 +103,8 @@ app.add_middleware(
     expose_headers=["X-Total-Count", "X-Rate-Limit-Remaining"]
 )
 
-# Mount versioned API under /api/v1
-try:
-    from app.api.api_v1.api import api_router as api_v1_router
-    app.include_router(api_v1_router, prefix="/api/v1")
-except ImportError as e:
-    print(f"Warning: Could not import API v1 router: {e}")
-
-# Include comprehensive payroll router
-app.include_router(payroll_router, prefix="/api/v1/payroll", tags=["payroll"])
-
-# Include budget router
-app.include_router(budget_router, prefix="/api/v1")
-
-# Include accounting router
-app.include_router(accounting_router, prefix="/api/v1/accounting", tags=["accounting"])
-
-# Include enhanced authentication
-try:
-    from app.api.auth_enhanced import router as auth_enhanced_router
-    app.include_router(auth_enhanced_router, prefix="/api/v1/auth", tags=["authentication"])
-except ImportError as e:
-    print(f"Warning: Could not import auth_enhanced router: {e}")
-
-# Include advanced GL endpoints
-try:
-    from app.api.endpoints.advanced_gl import router as advanced_gl_router
-    app.include_router(advanced_gl_router, prefix="/api/v1/gl", tags=["general-ledger"])
-except ImportError as e:
-    print(f"Warning: Could not import advanced GL router: {e}")
-
-# Include super admin router
+# Core routers only for memory optimization
 app.include_router(super_admin_router, prefix="/api/v1/super-admin", tags=["super-admin"])
-
-# Include approval workflows
-from app.api.approval_workflows import router as approval_router
-app.include_router(approval_router, prefix="/api/v1/approvals", tags=["approvals"])
-
-# Include dashboard analytics
-from app.api.dashboard_analytics import router as analytics_router
-app.include_router(analytics_router, prefix="/api/v1/analytics", tags=["analytics"])
-
-# Include enhanced financial API
-from app.api.financial_enhanced import router as financial_enhanced_router
-app.include_router(financial_enhanced_router, prefix="/api/v1/financial", tags=["financial"])
-
-# Include HRM endpoints
-from app.api.endpoints.hrm import router as hrm_router
-app.include_router(hrm_router, prefix="/api/v1/hrm", tags=["hrm"])
-
-# Include WebSocket endpoints
-from app.api.websockets import router as websocket_router
-app.include_router(websocket_router)
-
-# Include AI/BI endpoints
-try:
-    from app.ai.api.ai_endpoints import router as ai_router
-    app.include_router(ai_router, prefix="/api/v1", tags=["ai"])
-except ImportError as e:
-    print(f"Warning: Could not import AI router: {e}")
-
-try:
-    from app.api.endpoints.bi_ai import router as bi_ai_router
-    app.include_router(bi_ai_router, prefix="/api/v1/bi-ai", tags=["bi-ai"])
-except ImportError as e:
-    print(f"Warning: Could not import BI-AI router: {e}")
-
-# Include comprehensive AI/BI endpoints
-try:
-    from app.api.endpoints.ai_bi_comprehensive import router as ai_bi_comprehensive_router
-    app.include_router(ai_bi_comprehensive_router, prefix="/api/v1/bi-ai", tags=["ai-bi-comprehensive"])
-except ImportError as e:
-    print(f"Warning: Could not import comprehensive AI-BI router: {e}")
-
-# Include missing API endpoints
-from app.api.endpoints.bi_ai import router as bi_ai_router
-app.include_router(bi_ai_router, prefix="/bi-ai", tags=["bi-ai"])
-
-from app.api.endpoints.gl_accounts import router as gl_accounts_router
-app.include_router(gl_accounts_router, prefix="/gl", tags=["gl"])
 
 # Default tenant for demo
 DEFAULT_TENANT_ID = "12345678-1234-5678-9012-123456789012"
