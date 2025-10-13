@@ -1,23 +1,22 @@
 #!/bin/bash
-# Build script for Render.com deployment
 
-set -e  # Exit on any error
+echo "Building Paksa Financial System - Unified Deployment"
 
-echo "Starting build process..."
+# Build frontend
+echo "Building frontend..."
+cd frontend
+npm install
+npm run build
 
-# Detect platform and install requirements
-echo "Installing Python dependencies..."
-pip install -r requirements-minimal.txt
+# Copy frontend build to backend
+echo "Copying frontend to backend..."
+cd ..
+rm -rf backend/static
+cp -r frontend/dist backend/static
 
-# Navigate to backend directory
+# Install backend dependencies
+echo "Installing backend dependencies..."
 cd backend
+pip install -r requirements.txt
 
-# Run database migrations
-echo "Running database migrations..."
-python -m alembic upgrade head
-
-# Initialize database if needed
-echo "Initializing database..."
-python init_db.py
-
-echo "Build completed successfully!"
+echo "Build complete! Deploy the backend folder."

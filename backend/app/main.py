@@ -8,7 +8,7 @@ from fastapi import FastAPI, Depends, HTTPException, status, Form, Body
 from fastapi.security import OAuth2PasswordBearer, HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi.responses import JSONResponse, FileResponse, HTMLResponse
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.openapi.utils import get_openapi
 from sqlalchemy.orm import Session
@@ -105,6 +105,14 @@ app.add_middleware(
 
 # Core routers only for memory optimization
 app.include_router(super_admin_router, prefix="/api/v1/super-admin", tags=["super-admin"])
+
+# Serve frontend static files
+try:
+    app.mount("/assets", StaticFiles(directory="static/assets"), name="assets")
+    app.mount("/js", StaticFiles(directory="static/js"), name="js")
+    app.mount("/css", StaticFiles(directory="static/css"), name="css")
+except:
+    print("Frontend static folder not found - serving backend only")
 
 # Default tenant for demo
 DEFAULT_TENANT_ID = "12345678-1234-5678-9012-123456789012"
@@ -2321,6 +2329,16 @@ async def get_system_status(db=Depends(get_db)):
         "last_backup": datetime.utcnow().isoformat(),
     }
 
+
+# Catch-all route for frontend SPA
+@app.get("/{full_path:path}")
+async def serve_frontend(full_path: str):
+    if full_path.startswith("api/") or full_path.startswith("docs") or full_path.startswith("redoc"):
+        raise HTTPException(status_code=404, detail="API endpoint not found")
+    try:
+        return FileResponse("static/index.html")
+    except:
+        return HTMLResponse("<h1>Frontend not built. Run build.sh first</h1>")
 
 if __name__ == "__main__":
     import uvicorn
