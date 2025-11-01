@@ -1,29 +1,36 @@
 """
-Notification service.
+Notification service for sending emails, SMS, and push notifications.
 """
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from typing import Dict, List, Any, Optional
 from datetime import datetime
-import httpx
 
 from app.core.config import settings
 from app.core.logging import logger
+
+# Try to import httpx, but make it optional
+try:
+    import httpx
+    HTTPX_AVAILABLE = True
+except ImportError:
+    HTTPX_AVAILABLE = False
 
 class EmailService:
     """Email notification service."""
     
     def __init__(self):
-        self.smtp_server = settings.SMTP_SERVER
-        self.smtp_port = settings.SMTP_PORT
-        self.smtp_username = settings.SMTP_USERNAME
-        self.smtp_password = settings.SMTP_PASSWORD
+        self.smtp_server = getattr(settings, 'SMTP_SERVER', 'localhost')
+        self.smtp_port = getattr(settings, 'SMTP_PORT', 587)
+        self.smtp_username = getattr(settings, 'SMTP_USERNAME', '')
+        self.smtp_password = getattr(settings, 'SMTP_PASSWORD', '')
+        self.from_email = getattr(settings, 'FROM_EMAIL', 'noreply@paksa.com')
     
     async def send_email(
-        self,
-        to_email: str,
-        subject: str,
+        self, 
+        to_email: str, 
+        subject: str, 
         body: str,
         html_body: Optional[str] = None
     ) -> bool:
@@ -31,7 +38,7 @@ class EmailService:
         try:
             msg = MIMEMultipart('alternative')
             msg['Subject'] = subject
-            msg['From'] = self.smtp_username
+            msg['From'] = self.from_email
             msg['To'] = to_email
             
             # Add text part
@@ -45,107 +52,164 @@ class EmailService:
             
             # Send email
             with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
-                server.starttls()
-                server.login(self.smtp_username, self.smtp_password)
+                if self.smtp_username and self.smtp_password:
+                    server.starttls()
+                    server.login(self.smtp_username, self.smtp_password)
                 server.send_message(msg)
             
             logger.info(f"Email sent successfully to {to_email}")
             return True
             
         except Exception as e:
-            logger.error(f"Failed to send email to {to_email}: {str(e)}")
+            logger.error(f"Failed to send email to {to_email}: {e}")
             return False
 
-class SlackService:
-    """Slack notification service."""
+class SMSService:
+    """SMS notification service."""
     
     def __init__(self):
-        self.webhook_url = settings.SLACK_WEBHOOK_URL
+        self.api_key = getattr(settings, 'SMS_API_KEY', '')
+        self.api_url = getattr(settings, 'SMS_API_URL', '')
     
-    async def send_message(self, message: str, channel: Optional[str] = None) -> bool:
-        """Send Slack message."""
+    async def send_sms(self, phone_number: str, message: str) -> bool:
+        """Send SMS notification."""
+        if not HTTPX_AVAILABLE:
+            logger.warning("SMS service not available - httpx not installed")
+            return False
+        
+        if not self.api_key or not self.api_url:
+            logger.warning("SMS service not configured")
+            return False
+        
         try:
-            payload = {"text": message}
-            if channel:
-                payload["channel"] = channel
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    self.api_url,
+                    json={
+                        "to": phone_number,
+                        "message": message
+                    },
+                    headers={"Authorization": f"Bearer {self.api_key}"}
+                )
+                
+                if response.status_code == 200:
+                    logger.info(f"SMS sent successfully to {phone_number}")
+                    return True
+                else:
+                    logger.error(f"Failed to send SMS: {response.text}")
+                    return False
+                    
+        except Exception as e:
+            logger.error(f"Failed to send SMS to {phone_number}: {e}")
+            return False
+
+class PushNotificationService:
+    """Push notification service."""
+    
+    def __init__(self):
+        self.fcm_key = getattr(settings, 'FCM_SERVER_KEY', '')
+        self.fcm_url = "https://fcm.googleapis.com/fcm/send"
+    
+    async def send_push_notification(
+        self, 
+        device_token: str, 
+        title: str, 
+        body: str,
+        data: Optional[Dict[str, Any]] = None
+    ) -> bool:
+        """Send push notification."""
+        if not HTTPX_AVAILABLE:
+            logger.warning("Push notification service not available - httpx not installed")
+            return False
+        
+        if not self.fcm_key:
+            logger.warning("Push notification service not configured")
+            return False
+        
+        try:
+            payload = {
+                "to": device_token,
+                "notification": {
+                    "title": title,
+                    "body": body
+                }
+            }
+            
+            if data:
+                payload["data"] = data
             
             async with httpx.AsyncClient() as client:
-                response = await client.post(self.webhook_url, json=payload)
-                return response.status_code == 200
+                response = await client.post(
+                    self.fcm_url,
+                    json=payload,
+                    headers={
+                        "Authorization": f"key={self.fcm_key}",
+                        "Content-Type": "application/json"
+                    }
+                )
                 
+                if response.status_code == 200:
+                    logger.info(f"Push notification sent successfully to {device_token}")
+                    return True
+                else:
+                    logger.error(f"Failed to send push notification: {response.text}")
+                    return False
+                    
         except Exception as e:
-            logger.error(f"Failed to send Slack message: {str(e)}")
+            logger.error(f"Failed to send push notification to {device_token}: {e}")
             return False
 
 class NotificationService:
-    """Central notification service."""
+    """Main notification service that coordinates all notification types."""
     
     def __init__(self):
         self.email_service = EmailService()
-        self.slack_service = SlackService()
-        self.notification_templates = {
-            "invoice_created": {
-                "subject": "New Invoice Created - {invoice_number}",
-                "body": "A new invoice {invoice_number} has been created for {customer_name}."
-            },
-            "payment_received": {
-                "subject": "Payment Received - {invoice_number}",
-                "body": "Payment of {amount} received for invoice {invoice_number}."
-            },
-            "expense_approved": {
-                "subject": "Expense Approved - {expense_id}",
-                "body": "Your expense report {expense_id} has been approved."
-            },
-            "budget_exceeded": {
-                "subject": "Budget Alert - {department}",
-                "body": "Budget for {department} has exceeded {percentage}% of allocated amount."
-            }
-        }
+        self.sms_service = SMSService()
+        self.push_service = PushNotificationService()
     
     async def send_notification(
         self,
         notification_type: str,
         recipient: str,
-        data: Dict[str, Any],
-        channels: List[str] = ["email"]
+        subject: str,
+        message: str,
+        **kwargs
     ) -> bool:
-        """Send notification through specified channels."""
-        template = self.notification_templates.get(notification_type)
-        if not template:
+        """Send notification via specified type."""
+        if notification_type == "email":
+            return await self.email_service.send_email(
+                recipient, subject, message, kwargs.get('html_body')
+            )
+        elif notification_type == "sms":
+            return await self.sms_service.send_sms(recipient, message)
+        elif notification_type == "push":
+            return await self.push_service.send_push_notification(
+                recipient, subject, message, kwargs.get('data')
+            )
+        else:
             logger.error(f"Unknown notification type: {notification_type}")
             return False
-        
-        subject = template["subject"].format(**data)
-        body = template["body"].format(**data)
-        
-        success = True
-        
-        if "email" in channels:
-            email_success = await self.email_service.send_email(
-                recipient, subject, body
-            )
-            success = success and email_success
-        
-        if "slack" in channels:
-            slack_message = f"*{subject}*\n{body}"
-            slack_success = await self.slack_service.send_message(slack_message)
-            success = success and slack_success
-        
-        return success
     
-    async def send_bulk_notification(
+    async def send_multi_channel_notification(
         self,
-        notification_type: str,
-        recipients: List[str],
-        data: Dict[str, Any],
-        channels: List[str] = ["email"]
+        channels: List[str],
+        recipients: Dict[str, str],
+        subject: str,
+        message: str,
+        **kwargs
     ) -> Dict[str, bool]:
-        """Send notification to multiple recipients."""
+        """Send notification via multiple channels."""
         results = {}
-        for recipient in recipients:
-            results[recipient] = await self.send_notification(
-                notification_type, recipient, data, channels
-            )
+        
+        for channel in channels:
+            if channel in recipients:
+                results[channel] = await self.send_notification(
+                    channel, recipients[channel], subject, message, **kwargs
+                )
+            else:
+                results[channel] = False
+                logger.warning(f"No recipient specified for channel: {channel}")
+        
         return results
 
 notification_service = NotificationService()

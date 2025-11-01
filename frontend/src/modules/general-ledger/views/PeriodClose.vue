@@ -1,17 +1,18 @@
 <template>
-  <div class="period-close">
-    <div class="flex justify-content-between align-items-center mb-4">
-      <div>
-        <h1>Period Close</h1>
-        <Breadcrumb :home="home" :model="breadcrumbItems" />
-      </div>
+  <UnifiedDashboard 
+    title="Period Close" 
+    subtitle="Manage period-end closing process and checklist"
+  >
+    <template #actions>
       <Button 
         icon="pi pi-refresh" 
         label="Refresh" 
         @click="loadData" 
         :loading="loading"
       />
-    </div>
+    </template>
+    
+    <template #content>
 
     <!-- Current Period Status -->
     <Card class="mb-4">
@@ -52,84 +53,81 @@
       </template>
     </Card>
 
-    <!-- Close Checklist -->
-    <div class="grid">
-      <div class="col-12 lg:col-8">
-        <Card>
-          <template #header>
-            <div class="flex justify-content-between align-items-center">
-              <h3>Period Close Checklist</h3>
-              <Dropdown 
-                v-model="selectedPeriod" 
-                :options="periods" 
-                optionLabel="label" 
-                optionValue="value" 
-                placeholder="Select Period"
-                @change="loadChecklist"
-              />
-            </div>
-          </template>
-          <template #content>
-            <div class="space-y-3">
-              <div 
-                v-for="item in checklist" 
-                :key="item.id"
-                class="border-1 border-200 border-round p-3"
-                :class="getItemClass(item.status)"
-              >
-                <div class="flex justify-content-between align-items-start">
-                  <div class="flex-1">
-                    <div class="flex align-items-center mb-2">
-                      <Checkbox 
-                        v-model="item.completed" 
-                        :binary="true" 
-                        @change="updateItemStatus(item)"
-                        :disabled="item.status === 'locked'"
-                      />
-                      <span class="ml-2 font-medium" :class="item.completed ? 'line-through text-500' : ''">{{ item.title }}</span>
-                      <Tag 
-                        v-if="item.priority === 'high'" 
-                        value="High Priority" 
-                        severity="danger" 
-                        class="ml-2"
-                      />
-                    </div>
-                    <p class="text-600 text-sm mb-2">{{ item.description }}</p>
-                    <div class="flex align-items-center text-sm text-500">
-                      <i class="pi pi-user mr-1"></i>
-                      <span class="mr-3">{{ item.assignee }}</span>
-                      <i class="pi pi-calendar mr-1"></i>
-                      <span>Due: {{ formatDate(item.dueDate) }}</span>
-                    </div>
-                  </div>
-                  <div class="flex gap-2">
-                    <Button 
-                      icon="pi pi-eye" 
-                      class="p-button-text p-button-sm" 
-                      @click="viewItem(item)"
+    <!-- Content Grid -->
+    <div class="content-grid">
+      <Card>
+        <template #header>
+          <div class="flex justify-content-between align-items-center">
+            <h3 class="card-title">Period Close Checklist</h3>
+            <Dropdown 
+              v-model="selectedPeriod" 
+              :options="periods" 
+              optionLabel="label" 
+              optionValue="value" 
+              placeholder="Select Period"
+              @change="loadChecklist"
+            />
+          </div>
+        </template>
+        <template #content>
+          <div class="checklist-items">
+            <div 
+              v-for="item in checklist" 
+              :key="item.id"
+              class="checklist-item"
+              :class="getItemClass(item.status)"
+            >
+              <div class="flex justify-content-between align-items-start">
+                <div class="flex-1">
+                  <div class="flex align-items-center mb-2">
+                    <Checkbox 
+                      v-model="item.completed" 
+                      :binary="true" 
+                      @change="updateItemStatus(item)"
+                      :disabled="item.status === 'locked'"
                     />
-                    <Button 
-                      v-if="!item.completed" 
-                      icon="pi pi-play" 
-                      class="p-button-text p-button-sm p-button-success" 
-                      @click="startTask(item)"
+                    <span class="ml-2 font-medium" :class="item.completed ? 'line-through text-500' : ''">{{ item.title }}</span>
+                    <Tag 
+                      v-if="item.priority === 'high'" 
+                      value="High Priority" 
+                      severity="danger" 
+                      class="ml-2"
                     />
                   </div>
+                  <p class="text-600 text-sm mb-2">{{ item.description }}</p>
+                  <div class="flex align-items-center text-sm text-500">
+                    <i class="pi pi-user mr-1"></i>
+                    <span class="mr-3">{{ item.assignee }}</span>
+                    <i class="pi pi-calendar mr-1"></i>
+                    <span>Due: {{ formatDate(item.dueDate) }}</span>
+                  </div>
+                </div>
+                <div class="flex gap-2">
+                  <Button 
+                    icon="pi pi-eye" 
+                    class="p-button-text p-button-sm" 
+                    @click="viewItem(item)"
+                  />
+                  <Button 
+                    v-if="!item.completed" 
+                    icon="pi pi-play" 
+                    class="p-button-text p-button-sm p-button-success" 
+                    @click="startTask(item)"
+                  />
                 </div>
               </div>
             </div>
-          </template>
-        </Card>
-      </div>
+          </div>
+        </template>
+      </Card>
 
-      <!-- Period Summary -->
-      <div class="col-12 lg:col-4">
-        <Card class="mb-4">
+      <div class="sidebar-cards">
+        <Card class="summary-card">
           <template #header>
-            <h3>Period Summary</h3>
+            <h3 class="card-title">Period Summary</h3>
           </template>
           <template #content>
-            <div class="space-y-3">
+            <div class="summary-items">
               <div class="flex justify-content-between">
                 <span>Total Tasks:</span>
                 <span class="font-bold">{{ checklist.length }}</span>
@@ -153,35 +151,34 @@
           </template>
         </Card>
 
-        <!-- Quick Actions -->
         <Card>
           <template #header>
-            <h3>Quick Actions</h3>
+            <h3 class="card-title">Quick Actions</h3>
           </template>
           <template #content>
-            <div class="flex flex-column gap-2">
+            <div class="actions-list">
               <Button 
                 label="Run Trial Balance" 
                 icon="pi pi-calculator" 
-                class="p-button-outlined" 
+                class="action-btn" 
                 @click="runTrialBalance"
               />
               <Button 
                 label="Generate Reports" 
                 icon="pi pi-file-pdf" 
-                class="p-button-outlined" 
+                class="action-btn" 
                 @click="generateReports"
               />
               <Button 
                 label="Review Adjustments" 
                 icon="pi pi-pencil" 
-                class="p-button-outlined" 
+                class="action-btn" 
                 @click="reviewAdjustments"
               />
               <Button 
                 label="Close Period" 
                 icon="pi pi-lock" 
-                class="p-button-danger" 
+                class="action-btn p-button-danger" 
                 @click="confirmClosePeriod"
                 :disabled="completionPercentage < 100"
               />
@@ -272,13 +269,15 @@
         />
       </template>
     </Dialog>
-  </div>
+    </template>
+  </UnifiedDashboard>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
+import UnifiedDashboard from '@/components/ui/UnifiedDashboard.vue'
 
 interface ChecklistItem {
   id: string
@@ -395,8 +394,25 @@ const completionPercentage = computed(() =>
 const loadData = async () => {
   loading.value = true
   try {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    const [statusResponse, checklistResponse] = await Promise.all([
+      fetch('http://localhost:8000/api/v1/gl/period-close/status'),
+      fetch('http://localhost:8000/api/v1/gl/period-close/checklist')
+    ])
+    
+    if (statusResponse.ok) {
+      const statusData = await statusResponse.json()
+      currentPeriod.value = statusData.currentPeriod || 'December 2024'
+      periodStatus.value = statusData.status || 'Open'
+      daysRemaining.value = statusData.daysRemaining || 15
+    }
+    
+    if (checklistResponse.ok) {
+      const checklistData = await checklistResponse.json()
+      checklist.value = checklistData || checklist.value
+    }
+  } catch (error) {
+    console.error('Error loading period close data:', error)
+    // Keep using mock data on error
   } finally {
     loading.value = false
   }
@@ -407,14 +423,30 @@ const loadChecklist = () => {
   console.log('Loading checklist for:', selectedPeriod.value)
 }
 
-const updateItemStatus = (item: ChecklistItem) => {
-  item.status = item.completed ? 'completed' : 'open'
-  toast.add({
-    severity: 'success',
-    summary: 'Updated',
-    detail: `Task "${item.title}" ${item.completed ? 'completed' : 'reopened'}`,
-    life: 3000
-  })
+const updateItemStatus = async (item: ChecklistItem) => {
+  try {
+    await fetch(`http://localhost:8000/api/v1/gl/period-close/checklist/${item.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ completed: item.completed })
+    })
+    
+    item.status = item.completed ? 'completed' : 'open'
+    toast.add({
+      severity: 'success',
+      summary: 'Updated',
+      detail: `Task "${item.title}" ${item.completed ? 'completed' : 'reopened'}`,
+      life: 3000
+    })
+  } catch (error) {
+    console.error('Error updating task:', error)
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to update task status',
+      life: 3000
+    })
+  }
 }
 
 const viewItem = (item: ChecklistItem) => {
@@ -475,7 +507,15 @@ const confirmClosePeriod = () => {
 const closePeriod = async () => {
   closing.value = true
   try {
-    await new Promise(resolve => setTimeout(resolve, 2000))
+    await fetch('http://localhost:8000/api/v1/gl/period-close/close', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        period: selectedPeriod.value,
+        reason: closeReason.value 
+      })
+    })
+    
     periodStatus.value = 'Closed'
     showCloseDialog.value = false
     toast.add({
@@ -483,6 +523,14 @@ const closePeriod = async () => {
       summary: 'Period Closed',
       detail: `Period ${selectedPeriod.value} has been successfully closed`,
       life: 5000
+    })
+  } catch (error) {
+    console.error('Error closing period:', error)
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to close period',
+      life: 3000
     })
   } finally {
     closing.value = false
@@ -499,11 +547,73 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.period-close {
-  padding: 1.5rem;
+.content-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--spacing-lg, 1.5rem);
 }
 
-.space-y-3 > * + * {
-  margin-top: 0.75rem;
+.sidebar-cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md, 1rem);
+}
+
+.card-title {
+  font-size: var(--font-size-lg, 1.125rem);
+  font-weight: var(--font-weight-semibold, 600);
+  color: var(--text-color, #1e293b);
+  margin: 0;
+}
+
+.checklist-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.checklist-item {
+  border: 1px solid var(--surface-200, #e2e8f0);
+  border-radius: 6px;
+  padding: 0.75rem;
+}
+
+.checklist-item.bg-green-50 {
+  background-color: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.checklist-item.bg-blue-50 {
+  background-color: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.checklist-item.bg-gray-50 {
+  background-color: #f9fafb;
+  border-color: #e5e7eb;
+}
+
+.summary-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.actions-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm, 0.5rem);
+}
+
+.action-btn {
+  width: 100%;
+  justify-content: flex-start;
+}
+
+@media (max-width: 768px) {
+  .content-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-md, 1rem);
+  }
 }
 </style>

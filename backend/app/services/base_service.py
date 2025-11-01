@@ -42,32 +42,24 @@ class GLService(BaseService):
     async def get_accounts(self):
         """Get chart of accounts with real database integration"""
         try:
-            from app.models.gl_models import ChartOfAccounts
+            from app.models.core_models import ChartOfAccounts
             accounts = self.db.query(ChartOfAccounts).filter(
                 ChartOfAccounts.company_id == self.company_id,
                 ChartOfAccounts.is_active == True
             ).order_by(ChartOfAccounts.account_code).all()
             
-            if accounts:
-                return [
-                    {
-                        "id": str(acc.id),
-                        "account_code": acc.account_code,
-                        "account_name": acc.account_name,
-                        "account_type": acc.account_type,
-                        "balance": float(acc.balance)
-                    } for acc in accounts
-                ]
-        except ImportError:
-            pass
-        
-        # Fallback to demo data
-        return [
-            {"id": "1", "account_code": "1000", "account_name": "Cash", "account_type": "Asset", "balance": 50000},
-            {"id": "2", "account_code": "1200", "account_name": "Accounts Receivable", "account_type": "Asset", "balance": 25000},
-            {"id": "3", "account_code": "2000", "account_name": "Accounts Payable", "account_type": "Liability", "balance": 15000},
-            {"id": "4", "account_code": "3000", "account_name": "Owner's Equity", "account_type": "Equity", "balance": 60000}
-        ]
+            return [
+                {
+                    "id": str(acc.id),
+                    "account_code": acc.account_code,
+                    "account_name": acc.account_name,
+                    "account_type": acc.account_type,
+                    "balance": float(acc.balance or 0)
+                } for acc in accounts
+            ]
+        except Exception as e:
+            print(f"GL Service error: {e}")
+            return []
     
     async def create_account(self, account_data: dict):
         """Create new GL account with audit trail"""
@@ -130,10 +122,27 @@ class GLService(BaseService):
 
 class APService(BaseService):
     async def get_vendors(self):
-        return [
-            {"id": 1, "vendor_code": "V001", "vendor_name": "ABC Supplies", "current_balance": 5000},
-            {"id": 2, "vendor_code": "V002", "vendor_name": "XYZ Services", "current_balance": 3000}
-        ]
+        try:
+            from app.models.core_models import Vendor
+            vendors = self.db.query(Vendor).filter(
+                Vendor.company_id == self.company_id,
+                Vendor.status == 'active'
+            ).all()
+            
+            return [
+                {
+                    "id": str(v.id),
+                    "vendor_code": v.vendor_code,
+                    "vendor_name": v.vendor_name,
+                    "current_balance": float(v.current_balance or 0),
+                    "email": v.email,
+                    "phone": v.phone,
+                    "payment_terms": v.payment_terms
+                } for v in vendors
+            ]
+        except Exception as e:
+            print(f"AP Service error: {e}")
+            return []
     
     async def create_vendor(self, vendor_data: dict):
         return {"id": 3, "vendor_code": vendor_data.get("code"), "vendor_name": vendor_data.get("name")}
@@ -146,10 +155,28 @@ class APService(BaseService):
 
 class ARService(BaseService):
     async def get_customers(self):
-        return [
-            {"id": 1, "customer_code": "C001", "customer_name": "Customer A", "current_balance": 15000, "credit_limit": 50000},
-            {"id": 2, "customer_code": "C002", "customer_name": "Customer B", "current_balance": 8000, "credit_limit": 30000}
-        ]
+        try:
+            from app.models.core_models import Customer
+            customers = self.db.query(Customer).filter(
+                Customer.company_id == self.company_id,
+                Customer.status == 'active'
+            ).all()
+            
+            return [
+                {
+                    "id": str(c.id),
+                    "customer_code": c.customer_code,
+                    "customer_name": c.customer_name,
+                    "current_balance": float(c.current_balance or 0),
+                    "credit_limit": float(c.credit_limit or 0),
+                    "email": c.email,
+                    "phone": c.phone,
+                    "payment_terms": c.payment_terms
+                } for c in customers
+            ]
+        except Exception as e:
+            print(f"AR Service error: {e}")
+            return []
     
     async def create_customer(self, customer_data: dict):
         return {"id": 3, "customer_code": customer_data.get("code"), "customer_name": customer_data.get("name")}

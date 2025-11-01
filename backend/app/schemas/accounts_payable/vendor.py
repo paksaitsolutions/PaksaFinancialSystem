@@ -3,7 +3,7 @@ Schemas for vendor API endpoints.
 """
 from typing import List, Optional
 from uuid import UUID
-from pydantic import BaseModel, EmailStr, Field, validator
+from pydantic import BaseModel, Field, validator
 
 from app.models.enums import VendorStatus, PaymentTerms
 
@@ -11,7 +11,7 @@ class VendorContactBase(BaseModel):
     """Base schema for vendor contact."""
     name: str
     position: Optional[str] = None
-    email: Optional[EmailStr] = None
+    email: Optional[str] = None
     phone: Optional[str] = None
     is_primary: bool = False
 
@@ -40,7 +40,7 @@ class VendorBase(BaseModel):
     status: VendorStatus = VendorStatus.ACTIVE
     
     # Contact information
-    email: Optional[EmailStr] = None
+    email: Optional[str] = None
     phone: Optional[str] = None
     website: Optional[str] = None
     
@@ -77,7 +77,7 @@ class VendorUpdate(BaseModel):
     status: Optional[VendorStatus] = None
     
     # Contact information
-    email: Optional[EmailStr] = None
+    email: Optional[str] = None
     phone: Optional[str] = None
     website: Optional[str] = None
     

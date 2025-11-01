@@ -145,36 +145,61 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useToast } from 'primevue/usetoast'
 
+const toast = useToast()
 const activeTab = ref(0)
+const loading = ref(false)
 
 const stats = ref({
-  totalTenants: 156,
-  activeUsers: 2847,
-  monthlyRevenue: 125000,
-  systemHealth: 98
+  totalTenants: 0,
+  activeUsers: 0,
+  monthlyRevenue: 0,
+  systemHealth: 0
 })
 
-const tenants = ref([
-  { id: 1, name: 'Acme Corp', plan: 'Enterprise', users: 150, status: 'Active' },
-  { id: 2, name: 'Tech Solutions', plan: 'Professional', users: 75, status: 'Active' },
-  { id: 3, name: 'StartUp Co', plan: 'Basic', users: 25, status: 'Suspended' }
-])
-
+const tenants = ref([])
 const config = ref({
-  platformName: 'Paksa Financial System',
+  platformName: '',
   maintenanceMode: false,
   sessionTimeout: 30,
   force2FA: false
 })
+const services = ref([])
 
-const services = ref([
-  { name: 'API Server', status: 'Online', uptime: 99.9 },
-  { name: 'Database', status: 'Online', uptime: 99.8 },
-  { name: 'Cache Server', status: 'Online', uptime: 98.5 },
-  { name: 'File Storage', status: 'Online', uptime: 99.2 }
-])
+const fetchAdminData = async () => {
+  try {
+    loading.value = true
+    
+    const [statusRes, tenantsRes, servicesRes, configRes] = await Promise.all([
+      fetch('/api/v1/admin/system-status'),
+      fetch('/api/v1/admin/tenants'),
+      fetch('/api/v1/admin/services'),
+      fetch('/api/v1/admin/config')
+    ])
+    
+    stats.value = await statusRes.json()
+    tenants.value = await tenantsRes.json()
+    services.value = await servicesRes.json()
+    config.value = await configRes.json()
+    
+  } catch (error) {
+    console.error('Failed to fetch admin data:', error)
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to load admin dashboard data',
+      life: 3000
+    })
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  fetchAdminData()
+})
 
 const viewTenant = (tenant: any) => {
   console.log('View tenant:', tenant)
@@ -184,12 +209,37 @@ const manageTenant = (tenant: any) => {
   console.log('Manage tenant:', tenant)
 }
 
-const saveConfig = () => {
-  console.log('Save config:', config.value)
+const saveConfig = async () => {
+  try {
+    const response = await fetch('/api/v1/admin/config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(config.value)
+    })
+    
+    const result = await response.json()
+    
+    if (result.success) {
+      toast.add({
+        severity: 'success',
+        summary: 'Success',
+        detail: 'Configuration saved successfully',
+        life: 3000
+      })
+    }
+  } catch (error) {
+    console.error('Failed to save config:', error)
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to save configuration',
+      life: 3000
+    })
+  }
 }
 
-const updateSecurity = () => {
-  console.log('Update security:', config.value)
+const updateSecurity = async () => {
+  await saveConfig() // Same endpoint for now
 }
 </script>
 

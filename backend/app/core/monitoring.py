@@ -2,12 +2,18 @@
 Application monitoring and metrics.
 """
 import time
-import psutil
 from typing import Dict, Any
 from datetime import datetime, timedelta
 from collections import defaultdict, deque
 
 from app.core.logging import logger
+
+# Try to import psutil, but make it optional
+try:
+    import psutil
+    PSUTIL_AVAILABLE = True
+except ImportError:
+    PSUTIL_AVAILABLE = False
 
 class MetricsCollector:
     """Collect application metrics."""
@@ -49,10 +55,25 @@ class MetricsCollector:
     
     def get_metrics(self) -> Dict[str, Any]:
         """Get current metrics."""
-        # System metrics
-        cpu_percent = psutil.cpu_percent()
-        memory = psutil.virtual_memory()
-        disk = psutil.disk_usage('/')
+        # System metrics (only if psutil is available)
+        system_metrics = {}
+        if PSUTIL_AVAILABLE:
+            try:
+                cpu_percent = psutil.cpu_percent()
+                memory = psutil.virtual_memory()
+                disk = psutil.disk_usage('/')
+                
+                system_metrics = {
+                    "cpu_percent": cpu_percent,
+                    "memory_percent": memory.percent,
+                    "memory_used_gb": memory.used / (1024**3),
+                    "disk_percent": disk.percent,
+                    "disk_used_gb": disk.used / (1024**3)
+                }
+            except Exception:
+                system_metrics = {"error": "Unable to collect system metrics"}
+        else:
+            system_metrics = {"error": "psutil not available"}
         
         # Application metrics
         avg_response_times = {}
@@ -62,13 +83,7 @@ class MetricsCollector:
         
         return {
             "timestamp": datetime.utcnow().isoformat(),
-            "system": {
-                "cpu_percent": cpu_percent,
-                "memory_percent": memory.percent,
-                "memory_used_gb": memory.used / (1024**3),
-                "disk_percent": disk.percent,
-                "disk_used_gb": disk.used / (1024**3)
-            },
+            "system": system_metrics,
             "application": {
                 "active_sessions": len(self.active_sessions),
                 "total_requests": sum(self.request_counts.values()),
@@ -110,43 +125,59 @@ class PerformanceMonitor:
     
     def check_system_health(self) -> Dict[str, Any]:
         """Check system health status."""
-        cpu_percent = psutil.cpu_percent(interval=1)
-        memory = psutil.virtual_memory()
-        disk = psutil.disk_usage('/')
-        
-        # Record for trending
-        self.cpu_usage.append(cpu_percent)
-        self.memory_usage.append(memory.percent)
-        
-        health_status = "healthy"
-        alerts = []
-        
-        # Check thresholds
-        if cpu_percent > 80:
-            health_status = "warning"
-            alerts.append(f"High CPU usage: {cpu_percent:.1f}%")
-        
-        if memory.percent > 85:
-            health_status = "critical" if memory.percent > 95 else "warning"
-            alerts.append(f"High memory usage: {memory.percent:.1f}%")
-        
-        if disk.percent > 90:
-            health_status = "critical"
-            alerts.append(f"Low disk space: {disk.percent:.1f}% used")
-        
-        return {
-            "status": health_status,
-            "alerts": alerts,
-            "metrics": {
-                "cpu_percent": cpu_percent,
-                "memory_percent": memory.percent,
-                "disk_percent": disk.percent
-            },
-            "trends": {
-                "avg_cpu_5min": sum(list(self.cpu_usage)[-300:]) / min(len(self.cpu_usage), 300),
-                "avg_memory_5min": sum(list(self.memory_usage)[-300:]) / min(len(self.memory_usage), 300)
+        if not PSUTIL_AVAILABLE:
+            return {
+                "status": "unknown",
+                "alerts": ["System monitoring unavailable - psutil not installed"],
+                "metrics": {},
+                "trends": {}
             }
-        }
+        
+        try:
+            cpu_percent = psutil.cpu_percent(interval=1)
+            memory = psutil.virtual_memory()
+            disk = psutil.disk_usage('/')
+            
+            # Record for trending
+            self.cpu_usage.append(cpu_percent)
+            self.memory_usage.append(memory.percent)
+            
+            health_status = "healthy"
+            alerts = []
+            
+            # Check thresholds
+            if cpu_percent > 80:
+                health_status = "warning"
+                alerts.append(f"High CPU usage: {cpu_percent:.1f}%")
+            
+            if memory.percent > 85:
+                health_status = "critical" if memory.percent > 95 else "warning"
+                alerts.append(f"High memory usage: {memory.percent:.1f}%")
+            
+            if disk.percent > 90:
+                health_status = "critical"
+                alerts.append(f"Low disk space: {disk.percent:.1f}% used")
+            
+            return {
+                "status": health_status,
+                "alerts": alerts,
+                "metrics": {
+                    "cpu_percent": cpu_percent,
+                    "memory_percent": memory.percent,
+                    "disk_percent": disk.percent
+                },
+                "trends": {
+                    "avg_cpu_5min": sum(list(self.cpu_usage)[-300:]) / min(len(self.cpu_usage), 300),
+                    "avg_memory_5min": sum(list(self.memory_usage)[-300:]) / min(len(self.memory_usage), 300)
+                }
+            }
+        except Exception as e:
+            return {
+                "status": "error",
+                "alerts": [f"Error checking system health: {str(e)}"],
+                "metrics": {},
+                "trends": {}
+            }
 
 # Global performance monitor
 performance_monitor = PerformanceMonitor()

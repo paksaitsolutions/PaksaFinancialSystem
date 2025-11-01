@@ -1,12 +1,18 @@
 """
 Payment gateway integrations.
 """
-import httpx
 from typing import Dict, Any, Optional
 from decimal import Decimal
 
 from app.core.config import settings
 from app.core.logging import logger
+
+# Try to import httpx, but make it optional
+try:
+    import httpx
+    HTTPX_AVAILABLE = True
+except ImportError:
+    HTTPX_AVAILABLE = False
 
 # Mock stripe module
 class MockStripe:
@@ -95,49 +101,74 @@ class PayPalIntegration:
     
     async def _get_access_token(self) -> str:
         """Get PayPal access token."""
+        if not HTTPX_AVAILABLE:
+            return ""
+        
         if self._access_token:
             return self._access_token
         
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                f"{self.base_url}/v1/oauth2/token",
-                data="grant_type=client_credentials",
-                headers={"Content-Type": "application/x-www-form-urlencoded"},
-                auth=(self.client_id, self.client_secret)
-            )
-            self._access_token = response.json()["access_token"]
-            return self._access_token
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    f"{self.base_url}/v1/oauth2/token",
+                    data="grant_type=client_credentials",
+                    headers={"Content-Type": "application/x-www-form-urlencoded"},
+                    auth=(self.client_id, self.client_secret)
+                )
+                self._access_token = response.json()["access_token"]
+                return self._access_token
+        except Exception as e:
+            logger.error(f"Error getting PayPal token: {e}")
+            return ""
     
     async def create_order(self, amount: Decimal, currency: str = "USD") -> Dict[str, Any]:
         """Create PayPal order."""
-        token = await self._get_access_token()
+        if not HTTPX_AVAILABLE:
+            return {"error": "PayPal integration not available - httpx not installed"}
         
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                f"{self.base_url}/v2/checkout/orders",
-                json={
-                    "intent": "CAPTURE",
-                    "purchase_units": [{
-                        "amount": {
-                            "currency_code": currency,
-                            "value": str(amount)
-                        }
-                    }]
-                },
-                headers={"Authorization": f"Bearer {token}"}
-            )
-            return response.json()
+        try:
+            token = await self._get_access_token()
+            if not token:
+                return {"error": "Failed to get PayPal access token"}
+            
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    f"{self.base_url}/v2/checkout/orders",
+                    json={
+                        "intent": "CAPTURE",
+                        "purchase_units": [{
+                            "amount": {
+                                "currency_code": currency,
+                                "value": str(amount)
+                            }
+                        }]
+                    },
+                    headers={"Authorization": f"Bearer {token}"}
+                )
+                return response.json()
+        except Exception as e:
+            logger.error(f"Error creating PayPal order: {e}")
+            return {"error": str(e)}
     
     async def capture_order(self, order_id: str) -> Dict[str, Any]:
         """Capture PayPal order."""
-        token = await self._get_access_token()
+        if not HTTPX_AVAILABLE:
+            return {"error": "PayPal integration not available - httpx not installed"}
         
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                f"{self.base_url}/v2/checkout/orders/{order_id}/capture",
-                headers={"Authorization": f"Bearer {token}"}
-            )
-            return response.json()
+        try:
+            token = await self._get_access_token()
+            if not token:
+                return {"error": "Failed to get PayPal access token"}
+            
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    f"{self.base_url}/v2/checkout/orders/{order_id}/capture",
+                    headers={"Authorization": f"Bearer {token}"}
+                )
+                return response.json()
+        except Exception as e:
+            logger.error(f"Error capturing PayPal order: {e}")
+            return {"error": str(e)}
 
 class PaymentGatewayManager:
     """Manage multiple payment gateways."""

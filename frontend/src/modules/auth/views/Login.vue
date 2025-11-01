@@ -116,28 +116,63 @@ const handleLogin = async () => {
   if (!validateForm()) return
   
   loading.value = true
+  
   try {
-    await authStore.login({
+    console.log('Form submission - attempting login...')
+    
+    const result = await authStore.login({
       email: form.value.email,
       password: form.value.password,
       remember_me: form.value.rememberMe
     })
     
-    toast.add({ 
-      severity: 'success', 
-      summary: 'Success', 
-      detail: 'Login successful', 
-      life: 3000 
-    })
+    console.log('Login result:', result)
     
-    router.push('/')
+    if (result && result.access_token) {
+      console.log('Login successful, showing success message')
+      
+      toast.add({ 
+        severity: 'success', 
+        summary: 'Welcome!', 
+        detail: 'Login successful', 
+        life: 3000 
+      })
+      
+      // Small delay to show success message
+      setTimeout(() => {
+        console.log('Redirecting to dashboard...')
+        router.push('/')
+      }, 500)
+    } else {
+      console.error('No access token in result:', result)
+      throw new Error('Invalid response from server')
+    }
   } catch (error: any) {
+    console.error('Login error in component:', error)
+    
+    let errorMessage = 'Login failed. Please try again.'
+    
+    if (error.message) {
+      errorMessage = error.message
+    } else if (error.response?.data?.detail) {
+      errorMessage = error.response.data.detail
+    } else if (error.response?.status === 401) {
+      errorMessage = 'Invalid email or password'
+    } else if (error.response?.status >= 500) {
+      errorMessage = 'Server error. Please try again later.'
+    }
+    
+    console.log('Showing error message:', errorMessage)
+    
     toast.add({ 
       severity: 'error', 
-      summary: 'Error', 
-      detail: error.message || 'Login failed', 
+      summary: 'Login Failed', 
+      detail: errorMessage, 
       life: 5000 
     })
+    
+    // Clear password field on error
+    form.value.password = ''
   } finally {
     loading.value = false
   }

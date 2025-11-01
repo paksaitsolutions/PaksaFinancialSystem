@@ -2,19 +2,19 @@
 Database session management with production-ready configuration.
 """
 import os
-from contextlib import asynccontextmanager
-from typing import AsyncGenerator
+from contextlib import contextmanager
+from typing import Generator
 from pathlib import Path
 
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from sqlalchemy.orm import declarative_base
+from sqlalchemy import create_engine
+from sqlalchemy.orm import declarative_base, sessionmaker, Session
 from app.core.config import settings
 
 # Create declarative base for models
 Base = declarative_base()
 
 # Use environment-based configuration with fallback
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./paksa_finance.db")
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./paksa_finance.db")
 
 # Handle SQLite path creation if using SQLite
 if "sqlite" in DATABASE_URL:
@@ -27,66 +27,59 @@ print(f"Database URL: {DATABASE_URL}")
 print(f"Environment: {getattr(settings, 'ENVIRONMENT', 'development')}")
 print("==============================\n")
 
-# Create async engine with proper configuration
+# Create engine with proper configuration
 connect_args = {}
 if "sqlite" in DATABASE_URL:
     connect_args["check_same_thread"] = False
 
-engine = create_async_engine(
+engine = create_engine(
     DATABASE_URL,
     echo=getattr(settings, 'DEBUG', False),
-    future=True,
     connect_args=connect_args,
-    pool_pre_ping=True,
+    pool_pre_ping=True if "postgresql" in DATABASE_URL else False,
     pool_recycle=300 if "postgresql" in DATABASE_URL else -1
 )
 
-# Create async session factory
-async_session_factory = async_sessionmaker(
+# Create session factory
+SessionLocal = sessionmaker(
     bind=engine,
-    class_=AsyncSession,
-    expire_on_commit=False,
     autocommit=False,
     autoflush=False
 )
 
 # SessionLocal for FastAPI dependency
-async def get_db() -> AsyncGenerator[AsyncSession, None]:
-    """Dependency for getting async DB session."""
-    async with async_session_factory() as session:
-        try:
-            yield session
-            await session.commit()
-        except Exception:
-            await session.rollback()
-            raise
-        finally:
-            await session.close()
+def get_db():
+    """Dependency for getting DB session."""
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
-@asynccontextmanager
-async def get_db_context() -> AsyncGenerator[AsyncSession, None]:
+@contextmanager
+def get_db_context():
     """
-    Async context manager for database sessions.
+    Context manager for database sessions.
     
     This can be used in non-FastAPI contexts where you need a database session.
     
     Example:
-        async with get_db_context() as db:
+        with get_db_context() as db:
             db.add(some_object)
-            await db.commit()
+            db.commit()
     """
-    async with async_session_factory() as session:
-        try:
-            yield session
-            await session.commit()
-        except Exception:
-            await session.rollback()
-            raise
-        finally:
-            await session.close()
+    db = SessionLocal()
+    try:
+        yield db
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+    finally:
+        db.close()
 
 # Initialize database with tables
-async def init_db():
+def init_db():
     """Initialize database with all tables."""
     try:
         # Import specific models to ensure they're registered
@@ -99,35 +92,32 @@ async def init_db():
         from app.models.budget import Budget, BudgetLineItem
         from app.models.cash_account import CashAccount, CashTransaction
         
-        async with engine.begin() as conn:
-            # Create all tables
-            await conn.run_sync(Base.metadata.create_all)
+        # Create all tables
+        Base.metadata.create_all(bind=engine)
         
         print("✅ Database initialized successfully")
         
         # Seed with sample data
-        await seed_database()
+        seed_database()
         
     except Exception as e:
         print(f"❌ Database initialization failed: {e}")
         # Don't raise in development to allow server to start
         pass
 
-async def seed_database():
+def seed_database():
     """Seed database with initial data."""
     try:
-        async with get_db_context() as db:
+        with get_db_context() as db:
             from app.models.user import User
             from app.models.gl_account import GLAccount
             from app.models.vendor import MainVendor as Vendor
             from app.models.customer import Customer
             from app.models.cash_account import CashAccount
             from app.core.security import get_password_hash
-            from sqlalchemy import select
             
             # Check if data already exists
-            result = await db.execute(select(User))
-            if result.first():
+            if db.query(User).first():
                 print("✅ Database already seeded")
                 return
             
@@ -180,7 +170,7 @@ async def seed_database():
             for item in accounts + vendors + customers + [cash_account]:
                 db.add(item)
             
-            await db.commit()
+            db.commit()
             print("✅ Database seeded with sample data")
             
     except Exception as e:
@@ -190,5 +180,4 @@ async def seed_database():
 get_db_session = get_db_context
 
 # For backward compatibility
-SessionLocal = async_session_factory
-SessionType = AsyncSession
+SessionType = Session

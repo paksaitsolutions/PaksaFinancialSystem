@@ -29,14 +29,28 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isAuthenticated = computed(() => !!token.value && !!user.value);
 
-  const login = async (credentials: { username: string; password: string; remember_me?: boolean }) => {
+  const login = async (credentials: { email: string; password: string; remember_me?: boolean }) => {
     try {
+      console.log('Attempting login with:', { email: credentials.email, remember_me: credentials.remember_me });
+      console.log('API base URL:', import.meta.env.VITE_API_BASE_URL);
+      
       const response = await api.post('/auth/login', {
-        username: credentials.username,
+        email: credentials.email,
         password: credentials.password,
         remember_me: credentials.remember_me
       });
-      const { access_token, user: userData } = response.data;
+      
+      console.log('Login response:', response);
+      
+      // The response should already be the data due to the response interceptor
+      const responseData = response;
+      
+      if (!responseData || !responseData.access_token) {
+        console.error('Invalid response structure:', responseData);
+        throw new Error('Invalid response from server');
+      }
+      
+      const { access_token, user: userData } = responseData;
       
       token.value = access_token;
       user.value = userData;
@@ -47,12 +61,47 @@ export const useAuthStore = defineStore('auth', () => {
         sessionStorage.setItem('token', token.value);
       }
       
+      console.log('Login successful, token stored');
+      
       // Load user companies after successful login
-      await loadUserCompanies();
+      try {
+        await loadUserCompanies();
+      } catch (companyError) {
+        console.warn('Failed to load companies:', companyError);
+      }
       
       return { access_token, user: userData };
     } catch (error: any) {
-      throw new Error(error.response?.data?.detail || 'Login failed');
+      console.error('Login error details:', {
+        message: error.message,
+        response: error.response,
+        request: error.request,
+        status: error.response?.status,
+        data: error.response?.data
+      });
+      
+      // Handle different types of errors
+      if (error.response) {
+        // Server responded with error status
+        const status = error.response.status;
+        const message = error.response.data?.detail || error.response.data?.message;
+        
+        if (status === 401) {
+          throw new Error('Invalid email or password');
+        } else if (status === 422) {
+          throw new Error('Please check your email and password format');
+        } else if (status >= 500) {
+          throw new Error('Server error. Please try again later');
+        } else {
+          throw new Error(message || 'Login failed');
+        }
+      } else if (error.request) {
+        // Network error
+        throw new Error('Network error. Please check your connection');
+      } else {
+        // Other error
+        throw new Error(error.message || 'Login failed');
+      }
     }
   };
 
@@ -103,7 +152,8 @@ export const useAuthStore = defineStore('auth', () => {
       const response = await api.get('/auth/me');
       user.value = response.data;
       await loadUserCompanies();
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Auth initialization error:', error);
       logout();
     }
   };

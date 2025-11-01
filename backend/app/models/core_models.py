@@ -967,3 +967,31 @@ class Notification(Base):
     priority = Column(String(20), default="normal")
     action_url = Column(String(500))
     created_at = Column(DateTime, default=func.now(), nullable=False)
+
+class SystemConfiguration(Base, AuditMixin):
+    """System Configuration Storage"""
+    __tablename__ = "system_configurations"
+    
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    module = Column(String(50), nullable=False, index=True)
+    config_key = Column(String(100), nullable=False)
+    config_value = Column(Text, nullable=False)
+    data_type = Column(String(20), default="string")  # string, number, boolean, json
+    description = Column(Text)
+    is_active = Column(Boolean, default=True)
+    
+    __table_args__ = ({'extend_existing': True},)
+
+class FeatureFlag(Base, AuditMixin):
+    """Feature Flags Management"""
+    __tablename__ = "feature_flags"
+    
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    name = Column(String(100), nullable=False, unique=True)
+    module = Column(String(50), nullable=False)
+    description = Column(Text)
+    enabled = Column(Boolean, default=False)
+    rollout_percentage = Column(Integer, default=0)
+    target_users = Column(Text)  # JSON array of user IDs
+    conditions = Column(Text)  # JSON conditions for enabling
+    is_active = Column(Boolean, default=True)

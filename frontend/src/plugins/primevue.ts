@@ -33,6 +33,9 @@ import TabPanel from 'primevue/tabpanel'
 import FileUpload from 'primevue/fileupload'
 import Message from 'primevue/message'
 import Toast from 'primevue/toast'
+import Breadcrumb from 'primevue/breadcrumb'
+import ProgressBar from 'primevue/progressbar'
+import Divider from 'primevue/divider'
 
 export default {
   install(app: App) {
@@ -72,5 +75,8 @@ export default {
     app.component('FileUpload', FileUpload)
     app.component('Message', Message)
     app.component('Toast', Toast)
+    app.component('Breadcrumb', Breadcrumb)
+    app.component('ProgressBar', ProgressBar)
+    app.component('Divider', Divider)
   }
 }

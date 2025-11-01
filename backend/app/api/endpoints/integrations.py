@@ -66,20 +66,15 @@ async def create_payment_intent(
 @router.post("/tax/calculate")
 async def calculate_tax(
     *,
-    service: str,
     amount: float,
-    from_zip: str,
-    to_zip: str,
-    from_state: str,
-    to_state: str,
+    tax_jurisdiction: str,
+    item_type: str = "general",
     _: bool = Depends(require_permission(Permission.READ))
 ) -> Any:
     """Calculate tax using external service."""
     try:
         result = await tax_service.calculate_tax(
-            service, amount, 
-            from_zip=from_zip, to_zip=to_zip,
-            from_state=from_state, to_state=to_state
+            amount, tax_jurisdiction, item_type
         )
         return success_response(data=result)
     except Exception as e:
@@ -91,14 +86,14 @@ async def send_notification(
     *,
     notification_type: str,
     recipient: str,
-    data: Dict[str, Any],
-    channels: list = ["email"],
+    subject: str,
+    message: str,
     _: bool = Depends(require_permission(Permission.WRITE))
 ) -> Any:
     """Send notification."""
     try:
         success = await notification_service.send_notification(
-            notification_type, recipient, data, channels
+            notification_type, recipient, subject, message
         )
         return success_response(data={"sent": success})
     except Exception as e:

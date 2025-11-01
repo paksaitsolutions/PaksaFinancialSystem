@@ -2,6 +2,7 @@ import { createI18n } from 'vue-i18n';
 import en from './en';
 import ur from './ur';
 import ar from './ar';
+import zh from './zh';
 
 // Available languages with their display names and RTL flag
 export const availableLocales = [
@@ -22,6 +23,12 @@ export const availableLocales = [
     name: 'العربية',
     rtl: true,
     flag: '🇸🇦',
+  },
+  {
+    code: 'zh',
+    name: '中文',
+    rtl: false,
+    flag: '🇨🇳',
   },
 ];
 
@@ -45,7 +52,7 @@ export const i18n = createI18n({
     : defaultLocale,
   fallbackLocale: defaultLocale,
   globalInjection: true,
-  messages: { en, ur, ar },
+  messages: { en, ur, ar, zh },
 });
 
 // Set HTML direction based on RTL status

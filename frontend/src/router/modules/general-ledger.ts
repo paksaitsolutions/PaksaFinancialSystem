@@ -150,7 +150,7 @@ const generalLedgerRoutes: RouteRecordRaw = {
     {
       path: 'recurring',
       name: 'GLRecurringJournals',
-      component: lazyLoad('GLRecurringJournals'),
+      component: lazyLoad('RecurringJournals'),
       meta: { 
         title: 'Recurring Journals',
         icon: 'pi pi-sync',
