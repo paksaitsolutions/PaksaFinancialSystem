@@ -171,7 +171,13 @@ const mainAppRoute: AppRouteRecordRaw = {
     {
       path: '',
       name: 'Dashboard',
-      component: () => import('@/views/home/Home.vue'),
+      component: () => import('@/modules/dashboard/components/DashboardMain.vue'),
+      meta: { title: 'Dashboard', requiresAuth: true }
+    },
+    {
+      path: 'dashboard',
+      name: 'DashboardMain',
+      component: () => import('@/modules/dashboard/components/DashboardMain.vue'),
       meta: { title: 'Dashboard', requiresAuth: true }
     },
     // General Ledger - Lazy loaded with chunk names
@@ -698,7 +704,7 @@ const mainAppRoute: AppRouteRecordRaw = {
     {
       path: 'compliance/audit',
       name: 'ComplianceAudit',
-      component: () => import('@/modules/reports/views/AuditReportsView.vue'),
+      component: () => import('@/views/compliance/audit/LogsView.vue'),
       meta: { title: 'Audit Compliance' }
     },
     {

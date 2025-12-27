@@ -49,9 +49,13 @@ class User(Base):
         ).first()
 
         if user and verify_password(password, user.hashed_password):
-            # Update last login
-            user.last_login = datetime.utcnow()
-            db.commit()
+            try:
+                # Update last login
+                user.last_login = datetime.utcnow()
+                db.commit()
+            except Exception as e:
+                print(f"Warning: Could not update last login: {e}")
+                db.rollback()
             return user
 
         return None

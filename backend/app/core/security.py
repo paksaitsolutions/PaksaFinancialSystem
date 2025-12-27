@@ -29,7 +29,9 @@ except (ImportError, ValueError):
 class SecurityManager:
     @staticmethod
     def verify_password(plain_password: str, hashed_password: str) -> bool:
-        return pwd_context.verify(plain_password, hashed_password)
+        # Truncate password to 72 bytes for bcrypt compatibility
+        truncated_password = plain_password.encode('utf-8')[:72].decode('utf-8', errors='ignore')
+        return pwd_context.verify(truncated_password, hashed_password)
     
     @staticmethod
     def get_password_hash(password: str) -> str:
@@ -174,7 +176,9 @@ def create_access_token(subject: str, additional_claims: dict = None):
     return SecurityManager.create_access_token(data)
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return SecurityManager.verify_password(plain_password, hashed_password)
+    # Truncate password to 72 bytes for bcrypt compatibility
+    truncated_password = plain_password.encode('utf-8')[:72].decode('utf-8', errors='ignore')
+    return SecurityManager.verify_password(truncated_password, hashed_password)
 
 def get_password_hash(password: str) -> str:
     return SecurityManager.get_password_hash(password)

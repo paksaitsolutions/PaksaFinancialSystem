@@ -1,16 +1,17 @@
 <template>
-  <div class="recurring-journals">
-    <div class="flex justify-content-between align-items-center mb-4">
-      <div>
-        <h1>Recurring Journal Entries</h1>
-        <Breadcrumb :home="home" :model="breadcrumbItems" />
+  <div class="recurring-journals-container">
+    <div class="recurring-journals">
+      <div class="flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="page-title">Recurring Journal Entries</h1>
+          <Breadcrumb :home="home" :model="breadcrumbItems" />
+        </div>
+        <Button 
+          icon="pi pi-plus" 
+          label="New Recurring Entry" 
+          @click="showDialog = true"
+        />
       </div>
-      <Button 
-        icon="pi pi-plus" 
-        label="New Recurring Entry" 
-        @click="showDialog = true"
-      />
-    </div>
 
     <!-- Filters -->
     <Card class="mb-4">
@@ -360,6 +361,7 @@
         />
       </template>
     </Dialog>
+    </div>
   </div>
 </template>
 
@@ -678,7 +680,168 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.recurring-journals-container {
+  min-height: 100vh;
+  width: 100%;
+  background-color: var(--surface-50, #f8fafc);
+  position: relative;
+}
+
 .recurring-journals {
   padding: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.page-title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--text-color, #1e293b);
+  margin: 0 0 0.5rem 0;
+  line-height: 1.2;
+}
+
+/* Ensure proper spacing and layout */
+:deep(.p-card) {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--surface-200, #e2e8f0);
+  margin-bottom: 1rem;
+}
+
+:deep(.p-datatable) {
+  background: white;
+  border-radius: 8px;
+}
+
+:deep(.p-datatable .p-datatable-wrapper) {
+  border-radius: 8px;
+}
+
+/* Grid system fixes */
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0 -0.5rem;
+  width: 100%;
+}
+
+.grid > [class*="col-"] {
+  padding: 0 0.5rem;
+  box-sizing: border-box;
+}
+
+/* Flex utilities */
+.flex {
+  display: flex;
+}
+
+.justify-content-between {
+  justify-content: space-between;
+}
+
+.align-items-center {
+  align-items: center;
+}
+
+.gap-2 {
+  gap: 0.5rem;
+}
+
+.gap-1 {
+  gap: 0.25rem;
+}
+
+.mb-4 {
+  margin-bottom: 1.5rem;
+}
+
+.mb-3 {
+  margin-bottom: 1rem;
+}
+
+.mt-2 {
+  margin-top: 0.5rem;
+}
+
+.w-full {
+  width: 100%;
+}
+
+/* Text utilities */
+.font-medium {
+  font-weight: 500;
+}
+
+.text-sm {
+  font-size: 0.875rem;
+}
+
+.text-right {
+  text-align: right;
+}
+
+/* Color utilities */
+.text-500 {
+  color: var(--text-color-secondary, #64748b);
+}
+
+.text-red-500 {
+  color: #ef4444;
+}
+
+.text-red-600 {
+  color: #dc2626;
+}
+
+.text-orange-600 {
+  color: #ea580c;
+}
+
+.text-green-600 {
+  color: #16a34a;
+}
+
+.text-600 {
+  color: var(--text-color-secondary, #64748b);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .recurring-journals {
+    padding: 1rem;
+  }
+  
+  .page-title {
+    font-size: 1.5rem;
+  }
+  
+  .flex.justify-content-between {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  
+  .grid > [class*="col-"] {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+}
+
+/* Large screens */
+@media (min-width: 768px) {
+  .col-12 { flex: 0 0 100%; max-width: 100%; }
+  .col-6 { flex: 0 0 50%; max-width: 50%; }
+  .col-4 { flex: 0 0 33.333%; max-width: 33.333%; }
+  .col-3 { flex: 0 0 25%; max-width: 25%; }
+  .col-2 { flex: 0 0 16.667%; max-width: 16.667%; }
+  
+  .md\:col-6 { flex: 0 0 50%; max-width: 50%; }
+  .md\:col-4 { flex: 0 0 33.333%; max-width: 33.333%; }
+  .md\:col-3 { flex: 0 0 25%; max-width: 25%; }
+  .md\:col-2 { flex: 0 0 16.667%; max-width: 16.667%; }
 }
 </style>

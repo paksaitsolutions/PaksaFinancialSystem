@@ -353,3 +353,4 @@ class PayrollService {
 }
 
 export const payrollService = new PayrollService()
+export default payrollService

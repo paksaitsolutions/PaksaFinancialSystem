@@ -1,348 +1,367 @@
 <template>
   <div class="invoice-form">
-    <v-form ref="form" v-model="valid" @submit.prevent="saveInvoice">
-      <v-card>
-        <v-card-title class="d-flex align-center justify-space-between">
+    <Card>
+      <template #title>
+        <div class="flex justify-content-between align-items-center">
           <h2>{{ isEdit ? 'Edit Invoice' : 'New Invoice' }}</h2>
-          <div>
-            <v-btn
+          <div class="flex gap-2">
+            <Button
               v-if="isEdit && canSubmit"
-              color="info"
-              class="mr-2"
-              prepend-icon="mdi-send"
+              icon="pi pi-send"
+              label="Submit for Approval"
+              severity="info"
               @click="submitInvoice"
-            >
-              Submit for Approval
-            </v-btn>
-            <v-btn
-              color="primary"
-              type="submit"
+            />
+            <Button
+              :label="isEdit ? 'Update' : 'Create'"
               :loading="saving"
-              :disabled="!valid || saving"
-            >
-              {{ isEdit ? 'Update' : 'Create' }} Invoice
-            </v-btn>
+              :disabled="!isFormValid || saving"
+              @click="saveInvoice"
+            />
           </div>
-        </v-card-title>
-        
-        <v-card-text>
-          <v-row>
+        </div>
+      </template>
+      
+      <template #content>
+        <form @submit.prevent="saveInvoice">
+          <div class="grid">
             <!-- Invoice Header -->
-            <v-col cols="12">
-              <h3 class="text-subtitle-1 font-weight-bold">Invoice Information</h3>
-            </v-col>
+            <div class="col-12">
+              <h3 class="text-lg font-semibold mb-3">Invoice Information</h3>
+            </div>
             
-            <v-col cols="12" md="6">
-              <v-select
-                v-model="formData.vendor_id"
-                label="Vendor*"
-                :items="vendors"
-                item-title="name"
-                item-value="id"
-                :rules="[v => !!v || 'Vendor is required']"
-                required
-                :disabled="isEdit"
-              ></v-select>
-            </v-col>
+            <div class="col-12 md:col-6">
+              <div class="field">
+                <label for="vendor" class="font-semibold">Vendor *</label>
+                <Dropdown
+                  id="vendor"
+                  v-model="formData.vendor_id"
+                  :options="vendors"
+                  optionLabel="name"
+                  optionValue="id"
+                  placeholder="Select vendor"
+                  :class="{ 'p-invalid': !formData.vendor_id }"
+                  :disabled="isEdit"
+                  class="w-full"
+                />
+                <small v-if="!formData.vendor_id" class="p-error">Vendor is required</small>
+              </div>
+            </div>
             
-            <v-col cols="12" md="6">
-              <v-text-field
-                v-model="formData.invoice_number"
-                label="Invoice Number*"
-                :rules="[v => !!v || 'Invoice number is required']"
-                required
-                :disabled="isEdit"
-              ></v-text-field>
-            </v-col>
+            <div class="col-12 md:col-6">
+              <div class="field">
+                <label for="invoice_number" class="font-semibold">Invoice Number *</label>
+                <InputText
+                  id="invoice_number"
+                  v-model="formData.invoice_number"
+                  :class="{ 'p-invalid': !formData.invoice_number }"
+                  :disabled="isEdit"
+                  class="w-full"
+                />
+                <small v-if="!formData.invoice_number" class="p-error">Invoice number is required</small>
+              </div>
+            </div>
             
-            <v-col cols="12" md="6">
-              <v-menu
-                ref="invoiceDateMenu"
-                v-model="invoiceDateMenu"
-                :close-on-content-click="false"
-                transition="scale-transition"
-                offset-y
-                min-width="auto"
-              >
-                <template v-slot:activator="{ props }">
-                  <v-text-field
-                    v-model="formData.invoice_date"
-                    label="Invoice Date*"
-                    prepend-inner-icon="mdi-calendar"
-                    readonly
-                    v-bind="props"
-                    :rules="[v => !!v || 'Invoice date is required']"
-                    required
-                  ></v-text-field>
-                </template>
-                <v-date-picker
+            <div class="col-12 md:col-6">
+              <div class="field">
+                <label for="invoice_date" class="font-semibold">Invoice Date *</label>
+                <Calendar
+                  id="invoice_date"
                   v-model="formData.invoice_date"
-                  @update:model-value="invoiceDateMenu = false"
-                ></v-date-picker>
-              </v-menu>
-            </v-col>
+                  :class="{ 'p-invalid': !formData.invoice_date }"
+                  showIcon
+                  class="w-full"
+                />
+                <small v-if="!formData.invoice_date" class="p-error">Invoice date is required</small>
+              </div>
+            </div>
             
-            <v-col cols="12" md="6">
-              <v-menu
-                ref="dueDateMenu"
-                v-model="dueDateMenu"
-                :close-on-content-click="false"
-                transition="scale-transition"
-                offset-y
-                min-width="auto"
-              >
-                <template v-slot:activator="{ props }">
-                  <v-text-field
-                    v-model="formData.due_date"
-                    label="Due Date*"
-                    prepend-inner-icon="mdi-calendar"
-                    readonly
-                    v-bind="props"
-                    :rules="[v => !!v || 'Due date is required']"
-                    required
-                  ></v-text-field>
-                </template>
-                <v-date-picker
+            <div class="col-12 md:col-6">
+              <div class="field">
+                <label for="due_date" class="font-semibold">Due Date *</label>
+                <Calendar
+                  id="due_date"
                   v-model="formData.due_date"
-                  @update:model-value="dueDateMenu = false"
-                ></v-date-picker>
-              </v-menu>
-            </v-col>
+                  :class="{ 'p-invalid': !formData.due_date }"
+                  showIcon
+                  class="w-full"
+                />
+                <small v-if="!formData.due_date" class="p-error">Due date is required</small>
+              </div>
+            </div>
             
-            <v-col cols="12" md="6">
-              <v-select
-                v-model="formData.payment_terms"
-                label="Payment Terms"
-                :items="paymentTermsOptions"
-                @update:model-value="updateDueDate"
-              ></v-select>
-            </v-col>
+            <div class="col-12 md:col-6">
+              <div class="field">
+                <label for="payment_terms" class="font-semibold">Payment Terms</label>
+                <Dropdown
+                  id="payment_terms"
+                  v-model="formData.payment_terms"
+                  :options="paymentTermsOptions"
+                  optionLabel="title"
+                  optionValue="value"
+                  placeholder="Select payment terms"
+                  class="w-full"
+                  @change="updateDueDate"
+                />
+              </div>
+            </div>
             
-            <v-col cols="12" md="6">
-              <v-select
-                v-model="formData.currency_id"
-                label="Currency"
-                :items="currencies"
-                item-title="name"
-                item-value="id"
-              ></v-select>
-            </v-col>
+            <div class="col-12 md:col-6">
+              <div class="field">
+                <label for="currency" class="font-semibold">Currency</label>
+                <Dropdown
+                  id="currency"
+                  v-model="formData.currency_id"
+                  :options="currencies"
+                  optionLabel="name"
+                  optionValue="id"
+                  placeholder="Select currency"
+                  class="w-full"
+                />
+              </div>
+            </div>
             
-            <v-col cols="12">
-              <v-text-field
-                v-model="formData.reference"
-                label="Reference"
-              ></v-text-field>
-            </v-col>
+            <div class="col-12">
+              <div class="field">
+                <label for="reference" class="font-semibold">Reference</label>
+                <InputText
+                  id="reference"
+                  v-model="formData.reference"
+                  class="w-full"
+                />
+              </div>
+            </div>
             
-            <v-col cols="12">
-              <v-textarea
-                v-model="formData.description"
-                label="Description"
-                rows="2"
-                auto-grow
-              ></v-textarea>
-            </v-col>
+            <div class="col-12">
+              <div class="field">
+                <label for="description" class="font-semibold">Description</label>
+                <Textarea
+                  id="description"
+                  v-model="formData.description"
+                  rows="2"
+                  class="w-full"
+                />
+              </div>
+            </div>
             
-            <v-col cols="12">
-              <v-checkbox
-                v-model="formData.requires_approval"
-                label="Requires Approval"
-                hide-details
-              ></v-checkbox>
-            </v-col>
+            <div class="col-12">
+              <div class="field-checkbox">
+                <Checkbox
+                  id="requires_approval"
+                  v-model="formData.requires_approval"
+                  :binary="true"
+                />
+                <label for="requires_approval">Requires Approval</label>
+              </div>
+            </div>
             
             <!-- Line Items -->
-            <v-col cols="12" class="mt-4">
-              <h3 class="text-subtitle-1 font-weight-bold">Line Items</h3>
+            <div class="col-12 mt-4">
+              <h3 class="text-lg font-semibold mb-3">Line Items</h3>
               
-              <v-data-table
-                :headers="lineItemHeaders"
-                :items="formData.line_items"
-                class="elevation-1 mt-2"
+              <DataTable
+                :value="formData.line_items"
+                class="mb-3"
+                responsiveLayout="scroll"
               >
-                <template v-slot:item.actions="{ item }">
-                  <v-btn
-                    icon
-                    variant="text"
-                    size="small"
-                    color="error"
-                    @click="removeLineItem(item)"
-                  >
-                    <v-icon>mdi-delete</v-icon>
-                  </v-btn>
-                </template>
-                
-                <template v-slot:item.amount="{ item }">
-                  {{ formatCurrency(item.amount) }}
-                </template>
-                
-                <template v-slot:bottom>
-                  <v-row class="mt-2">
-                    <v-col cols="12">
-                      <v-btn
-                        color="primary"
-                        prepend-icon="mdi-plus"
-                        @click="openLineItemDialog"
-                      >
-                        Add Line Item
-                      </v-btn>
-                    </v-col>
-                  </v-row>
-                </template>
-              </v-data-table>
-            </v-col>
+                <template #empty>No line items added.</template>
+                <Column field="description" header="Description" />
+                <Column field="quantity" header="Quantity" />
+                <Column field="unit_price" header="Unit Price">
+                  <template #body="{ data }">
+                    {{ formatCurrency(data.unit_price) }}
+                  </template>
+                </Column>
+                <Column field="amount" header="Amount">
+                  <template #body="{ data }">
+                    {{ formatCurrency(data.amount) }}
+                  </template>
+                </Column>
+                <Column header="Actions" style="width: 4rem">
+                  <template #body="{ data }">
+                    <Button
+                      icon="pi pi-trash"
+                      class="p-button-text p-button-sm p-button-danger"
+                      @click="removeLineItem(data)"
+                    />
+                  </template>
+                </Column>
+              </DataTable>
+              
+              <Button
+                icon="pi pi-plus"
+                label="Add Line Item"
+                class="p-button-outlined"
+                @click="openLineItemDialog"
+              />
+            </div>
             
             <!-- Totals -->
-            <v-col cols="12" md="6" offset-md="6" class="mt-4">
-              <v-list>
-                <v-list-item>
-                  <template v-slot:prepend>
-                    <div class="font-weight-medium">Subtotal:</div>
-                  </template>
-                  <v-list-item-title class="text-right">
-                    {{ formatCurrency(calculateSubtotal) }}
-                  </v-list-item-title>
-                </v-list-item>
-                
-                <v-list-item>
-                  <template v-slot:prepend>
-                    <div class="font-weight-medium">Tax:</div>
-                  </template>
-                  <v-list-item-title class="text-right">
-                    {{ formatCurrency(0) }}
-                  </v-list-item-title>
-                </v-list-item>
-                
-                <v-list-item>
-                  <template v-slot:prepend>
-                    <div class="font-weight-bold">Total:</div>
-                  </template>
-                  <v-list-item-title class="text-right font-weight-bold">
-                    {{ formatCurrency(calculateTotal) }}
-                  </v-list-item-title>
-                </v-list-item>
-              </v-list>
-            </v-col>
-          </v-row>
-        </v-card-text>
-        
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="primary" variant="text" @click="cancel">Cancel</v-btn>
-          <v-btn
-            color="primary"
-            type="submit"
+            <div class="col-12 md:col-6 md:col-offset-6 mt-4">
+              <Card class="bg-primary-50">
+                <template #content>
+                  <div class="flex justify-content-between align-items-center mb-2">
+                    <span class="font-medium">Subtotal:</span>
+                    <span>{{ formatCurrency(calculateSubtotal) }}</span>
+                  </div>
+                  <div class="flex justify-content-between align-items-center mb-2">
+                    <span class="font-medium">Tax:</span>
+                    <span>{{ formatCurrency(0) }}</span>
+                  </div>
+                  <div class="flex justify-content-between align-items-center">
+                    <span class="font-bold">Total:</span>
+                    <span class="font-bold text-primary">{{ formatCurrency(calculateTotal) }}</span>
+                  </div>
+                </template>
+              </Card>
+            </div>
+          </div>
+        </form>
+      </template>
+      
+      <template #footer>
+        <div class="flex justify-content-end gap-2">
+          <Button label="Cancel" severity="secondary" @click="cancel" />
+          <Button
+            :label="isEdit ? 'Update' : 'Create'"
             :loading="saving"
-            :disabled="!valid || saving"
-          >
-            {{ isEdit ? 'Update' : 'Create' }} Invoice
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-form>
+            :disabled="!isFormValid || saving"
+            @click="saveInvoice"
+          />
+        </div>
+      </template>
+    </Card>
     
     <!-- Line Item Dialog -->
-    <v-dialog v-model="lineItemDialog.show" max-width="600px">
-      <v-card>
-        <v-card-title>{{ lineItemDialog.isEdit ? 'Edit' : 'Add' }} Line Item</v-card-title>
-        <v-card-text>
-          <v-form ref="lineItemForm" v-model="lineItemDialog.valid">
-            <v-row>
-              <v-col cols="12">
-                <v-text-field
-                  v-model="lineItemDialog.item.description"
-                  label="Description*"
-                  :rules="[v => !!v || 'Description is required']"
-                  required
-                ></v-text-field>
-              </v-col>
-              
-              <v-col cols="12" md="6">
-                <v-text-field
-                  v-model="lineItemDialog.item.quantity"
-                  label="Quantity*"
-                  type="number"
-                  :rules="[
-                    v => !!v || 'Quantity is required',
-                    v => v > 0 || 'Quantity must be greater than 0'
-                  ]"
-                  required
-                  @input="calculateLineItemAmount"
-                ></v-text-field>
-              </v-col>
-              
-              <v-col cols="12" md="6">
-                <v-text-field
-                  v-model="lineItemDialog.item.unit_price"
-                  label="Unit Price*"
-                  type="number"
-                  :rules="[
-                    v => !!v || 'Unit price is required',
-                    v => v >= 0 || 'Unit price must be non-negative'
-                  ]"
-                  required
-                  @input="calculateLineItemAmount"
-                ></v-text-field>
-              </v-col>
-              
-              <v-col cols="12" md="6">
-                <v-text-field
-                  v-model="lineItemDialog.item.amount"
-                  label="Amount*"
-                  type="number"
-                  :rules="[v => !!v || 'Amount is required']"
-                  required
-                  readonly
-                ></v-text-field>
-              </v-col>
-              
-              <v-col cols="12" md="6">
-                <v-select
-                  v-model="lineItemDialog.item.account_id"
-                  label="GL Account*"
-                  :items="glAccounts"
-                  item-title="name"
-                  item-value="id"
-                  :rules="[v => !!v || 'GL Account is required']"
-                  required
-                ></v-select>
-              </v-col>
-              
-              <v-col cols="12" md="6">
-                <v-select
-                  v-model="lineItemDialog.item.tax_code_id"
-                  label="Tax Code"
-                  :items="taxCodes"
-                  item-title="name"
-                  item-value="id"
-                ></v-select>
-              </v-col>
-            </v-row>
-          </v-form>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="primary" variant="text" @click="lineItemDialog.show = false">Cancel</v-btn>
-          <v-btn
-            color="primary"
-            :disabled="!lineItemDialog.valid"
-            @click="saveLineItem"
-          >
-            {{ lineItemDialog.isEdit ? 'Update' : 'Add' }}
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <Dialog
+      v-model:visible="lineItemDialog.show"
+      :style="{width: '600px'}"
+      :header="lineItemDialog.isEdit ? 'Edit Line Item' : 'Add Line Item'"
+      :modal="true"
+      class="p-fluid"
+    >
+      <div class="grid">
+        <div class="col-12">
+          <div class="field">
+            <label for="item_description" class="font-semibold">Description *</label>
+            <InputText
+              id="item_description"
+              v-model="lineItemDialog.item.description"
+              :class="{ 'p-invalid': !lineItemDialog.item.description }"
+              class="w-full"
+            />
+            <small v-if="!lineItemDialog.item.description" class="p-error">Description is required</small>
+          </div>
+        </div>
+        
+        <div class="col-12 md:col-6">
+          <div class="field">
+            <label for="quantity" class="font-semibold">Quantity *</label>
+            <InputNumber
+              id="quantity"
+              v-model="lineItemDialog.item.quantity"
+              :min="0"
+              class="w-full"
+              @input="calculateLineItemAmount"
+            />
+          </div>
+        </div>
+        
+        <div class="col-12 md:col-6">
+          <div class="field">
+            <label for="unit_price" class="font-semibold">Unit Price *</label>
+            <InputNumber
+              id="unit_price"
+              v-model="lineItemDialog.item.unit_price"
+              mode="currency"
+              currency="USD"
+              locale="en-US"
+              :min="0"
+              class="w-full"
+              @input="calculateLineItemAmount"
+            />
+          </div>
+        </div>
+        
+        <div class="col-12 md:col-6">
+          <div class="field">
+            <label for="amount" class="font-semibold">Amount</label>
+            <InputNumber
+              id="amount"
+              v-model="lineItemDialog.item.amount"
+              mode="currency"
+              currency="USD"
+              locale="en-US"
+              readonly
+              class="w-full"
+            />
+          </div>
+        </div>
+        
+        <div class="col-12 md:col-6">
+          <div class="field">
+            <label for="account" class="font-semibold">GL Account *</label>
+            <Dropdown
+              id="account"
+              v-model="lineItemDialog.item.account_id"
+              :options="glAccounts"
+              optionLabel="name"
+              optionValue="id"
+              placeholder="Select account"
+              class="w-full"
+            />
+          </div>
+        </div>
+        
+        <div class="col-12 md:col-6">
+          <div class="field">
+            <label for="tax_code" class="font-semibold">Tax Code</label>
+            <Dropdown
+              id="tax_code"
+              v-model="lineItemDialog.item.tax_code_id"
+              :options="taxCodes"
+              optionLabel="name"
+              optionValue="id"
+              placeholder="Select tax code"
+              class="w-full"
+            />
+          </div>
+        </div>
+      </div>
+      
+      <template #footer>
+        <Button
+          label="Cancel"
+          severity="secondary"
+          @click="lineItemDialog.show = false"
+        />
+        <Button
+          :label="lineItemDialog.isEdit ? 'Update' : 'Add'"
+          :disabled="!isLineItemValid"
+          @click="saveLineItem"
+        />
+      </template>
+    </Dialog>
   </div>
 </template>
 
-<script setup>
-import { ref, reactive, computed, onMounted, watch } from 'vue';
-import { useSnackbar } from '@/composables/useSnackbar';
-import { formatCurrency } from '@/utils/formatters';
-import { apiClient } from '@/utils/apiClient';
-import { addToDate } from '@/utils/date';
+<script setup lang="ts">
+import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { useToast } from 'primevue/usetoast'
+import { formatCurrency } from '@/utils/formatters'
+import { apiClient } from '@/utils/apiClient'
+import { addToDate } from '@/utils/date'
+import Card from 'primevue/card'
+import Button from 'primevue/button'
+import InputText from 'primevue/inputtext'
+import InputNumber from 'primevue/inputnumber'
+import Textarea from 'primevue/textarea'
+import Calendar from 'primevue/calendar'
+import Dropdown from 'primevue/dropdown'
+import Checkbox from 'primevue/checkbox'
+import DataTable from 'primevue/datatable'
+import Column from 'primevue/column'
+import Dialog from 'primevue/dialog'
 
 // Props
 const props = defineProps({
@@ -356,15 +375,10 @@ const props = defineProps({
 const emit = defineEmits(['saved', 'cancelled']);
 
 // Composables
-const { showSnackbar } = useSnackbar();
+const toast = useToast()
 
 // Refs
-const form = ref(null);
-const lineItemForm = ref(null);
-const valid = ref(false);
-const saving = ref(false);
-const invoiceDateMenu = ref(false);
-const dueDateMenu = ref(false);
+const saving = ref(false)
 
 // Data
 const vendors = ref([]);
@@ -378,8 +392,8 @@ const canSubmit = computed(() => isEdit.value && formData.status === 'draft');
 const formData = reactive({
   vendor_id: null,
   invoice_number: '',
-  invoice_date: new Date().toISOString().substr(0, 10),
-  due_date: '',
+  invoice_date: new Date(),
+  due_date: new Date(),
   description: '',
   reference: '',
   payment_terms: 'net_30',
@@ -387,14 +401,13 @@ const formData = reactive({
   requires_approval: false,
   status: 'draft',
   line_items: [],
-});
+})
 
 // Line item dialog
 const lineItemDialog = reactive({
   show: false,
   isEdit: false,
   index: -1,
-  valid: false,
   item: {
     description: '',
     quantity: 1,
@@ -403,16 +416,16 @@ const lineItemDialog = reactive({
     account_id: null,
     tax_code_id: null,
   },
-});
+})
 
-// Line item headers
-const lineItemHeaders = [
-  { title: 'Description', key: 'description', sortable: true },
-  { title: 'Quantity', key: 'quantity', sortable: true },
-  { title: 'Unit Price', key: 'unit_price', sortable: true },
-  { title: 'Amount', key: 'amount', sortable: true, align: 'end' },
-  { title: 'Actions', key: 'actions', sortable: false, align: 'center' },
-];
+// Computed
+const isFormValid = computed(() => {
+  return formData.vendor_id && formData.invoice_number && formData.invoice_date && formData.due_date
+})
+
+const isLineItemValid = computed(() => {
+  return lineItemDialog.item.description && lineItemDialog.item.quantity > 0 && lineItemDialog.item.unit_price >= 0
+})
 
 // Payment terms options
 const paymentTermsOptions = [
@@ -497,7 +510,7 @@ const fetchInvoice = async () => {
     formData.status = invoice.status;
     
   } catch (error) {
-    showSnackbar('Failed to load invoice', 'error');
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load invoice' })
     console.error('Error fetching invoice:', error);
   }
 };
@@ -528,7 +541,7 @@ const updateDueDate = () => {
       daysToAdd = 30;
   }
   
-  formData.due_date = addToDate(invoiceDate, daysToAdd, 'days').toISOString().substr(0, 10);
+  formData.due_date = addToDate(invoiceDate, daysToAdd, 'days')
 };
 
 const openLineItemDialog = () => {
@@ -566,7 +579,7 @@ const calculateLineItemAmount = () => {
 };
 
 const saveLineItem = () => {
-  if (!lineItemDialog.valid) return;
+  if (!isLineItemValid.value) return
   
   if (lineItemDialog.isEdit && lineItemDialog.index !== -1) {
     // Update existing line item
@@ -584,8 +597,8 @@ const saveInvoice = async () => {
   
   // Validate line items
   if (formData.line_items.length === 0) {
-    showSnackbar('At least one line item is required', 'error');
-    return;
+    toast.add({ severity: 'error', summary: 'Error', detail: 'At least one line item is required' })
+    return
   }
   
   saving.value = true;
@@ -594,15 +607,15 @@ const saveInvoice = async () => {
     
     if (isEdit.value) {
       await apiClient.put(`/api/v1/accounts-payable/invoices/${props.invoiceId}`, payload);
-      showSnackbar('Invoice updated successfully', 'success');
+      toast.add({ severity: 'success', summary: 'Success', detail: 'Invoice updated successfully' })
     } else {
       await apiClient.post('/api/v1/accounts-payable/invoices', payload);
-      showSnackbar('Invoice created successfully', 'success');
+      toast.add({ severity: 'success', summary: 'Success', detail: 'Invoice created successfully' })
     }
     
     emit('saved');
   } catch (error) {
-    showSnackbar(error.response?.data?.message || 'Failed to save invoice', 'error');
+    toast.add({ severity: 'error', summary: 'Error', detail: error.response?.data?.message || 'Failed to save invoice' })
     console.error('Error saving invoice:', error);
   } finally {
     saving.value = false;
@@ -614,10 +627,10 @@ const submitInvoice = async () => {
   
   try {
     await apiClient.post(`/api/v1/accounts-payable/invoices/${props.invoiceId}/submit`);
-    showSnackbar('Invoice submitted for approval', 'success');
+    toast.add({ severity: 'success', summary: 'Success', detail: 'Invoice submitted for approval' })
     emit('saved');
   } catch (error) {
-    showSnackbar('Failed to submit invoice', 'error');
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to submit invoice' })
     console.error('Error submitting invoice:', error);
   }
 };
@@ -648,6 +661,14 @@ onMounted(() => {
 
 <style scoped>
 .invoice-form {
-  padding: 16px;
+  padding: 1.5rem;
+}
+
+.field {
+  margin-bottom: 1.5rem;
+}
+
+.field-checkbox {
+  margin-bottom: 1.5rem;
 }
 </style>

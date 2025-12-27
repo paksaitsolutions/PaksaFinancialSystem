@@ -10,9 +10,9 @@
           </div>
         </div>
         <div class="header-actions">
-          <Button label="Export PDF" icon="pi pi-file-pdf" class="p-button-outlined" />
-          <Button label="Export Excel" icon="pi pi-file-excel" class="p-button-outlined" />
-          <Button label="Print" icon="pi pi-print" class="p-button-outlined" />
+          <Button label="Export PDF" icon="pi pi-file-pdf" class="p-button-outlined" @click="exportToPDF" :loading="exportingPDF" />
+          <Button label="Export CSV" icon="pi pi-file" class="p-button-outlined" @click="exportToExcel" :loading="exportingExcel" />
+          <Button label="Print" icon="pi pi-print" class="p-button-outlined" @click="printReport" />
         </div>
       </div>
     </div>
@@ -136,6 +136,8 @@
 import { ref, computed, onMounted } from 'vue'
 
 const loading = ref(false)
+const exportingPDF = ref(false)
+const exportingExcel = ref(false)
 const asOfDate = ref(new Date())
 
 const trialBalanceData = ref([
@@ -215,6 +217,152 @@ const generateReport = async () => {
   } finally {
     loading.value = false
   }
+}
+
+const exportToPDF = async () => {
+  exportingPDF.value = true
+  try {
+    console.log('Starting PDF export...')
+    const response = await fetch('http://localhost:8000/api/v1/gl/reports/trial-balance/export/pdf', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Accept': 'application/pdf,text/html'
+      },
+      body: JSON.stringify({ asOfDate: asOfDate.value, data: trialBalanceData.value })
+    })
+    
+    console.log('PDF export response:', response.status, response.headers.get('content-type'))
+    
+    if (response.ok) {
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      
+      // Check content type to determine file extension
+      const contentType = response.headers.get('content-type')
+      if (contentType?.includes('text/html')) {
+        a.download = `trial-balance-${formatDate(asOfDate.value)}.html`
+      } else {
+        a.download = `trial-balance-${formatDate(asOfDate.value)}.pdf`
+      }
+      
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+      console.log('PDF export successful')
+    } else {
+      const errorText = await response.text()
+      console.error('PDF export failed:', response.status, response.statusText, errorText)
+      alert(`PDF export failed: ${response.status} ${response.statusText}`)
+    }
+  } catch (error) {
+    console.error('PDF export failed:', error)
+    alert('PDF export failed. Please check your connection and try again.')
+  } finally {
+    exportingPDF.value = false
+  }
+}
+
+const exportToExcel = async () => {
+  exportingExcel.value = true
+  try {
+    console.log('Starting Excel export...')
+    const response = await fetch('http://localhost:8000/api/v1/gl/reports/trial-balance/export/excel', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      },
+      body: JSON.stringify({ asOfDate: asOfDate.value, data: trialBalanceData.value })
+    })
+    
+    console.log('Excel export response:', response.status, response.headers.get('content-type'))
+    
+    if (response.ok) {
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `trial-balance-${formatDate(asOfDate.value)}.csv`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+      console.log('CSV export successful')
+    } else {
+      const errorText = await response.text()
+      console.error('Excel export failed:', response.status, response.statusText, errorText)
+      alert(`CSV export failed: ${response.status} ${response.statusText}`)
+    }
+  } catch (error) {
+    console.error('Excel export failed:', error)
+    alert('CSV export failed. Please check your connection and try again.')
+  } finally {
+    exportingExcel.value = false
+  }
+}
+
+const printReport = () => {
+  const printContent = document.querySelector('.trial-balance')
+  const printWindow = window.open('', '_blank')
+  
+  printWindow.document.write(`
+    <html>
+      <head>
+        <title>Trial Balance Report</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 20px; }
+          .page-header { border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
+          .report-header { text-align: center; margin-bottom: 20px; }
+          table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+          th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+          th { background-color: #f5f5f5; font-weight: bold; }
+          .text-right { text-align: right; }
+          .totals-row { border-top: 2px solid #000; font-weight: bold; }
+          @media print { .header-actions { display: none; } }
+        </style>
+      </head>
+      <body>
+        <div class="report-header">
+          <h1>Paksa Financial System</h1>
+          <h2>Trial Balance</h2>
+          <p>As of ${formatDate(asOfDate.value)}</p>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Account Code</th>
+              <th>Account Name</th>
+              <th class="text-right">Debit</th>
+              <th class="text-right">Credit</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${trialBalanceData.value.map(item => `
+              <tr>
+                <td>${item.accountCode}</td>
+                <td>${item.accountName}</td>
+                <td class="text-right">${item.debit > 0 ? formatCurrency(item.debit) : '-'}</td>
+                <td class="text-right">${item.credit > 0 ? formatCurrency(item.credit) : '-'}</td>
+              </tr>
+            `).join('')}
+            <tr class="totals-row">
+              <td colspan="2"><strong>TOTALS</strong></td>
+              <td class="text-right"><strong>${formatCurrency(totalDebits.value)}</strong></td>
+              <td class="text-right"><strong>${formatCurrency(totalCredits.value)}</strong></td>
+            </tr>
+          </tbody>
+        </table>
+        <p><strong>${isBalanced.value ? 'Trial Balance is Balanced' : 'Trial Balance is NOT Balanced'}</strong></p>
+      </body>
+    </html>
+  `)
+  
+  printWindow.document.close()
+  printWindow.print()
 }
 
 onMounted(() => {

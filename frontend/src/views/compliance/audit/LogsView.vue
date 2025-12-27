@@ -364,14 +364,12 @@ const fetchLogs = async (): Promise<void> => {
       filters.value.endDate = null;
     }
     
-    // Simulate API call with mock data
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    // Mock data - in a real app, this would be an API call
-    const mockLogs = generateMockLogs(100);
+    // Fetch real data from API
+    const response = await fetch('/api/v1/compliance/audit/logs');
+    const apiLogs = await response.json();
     
     // Apply filters
-    let filteredLogs = [...mockLogs];
+    let filteredLogs = [...apiLogs];
     
     if (filters.value.actionType) {
       filteredLogs = filteredLogs.filter(log => log.action === filters.value.actionType);
@@ -428,19 +426,23 @@ const fetchLogs = async (): Promise<void> => {
       detail: 'Failed to load audit logs. Please try again.',
       life: 5000
     });
+    // Fallback to empty array
+    logs.value = [];
+    pagination.value.total = 0;
   } finally {
     loading.value = false;
   }
 };
 
 const fetchUsers = async () => {
-  // In a real app, this would be an API call to get users with audit access
-  users.value = [
-    { id: '1', name: 'John Doe' },
-    { id: '2', name: 'Jane Smith' },
-    { id: '3', name: 'Admin User' },
-    { id: '4', name: 'System' },
-  ];
+  try {
+    const response = await fetch('/api/v1/compliance/audit/users');
+    users.value = await response.json();
+  } catch (error) {
+    console.error('Failed to fetch users:', error);
+    // Fallback to empty array
+    users.value = [];
+  }
 };
 
 const exportLogs = async () => {

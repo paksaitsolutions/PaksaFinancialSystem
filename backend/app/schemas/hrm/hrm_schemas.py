@@ -5,7 +5,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Optional, List
 from uuid import UUID
-from pydantic import BaseModel, EmailStr, validator
+from pydantic import BaseModel, validator
 
 # Base Schemas
 class HRMBase(BaseModel):
@@ -18,7 +18,7 @@ class EmployeeBase(HRMBase):
     first_name: str
     middle_name: Optional[str] = None
     last_name: str
-    email: EmailStr
+    email: str
     phone_number: str
     date_of_birth: Optional[date] = None
     gender: Optional[str] = None
@@ -39,7 +39,7 @@ class EmployeeUpdate(HRMBase):
     first_name: Optional[str] = None
     middle_name: Optional[str] = None
     last_name: Optional[str] = None
-    email: Optional[EmailStr] = None
+    email: Optional[str] = None
     phone_number: Optional[str] = None
     date_of_birth: Optional[date] = None
     gender: Optional[str] = None
@@ -327,7 +327,7 @@ class JobOpeningResponse(JobOpeningBase):
 class CandidateBase(HRMBase):
     first_name: str
     last_name: str
-    email: EmailStr
+    email: str
     phone_number: Optional[str] = None
     resume_url: Optional[str] = None
     cover_letter: Optional[str] = None
@@ -341,7 +341,7 @@ class CandidateCreate(CandidateBase):
 class CandidateUpdate(HRMBase):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
-    email: Optional[EmailStr] = None
+    email: Optional[str] = None
     phone_number: Optional[str] = None
     resume_url: Optional[str] = None
     cover_letter: Optional[str] = None

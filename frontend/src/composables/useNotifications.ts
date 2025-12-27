@@ -1,5 +1,5 @@
 import { ref, computed } from 'vue'
-import { api } from '@/services/api'
+import { api } from '@/utils/api'
 
 export interface Notification {
   id: string
@@ -76,12 +76,37 @@ export const useNotifications = () => {
     }
   }
 
+  // Toast notification methods
+  const success = (message: string, title?: string) => {
+    // This will be handled by PrimeVue Toast in components
+    console.log('Success:', title || 'Success', message)
+  }
+
+  const error = (message: string, title?: string) => {
+    // This will be handled by PrimeVue Toast in components
+    console.error('Error:', title || 'Error', message)
+  }
+
+  const warning = (message: string, title?: string) => {
+    // This will be handled by PrimeVue Toast in components
+    console.warn('Warning:', title || 'Warning', message)
+  }
+
+  const info = (message: string, title?: string) => {
+    // This will be handled by PrimeVue Toast in components
+    console.info('Info:', title || 'Info', message)
+  }
+
   return {
     notifications: computed(() => notifications.value),
     unreadCount,
     loading: computed(() => loading.value),
     fetchNotifications,
     markAsRead,
-    markAllAsRead
+    markAllAsRead,
+    success,
+    error,
+    warning,
+    info
   }
 }
