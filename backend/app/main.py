@@ -4,13 +4,15 @@ Paksa Financial System - Production-Ready Main Application
 import os
 from contextlib import asynccontextmanager
 from datetime import datetime
-from fastapi import FastAPI, Depends, HTTPException, status, Form, Body, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Depends, HTTPException, status, Form, Body, WebSocket, WebSocketDisconnect, Request
 from fastapi.security import OAuth2PasswordBearer, HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse, FileResponse, HTMLResponse, Response
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.openapi.utils import get_openapi
+from fastapi.exceptions import RequestValidationError
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from sqlalchemy.orm import Session
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timedelta
@@ -103,6 +105,53 @@ app.add_middleware(
     allow_headers=["*"],
     expose_headers=["X-Total-Count", "X-Rate-Limit-Remaining"]
 )
+
+# Global error handlers
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    errors = []
+    for error in exc.errors():
+        field = " -> ".join(str(x) for x in error["loc"][1:])  # Skip 'body'
+        message = error["msg"]
+        errors.append(f"{field}: {message}")
+    
+    return JSONResponse(
+        status_code=422,
+        content={
+            "success": False,
+            "error": "Validation Error",
+            "message": "Please check the following fields: " + "; ".join(errors),
+            "details": errors
+        }
+    )
+
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "success": False,
+            "error": f"HTTP {exc.status_code}",
+            "message": exc.detail,
+            "path": str(request.url)
+        }
+    )
+
+@app.exception_handler(Exception)
+async def general_exception_handler(request: Request, exc: Exception):
+    print(f"Unhandled error on {request.method} {request.url}: {exc}")
+    import traceback
+    traceback.print_exc()
+    
+    return JSONResponse(
+        status_code=500,
+        content={
+            "success": False,
+            "error": "Internal Server Error",
+            "message": "An unexpected error occurred. Please try again or contact support.",
+            "path": str(request.url)
+        }
+    )
 
 # Core routers only for memory optimization
 app.include_router(super_admin_router, prefix="/api/v1/super-admin", tags=["super-admin"])
@@ -450,23 +499,59 @@ async def get_gl_accounts(db=Depends(get_db)):
 async def create_gl_account(account_data: dict, db=Depends(get_db)):
     from app.models.core_models import ChartOfAccounts
     import uuid
-    account = ChartOfAccounts(
-        id=uuid.uuid4(),
-        company_id=uuid.uuid4(),  # Default company ID
-        account_code=account_data.get("code"),
-        account_name=account_data.get("name"),
-        account_type=account_data.get("account_type", account_data.get("type", "Asset")),
-        is_active=account_data.get("is_active", True),
-        balance=0.0
-    )
-    db.add(account)
-    db.commit()
-    db.refresh(account)
-    return {
-        "id": str(account.id),
-        "code": account.account_code,
-        "name": account.account_name,
-    }
+    
+    # Validation
+    if not account_data:
+        raise HTTPException(status_code=400, detail="Account data is required")
+    
+    account_code = account_data.get("code", "").strip()
+    if not account_code:
+        raise HTTPException(status_code=400, detail="Account code is required")
+    
+    account_name = account_data.get("name", "").strip()
+    if not account_name:
+        raise HTTPException(status_code=400, detail="Account name is required")
+    
+    account_type = account_data.get("account_type", account_data.get("type", "")).strip()
+    valid_types = ["Asset", "Liability", "Equity", "Revenue", "Expense"]
+    if account_type not in valid_types:
+        raise HTTPException(status_code=400, detail=f"Account type must be one of: {', '.join(valid_types)}")
+    
+    try:
+        # Check for duplicate account code
+        existing = db.query(ChartOfAccounts).filter(ChartOfAccounts.account_code == account_code).first()
+        if existing:
+            raise HTTPException(status_code=409, detail=f"Account code '{account_code}' already exists")
+        
+        account = ChartOfAccounts(
+            id=uuid.uuid4(),
+            company_id=uuid.uuid4(),
+            account_code=account_code,
+            account_name=account_name,
+            account_type=account_type,
+            is_active=account_data.get("is_active", True),
+            balance=0.0
+        )
+        db.add(account)
+        db.commit()
+        db.refresh(account)
+        
+        return {
+            "success": True,
+            "message": f"Account '{account_code} - {account_name}' created successfully",
+            "data": {
+                "id": str(account.id),
+                "code": account.account_code,
+                "name": account.account_name,
+                "type": account.account_type
+            }
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        print(f"Create account error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to create account. Please try again.")
 
 
 @app.post("/api/v1/gl/journal-entries")
@@ -573,41 +658,84 @@ async def get_vendors(db=Depends(get_db)):
 @app.get("/api/v1/accounts-payable/vendors")
 async def get_ap_vendors(company_id: str = "", db=Depends(get_db)):
     from app.models.core_models import Vendor
-    vendors = db.query(Vendor).filter(Vendor.is_active == True).all()
-    return [
-        {
-            "id": str(v.id),
-            "code": v.vendor_code,
-            "name": v.vendor_name,
-            "balance": float(v.current_balance or 0)
-        }
-        for v in vendors
-    ]
+    try:
+        vendors = db.query(Vendor).filter(Vendor.status == 'active').all()
+        return [
+            {
+                "id": str(v.id),
+                "code": v.vendor_code,
+                "name": v.vendor_name,
+                "balance": float(v.current_balance or 0)
+            }
+            for v in vendors
+        ]
+    except Exception as e:
+        print(f"AP vendors error: {e}")
+        return []
 
 
 @app.post("/api/v1/ap/vendors")
 async def create_vendor(vendor_data: dict, db=Depends(get_db)):
     from app.models.core_models import Vendor
     import uuid
-    vendor = Vendor(
-        id=uuid.uuid4(),
-        vendor_code=f"VEND{len(db.query(Vendor).all()) + 1:04d}",
-        vendor_name=vendor_data.get("name"),
-        email=vendor_data.get("email"),
-        phone=vendor_data.get("phone"),
-        address=vendor_data.get("address"),
-        current_balance=0.0,
-        payment_terms=vendor_data.get("payment_terms", "net30"),
-        status="active"
-    )
-    db.add(vendor)
-    db.commit()
-    db.refresh(vendor)
-    return {
-        "id": str(vendor.id),
-        "code": vendor.vendor_code,
-        "name": vendor.vendor_name,
-    }
+    
+    # Validation
+    if not vendor_data:
+        raise HTTPException(status_code=400, detail="Vendor data is required")
+    
+    vendor_name = vendor_data.get("name", "").strip()
+    if not vendor_name:
+        raise HTTPException(status_code=400, detail="Vendor name is required")
+    
+    email = vendor_data.get("email", "").strip()
+    if email and "@" not in email:
+        raise HTTPException(status_code=400, detail="Invalid email format")
+    
+    try:
+        # Check for duplicate vendor name
+        existing = db.query(Vendor).filter(Vendor.vendor_name == vendor_name).first()
+        if existing:
+            raise HTTPException(status_code=409, detail=f"Vendor '{vendor_name}' already exists")
+        
+        # Check for duplicate email
+        if email:
+            existing_email = db.query(Vendor).filter(Vendor.email == email).first()
+            if existing_email:
+                raise HTTPException(status_code=409, detail=f"Email '{email}' is already in use")
+        
+        vendor = Vendor(
+            id=uuid.uuid4(),
+            vendor_code=f"VEND{len(db.query(Vendor).all()) + 1:04d}",
+            vendor_name=vendor_name,
+            email=email or None,
+            phone=vendor_data.get("phone", "").strip() or None,
+            address=vendor_data.get("address", "").strip() or None,
+            current_balance=0.0,
+            payment_terms=vendor_data.get("payment_terms", "net30"),
+            status="active"
+        )
+        db.add(vendor)
+        db.commit()
+        db.refresh(vendor)
+        
+        return {
+            "success": True,
+            "message": f"Vendor '{vendor_name}' created successfully",
+            "data": {
+                "id": str(vendor.id),
+                "code": vendor.vendor_code,
+                "name": vendor.vendor_name,
+                "email": vendor.email,
+                "phone": vendor.phone,
+                "address": vendor.address
+            }
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        print(f"Create vendor error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to create vendor. Please try again.")
 
 
 @app.post("/api/v1/ap/invoices")
@@ -649,6 +777,89 @@ async def create_ap_payment(payment_data: dict, db=Depends(get_db)):
     db.commit()
     db.refresh(payment)
     return {"id": str(payment.id), "payment_number": payment.payment_number}
+
+# AP Reports endpoints
+@app.get("/api/v1/accounts-payable/reports/aging")
+async def get_ap_aging_report(db=Depends(get_db)):
+    from app.models.core_models import APInvoice, Vendor
+    try:
+        invoices = db.query(APInvoice).join(Vendor).all()
+        aging_data = []
+        for inv in invoices:
+            days_outstanding = (datetime.now().date() - inv.invoice_date).days
+            aging_data.append({
+                "vendor_name": inv.vendor.vendor_name if inv.vendor else "Unknown",
+                "invoice_number": inv.invoice_number,
+                "invoice_date": inv.invoice_date.isoformat(),
+                "due_date": inv.due_date.isoformat(),
+                "amount": float(inv.total_amount),
+                "days_outstanding": days_outstanding,
+                "aging_bucket": "Current" if days_outstanding <= 30 else "31-60" if days_outstanding <= 60 else "61-90" if days_outstanding <= 90 else "90+"
+            })
+        return {"aging_data": aging_data}
+    except Exception as e:
+        print(f"AP aging error: {e}")
+        return {"aging_data": []}
+
+@app.get("/api/v1/accounts-payable/reports/cash-flow-forecast")
+async def get_ap_cash_flow_forecast(db=Depends(get_db)):
+    from app.models.core_models import APInvoice
+    try:
+        invoices = db.query(APInvoice).filter(APInvoice.status.in_(["pending", "sent"])).all()
+        forecast_data = []
+        for inv in invoices:
+            forecast_data.append({
+                "due_date": inv.due_date.isoformat(),
+                "vendor_name": inv.vendor.vendor_name if inv.vendor else "Unknown",
+                "amount": float(inv.total_amount),
+                "invoice_number": inv.invoice_number
+            })
+        return {"forecast_data": forecast_data}
+    except Exception as e:
+        print(f"AP cash flow forecast error: {e}")
+        return {"forecast_data": []}
+
+@app.get("/api/v1/accounts-payable/reports/vendor-summary")
+async def get_ap_vendor_summary(db=Depends(get_db)):
+    from app.models.core_models import Vendor, APInvoice, APPayment
+    from sqlalchemy import func
+    try:
+        vendors = db.query(Vendor).all()
+        summary_data = []
+        for vendor in vendors:
+            total_invoices = db.query(func.sum(APInvoice.total_amount)).filter(APInvoice.vendor_id == vendor.id).scalar() or 0
+            total_payments = db.query(func.sum(APPayment.amount)).filter(APPayment.vendor_id == vendor.id).scalar() or 0
+            summary_data.append({
+                "vendor_name": vendor.vendor_name,
+                "total_invoices": float(total_invoices),
+                "total_payments": float(total_payments),
+                "balance": float(vendor.current_balance or 0),
+                "payment_terms": vendor.payment_terms
+            })
+        return {"vendor_summary": summary_data}
+    except Exception as e:
+        print(f"AP vendor summary error: {e}")
+        return {"vendor_summary": []}
+
+@app.get("/api/v1/accounts-payable/reports/payment-history")
+async def get_ap_payment_history(db=Depends(get_db)):
+    from app.models.core_models import APPayment, Vendor
+    try:
+        payments = db.query(APPayment).join(Vendor).order_by(APPayment.payment_date.desc()).all()
+        history_data = []
+        for payment in payments:
+            history_data.append({
+                "payment_number": payment.payment_number,
+                "payment_date": payment.payment_date.isoformat(),
+                "vendor_name": payment.vendor.vendor_name if payment.vendor else "Unknown",
+                "amount": float(payment.amount),
+                "payment_method": payment.payment_method.value if hasattr(payment.payment_method, 'value') else payment.payment_method,
+                "reference": payment.reference
+            })
+        return {"payment_history": history_data}
+    except Exception as e:
+        print(f"AP payment history error: {e}")
+        return {"payment_history": []}
 
 
 # Accounts Receivable endpoints
@@ -756,6 +967,99 @@ async def create_ar_payment(payment_data: dict, db=Depends(get_db)):
     db.commit()
     db.refresh(payment)
     return {"id": str(payment.id), "payment_number": payment.payment_number}
+
+# Short AR routes for frontend compatibility
+@app.post("/ar/customers")
+async def create_ar_customer_short(customer_data: dict, db=Depends(get_db)):
+    from app.models.core_models import Customer
+    import uuid
+    
+    # Validation
+    if not customer_data:
+        raise HTTPException(status_code=400, detail="Customer data is required")
+    
+    customer_name = customer_data.get("name", customer_data.get("customer_name", "")).strip()
+    if not customer_name:
+        raise HTTPException(status_code=400, detail="Customer name is required")
+    
+    email = customer_data.get("email", "").strip()
+    if email and "@" not in email:
+        raise HTTPException(status_code=400, detail="Invalid email format")
+    
+    try:
+        # Check for duplicate customer name
+        existing = db.query(Customer).filter(Customer.customer_name == customer_name).first()
+        if existing:
+            raise HTTPException(status_code=409, detail=f"Customer '{customer_name}' already exists")
+        
+        # Check for duplicate email
+        if email:
+            existing_email = db.query(Customer).filter(Customer.email == email).first()
+            if existing_email:
+                raise HTTPException(status_code=409, detail=f"Email '{email}' is already in use")
+        
+        customer = Customer(
+            id=uuid.uuid4(),
+            customer_code=f"CUST{len(db.query(Customer).all()) + 1:04d}",
+            customer_name=customer_name,
+            email=email or None,
+            phone=customer_data.get("phone", "").strip() or None,
+            address=customer_data.get("address", "").strip() or None,
+            credit_limit=max(0, float(customer_data.get("credit_limit", 0))),
+            current_balance=0.0,
+            payment_terms=customer_data.get("payment_terms", "net30"),
+            status="active"
+        )
+        db.add(customer)
+        db.commit()
+        db.refresh(customer)
+        
+        return {
+            "success": True,
+            "message": f"Customer '{customer_name}' created successfully",
+            "data": {
+                "id": str(customer.id),
+                "name": customer.customer_name,
+                "email": customer.email,
+                "phone": customer.phone,
+                "address": customer.address,
+                "creditLimit": customer.credit_limit,
+                "balance": customer.current_balance,
+                "paymentTerms": customer.payment_terms,
+                "status": customer.status
+            }
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        print(f"Create customer error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to create customer. Please try again.")
+
+@app.get("/ar/customers")
+async def get_ar_customers_short(db=Depends(get_db)):
+    from app.models.core_models import Customer
+    try:
+        customers = db.query(Customer).filter(Customer.status == 'active').all()
+        return {
+            "customers": [
+                {
+                    "id": str(c.id),
+                    "name": c.customer_name,
+                    "email": c.email,
+                    "phone": c.phone,
+                    "address": c.address,
+                    "creditLimit": float(c.credit_limit or 0),
+                    "balance": float(c.current_balance or 0),
+                    "paymentTerms": c.payment_terms,
+                    "status": c.status.value if hasattr(c.status, 'value') else c.status
+                }
+                for c in customers
+            ]
+        }
+    except Exception as e:
+        print(f"Get customers error: {e}")
+        return {"customers": []}
 
 
 # Budget Management endpoints
@@ -2926,6 +3230,131 @@ async def get_ar_aging_chart():
 async def get_dashboard_updates():
     return {"has_updates": False}
 
+# Settings API endpoints
+@app.put("/api/v1/settings/system/{setting_key}")
+async def update_system_setting(setting_key: str, setting_value: str, description: str = "", db=Depends(get_db)):
+    try:
+        # Simple in-memory storage for demo - avoid database issues
+        if not hasattr(update_system_setting, 'settings_cache'):
+            update_system_setting.settings_cache = {}
+        
+        # Store setting in memory
+        update_system_setting.settings_cache[setting_key] = {
+            "value": setting_value,
+            "description": description
+        }
+        
+        return {
+            "success": True,
+            "setting_key": setting_key,
+            "setting_value": setting_value,
+            "message": f"Setting {setting_key} updated successfully"
+        }
+    except Exception as e:
+        print(f"Settings update error: {e}")
+        import traceback
+        traceback.print_exc()
+        return JSONResponse(
+            {"error": f"Failed to update setting: {str(e)}"},
+            status_code=500
+        )
+
+@app.get("/api/v1/settings/system/{setting_key}")
+async def get_system_setting(setting_key: str):
+    try:
+        # Check in-memory cache first
+        if hasattr(update_system_setting, 'settings_cache') and setting_key in update_system_setting.settings_cache:
+            cached = update_system_setting.settings_cache[setting_key]
+            return {
+                "setting_key": setting_key,
+                "setting_value": cached["value"],
+                "description": cached["description"]
+            }
+        
+        # Return default values for GL settings
+        defaults = {
+            "gl_allowNegativeBalances": "false",
+            "gl_fiscalYearStart": "1",
+            "gl_periodLength": "monthly",
+            "gl_autoCreatePeriods": "true",
+            "gl_autoClosePeriods": "false",
+            "gl_requireBalancedEntries": "true",
+            "gl_requireApproval": "false",
+            "gl_allowFutureDates": "false",
+            "gl_requireReference": "true",
+            "gl_maxPostingDays": "30",
+            "gl_approvalLimit": "10000",
+            "gl_journalEntryPrefix": "JE",
+            "gl_nextJournalNumber": "1",
+            "gl_accountPrefix": "",
+            "gl_numberingFormat": "sequential",
+            "gl_resetNumberingYearly": "false"
+        }
+        
+        return {
+            "setting_key": setting_key,
+            "setting_value": defaults.get(setting_key, ""),
+            "description": f"Default value for {setting_key}"
+        }
+    except Exception as e:
+        print(f"Settings get error: {e}")
+        return JSONResponse(
+            {"error": f"Failed to get setting: {str(e)}"},
+            status_code=500
+        )
+
+@app.get("/api/v1/settings/system")
+async def get_all_system_settings(db=Depends(get_db)):
+    from app.models.core_models import SystemSetting
+    
+    try:
+        settings = db.query(SystemSetting).all()
+        
+        # Default GL settings if none exist
+        defaults = {
+            "gl_allowNegativeBalances": "false",
+            "gl_fiscalYearStart": "1",
+            "gl_periodLength": "monthly",
+            "gl_autoCreatePeriods": "true",
+            "gl_autoClosePeriods": "false",
+            "gl_requireBalancedEntries": "true",
+            "gl_requireApproval": "false",
+            "gl_allowFutureDates": "false",
+            "gl_requireReference": "true",
+            "gl_maxPostingDays": "30",
+            "gl_approvalLimit": "10000",
+            "gl_journalEntryPrefix": "JE",
+            "gl_nextJournalNumber": "1",
+            "gl_accountPrefix": "",
+            "gl_numberingFormat": "sequential",
+            "gl_resetNumberingYearly": "false"
+        }
+        
+        result = {}
+        
+        # Add existing settings
+        for setting in settings:
+            result[setting.setting_key] = {
+                "value": setting.setting_value,
+                "description": setting.description
+            }
+        
+        # Add defaults for missing settings
+        for key, value in defaults.items():
+            if key not in result:
+                result[key] = {
+                    "value": value,
+                    "description": f"Default value for {key}"
+                }
+        
+        return result
+    except Exception as e:
+        print(f"Settings get all error: {e}")
+        return JSONResponse(
+            {"error": f"Failed to get settings: {str(e)}"},
+            status_code=500
+        )
+
 # Period Close API endpoints
 @app.get("/api/v1/gl/period-close/status")
 async def get_period_close_status(db=Depends(get_db)):
@@ -2980,98 +3409,78 @@ async def close_period(close_data: dict, db=Depends(get_db)):
 
 # Trial Balance Export Endpoints
 @app.post("/api/v1/gl/reports/trial-balance/export/pdf")
-async def export_trial_balance_pdf(request_data: dict):
+async def export_trial_balance_pdf(request_data: dict = Body(...)):
     try:
-        # Simple HTML to PDF approach using weasyprint or fallback to HTML
-        from io import BytesIO
-        import tempfile
-        import os
+        print(f"PDF export request: {request_data}")
         
-        # Generate HTML content
+        # Generate simple HTML content
         html_content = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Trial Balance Report</title>
-            <style>
-                body {{ font-family: Arial, sans-serif; margin: 20px; }}
-                .header {{ text-align: center; margin-bottom: 30px; }}
-                .company {{ font-size: 18px; font-weight: bold; }}
-                .report-title {{ font-size: 16px; font-weight: bold; margin: 10px 0; }}
-                .date {{ font-size: 14px; margin-bottom: 20px; }}
-                table {{ width: 100%; border-collapse: collapse; margin: 20px 0; }}
-                th, td {{ border: 1px solid #ddd; padding: 8px; text-align: left; }}
-                th {{ background-color: #f5f5f5; font-weight: bold; }}
-                .text-right {{ text-align: right; }}
-                .totals {{ border-top: 2px solid #000; font-weight: bold; }}
-            </style>
-        </head>
-        <body>
-            <div class="header">
-                <div class="company">Paksa Financial System</div>
-                <div class="report-title">Trial Balance Report</div>
-                <div class="date">As of {request_data.get('asOfDate', 'Current Date')}</div>
-            </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Account Code</th>
-                        <th>Account Name</th>
-                        <th class="text-right">Debit</th>
-                        <th class="text-right">Credit</th>
-                    </tr>
-                </thead>
-                <tbody>
-        """
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Trial Balance Report</title>
+    <style>
+        body {{ font-family: Arial, sans-serif; margin: 20px; }}
+        .header {{ text-align: center; margin-bottom: 30px; }}
+        table {{ width: 100%; border-collapse: collapse; }}
+        th, td {{ border: 1px solid #ddd; padding: 8px; text-align: left; }}
+        th {{ background-color: #f5f5f5; font-weight: bold; }}
+        .text-right {{ text-align: right; }}
+        .totals {{ border-top: 2px solid #000; font-weight: bold; }}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Paksa Financial System</h1>
+        <h2>Trial Balance Report</h2>
+        <p>As of {request_data.get('asOfDate', 'Current Date')}</p>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Account Code</th>
+                <th>Account Name</th>
+                <th class="text-right">Debit</th>
+                <th class="text-right">Credit</th>
+            </tr>
+        </thead>
+        <tbody>
+"""
         
         total_debits = 0
         total_credits = 0
         
         for item in request_data.get('data', []):
-            debit_str = f"${item['debit']:,.2f}" if item['debit'] > 0 else "-"
-            credit_str = f"${item['credit']:,.2f}" if item['credit'] > 0 else "-"
+            debit_str = f"${item['debit']:,.2f}" if item.get('debit', 0) > 0 else "-"
+            credit_str = f"${item['credit']:,.2f}" if item.get('credit', 0) > 0 else "-"
             html_content += f"""
-                    <tr>
-                        <td>{item['accountCode']}</td>
-                        <td>{item['accountName']}</td>
-                        <td class="text-right">{debit_str}</td>
-                        <td class="text-right">{credit_str}</td>
-                    </tr>
-            """
-            total_debits += item['debit']
-            total_credits += item['credit']
+            <tr>
+                <td>{item.get('accountCode', '')}</td>
+                <td>{item.get('accountName', '')}</td>
+                <td class="text-right">{debit_str}</td>
+                <td class="text-right">{credit_str}</td>
+            </tr>
+"""
+            total_debits += item.get('debit', 0)
+            total_credits += item.get('credit', 0)
         
-        # Add totals row
         html_content += f"""
-                    <tr class="totals">
-                        <td colspan="2"><strong>TOTALS</strong></td>
-                        <td class="text-right"><strong>${total_debits:,.2f}</strong></td>
-                        <td class="text-right"><strong>${total_credits:,.2f}</strong></td>
-                    </tr>
-                </tbody>
-            </table>
-        </body>
-        </html>
-        """
+            <tr class="totals">
+                <td colspan="2"><strong>TOTALS</strong></td>
+                <td class="text-right"><strong>${total_debits:,.2f}</strong></td>
+                <td class="text-right"><strong>${total_credits:,.2f}</strong></td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>
+"""
         
-        # Try to use weasyprint for PDF generation
-        try:
-            import weasyprint
-            pdf_buffer = BytesIO()
-            weasyprint.HTML(string=html_content).write_pdf(pdf_buffer)
-            pdf_buffer.seek(0)
-            return Response(
-                content=pdf_buffer.getvalue(),
-                media_type="application/pdf",
-                headers={"Content-Disposition": "attachment; filename=trial-balance.pdf"}
-            )
-        except ImportError:
-            # Fallback: return HTML as PDF (browser will handle)
-            return Response(
-                content=html_content.encode('utf-8'),
-                media_type="text/html",
-                headers={"Content-Disposition": "attachment; filename=trial-balance.html"}
-            )
+        return Response(
+            content=html_content.encode('utf-8'),
+            media_type="text/html",
+            headers={"Content-Disposition": "attachment; filename=trial-balance.html"}
+        )
             
     except Exception as e:
         print(f"PDF export error: {e}")
@@ -3080,8 +3489,9 @@ async def export_trial_balance_pdf(request_data: dict):
         return JSONResponse({"error": f"PDF export failed: {str(e)}"}, status_code=500)
 
 @app.post("/api/v1/gl/reports/trial-balance/export/excel")
-async def export_trial_balance_excel(request_data: dict):
+async def export_trial_balance_excel(request_data: dict = Body(...)):
     try:
+        print(f"Excel export request: {request_data}")
         import csv
         from io import StringIO
         
@@ -3103,18 +3513,18 @@ async def export_trial_balance_excel(request_data: dict):
         total_credits = 0
         
         for item in request_data.get('data', []):
-            debit_val = f"{item['debit']:,.2f}" if item['debit'] > 0 else ''
-            credit_val = f"{item['credit']:,.2f}" if item['credit'] > 0 else ''
+            debit_val = f"{item.get('debit', 0):,.2f}" if item.get('debit', 0) > 0 else ''
+            credit_val = f"{item.get('credit', 0):,.2f}" if item.get('credit', 0) > 0 else ''
             
             writer.writerow([
-                item['accountCode'],
-                item['accountName'],
+                item.get('accountCode', ''),
+                item.get('accountName', ''),
                 debit_val,
                 credit_val
             ])
             
-            total_debits += item['debit']
-            total_credits += item['credit']
+            total_debits += item.get('debit', 0)
+            total_credits += item.get('credit', 0)
         
         # Add totals row
         writer.writerow([

@@ -982,6 +982,17 @@ class SystemConfiguration(Base, AuditMixin):
     
     __table_args__ = ({'extend_existing': True},)
 
+class SystemSetting(Base, AuditMixin):
+    """System Settings Storage"""
+    __tablename__ = "system_settings"
+    
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    setting_key = Column(String(100), nullable=False, unique=True, index=True)
+    setting_value = Column(Text, nullable=False)
+    description = Column(Text)
+    data_type = Column(String(20), default="string")  # string, number, boolean, json
+    is_active = Column(Boolean, default=True)
+    
 class FeatureFlag(Base, AuditMixin):
     """Feature Flags Management"""
     __tablename__ = "feature_flags"
