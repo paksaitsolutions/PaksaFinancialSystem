@@ -16,7 +16,7 @@ python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 python-multipart==0.0.20
 bcrypt==4.1.2
-cryptography==44.0.1
+cryptography==46.0.3
 
 # Session and Cache Management
 redis==5.0.1
@@ -37,7 +37,7 @@ emails==0.6
 jinja2==3.1.6
 
 # Validation and Serialization
-marshmallow==3.20.1
+marshmallow==3.26.2
 cerberus==1.3.5
 
 # Utilities
@@ -48,7 +48,7 @@ uuid==1.30
 # Development and Testing
 pytest==7.4.3
 pytest-asyncio==0.21.1
-black==24.3.0
+black==25.11.0
 isort==5.12.0
 flake8==6.1.0
 
