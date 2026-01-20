@@ -37,7 +37,7 @@ emails==0.6
 jinja2==3.1.6
 
 # Validation and Serialization
-marshmallow==3.26.2
+marshmallow==4.2.0
 cerberus==1.3.5
 
 # Utilities
@@ -53,7 +53,7 @@ forex-python==1.8
 
 # PDF and Document Generation
 reportlab==4.0.7
-weasyprint==60.2
+weasyprint==68.0
 
 # Production and Monitoring
 gunicorn==23.0.0
