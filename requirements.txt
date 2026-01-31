@@ -15,7 +15,7 @@ psycopg2==2.9.9; sys_platform == "win32"
 # Authentication and Security
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
-python-multipart==0.0.18
+python-multipart==0.0.22
 bcrypt==4.1.2
 cryptography==44.0.1
 
@@ -38,7 +38,7 @@ emails==0.6
 jinja2==3.1.6
 
 # Validation and Serialization
-marshmallow==3.20.1
+marshmallow==3.26.2
 cerberus==1.3.5
 
 # Utilities
@@ -55,7 +55,7 @@ forex-python==1.8
 # PDF and Document Generation
 reportlab==4.0.7
 # WeasyPrint has platform-specific dependencies
-weasyprint==60.2; sys_platform != "win32"
+weasyprint==68.0; sys_platform != "win32"
 
 # Production and Monitoring
 gunicorn==22.0.0; sys_platform != "win32"
