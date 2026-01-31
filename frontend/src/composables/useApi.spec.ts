@@ -1,14 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { useApi } from '@/composables/useApi'
+import axios from 'axios'
 
-vi.mock('@/utils/apiClient', () => ({
-  apiClient: {
-    get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
-    delete: vi.fn()
-  }
-}))
+vi.mock('axios')
 
 describe('useApi', () => {
   beforeEach(() => {
@@ -16,21 +10,32 @@ describe('useApi', () => {
   })
 
   it('handles successful GET request', async () => {
-    const { get } = useApi()
     const mockData = { id: 1, name: 'Test' }
-    vi.spyOn(global, 'fetch').mockResolvedValue({
-      ok: true,
-      json: async () => mockData
-    } as Response)
+    vi.mocked(axios.create).mockReturnValue({
+      get: vi.fn().mockResolvedValue({ data: mockData }),
+      interceptors: {
+        request: { use: vi.fn() },
+        response: { use: vi.fn() }
+      }
+    } as any)
 
+    const { get } = useApi()
     const result = await get('/test')
 
     expect(result).toEqual(mockData)
   })
 
   it('handles API error', async () => {
+    const mockError = new Error('API Error')
+    vi.mocked(axios.create).mockReturnValue({
+      get: vi.fn().mockRejectedValue(mockError),
+      interceptors: {
+        request: { use: vi.fn() },
+        response: { use: vi.fn() }
+      }
+    } as any)
+
     const { get, error } = useApi()
-    vi.spyOn(global, 'fetch').mockRejectedValue(new Error('API Error'))
 
     try {
       await get('/test')
@@ -40,14 +45,18 @@ describe('useApi', () => {
   })
 
   it('sets loading state correctly', async () => {
-    const { get, loading } = useApi()
-    vi.spyOn(global, 'fetch').mockImplementation(() => 
-      new Promise(resolve => setTimeout(() => resolve({
-        ok: true,
-        json: async () => ({})
-      } as Response), 100))
-    )
+    vi.mocked(axios.create).mockReturnValue({
+      get: vi.fn().mockImplementation(() => 
+        new Promise(resolve => setTimeout(() => resolve({ data: {} }), 100))
+      ),
+      interceptors: {
+        request: { use: vi.fn() },
+        response: { use: vi.fn() }
+      }
+    } as any)
 
+    const { get, loading } = useApi()
+    
     const promise = get('/test')
     expect(loading.value).toBe(true)
     
