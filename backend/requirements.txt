@@ -4,6 +4,7 @@ uvicorn[standard]==0.24.0
 pydantic[email]==2.11.7
 pydantic-settings==2.1.0
 email-validator==2.1.0
+typing-extensions>=4.12.2
 
 # Database and ORM
 sqlalchemy==2.0.23
