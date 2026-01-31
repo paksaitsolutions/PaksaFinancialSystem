@@ -25,7 +25,7 @@
 import { ref } from 'vue'
 import AppTopbar from '@/components/layout/AppTopbar.vue'
 import AppSidebar from '@/components/layout/AppSidebar.vue'
-import Breadcrumbs from '@/components/layout/Breadcrumbs.vue'
+import Breadcrumbs from '@/components/common/Breadcrumbs.vue'
 import AIAssistant from '@/components/ai/AIAssistant.vue'
 
 const sidebarActive = ref(false)
