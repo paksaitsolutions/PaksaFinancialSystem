@@ -15,35 +15,24 @@ logger = logging.getLogger(__name__)
 
 class TenantService:
     def __init__(self, db: Session):
-        """  Init  ."""
         self.db = db
     
     def get_company_by_id(self, company_id: int) -> Optional[TenantCompany]:
-        """Get Company By Id."""
-        """Get company by ID"""
         return self.db.query(TenantCompany).filter(TenantCompany.id == company_id).first()
     
     def get_company_by_code(self, code: str) -> Optional[TenantCompany]:
-        """Get Company By Code."""
-        """Get company by code"""
         return self.db.query(TenantCompany).filter(TenantCompany.code == code).first()
     
     def get_company_by_subdomain(self, subdomain: str) -> Optional[TenantCompany]:
-        """Get Company By Subdomain."""
-        """Get company by subdomain"""
         return self.db.query(TenantCompany).filter(TenantCompany.subdomain == subdomain).first()
     
     def get_user_companies(self, user_id: int) -> List[TenantCompany]:
-        """Get User Companies."""
-        """Get all companies a user has access to"""
         return self.db.query(TenantCompany).join(CompanyAdmin).filter(
             CompanyAdmin.user_id == user_id,
             TenantCompany.is_active == True
         ).all()
     
     def check_user_company_access(self, user_id: int, company_id: int) -> bool:
-        """Check User Company Access."""
-        """Check if user has access to a company"""
         access = self.db.query(CompanyAdmin).filter(
             CompanyAdmin.user_id == user_id,
             CompanyAdmin.company_id == company_id
@@ -51,8 +40,6 @@ class TenantService:
         return access is not None
     
     def get_company_admin_role(self, user_id: int, company_id: int) -> Optional[str]:
-        """Get Company Admin Role."""
-        """Get user's role in a company"""
         admin = self.db.query(CompanyAdmin).filter(
             CompanyAdmin.user_id == user_id,
             CompanyAdmin.company_id == company_id
@@ -60,8 +47,6 @@ class TenantService:
         return admin.role if admin else None
     
     def is_company_owner(self, user_id: int, company_id: int) -> bool:
-        """Is Company Owner."""
-        """Check if user is the owner of a company"""
         admin = self.db.query(CompanyAdmin).filter(
             CompanyAdmin.user_id == user_id,
             CompanyAdmin.company_id == company_id,
@@ -70,16 +55,12 @@ class TenantService:
         return admin is not None
     
     def get_company_modules(self, company_id: int) -> List[CompanyModule]:
-        """Get Company Modules."""
-        """Get all enabled modules for a company"""
         return self.db.query(CompanyModule).filter(
             CompanyModule.company_id == company_id,
             CompanyModule.is_enabled == True
         ).all()
     
     def is_module_enabled(self, company_id: int, module_name: str) -> bool:
-        """Is Module Enabled."""
-        """Check if a module is enabled for a company"""
         module = self.db.query(CompanyModule).filter(
             CompanyModule.company_id == company_id,
             CompanyModule.module_name == module_name,
@@ -88,15 +69,11 @@ class TenantService:
         return module is not None
     
     def get_company_settings(self, company_id: int) -> Optional[CompanySettings]:
-        """Get Company Settings."""
-        """Get company settings"""
         return self.db.query(CompanySettings).filter(
             CompanySettings.company_id == company_id
         ).first()
     
     def update_company_branding(self, company_id: int, branding_data: Dict[str, Any]) -> bool:
-        """Update Company Branding."""
-        """Update company branding settings"""
         try:
             company = self.get_company_by_id(company_id)
             if not company:
@@ -118,8 +95,6 @@ class TenantService:
             return False
     
     def check_company_limits(self, company_id: int) -> Dict[str, Any]:
-        """Check Company Limits."""
-        """Check company usage against limits"""
         company = self.get_company_by_id(company_id)
         if not company:
             return {}
@@ -146,14 +121,10 @@ class TenantService:
         }
     
     def can_add_user(self, company_id: int) -> bool:
-        """Can Add User."""
-        """Check if company can add more users"""
         limits = self.check_company_limits(company_id)
         return not limits.get('users', {}).get('exceeded', True)
     
     def get_company_subscription_status(self, company_id: int) -> Dict[str, Any]:
-        """Get Company Subscription Status."""
-        """Get company subscription status"""
         company = self.get_company_by_id(company_id)
         if not company:
             return {}
@@ -188,8 +159,6 @@ class TenantService:
         }
     
     def extend_trial(self, company_id: int, days: int) -> bool:
-        """Extend Trial."""
-        """Extend company trial period"""
         try:
             company = self.get_company_by_id(company_id)
             if not company:
@@ -210,8 +179,6 @@ class TenantService:
             return False
     
     def suspend_company(self, company_id: int, reason: str = None) -> bool:
-        """Suspend Company."""
-        """Suspend a company"""
         try:
             company = self.get_company_by_id(company_id)
             if not company:
@@ -235,8 +202,6 @@ class TenantService:
             return False
     
     def reactivate_company(self, company_id: int) -> bool:
-        """Reactivate Company."""
-        """Reactivate a suspended company"""
         try:
             company = self.get_company_by_id(company_id)
             if not company:
@@ -260,8 +225,6 @@ class TenantService:
             return False
     
     def get_company_analytics(self, company_id: int) -> Dict[str, Any]:
-        """Get Company Analytics."""
-        """Get company analytics data"""
         company = self.get_company_by_id(company_id)
         if not company:
             return {}
@@ -294,8 +257,6 @@ class TenantService:
         }
     
     def validate_company_access(self, user: User, company_id: int) -> bool:
-        """Validate Company Access."""
-        """Validate if user can access company resources"""
         # Super admin can access any company
         if user.is_superuser:
             return True
@@ -307,8 +268,6 @@ class TenantService:
         return self.check_user_company_access(user.id, company_id)
     
     def get_company_context(self, company_id: int) -> Dict[str, Any]:
-        """Get Company Context."""
-        """Get complete company context for frontend"""
         company = self.get_company_by_id(company_id)
         if not company:
             return {}

@@ -27,8 +27,6 @@ class NetPayProcessor:
     """Handles net pay calculation and payment processing."""
     
     def __init__(self, db: Session):
-        """  Init  ."""
-        """Initialize the net pay processor with a database session."""
         self.db = db
     
     def calculate_net_pay(

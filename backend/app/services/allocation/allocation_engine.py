@@ -28,12 +28,9 @@ class AllocationEngine:
     """Engine for processing allocation rules and creating allocations."""
     
     def __init__(self, db: Session):
-        """  Init  ."""
         self.db = db
     
     def create_allocation_rule(self, rule_data: Dict[str, Any], created_by: UUID) -> AllocationRule:
-        """Create Allocation Rule."""
-        """Create a new allocation rule."""
         if not rule_data.get('rule_code'):
             rule_data['rule_code'] = self._generate_rule_code()
         
@@ -73,8 +70,6 @@ class AllocationEngine:
         return rule
     
     def process_allocation(self, journal_entry_id: UUID, created_by: UUID) -> Optional[Allocation]:
-        """Process Allocation."""
-        """Process allocation for a journal entry based on matching rules."""
         journal_entry = self.db.query(JournalEntry).filter(
             JournalEntry.id == journal_entry_id
         ).first()
@@ -119,22 +114,16 @@ class AllocationEngine:
         return allocation
     
     def get_allocation_rules(self, skip: int = 0, limit: int = 100) -> List[AllocationRule]:
-        """Get Allocation Rules."""
-        """Get allocation rules."""
         return self.db.query(AllocationRule)\
                    .order_by(AllocationRule.priority, AllocationRule.rule_name)\
                    .offset(skip).limit(limit).all()
     
     def get_allocation_rule(self, rule_id: UUID) -> Optional[AllocationRule]:
-        """Get Allocation Rule."""
-        """Get an allocation rule by ID."""
         return self.db.query(AllocationRule).filter(
             AllocationRule.id == rule_id
         ).first()
     
     def _find_matching_rules(self, journal_entry: JournalEntry) -> List[AllocationRule]:
-        """ Find Matching Rules."""
-        """Find allocation rules that match a journal entry."""
         query = self.db.query(AllocationRule).filter(
             and_(
                 AllocationRule.status == AllocationStatus.ACTIVE,
@@ -281,8 +270,6 @@ class AllocationEngine:
         return je
     
     def _generate_rule_code(self) -> str:
-        """ Generate Rule Code."""
-        """Generate a unique rule code."""
         last_rule = self.db.query(AllocationRule)\
             .order_by(desc(AllocationRule.created_at))\
             .first()
@@ -299,8 +286,6 @@ class AllocationEngine:
         return f"AR-{next_num:04d}"
     
     def _generate_allocation_number(self) -> str:
-        """ Generate Allocation Number."""
-        """Generate a unique allocation number."""
         last_allocation = self.db.query(Allocation)\
             .order_by(desc(Allocation.created_at))\
             .first()

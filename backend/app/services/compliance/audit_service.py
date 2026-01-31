@@ -33,7 +33,6 @@ class AuditService:
     """
     
     def __init__(self, db: Session):
-        """  Init  ."""
         self.db = db
     
     def create_audit_log(
@@ -91,7 +90,6 @@ class AuditService:
             raise exceptions.AuditLogError(f"Failed to create audit log: {str(e)}")
     
     def get_audit_log(self, log_id: UUID) -> models.AuditLog:
-        """Get Audit Log."""
         """
         Retrieve an audit log entry by ID.
         

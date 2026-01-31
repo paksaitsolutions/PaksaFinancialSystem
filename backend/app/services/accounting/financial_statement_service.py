@@ -42,8 +42,6 @@ class FinancialStatementService(BaseService):
     """
     
     def __init__(self, db: Session):
-        """  Init  ."""
-        """Initialize the service with a database session."""
         super().__init__(db)
         self.period_service = GLPeriodService(db)
     
@@ -255,7 +253,6 @@ class FinancialStatementService(BaseService):
         return balance_sheet
     
     def _get_account_balances_for_period(self, period_id: UUID) -> Dict[UUID, Dict[str, Any]]:
-        """ Get Account Balances For Period."""
         """
         Get account balances for a specific period.
         
@@ -317,7 +314,6 @@ class FinancialStatementService(BaseService):
         return balances
     
     def _get_accounts_by_type(self, account_type: str) -> List[Account]:
-        """ Get Accounts By Type."""
         """
         Get all accounts of a specific type.
         
@@ -335,7 +331,6 @@ class FinancialStatementService(BaseService):
         )
     
     def _get_previous_period(self, period: GLPeriod) -> Optional[GLPeriod]:
-        """ Get Previous Period."""
         """
         Get the previous period for a given period.
         
@@ -356,7 +351,6 @@ class FinancialStatementService(BaseService):
         )
     
     def _format_amount(self, amount: Decimal, format_currency: bool, currency: str) -> Union[str, Decimal]:
-        """ Format Amount."""
         """
         Format an amount as a currency string if requested.
         
@@ -375,7 +369,6 @@ class FinancialStatementService(BaseService):
         return f"{currency} {amount:,.2f}"
     
     def _parse_amount(self, amount: Union[str, Decimal]) -> Decimal:
-        """ Parse Amount."""
         """
         Parse an amount from a formatted currency string or return as is.
         
@@ -640,7 +633,6 @@ class FinancialStatementService(BaseService):
         return income_statement
     
     def _get_first_period_of_fiscal_year(self, fiscal_year: str) -> Optional[GLPeriod]:
-        """ Get First Period Of Fiscal Year."""
         """
         Get the first period of a fiscal year.
         
@@ -1251,7 +1243,6 @@ class FinancialStatementService(BaseService):
                 balance_sheet['is_balanced_prev'] = abs(total_assets_prev - total_liab_equity_prev) < Decimal('0.01')
     
     def _get_accounts_by_type(self, account_type: str) -> List[Account]:
-        """ Get Accounts By Type."""
         """
         Get all accounts of a specific type.
         

@@ -30,13 +30,10 @@ class AIModule(ABC):
     @property
     @abstractmethod
     def module_name(self) -> str:
-        """Module Name."""
-        """Return the name of the module"""
         pass
     
     @abstractmethod
     async def handle_query(self, query: str, context: Dict[str, Any]) -> ModuleResponse:
-        """Handle Query."""
         """
         Handle a user query within this module's context
         
@@ -51,7 +48,6 @@ class AIModule(ABC):
     
     @abstractmethod
     async def get_suggestions(self, context: Dict[str, Any]) -> List[Dict[str, str]]:
-        """Get Suggestions."""
         """
         Get contextual suggestions for the current state
         
@@ -64,7 +60,6 @@ class AIModule(ABC):
         pass
     
     async def get_module_info(self) -> Dict[str, Any]:
-        """Get Module Info."""
         """
         Get information about this module's capabilities
         

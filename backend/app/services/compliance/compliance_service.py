@@ -24,7 +24,6 @@ class ComplianceService:
     """Service for generating compliance reports."""
     
     def __init__(self, db: Session):
-        """  Init  ."""
         self.db = db
         self.audit_service = AuditService(db)
     
@@ -76,8 +75,6 @@ class ComplianceService:
         return report
     
     def get_report(self, report_id: UUID) -> Optional[ComplianceReport]:
-        """Get Report."""
-        """Get a compliance report by ID."""
         return self.db.query(ComplianceReport).filter(
             ComplianceReport.id == report_id
         ).first()
@@ -103,8 +100,6 @@ class ComplianceService:
                    .offset(skip).limit(limit).all()
     
     def create_policy(self, policy_data: Dict[str, Any], created_by: UUID) -> CompliancePolicy:
-        """Create Policy."""
-        """Create a compliance policy."""
         policy = CompliancePolicy(
             policy_name=policy_data['policy_name'],
             policy_code=policy_data['policy_code'],
@@ -124,8 +119,6 @@ class ComplianceService:
         return policy
     
     def list_policies(self, active_only: bool = True) -> List[CompliancePolicy]:
-        """List Policies."""
-        """List compliance policies."""
         query = self.db.query(CompliancePolicy)
         
         if active_only:
@@ -412,8 +405,6 @@ class ComplianceService:
         }
     
     def _get_report_name(self, report_type: str) -> str:
-        """ Get Report Name."""
-        """Get human-readable report name."""
         names = {
             ComplianceReportType.AUDIT_TRAIL: "Audit Trail Compliance Report",
             ComplianceReportType.ACCESS_CONTROL: "Access Control Compliance Report",
@@ -424,8 +415,6 @@ class ComplianceService:
         return names.get(report_type, f"Compliance Report - {report_type}")
     
     def _generate_report_number(self, report_type: str) -> str:
-        """ Generate Report Number."""
-        """Generate unique report number."""
         prefix = report_type.upper()[:3]
         timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S")
         return f"{prefix}-{timestamp}"

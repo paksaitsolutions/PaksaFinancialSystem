@@ -232,8 +232,6 @@ class BarcodeService:
         }
     
     async def _unset_primary_barcodes(self, db: AsyncSession, item_id: UUID) -> None:
-        """Unset Primary Barcodes."""
-        """Unset primary flag for all barcodes of an item."""
         result = await db.execute(
             select(BarcodeMapping).where(
                 and_(

@@ -28,7 +28,6 @@ class AlertingService:
     """Service for system alerting."""
     
     def __init__(self, db: Session):
-        """  Init  ."""
         self.db = db
     
     def create_alert(
@@ -56,8 +55,6 @@ class AlertingService:
         return alert
     
     def resolve_alert(self, alert_id: str) -> bool:
-        """Resolve Alert."""
-        """Resolve an alert."""
         alert = self.db.query(SystemAlert).filter(SystemAlert.id == alert_id).first()
         if alert:
             alert.resolved = True
@@ -67,15 +64,11 @@ class AlertingService:
         return False
     
     def get_active_alerts(self) -> List[SystemAlert]:
-        """Get Active Alerts."""
-        """Get all active (unresolved) alerts."""
         return self.db.query(SystemAlert).filter(
             SystemAlert.resolved == False
         ).order_by(SystemAlert.created_at.desc()).all()
     
     def check_system_thresholds(self, metrics: Dict[str, Any]):
-        """Check System Thresholds."""
-        """Check system metrics against thresholds and create alerts."""
         # CPU threshold
         if metrics.get("cpu", {}).get("usage_percent", 0) > 80:
             self.create_alert(

@@ -9,12 +9,9 @@ from app.models.user import User
 
 class AuthService:
     def __init__(self, db: AsyncSession):
-        """  Init  ."""
         self.db = db
     
     async def authenticate_user(self, username: str, password: str) -> Optional[User]:
-        """Authenticate User."""
-        """Authenticate user by username/email and password."""
         result = await self.db.execute(
             select(User).where(
                 (User.username == username) | (User.email == username),
@@ -29,8 +26,6 @@ class AuthService:
         return user
     
     async def create_user(self, user_data: dict) -> User:
-        """Create User."""
-        """Create a new user."""
         user = User(
             email=user_data['email'],
             username=user_data.get('username'),
@@ -47,7 +42,5 @@ class AuthService:
         return user
     
     async def get_user_by_id(self, user_id: str) -> Optional[User]:
-        """Get User By Id."""
-        """Get user by ID."""
         result = await self.db.execute(select(User).where(User.id == user_id))
         return result.scalars().first()

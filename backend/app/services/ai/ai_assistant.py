@@ -20,14 +20,12 @@ class AIAssistantManager:
     _instance = None
     
     def __new__(cls):
-        """  New  ."""
         if cls._instance is None:
             cls._instance = super(AIAssistantManager, cls).__new__(cls)
             cls._instance._initialized = False
         return cls._instance
     
     def __init__(self):
-        """  Init  ."""
         if self._initialized:
             return
             
@@ -36,8 +34,6 @@ class AIAssistantManager:
         self._initialize_modules()
     
     def _initialize_modules(self):
-        """ Initialize Modules."""
-        """Initialize all AI modules and register them with the assistant."""
         try:
             # Register modules directly without async
             self.assistant.modules = {
@@ -53,14 +49,10 @@ class AIAssistantManager:
             pass
     
     def get_assistant(self) -> AIAssistant:
-        """Get Assistant."""
-        """Get the initialized AI assistant instance."""
         return self.assistant
 
 # Create a singleton instance of the AI Assistant Manager
 ai_assistant_manager = AIAssistantManager()
 
 def get_ai_assistant() -> AIAssistant:
-    """Get Ai Assistant."""
-    """Dependency function to get the AI assistant instance."""
     return ai_assistant_manager.get_assistant()

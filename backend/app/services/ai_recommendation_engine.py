@@ -13,13 +13,10 @@ class AIRecommendationEngine:
     """AI-powered recommendation engine for financial optimization"""
     
     def __init__(self, db: Session, tenant_id: str):
-        """  Init  ."""
         self.db = db
         self.tenant_id = tenant_id
     
     async def generate_recommendations(self) -> List[Dict[str, Any]]:
-        """Generate Recommendations."""
-        """Generate AI recommendations based on real-time financial analysis"""
         recommendations = []
         
         # Analyze different financial areas
@@ -45,8 +42,6 @@ class AIRecommendationEngine:
         return recommendations[:10]  # Return top 10 recommendations
     
     async def _analyze_accounts_payable(self) -> List[Dict[str, Any]]:
-        """Analyze Accounts Payable."""
-        """Analyze AP data for optimization opportunities"""
         recommendations = []
         
         try:
@@ -120,8 +115,6 @@ class AIRecommendationEngine:
         return recommendations
     
     async def _analyze_accounts_receivable(self) -> List[Dict[str, Any]]:
-        """Analyze Accounts Receivable."""
-        """Analyze AR data for collection opportunities"""
         recommendations = []
         
         try:
@@ -173,8 +166,6 @@ class AIRecommendationEngine:
         return recommendations
     
     async def _analyze_cash_flow(self) -> List[Dict[str, Any]]:
-        """Analyze Cash Flow."""
-        """Analyze cash flow patterns"""
         recommendations = []
         
         try:
@@ -224,8 +215,6 @@ class AIRecommendationEngine:
         return recommendations
     
     async def _analyze_general_ledger(self) -> List[Dict[str, Any]]:
-        """Analyze General Ledger."""
-        """Analyze GL for unusual patterns"""
         recommendations = []
         
         try:
@@ -257,8 +246,6 @@ class AIRecommendationEngine:
         return recommendations
     
     async def _analyze_budget_variance(self) -> List[Dict[str, Any]]:
-        """Analyze Budget Variance."""
-        """Analyze budget vs actual variances"""
         recommendations = []
         
         try:
@@ -291,15 +278,11 @@ class AIRecommendationEngine:
         return recommendations
     
     async def get_recommendation_by_id(self, recommendation_id: str) -> Optional[Dict[str, Any]]:
-        """Get Recommendation By Id."""
-        """Get specific recommendation by ID"""
         # In real implementation, this would query the database
         # For now, return None to indicate recommendation not found
         return None
     
     async def dismiss_recommendation(self, recommendation_id: str) -> bool:
-        """Dismiss Recommendation."""
-        """Mark recommendation as dismissed"""
         try:
             # In real implementation, update database to mark as dismissed
             # For now, just return success

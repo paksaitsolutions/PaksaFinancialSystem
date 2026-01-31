@@ -39,12 +39,9 @@ class AccountService(BaseService):
     """Service for managing Chart of Accounts."""
     
     def __init__(self, db: Session):
-        """  Init  ."""
         super().__init__(db, ChartOfAccounts)
     
     def _validate_account_creation(self, account_data: AccountCreate) -> None:
-        """ Validate Account Creation."""
-        """Validate account creation data."""
         # Validate account type and sub-type compatibility
         if account_data.account_type == AccountType.ASSET:
             if account_data.sub_type not in [
@@ -60,8 +57,6 @@ class AccountService(BaseService):
         # Add more validations for other account types...
 
     def _validate_account_code(self, code: str, company_id: UUID, account_id: UUID = None) -> None:
-        """ Validate Account Code."""
-        """Validate account code uniqueness within company."""
         query = self.db.query(ChartOfAccounts).filter(
             ChartOfAccounts.code == code,
             ChartOfAccounts.company_id == company_id,
@@ -75,8 +70,6 @@ class AccountService(BaseService):
             raise BusinessRuleException(f"Account code {code} already exists in this company")
 
     def _get_account_balance_query(self, account_id: UUID, as_of_date: date = None):
-        """ Get Account Balance Query."""
-        """Build a query to calculate account balance."""
         # Base query for journal entries
         query = self.db.query(
             func.coalesce(
@@ -108,8 +101,6 @@ class AccountService(BaseService):
         return query
 
     def get_account_balance(self, account_id: UUID, as_of_date: date = None) -> Decimal:
-        """Get Account Balance."""
-        """Get the current balance of an account."""
         account = self.db.query(ChartOfAccounts).get(account_id)
         if not account or not account.is_active:
             raise NotFoundException(f"Account {account_id} not found")
@@ -124,8 +115,6 @@ class AccountService(BaseService):
         return balance.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
 
     def get_children_balance(self, parent_id: UUID, as_of_date: date = None) -> Decimal:
-        """Get Children Balance."""
-        """Calculate the total balance of all child accounts."""
         children = self.db.query(ChartOfAccounts.id).filter(
             ChartOfAccounts.parent_id == parent_id,
             ChartOfAccounts.is_active == True
@@ -139,8 +128,6 @@ class AccountService(BaseService):
         return total_balance.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
 
     def get_account_hierarchy(self, company_id: UUID) -> List[Dict[str, Any]]:
-        """Get Account Hierarchy."""
-        """Get the complete account hierarchy for a company."""
         accounts = self.db.query(ChartOfAccounts).filter(
             ChartOfAccounts.company_id == company_id,
             ChartOfAccounts.is_active == True
@@ -150,8 +137,6 @@ class AccountService(BaseService):
         account_map = {}
             
     def create_account(self, account_data: AccountCreate, created_by: UUID) -> AccountResponse:
-        """Create Account."""
-        """Create a new account in the chart of accounts."""
         # Validate account data
         self._validate_account_creation(account_data)
         
@@ -211,8 +196,6 @@ class AccountService(BaseService):
         return AccountResponse.from_orm(account)
     
     def _update_parent_leaf_status(self, account_id: UUID, is_leaf: bool) -> None:
-        """ Update Parent Leaf Status."""
-        """Update the is_leaf status of a parent account."""
         account = self.db.query(ChartOfAccounts).get(account_id)
         if account and account.is_leaf != is_leaf:
             account.is_leaf = is_leaf
@@ -221,8 +204,6 @@ class AccountService(BaseService):
             self.db.flush()
     
     def _update_account_hierarchy_path(self, account: ChartOfAccounts) -> None:
-        """ Update Account Hierarchy Path."""
-        """Update the hierarchy path for an account."""
         if account.parent_id:
             parent = self.db.query(ChartOfAccounts).get(account.parent_id)
             account.hierarchy_path = f"{parent.hierarchy_path}.{account.id}"
@@ -237,8 +218,6 @@ class AccountService(BaseService):
         self._update_descendants_hierarchy_path(account)
     
     def _update_descendants_hierarchy_path(self, account: ChartOfAccounts) -> None:
-        """ Update Descendants Hierarchy Path."""
-        """Update hierarchy paths for all descendants of an account."""
         children = self.db.query(ChartOfAccounts).filter(
             ChartOfAccounts.parent_id == account.id,
             ChartOfAccounts.is_active == True
@@ -250,8 +229,6 @@ class AccountService(BaseService):
             self._update_descendants_hierarchy_path(child)
     
     def _update_account_balance(self, account_id: UUID) -> None:
-        """ Update Account Balance."""
-        """Update the current balance of an account."""
         account = self.db.query(ChartOfAccounts).get(account_id)
         if not account:
             return
@@ -343,8 +320,6 @@ class AccountService(BaseService):
         return AccountResponse.from_orm(account)
     
     def delete_account(self, account_id: UUID, deleted_by: UUID) -> bool:
-        """Delete Account."""
-        """Soft delete an account."""
         account = self.db.query(ChartOfAccounts).get(account_id)
         if not account or not account.is_active:
             raise NotFoundException(f"Account {account_id} not found")
@@ -382,8 +357,6 @@ class AccountService(BaseService):
         return True
     
     def get_account_tree(self, company_id: UUID) -> List[AccountTreeResponse]:
-        """Get Account Tree."""
-        """Get the complete account hierarchy as a tree."""
         # Get all active accounts for the company
         accounts = self.db.query(ChartOfAccounts).filter(
             ChartOfAccounts.company_id == company_id,
@@ -477,8 +450,6 @@ class AccountService(BaseService):
         )
     
     def _is_descendant(self, parent_id: UUID, child_id: UUID) -> bool:
-        """ Is Descendant."""
-        """Check if an account is a descendant of another account."""
         if parent_id == child_id:
             return True
         

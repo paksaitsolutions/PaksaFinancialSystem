@@ -21,7 +21,6 @@ class UserActivityService:
     """Service for user activity tracking and management."""
     
     def __init__(self, db: Session):
-        """  Init  ."""
         self.db = db
     
     def log_login(

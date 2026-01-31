@@ -28,13 +28,10 @@ class TaxAnalyticsService:
     """Service for tax analytics and reporting."""
 
     def __init__(self, db: AsyncSession):
-        """  Init  ."""
         self.db = db
         self.ai_service = AIService(db)
 
     async def get_tax_analytics(self, request: TaxAnalyticsRequest) -> TaxAnalyticsResponse:
-        """Get Tax Analytics."""
-        """Get comprehensive tax analytics based on the request parameters."""
         try:
             # Get date range based on period
             start_date, end_date = self._get_date_range(request.period)
@@ -58,8 +55,6 @@ class TaxAnalyticsService:
             raise HTTPException(status_code=500, detail=str(e))
 
     async def _calculate_metrics(self, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
-        """Calculate Metrics."""
-        """Calculate tax metrics for the specified period."""
         # Get total tax amount
         total_tax = await self._get_total_tax(start_date, end_date)
 
@@ -84,8 +79,6 @@ class TaxAnalyticsService:
         }
 
     async def _generate_insights(self, metrics: Dict[str, Any]) -> Dict[str, str]:
-        """Generate Insights."""
-        """Generate AI-powered insights based on the calculated metrics."""
         try:
             return await self.ai_service.generate_insights({
                 "metrics": metrics,
@@ -103,8 +96,6 @@ class TaxAnalyticsService:
             }
 
     def _get_date_range(self, period: str) -> tuple[datetime, datetime]:
-        """ Get Date Range."""
-        """Get date range based on the period type."""
         now = datetime.utcnow()
         
         if period == "current_month":
@@ -124,8 +115,6 @@ class TaxAnalyticsService:
         return start_date, end_date
 
     async def _get_total_tax(self, start_date: datetime, end_date: datetime) -> float:
-        """Get Total Tax."""
-        """Calculate total tax amount for the period."""
         query = (
             select(func.sum(TaxTransaction.amount))
             .where(
@@ -139,8 +128,6 @@ class TaxAnalyticsService:
         return result.scalar() or 0.0
 
     async def _get_avg_tax_per_employee(self, start_date: datetime, end_date: datetime) -> float:
-        """Get Avg Tax Per Employee."""
-        """Calculate average tax per employee for the period."""
         query = (
             select(
                 func.sum(TaxTransaction.amount).label("total_tax"),
@@ -160,8 +147,6 @@ class TaxAnalyticsService:
         return row.total_tax / row.employee_count
 
     async def _get_compliance_rate(self, start_date: datetime, end_date: datetime) -> float:
-        """Get Compliance Rate."""
-        """Calculate tax compliance rate for the period."""
         query = (
             select(
                 func.count(
@@ -186,8 +171,6 @@ class TaxAnalyticsService:
         return (row.compliant_count / row.total_count) * 100
 
     async def _get_exemption_usage(self, start_date: datetime, end_date: datetime) -> Dict[str, float]:
-        """Get Exemption Usage."""
-        """Calculate exemption usage by type for the period."""
         query = (
             select(
                 TaxExemption.type,
@@ -205,8 +188,6 @@ class TaxAnalyticsService:
         return {row.type: row.total_amount for row in result.all()}
 
     async def _get_jurisdictional_breakdown(self, start_date: datetime, end_date: datetime) -> Dict[str, float]:
-        """Get Jurisdictional Breakdown."""
-        """Calculate tax breakdown by jurisdiction for the period."""
         query = (
             select(
                 TaxTransaction.jurisdiction,

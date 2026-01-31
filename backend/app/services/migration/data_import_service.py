@@ -30,12 +30,9 @@ class DataImportService:
     """Service for importing data from various sources."""
     
     def __init__(self, db: Session):
-        """  Init  ."""
         self.db = db
     
     def import_csv(self, file_path: str, data_type: str, mapping: Dict[str, str]) -> ImportJob:
-        """Import Csv."""
-        """Import data from CSV file."""
         job = ImportJob(
             job_name=f"CSV Import - {data_type}",
             file_path=file_path,
@@ -74,8 +71,6 @@ class DataImportService:
         return job
     
     def _apply_mapping(self, data: Dict[str, Any], mapping: Dict[str, str]) -> Dict[str, Any]:
-        """ Apply Mapping."""
-        """Apply field mapping to data."""
         mapped_data = {}
         for source_field, target_field in mapping.items():
             if source_field in data:
@@ -83,8 +78,6 @@ class DataImportService:
         return mapped_data
     
     def _validate_record(self, data_type: str, data: Dict[str, Any]):
-        """ Validate Record."""
-        """Validate record data."""
         if not data:
             raise ValueError("Empty data record")
         
@@ -101,8 +94,6 @@ class DataImportService:
                     raise ValueError(f"Missing required field: {field}")
     
     def get_import_jobs(self, limit: int = 50) -> List[ImportJob]:
-        """Get Import Jobs."""
-        """Get import job history."""
         return self.db.query(ImportJob).order_by(
             ImportJob.created_at.desc()
         ).limit(limit).all()

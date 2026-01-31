@@ -29,7 +29,6 @@ class ReconciliationService(BaseService[models.Reconciliation, schemas.Reconcili
     """Service for managing account reconciliations."""
     
     def __init__(self, db: Optional[Session] = None):
-        """  Init  ."""
         """
         Initialize the service with an optional database session.
         
@@ -42,16 +41,12 @@ class ReconciliationService(BaseService[models.Reconciliation, schemas.Reconcili
         self.balance_service = AccountBalanceService(db)
     
     def _get_db(self) -> Session:
-        """ Get Db."""
-        """Get a database session."""
         if self.db is None:
             from app.core.database import SessionLocal
             self.db = SessionLocal()
         return self.db
     
     def _get_reconciliation_or_404(self, reconciliation_id: UUID) -> models.Reconciliation:
-        """ Get Reconciliation Or 404."""
-        """Get a reconciliation by ID or raise appropriate exception."""
         return self._get_or_404(
             self._get_db(), 
             models.Reconciliation, 
@@ -60,8 +55,6 @@ class ReconciliationService(BaseService[models.Reconciliation, schemas.Reconcili
         )
     
     def _get_reconciliation_item_or_404(self, item_id: UUID) -> models.ReconciliationItem:
-        """ Get Reconciliation Item Or 404."""
-        """Get a reconciliation item by ID or raise appropriate exception."""
         return self._get_or_404(
             self._get_db(),
             models.ReconciliationItem,
@@ -70,8 +63,6 @@ class ReconciliationService(BaseService[models.Reconciliation, schemas.Reconcili
         )
     
     def _get_account_or_404(self, account_id: UUID) -> models.Account:
-        """ Get Account Or 404."""
-        """Get an account by ID or raise appropriate exception."""
         return self._get_or_404(
             self._get_db(),
             models.Account,
@@ -111,7 +102,6 @@ class ReconciliationService(BaseService[models.Reconciliation, schemas.Reconcili
                 )
     
     def _count_unmatched_items(self, reconciliation_id: UUID) -> int:
-        """ Count Unmatched Items."""
         """
         Count unmatched items for a reconciliation.
         

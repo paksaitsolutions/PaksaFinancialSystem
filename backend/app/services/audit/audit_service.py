@@ -20,7 +20,6 @@ class AuditService:
     """Service for managing audit logs."""
     
     def __init__(self, db: Session):
-        """  Init  ."""
         self.db = db
     
     def log_action(
@@ -105,8 +104,6 @@ class AuditService:
                    .offset(skip).limit(limit).all()
     
     def get_user_activity(self, user_id: UUID, days: int = 30) -> List[AuditLog]:
-        """Get User Activity."""
-        """Get recent activity for a user."""
         start_date = datetime.utcnow() - timedelta(days=days)
         
         return self.db.query(AuditLog).filter(
@@ -117,8 +114,6 @@ class AuditService:
         ).order_by(desc(AuditLog.timestamp)).all()
     
     def get_resource_history(self, resource_type: str, resource_id: str) -> List[AuditLog]:
-        """Get Resource History."""
-        """Get audit history for a specific resource."""
         return self.db.query(AuditLog).filter(
             and_(
                 AuditLog.resource_type == resource_type,
@@ -127,8 +122,6 @@ class AuditService:
         ).order_by(desc(AuditLog.timestamp)).all()
     
     def get_audit_statistics(self, days: int = 30) -> Dict[str, Any]:
-        """Get Audit Statistics."""
-        """Get audit statistics."""
         start_date = datetime.utcnow() - timedelta(days=days)
         
         total_logs = self.db.query(func.count(AuditLog.id)).filter(
@@ -165,8 +158,6 @@ class AuditService:
         }
     
     def cleanup_old_logs(self) -> int:
-        """Cleanup Old Logs."""
-        """Clean up old audit logs based on retention policy."""
         config = self.get_active_config()
         retention_days = int(config.retention_days)
         
@@ -185,8 +176,6 @@ class AuditService:
         return count
     
     def get_active_config(self) -> AuditConfig:
-        """Get Active Config."""
-        """Get active audit configuration."""
         config = self.db.query(AuditConfig).filter(
             AuditConfig.is_active == "true"
         ).first()
@@ -197,8 +186,6 @@ class AuditService:
         return config
     
     def _should_log_action(self, action: str, resource_type: str, config: AuditConfig) -> bool:
-        """ Should Log Action."""
-        """Check if action should be logged based on configuration."""
         if action in [AuditAction.CREATE, AuditAction.UPDATE, AuditAction.DELETE]:
             return True
         
@@ -216,8 +203,6 @@ class AuditService:
         return True
     
     def _clean_sensitive_data(self, data: Optional[Dict], resource_type: str) -> Optional[Dict]:
-        """ Clean Sensitive Data."""
-        """Clean sensitive data from audit logs."""
         if not data:
             return data
         
@@ -235,8 +220,6 @@ class AuditService:
         return cleaned_data
     
     def _create_default_config(self) -> AuditConfig:
-        """ Create Default Config."""
-        """Create default audit configuration."""
         config = AuditConfig(
             name="Default Audit Configuration",
             description="Default audit logging settings",

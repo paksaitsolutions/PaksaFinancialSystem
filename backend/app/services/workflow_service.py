@@ -12,14 +12,11 @@ from app.services.tax_service import TaxService
 
 class WorkflowService(BaseService):
     def __init__(self, db: Session):
-        """  Init  ."""
         super().__init__(db, JournalEntry)
         self.tax_service = TaxService(db)
         self.payroll_gl_service = PayrollGLService(db)
     
     def process_ap_invoice_workflow(self, invoice: APInvoice) -> dict:
-        """Process Ap Invoice Workflow."""
-        """Complete AP invoice workflow with tax and GL integration"""
         
         # Step 1: Calculate taxes
         tax_amount = self.tax_service.calculate_tax_for_ap_invoice(invoice)
@@ -38,8 +35,6 @@ class WorkflowService(BaseService):
         }
     
     def process_payroll_workflow(self, payroll_run: PayrollRun) -> dict:
-        """Process Payroll Workflow."""
-        """Complete payroll workflow with GL integration"""
         
         # Step 1: Process payroll run
         payroll_run.status = 'approved'
@@ -63,8 +58,6 @@ class WorkflowService(BaseService):
         }
     
     def get_workflow_status(self, entity_type: str, entity_id: UUID) -> dict:
-        """Get Workflow Status."""
-        """Get workflow status for any entity"""
         
         if entity_type == "ap_invoice":
             invoice = self.db.query(APInvoice).filter(APInvoice.id == entity_id).first()

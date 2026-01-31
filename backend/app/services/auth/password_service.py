@@ -24,12 +24,9 @@ class PasswordService:
     """Service for managing password policies and validation."""
     
     def __init__(self, db: Session):
-        """  Init  ."""
         self.db = db
     
     def get_active_policy(self) -> PasswordPolicy:
-        """Get Active Policy."""
-        """Get the active password policy."""
         policy = self.db.query(PasswordPolicy).filter(
             PasswordPolicy.is_active == True
         ).first()
@@ -40,8 +37,6 @@ class PasswordService:
         return policy
     
     def validate_password(self, password: str, user_id: Optional[UUID] = None) -> Dict[str, Any]:
-        """Validate Password."""
-        """Validate password against active policy."""
         policy = self.get_active_policy()
         errors = []
         
@@ -80,18 +75,12 @@ class PasswordService:
         }
     
     def hash_password(self, password: str) -> str:
-        """Hash Password."""
-        """Hash a password."""
         return pwd_context.hash(password)
     
     def verify_password(self, plain_password: str, hashed_password: str) -> bool:
-        """Verify Password."""
-        """Verify a password against its hash."""
         return pwd_context.verify(plain_password, hashed_password)
     
     def change_password(self, user_id: UUID, old_password: str, new_password: str) -> Dict[str, Any]:
-        """Change Password."""
-        """Change user password with validation."""
         user = self.db.query(User).filter(User.id == user_id).first()
         if not user:
             raise ValidationException("User not found")
@@ -116,8 +105,6 @@ class PasswordService:
         return {'success': True, 'message': 'Password changed successfully'}
     
     def is_password_expired(self, user_id: UUID) -> bool:
-        """Is Password Expired."""
-        """Check if user's password has expired."""
         user = self.db.query(User).filter(User.id == user_id).first()
         if not user or not user.password_changed_at:
             return False
@@ -128,8 +115,6 @@ class PasswordService:
         return datetime.utcnow() > expiry_date
     
     def record_login_attempt(self, user_id: UUID, success: bool, ip_address: str = None, user_agent: str = None):
-        """Record Login Attempt."""
-        """Record a login attempt."""
         attempt = LoginAttempt(
             user_id=user_id,
             success=success,
@@ -142,8 +127,6 @@ class PasswordService:
         self.db.commit()
     
     def is_account_locked(self, user_id: UUID) -> Dict[str, Any]:
-        """Is Account Locked."""
-        """Check if account is locked due to failed login attempts."""
         policy = self.get_active_policy()
         lockout_window = datetime.utcnow() - timedelta(minutes=policy.lockout_duration_minutes)
         
@@ -178,8 +161,6 @@ class PasswordService:
         }
     
     def unlock_account(self, user_id: UUID):
-        """Unlock Account."""
-        """Manually unlock an account by clearing failed login attempts."""
         policy = self.get_active_policy()
         lockout_window = datetime.utcnow() - timedelta(minutes=policy.lockout_duration_minutes)
         
@@ -194,8 +175,6 @@ class PasswordService:
         self.db.commit()
     
     def _add_to_password_history(self, user_id: UUID, password_hash: str):
-        """ Add To Password History."""
-        """Add password to user's history."""
         history_entry = PasswordHistory(
             user_id=user_id,
             password_hash=password_hash
@@ -212,8 +191,6 @@ class PasswordService:
             self.db.delete(entry)
     
     def _is_password_in_history(self, password: str, user_id: UUID, history_count: int) -> bool:
-        """ Is Password In History."""
-        """Check if password exists in user's history."""
         history_entries = self.db.query(PasswordHistory).filter(
             PasswordHistory.user_id == user_id
         ).order_by(desc(PasswordHistory.created_at)).limit(history_count).all()
@@ -225,8 +202,6 @@ class PasswordService:
         return False
     
     def _create_default_policy(self) -> PasswordPolicy:
-        """ Create Default Policy."""
-        """Create default password policy."""
         policy = PasswordPolicy(
             name="Default Password Policy",
             description="Default security policy for password requirements",

@@ -8,19 +8,16 @@ from app.models.budget import Budget, BudgetLineItem
 
 class BudgetService:
     def __init__(self, db: AsyncSession, tenant_id: str):
-        """  Init  ."""
         self.db = db
         self.tenant_id = tenant_id
     
     async def get_budgets(self) -> List[Budget]:
-        """Get Budgets."""
         result = await self.db.execute(
             select(Budget).where(Budget.tenant_id == self.tenant_id)
         )
         return result.scalars().all()
     
     async def create_budget(self, budget_data: dict) -> Budget:
-        """Create Budget."""
         budget = Budget(
             tenant_id=self.tenant_id,
             budget_name=budget_data['budget_name'],

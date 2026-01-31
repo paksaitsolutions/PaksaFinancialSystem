@@ -73,7 +73,6 @@ class ReportService:
     """Service for generating and managing financial reports."""
     
     def __init__(self, db: Session):
-        """  Init  ."""
         self.db = db
         self.notification_service = NotificationService()
     
@@ -130,7 +129,6 @@ class ReportService:
             )
     
     async def get_report_status(self, report_id: str) -> Dict[str, Any]:
-        """Get Report Status."""
         """
         Get the status of a report.
         
@@ -324,8 +322,6 @@ class ReportService:
     # --- Helper Methods ---
     
     def _validate_report_definition(self, definition: ReportDefinition) -> None:
-        """ Validate Report Definition."""
-        """Validate a report definition."""
         if not definition.name or not definition.name.strip():
             raise ValueError("Report name is required")
         
@@ -357,8 +353,6 @@ class ReportService:
         }
     
     def _generate_report_async(self, report_id: str) -> None:
-        """ Generate Report Async."""
-        """Generate a report asynchronously."""
         # In a real implementation, this would queue a background task
         # For now, we'll just log a message
         logger.info(f"Starting async report generation for report {report_id}")
@@ -367,7 +361,6 @@ class ReportService:
         import threading
         
         def process():
-            """Process."""
             try:
                 # Simulate processing time
                 import time
@@ -385,8 +378,6 @@ class ReportService:
         thread.start()
     
     async def _generate_report(self, report_id: str) -> Dict[str, Any]:
-        """Generate Report."""
-        """Generate a report synchronously."""
         # In a real implementation, this would generate the actual report
         # For now, we'll just return a mock response
         return {
@@ -402,6 +393,4 @@ class ReportService:
 
 # Singleton instance for dependency injection
 def get_report_service(db: Session) -> ReportService:
-    """Get Report Service."""
-    """Get an instance of the report service."""
     return ReportService(db)

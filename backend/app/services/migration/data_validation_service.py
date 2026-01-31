@@ -11,14 +11,11 @@ class ValidationRule:
     """Base validation rule."""
     
     def __init__(self, field: str, rule_type: str, params: Dict[str, Any] = None):
-        """  Init  ."""
         self.field = field
         self.rule_type = rule_type
         self.params = params or {}
     
     def validate(self, data: Dict[str, Any]) -> Optional[str]:
-        """Validate."""
-        """Validate data against rule."""
         value = data.get(self.field)
         
         if self.rule_type == "required":
@@ -45,7 +42,6 @@ class DataValidationService:
     """Service for validating data during import/export."""
     
     def __init__(self):
-        """  Init  ."""
         self.validation_rules = {
             "vendors": [
                 ValidationRule("name", "required"),
@@ -65,8 +61,6 @@ class DataValidationService:
         }
     
     def validate_record(self, data_type: str, data: Dict[str, Any]) -> List[str]:
-        """Validate Record."""
-        """Validate a single record."""
         errors = []
         
         if data_type not in self.validation_rules:
@@ -80,8 +74,6 @@ class DataValidationService:
         return errors
     
     def validate_batch(self, data_type: str, records: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Validate Batch."""
-        """Validate a batch of records."""
         results = {
             "total_records": len(records),
             "valid_records": 0,
@@ -104,8 +96,6 @@ class DataValidationService:
         return results
     
     def get_validation_schema(self, data_type: str) -> Dict[str, Any]:
-        """Get Validation Schema."""
-        """Get validation schema for a data type."""
         if data_type not in self.validation_rules:
             return {}
         

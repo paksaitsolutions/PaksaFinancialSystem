@@ -38,7 +38,6 @@ class EncryptionService:
     """
     
     def __init__(self):
-        """  Init  ."""
         # Initialize with default encryption key from settings
         self.encryption_key = settings.ENCRYPTION_KEY.encode()
         
@@ -56,7 +55,6 @@ class EncryptionService:
             self.encryption_key = kdf.derive(self.encryption_key)
     
     def generate_key(self) -> bytes:
-        """Generate Key."""
         """
         Generate a new encryption key.
         
@@ -542,7 +540,6 @@ class EncryptionService:
             raise ValueError(f"Unsupported encoding: {encoding}")
     
     def generate_key_pair(self, key_size: int = 2048):
-        """Generate Key Pair."""
         """
         Generate an RSA key pair.
         

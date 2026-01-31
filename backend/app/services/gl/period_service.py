@@ -39,7 +39,6 @@ class PeriodService(BaseService):
     """Service for managing accounting periods and period closing."""
     
     def __init__(self, db: Session):
-        """  Init  ."""
         super().__init__(db, AccountingPeriod)
     
     def create_period(

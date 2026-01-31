@@ -11,12 +11,9 @@ from app.services.base import BaseService
 
 class PayrollGLService(BaseService):
     def __init__(self, db: Session):
-        """  Init  ."""
         super().__init__(db, PayrollRun)
     
     def post_payroll_to_gl(self, payroll_run: PayrollRun) -> JournalEntry:
-        """Post Payroll To Gl."""
-        """Post payroll run to GL with automatic journal entries"""
         
         # Create journal entry
         journal_entry = JournalEntry(
@@ -60,8 +57,6 @@ class PayrollGLService(BaseService):
         return journal_entry
     
     def post_tax_withholdings_to_gl(self, payroll_run: PayrollRun, federal_tax: Decimal, state_tax: Decimal, fica_tax: Decimal) -> JournalEntry:
-        """Post Tax Withholdings To Gl."""
-        """Post tax withholdings to liability accounts"""
         
         journal_entry = JournalEntry(
             company_id=payroll_run.company_id,
@@ -135,8 +130,6 @@ class PayrollGLService(BaseService):
         return journal_entry
     
     def post_benefits_deductions_to_gl(self, payroll_run: PayrollRun, health_insurance: Decimal, retirement_401k: Decimal, other_deductions: Decimal) -> JournalEntry:
-        """Post Benefits Deductions To Gl."""
-        """Post benefits deductions to GL accounts"""
         
         journal_entry = JournalEntry(
             company_id=payroll_run.company_id,
@@ -210,8 +203,6 @@ class PayrollGLService(BaseService):
         return journal_entry
     
     def _get_account(self, company_id: UUID, code: str, name: str) -> ChartOfAccounts:
-        """ Get Account."""
-        """Get or create chart of accounts"""
         account = self.db.query(ChartOfAccounts).filter(
             ChartOfAccounts.company_id == company_id,
             ChartOfAccounts.account_code == code

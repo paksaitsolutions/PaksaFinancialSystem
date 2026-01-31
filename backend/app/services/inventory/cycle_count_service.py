@@ -200,8 +200,6 @@ class CycleCountService:
         return [self._serialize_cycle_count(count) for count in counts]
     
     async def _generate_count_number(self, db: AsyncSession, tenant_id: UUID) -> str:
-        """Generate Count Number."""
-        """Generate unique count number."""
         today = date.today()
         prefix = f"CC-{today.strftime('%Y%m%d')}"
         
@@ -219,8 +217,6 @@ class CycleCountService:
         return f"{prefix}-{count + 1:04d}"
     
     def _serialize_count_item(self, item: CycleCountItem) -> Dict[str, Any]:
-        """ Serialize Count Item."""
-        """Serialize count item."""
         return {
             "item_id": str(item.item_id),
             "system_quantity": float(item.system_quantity),
@@ -231,8 +227,6 @@ class CycleCountService:
         }
     
     def _serialize_cycle_count(self, count: CycleCount) -> Dict[str, Any]:
-        """ Serialize Cycle Count."""
-        """Serialize cycle count."""
         return {
             "id": str(count.id),
             "count_number": count.count_number,
@@ -245,8 +239,6 @@ class CycleCountService:
         }
     
     def _calculate_accuracy(self, items: List[CycleCountItem]) -> float:
-        """ Calculate Accuracy."""
-        """Calculate count accuracy percentage."""
         if not items:
             return 100.0
         

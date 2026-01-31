@@ -23,19 +23,14 @@ class TenantAuthService:
     """Service for multi-tenant authentication operations."""
     
     def __init__(self, db: Session):
-        """  Init  ."""
         self.db = db
     
     def get_auth_config(self, company_id: UUID) -> Optional[TenantAuthConfig]:
-        """Get Auth Config."""
-        """Get authentication configuration for a company."""
         return self.db.query(TenantAuthConfig).filter(
             TenantAuthConfig.company_id == company_id
         ).first()
     
     def create_auth_config(self, company_id: UUID, config_data: Dict[str, Any]) -> TenantAuthConfig:
-        """Create Auth Config."""
-        """Create authentication configuration for a company."""
         config = TenantAuthConfig(
             company_id=company_id,
             custom_login_url=config_data.get('custom_login_url'),
@@ -107,8 +102,6 @@ class TenantAuthService:
         return session
     
     def validate_session(self, session_token: str) -> Optional[TenantSession]:
-        """Validate Session."""
-        """Validate and refresh a session."""
         session = self.db.query(TenantSession).filter(
             and_(
                 TenantSession.session_token == session_token,
@@ -132,8 +125,6 @@ class TenantAuthService:
         return session
     
     def terminate_session(self, session_token: str, reason: str = "user_logout") -> bool:
-        """Terminate Session."""
-        """Terminate a session."""
         session = self.db.query(TenantSession).filter(
             TenantSession.session_token == session_token
         ).first()
@@ -147,8 +138,6 @@ class TenantAuthService:
         return False
     
     def terminate_all_user_sessions(self, user_id: UUID, company_id: UUID, except_token: Optional[str] = None):
-        """Terminate All User Sessions."""
-        """Terminate all sessions for a user in a company."""
         query = self.db.query(TenantSession).filter(
             and_(
                 TenantSession.user_id == user_id,
@@ -234,8 +223,6 @@ class TenantAuthService:
         return reset_token
     
     def validate_password_reset_token(self, token: str) -> Optional[PasswordResetToken]:
-        """Validate Password Reset Token."""
-        """Validate a password reset token."""
         return self.db.query(PasswordResetToken).filter(
             and_(
                 PasswordResetToken.token == token,
@@ -245,8 +232,6 @@ class TenantAuthService:
         ).first()
     
     def use_password_reset_token(self, token: str) -> bool:
-        """Use Password Reset Token."""
-        """Mark a password reset token as used."""
         reset_token = self.validate_password_reset_token(token)
         
         if reset_token:
@@ -283,8 +268,6 @@ class TenantAuthService:
         return provider
     
     def get_oauth_providers(self, company_id: UUID, active_only: bool = True) -> List[OAuthProvider]:
-        """Get Oauth Providers."""
-        """Get OAuth providers for a company."""
         query = self.db.query(OAuthProvider).filter(
             OAuthProvider.company_id == company_id
         )
@@ -313,8 +296,6 @@ class TenantAuthService:
         return query.order_by(desc(CompanyLoginAttempt.created_at)).limit(limit).all()
     
     def cleanup_expired_sessions(self):
-        """Cleanup Expired Sessions."""
-        """Clean up expired sessions."""
         expired_sessions = self.db.query(TenantSession).filter(
             and_(
                 TenantSession.status == SessionStatus.ACTIVE,
@@ -329,8 +310,6 @@ class TenantAuthService:
         return len(expired_sessions)
     
     def _enforce_session_limit(self, user_id: UUID, company_id: UUID, limit: int):
-        """ Enforce Session Limit."""
-        """Enforce concurrent session limit."""
         active_sessions = self.db.query(TenantSession).filter(
             and_(
                 TenantSession.user_id == user_id,

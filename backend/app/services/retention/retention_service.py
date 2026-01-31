@@ -19,12 +19,9 @@ class DataRetentionService:
     """Service for managing data retention policies."""
     
     def __init__(self, db: Session):
-        """  Init  ."""
         self.db = db
     
     def create_policy(self, policy_data: Dict[str, Any], created_by: UUID) -> DataRetentionPolicy:
-        """Create Policy."""
-        """Create a data retention policy."""
         policy = DataRetentionPolicy(
             policy_name=policy_data['policy_name'],
             policy_code=policy_data['policy_code'],
@@ -48,8 +45,6 @@ class DataRetentionService:
         return policy
     
     def execute_policy(self, policy_id: UUID) -> RetentionExecution:
-        """Execute Policy."""
-        """Execute a data retention policy."""
         policy = self.get_policy(policy_id)
         if not policy:
             raise ValueError(f"Policy {policy_id} not found")
@@ -99,8 +94,6 @@ class DataRetentionService:
         return execution
     
     def execute_all_policies(self) -> List[RetentionExecution]:
-        """Execute All Policies."""
-        """Execute all active retention policies that are due."""
         due_policies = self.db.query(DataRetentionPolicy).filter(
             and_(
                 DataRetentionPolicy.status == RetentionStatus.ACTIVE,
@@ -119,15 +112,11 @@ class DataRetentionService:
         return executions
     
     def get_policy(self, policy_id: UUID) -> Optional[DataRetentionPolicy]:
-        """Get Policy."""
-        """Get a retention policy by ID."""
         return self.db.query(DataRetentionPolicy).filter(
             DataRetentionPolicy.id == policy_id
         ).first()
     
     def list_policies(self, active_only: bool = True) -> List[DataRetentionPolicy]:
-        """List Policies."""
-        """List retention policies."""
         query = self.db.query(DataRetentionPolicy)
         
         if active_only:
@@ -136,8 +125,6 @@ class DataRetentionService:
         return query.order_by(DataRetentionPolicy.policy_name).all()
     
     def get_execution_history(self, policy_id: Optional[UUID] = None, limit: int = 100) -> List[RetentionExecution]:
-        """Get Execution History."""
-        """Get retention execution history."""
         query = self.db.query(RetentionExecution)
         
         if policy_id:
@@ -146,8 +133,6 @@ class DataRetentionService:
         return query.order_by(desc(RetentionExecution.execution_date)).limit(limit).all()
     
     def initialize_default_policies(self):
-        """Initialize Default Policies."""
-        """Initialize default retention policies."""
         default_policies = [
             {
                 'policy_name': 'Audit Log Retention',
@@ -194,8 +179,6 @@ class DataRetentionService:
         self.db.commit()
     
     def _delete_records(self, policy: DataRetentionPolicy, cutoff_date: datetime) -> Dict[str, int]:
-        """ Delete Records."""
-        """Delete records based on retention policy."""
         where_clause = f"created_at < :cutoff_date"
         
         if policy.conditions:
@@ -222,8 +205,6 @@ class DataRetentionService:
         }
     
     def _archive_records(self, policy: DataRetentionPolicy, cutoff_date: datetime) -> Dict[str, int]:
-        """ Archive Records."""
-        """Archive records based on retention policy."""
         where_clause = f"created_at < :cutoff_date"
         
         if policy.conditions:
@@ -246,8 +227,6 @@ class DataRetentionService:
         }
     
     def _anonymize_records(self, policy: DataRetentionPolicy, cutoff_date: datetime) -> Dict[str, int]:
-        """ Anonymize Records."""
-        """Anonymize records based on retention policy."""
         where_clause = f"created_at < :cutoff_date"
         
         if policy.conditions:

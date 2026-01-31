@@ -21,7 +21,6 @@ class BackupService:
     """Service for database backup and restore operations."""
     
     def __init__(self, db: Session):
-        """  Init  ."""
         self.db = db
         from app.core.config import settings
         self.backup_dir = os.path.join(settings.UPLOAD_DIR, 'backups')
@@ -126,8 +125,6 @@ class BackupService:
         return restore_op
     
     def create_schedule(self, schedule_data: Dict[str, Any], created_by: UUID) -> BackupSchedule:
-        """Create Schedule."""
-        """Create a backup schedule."""
         schedule = BackupSchedule(
             schedule_name=schedule_data['schedule_name'],
             backup_type=schedule_data.get('backup_type', BackupType.FULL),
@@ -146,27 +143,19 @@ class BackupService:
         return schedule
     
     def get_backup(self, backup_id: UUID) -> Optional[Backup]:
-        """Get Backup."""
-        """Get a backup by ID."""
         return self.db.query(Backup).filter(Backup.id == backup_id).first()
     
     def list_backups(self, limit: int = 100) -> List[Backup]:
-        """List Backups."""
-        """List backups."""
         return self.db.query(Backup)\
                    .order_by(desc(Backup.created_at))\
                    .limit(limit).all()
     
     def list_restore_operations(self, limit: int = 100) -> List[RestoreOperation]:
-        """List Restore Operations."""
-        """List restore operations."""
         return self.db.query(RestoreOperation)\
                    .order_by(desc(RestoreOperation.created_at))\
                    .limit(limit).all()
     
     def list_schedules(self, active_only: bool = True) -> List[BackupSchedule]:
-        """List Schedules."""
-        """List backup schedules."""
         query = self.db.query(BackupSchedule)
         
         if active_only:
@@ -175,8 +164,6 @@ class BackupService:
         return query.order_by(BackupSchedule.schedule_name).all()
     
     def cleanup_old_backups(self, retention_days: int = 30) -> int:
-        """Cleanup Old Backups."""
-        """Clean up old backup files."""
         cutoff_date = datetime.utcnow() - timedelta(days=retention_days)
         
         old_backups = self.db.query(Backup).filter(
@@ -198,8 +185,6 @@ class BackupService:
         return cleaned_count
     
     def _perform_backup(self, backup: Backup) -> str:
-        """ Perform Backup."""
-        """Perform the actual backup operation."""
         timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
         filename = f"{backup.backup_name}_{timestamp}.sql"
         file_path = os.path.join(self.backup_dir, filename)
@@ -214,8 +199,6 @@ class BackupService:
         return file_path
     
     def _perform_restore(self, backup: Backup, restore_op: RestoreOperation) -> int:
-        """ Perform Restore."""
-        """Perform the actual restore operation."""
         if not backup.file_path or not os.path.exists(backup.file_path):
             raise Exception(f"Backup file not found: {backup.file_path}")
         
@@ -223,8 +206,6 @@ class BackupService:
         return 1000
     
     def _calculate_checksum(self, file_path: str) -> str:
-        """ Calculate Checksum."""
-        """Calculate SHA-256 checksum of backup file."""
         sha256_hash = hashlib.sha256()
         with open(file_path, "rb") as f:
             for chunk in iter(lambda: f.read(4096), b""):

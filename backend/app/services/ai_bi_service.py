@@ -28,13 +28,10 @@ logger = logging.getLogger(__name__)
 
 class AIBIService:
     def __init__(self, db: Session, tenant_id: str):
-        """  Init  ."""
         self.db = db
         self.tenant_id = UUID(tenant_id)
 
     async def get_insights(self, limit: int = 50, insight_type: Optional[str] = None) -> List[AIInsight]:
-        """Get Insights."""
-        """Get AI insights with optional filtering"""
         query = self.db.query(AIInsight).filter(
             AIInsight.tenant_id == self.tenant_id,
             AIInsight.status == "Active"
@@ -46,8 +43,6 @@ class AIBIService:
         return query.order_by(desc(AIInsight.created_at)).limit(limit).all()
 
     async def create_insight(self, insight_data: AIInsightCreate) -> AIInsight:
-        """Create Insight."""
-        """Create a new AI insight"""
         insight = AIInsight(
             tenant_id=self.tenant_id,
             **insight_data.model_dump()
@@ -58,16 +53,12 @@ class AIBIService:
         return insight
 
     async def get_recommendations(self, limit: int = 20, status: str = "Pending") -> List[AIRecommendation]:
-        """Get Recommendations."""
-        """Get AI recommendations"""
         return self.db.query(AIRecommendation).filter(
             AIRecommendation.tenant_id == self.tenant_id,
             AIRecommendation.status == status
         ).order_by(desc(AIRecommendation.confidence_score)).limit(limit).all()
 
     async def create_recommendation(self, rec_data: AIRecommendationCreate) -> AIRecommendation:
-        """Create Recommendation."""
-        """Create a new AI recommendation"""
         recommendation = AIRecommendation(
             tenant_id=self.tenant_id,
             **rec_data.model_dump()
@@ -78,8 +69,6 @@ class AIBIService:
         return recommendation
 
     async def apply_recommendation(self, recommendation_id: UUID) -> bool:
-        """Apply Recommendation."""
-        """Mark recommendation as applied"""
         recommendation = self.db.query(AIRecommendation).filter(
             AIRecommendation.id == recommendation_id,
             AIRecommendation.tenant_id == self.tenant_id
@@ -93,8 +82,6 @@ class AIBIService:
         return False
 
     async def dismiss_recommendation(self, recommendation_id: UUID) -> bool:
-        """Dismiss Recommendation."""
-        """Dismiss a recommendation"""
         recommendation = self.db.query(AIRecommendation).filter(
             AIRecommendation.id == recommendation_id,
             AIRecommendation.tenant_id == self.tenant_id
@@ -107,8 +94,6 @@ class AIBIService:
         return False
 
     async def get_anomalies(self, limit: int = 30, severity: Optional[str] = None) -> List[AIAnomaly]:
-        """Get Anomalies."""
-        """Get detected anomalies"""
         query = self.db.query(AIAnomaly).filter(
             AIAnomaly.tenant_id == self.tenant_id,
             AIAnomaly.status.in_(["Open", "Investigating"])
@@ -120,8 +105,6 @@ class AIBIService:
         return query.order_by(desc(AIAnomaly.anomaly_score)).limit(limit).all()
 
     async def create_anomaly(self, anomaly_data: AIAnomalyCreate) -> AIAnomaly:
-        """Create Anomaly."""
-        """Create a new anomaly record"""
         anomaly = AIAnomaly(
             tenant_id=self.tenant_id,
             **anomaly_data.model_dump()
@@ -132,8 +115,6 @@ class AIBIService:
         return anomaly
 
     async def get_predictions(self, prediction_type: Optional[str] = None, limit: int = 20) -> List[AIPrediction]:
-        """Get Predictions."""
-        """Get AI predictions"""
         query = self.db.query(AIPrediction).filter(
             AIPrediction.tenant_id == self.tenant_id,
             AIPrediction.status == "Active"
@@ -145,8 +126,6 @@ class AIBIService:
         return query.order_by(desc(AIPrediction.target_date)).limit(limit).all()
 
     async def create_prediction(self, pred_data: AIPredictionCreate) -> AIPrediction:
-        """Create Prediction."""
-        """Create a new prediction"""
         prediction = AIPrediction(
             tenant_id=self.tenant_id,
             **pred_data.model_dump()
@@ -157,8 +136,6 @@ class AIBIService:
         return prediction
 
     async def get_analytics_summary(self) -> Dict[str, Any]:
-        """Get Analytics Summary."""
-        """Get comprehensive analytics summary"""
         # Get counts
         insights_count = self.db.query(AIInsight).filter(
             AIInsight.tenant_id == self.tenant_id,
@@ -211,8 +188,6 @@ class AIBIService:
         }
 
     async def detect_financial_anomalies(self) -> List[AIAnomaly]:
-        """Detect Financial Anomalies."""
-        """Advanced anomaly detection using statistical methods"""
         anomalies = []
         
         try:
@@ -251,8 +226,6 @@ class AIBIService:
         return anomalies
 
     async def generate_intelligent_recommendations(self) -> List[AIRecommendation]:
-        """Generate Intelligent Recommendations."""
-        """Generate AI-powered recommendations based on financial data analysis"""
         recommendations = []
         
         try:
@@ -315,8 +288,6 @@ class AIBIService:
         return recommendations
 
     async def create_financial_predictions(self) -> List[AIPrediction]:
-        """Create Financial Predictions."""
-        """Create financial predictions using time series analysis"""
         predictions = []
         
         try:
@@ -360,16 +331,12 @@ class AIBIService:
         return predictions
 
     async def get_model_performance_metrics(self) -> List[AIModelMetrics]:
-        """Get Model Performance Metrics."""
-        """Get AI model performance metrics"""
         return self.db.query(AIModelMetrics).filter(
             AIModelMetrics.tenant_id == self.tenant_id,
             AIModelMetrics.is_active == True
         ).order_by(desc(AIModelMetrics.last_trained)).all()
 
     async def update_model_metrics(self, model_name: str, metrics_data: Dict[str, Any]) -> AIModelMetrics:
-        """Update Model Metrics."""
-        """Update model performance metrics"""
         existing_metric = self.db.query(AIModelMetrics).filter(
             AIModelMetrics.tenant_id == self.tenant_id,
             AIModelMetrics.model_name == model_name,

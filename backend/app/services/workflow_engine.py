@@ -20,7 +20,6 @@ class WorkflowEngine:
     
     @staticmethod
     def create_workflow(db: Session, workflow_type: str, entity_id: str, 
-        """Create Workflow."""
                        amount: float, created_by: str) -> str:
         """Create Workflow."""
         """Create new workflow instance"""
@@ -68,7 +67,6 @@ class WorkflowEngine:
     
     @staticmethod
     def approve_step(db: Session, workflow_id: str, step_number: int, 
-        """Approve Step."""
                     approver_id: str, comments: str = None) -> Dict:
         """Approve Step."""
         """Approve workflow step"""
@@ -150,7 +148,6 @@ class WorkflowEngine:
     
     @staticmethod
     def reject_step(db: Session, workflow_id: str, step_number: int, 
-        """Reject Step."""
                    approver_id: str, comments: str) -> Dict:
         """Reject Step."""
         """Reject workflow step"""
@@ -199,7 +196,6 @@ class WorkflowEngine:
     
     @staticmethod
     def delegate_approval(db: Session, workflow_id: str, step_number: int, 
-        """Delegate Approval."""
                          from_user: str, to_user: str, reason: str) -> Dict:
         """Delegate Approval."""
         """Delegate approval to another user"""
@@ -243,8 +239,6 @@ class WorkflowEngine:
     
     @staticmethod
     def _get_workflow_definition(workflow_type: str, amount: float) -> Dict:
-        """ Get Workflow Definition."""
-        """Get workflow definition based on type and amount"""
         definitions = {
             'journal_entry': {
                 'steps': [
@@ -275,8 +269,6 @@ class WorkflowEngine:
     
     @staticmethod
     def _get_entity_type(workflow_type: str) -> str:
-        """ Get Entity Type."""
-        """Get entity type from workflow type"""
         mapping = {
             'journal_entry': 'JournalEntry',
             'vendor_payment': 'VendorPayment',
@@ -288,8 +280,6 @@ class WorkflowEngine:
     
     @staticmethod
     def _can_approve(db: Session, step, user_id: str) -> bool:
-        """ Can Approve."""
-        """Check if user can approve step"""
         # Check direct assignment
         if step.approver_user == user_id:
             return True
@@ -310,8 +300,6 @@ class WorkflowEngine:
     
     @staticmethod
     def _execute_final_action(db: Session, workflow):
-        """ Execute Final Action."""
-        """Execute final action when workflow is approved"""
         if workflow.entity_type == 'JournalEntry':
             # Auto-post journal entry
             entry = db.query(JournalEntry).filter(JournalEntry.id == workflow.entity_id).first()
@@ -326,8 +314,6 @@ class WorkflowEngine:
     
     @staticmethod
     def _send_notification(db: Session, workflow_id: str, notification_type: str, step_id: str = None):
-        """ Send Notification."""
-        """Send workflow notification"""
         try:
             EmailNotificationService.send_workflow_notification(
                 db, workflow_id, notification_type, step_id
@@ -345,7 +331,6 @@ class EmailNotificationService:
     
     @staticmethod
     def send_workflow_notification(db: Session, workflow_id: str, 
-        """Send Workflow Notification."""
                                  notification_type: str, step_id: str = None):
         """Send Workflow Notification."""
         """Send workflow email notification"""
@@ -373,8 +358,6 @@ class EmailNotificationService:
     
     @staticmethod
     def _get_recipients(db: Session, workflow, notification_type: str, step_id: str = None) -> List[str]:
-        """ Get Recipients."""
-        """Get email recipients for notification"""
         from app.models.workflow import WorkflowStep
         from app.models.user_enhanced import User
         
@@ -423,8 +406,6 @@ class EmailNotificationService:
     
     @staticmethod
     def _generate_email_content(workflow, notification_type: str, step_id: str = None) -> tuple:
-        """ Generate Email Content."""
-        """Generate email subject and body"""
         base_url = "http://localhost:3000"
         
         subjects = {
@@ -478,8 +459,6 @@ View details at: {base_url}/workflows/{workflow.id}
     
     @staticmethod
     def _send_email(to_email: str, subject: str, body: str):
-        """ Send Email."""
-        """Send email using SMTP"""
         try:
             msg = MimeMultipart()
             msg['From'] = EmailNotificationService.SMTP_USERNAME
@@ -506,7 +485,6 @@ class ApprovalHierarchy:
     
     @staticmethod
     def get_approval_chain(db: Session, workflow_type: str, amount: float, 
-        """Get Approval Chain."""
                           department: str = None) -> List[Dict]:
         """Get Approval Chain."""
         """Get approval chain for workflow"""
@@ -542,8 +520,6 @@ class ApprovalHierarchy:
     
     @staticmethod
     def get_next_approver(db: Session, workflow_id: str) -> Optional[Dict]:
-        """Get Next Approver."""
-        """Get next approver in chain"""
         from app.models.workflow import WorkflowInstance, WorkflowStep
         
         workflow = db.query(WorkflowInstance).filter(
@@ -577,8 +553,6 @@ class WorkflowDashboard:
     
     @staticmethod
     def get_pending_approvals(db: Session, user_id: str) -> List[Dict]:
-        """Get Pending Approvals."""
-        """Get pending approvals for user"""
         from app.models.workflow import WorkflowInstance, WorkflowStep
         
         # Direct assignments
@@ -617,8 +591,6 @@ class WorkflowDashboard:
     
     @staticmethod
     def get_workflow_history(db: Session, user_id: str, limit: int = 50) -> List[Dict]:
-        """Get Workflow History."""
-        """Get workflow history for user"""
         from app.models.workflow import WorkflowInstance, WorkflowApproval
         
         # Workflows created by user
@@ -650,8 +622,6 @@ class WorkflowDashboard:
     
     @staticmethod
     def get_workflow_metrics(db: Session, start_date: datetime, end_date: datetime) -> Dict:
-        """Get Workflow Metrics."""
-        """Get workflow metrics for date range"""
         from app.models.workflow import WorkflowInstance
         
         total_workflows = db.query(WorkflowInstance).filter(

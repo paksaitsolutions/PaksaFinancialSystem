@@ -26,12 +26,9 @@ class PeriodCloseService:
     """Service for managing period close processes."""
     
     def __init__(self, db: Session):
-        """  Init  ."""
         self.db = db
     
     def create_accounting_period(self, period_data: Dict[str, Any], created_by: UUID) -> AccountingPeriod:
-        """Create Accounting Period."""
-        """Create a new accounting period."""
         period = AccountingPeriod(
             period_name=period_data['period_name'],
             period_type=PeriodType(period_data['period_type']),
@@ -49,8 +46,6 @@ class PeriodCloseService:
         return period
     
     def initiate_period_close(self, period_id: UUID, initiated_by: UUID) -> PeriodClose:
-        """Initiate Period Close."""
-        """Initiate a period close process."""
         period = self.get_accounting_period(period_id)
         if not period:
             raise NotFoundException(f"Period {period_id} not found")
@@ -82,8 +77,6 @@ class PeriodCloseService:
         return period_close
     
     def execute_close_task(self, task_id: UUID, executed_by: UUID) -> PeriodCloseTask:
-        """Execute Close Task."""
-        """Execute a period close task."""
         task = self.get_close_task(task_id)
         if not task:
             raise NotFoundException(f"Task {task_id} not found")
@@ -113,8 +106,6 @@ class PeriodCloseService:
         return task
     
     def complete_period_close(self, close_id: UUID, completed_by: UUID) -> PeriodClose:
-        """Complete Period Close."""
-        """Complete a period close process."""
         period_close = self.get_period_close(close_id)
         if not period_close:
             raise NotFoundException(f"Period close {close_id} not found")
@@ -139,43 +130,31 @@ class PeriodCloseService:
         return period_close
     
     def get_accounting_period(self, period_id: UUID) -> Optional[AccountingPeriod]:
-        """Get Accounting Period."""
-        """Get an accounting period by ID."""
         return self.db.query(AccountingPeriod).filter(
             AccountingPeriod.id == period_id
         ).first()
     
     def get_period_close(self, close_id: UUID) -> Optional[PeriodClose]:
-        """Get Period Close."""
-        """Get a period close by ID."""
         return self.db.query(PeriodClose).filter(
             PeriodClose.id == close_id
         ).first()
     
     def get_close_task(self, task_id: UUID) -> Optional[PeriodCloseTask]:
-        """Get Close Task."""
-        """Get a close task by ID."""
         return self.db.query(PeriodCloseTask).filter(
             PeriodCloseTask.id == task_id
         ).first()
     
     def list_accounting_periods(self, skip: int = 0, limit: int = 100) -> List[AccountingPeriod]:
-        """List Accounting Periods."""
-        """List accounting periods."""
         return self.db.query(AccountingPeriod)\
                    .order_by(desc(AccountingPeriod.start_date))\
                    .offset(skip).limit(limit).all()
     
     def list_period_closes(self, skip: int = 0, limit: int = 100) -> List[PeriodClose]:
-        """List Period Closes."""
-        """List period closes."""
         return self.db.query(PeriodClose)\
                    .order_by(desc(PeriodClose.initiated_at))\
                    .offset(skip).limit(limit).all()
     
     def _create_close_tasks(self, period_close: PeriodClose, created_by: UUID):
-        """ Create Close Tasks."""
-        """Create standard close tasks for a period close."""
         standard_tasks = [
             {'name': 'Review Journal Entries', 'description': 'Review all journal entries for the period', 'order': 1, 'required': True, 'automated': False},
             {'name': 'Process Accruals', 'description': 'Process month-end accruals', 'order': 2, 'required': True, 'automated': False},
@@ -201,8 +180,6 @@ class PeriodCloseService:
             self.db.add(task)
     
     def _execute_task_logic(self, task: PeriodCloseTask) -> str:
-        """ Execute Task Logic."""
-        """Execute the logic for a specific task."""
         if task.task_name == 'Run Depreciation':
             return "Depreciation entries processed successfully"
         elif task.task_name == 'Process Allocations':
@@ -213,8 +190,6 @@ class PeriodCloseService:
             return f"Manual task {task.task_name} marked as completed"
     
     def _generate_close_number(self) -> str:
-        """ Generate Close Number."""
-        """Generate a unique close number."""
         last_close = self.db.query(PeriodClose)\
             .order_by(desc(PeriodClose.created_at))\
             .first()

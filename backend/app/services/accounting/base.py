@@ -52,7 +52,6 @@ class BaseReconciliationService:
     """Base service class for reconciliation operations."""
     
     def __init__(self, db: Session):
-        """  Init  ."""
         """Initialize the base reconciliation service.
         
         Args:
@@ -96,7 +95,6 @@ class BaseReconciliationService:
         return log
     
     def _recalculate_reconciliation(self, reconciliation_id: UUID, user_id: UUID) -> None:
-        """ Recalculate Reconciliation."""
         """Recalculate the reconciliation totals and update the status.
         
         Args:

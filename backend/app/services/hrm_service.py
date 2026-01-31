@@ -26,7 +26,6 @@ class HRMService:
     """Comprehensive HRM Service with real-time data integration"""
     
     def __init__(self):
-        """  Init  ."""
         self.mock_tenant_id = UUID("12345678-1234-5678-9012-123456789012")
     
     # Employee Management

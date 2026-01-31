@@ -51,14 +51,11 @@ class DataWarehouseService:
     """Service for data warehouse operations and ETL processes."""
 
     def __init__(self, db: AsyncSession, company_id: UUID):
-        """  Init  ."""
         self.db = db
         self.company_id = company_id
         self.etl_jobs: Dict[str, ETLJob] = {}
 
     async def create_data_warehouse_schema(self) -> None:
-        """Create Data Warehouse Schema."""
-        """Create data warehouse schema with fact and dimension tables."""
         
         # Create dimension tables
         await self._create_dimension_tables()
@@ -70,8 +67,6 @@ class DataWarehouseService:
         await self._create_aggregated_tables()
 
     async def _create_dimension_tables(self) -> None:
-        """Create Dimension Tables."""
-        """Create dimension tables for the data warehouse."""
         
         dimension_tables = [
             # Date dimension
@@ -166,8 +161,6 @@ class DataWarehouseService:
         await self.db.commit()
 
     async def _create_fact_tables(self) -> None:
-        """Create Fact Tables."""
-        """Create fact tables for the data warehouse."""
         
         fact_tables = [
             # Financial transactions fact
@@ -257,8 +250,6 @@ class DataWarehouseService:
         await self.db.commit()
 
     async def _create_aggregated_tables(self) -> None:
-        """Create Aggregated Tables."""
-        """Create pre-aggregated tables for faster reporting."""
         
         aggregated_tables = [
             # Monthly financial summary
@@ -324,8 +315,6 @@ class DataWarehouseService:
         await self.db.commit()
 
     async def run_etl_process(self, full_refresh: bool = False) -> Dict[str, Any]:
-        """Run Etl Process."""
-        """Run the complete ETL process."""
         
         etl_start_time = datetime.now()
         results = {}
@@ -371,8 +360,6 @@ class DataWarehouseService:
             }
 
     async def _populate_date_dimension(self) -> Dict[str, Any]:
-        """Populate Date Dimension."""
-        """Populate the date dimension table."""
         
         # Generate dates for the next 5 years
         start_date = datetime(2020, 1, 1)
@@ -425,8 +412,6 @@ class DataWarehouseService:
         }
 
     async def _populate_account_dimension(self, full_refresh: bool) -> Dict[str, Any]:
-        """Populate Account Dimension."""
-        """Populate the account dimension table."""
         
         if full_refresh:
             await self.db.execute(text("DELETE FROM dim_account WHERE company_id = :company_id"), 
@@ -477,8 +462,6 @@ class DataWarehouseService:
         }
 
     async def _populate_financial_transactions_fact(self, full_refresh: bool) -> Dict[str, Any]:
-        """Populate Financial Transactions Fact."""
-        """Populate the financial transactions fact table."""
         
         if full_refresh:
             await self.db.execute(text("DELETE FROM fact_financial_transaction WHERE company_id = :company_id"), 
@@ -543,8 +526,6 @@ class DataWarehouseService:
         }
 
     async def _update_monthly_financial_aggregates(self) -> Dict[str, Any]:
-        """Update Monthly Financial Aggregates."""
-        """Update monthly financial aggregates."""
         
         # Calculate monthly aggregates
         aggregate_sql = text("""
@@ -580,8 +561,6 @@ class DataWarehouseService:
         }
 
     async def get_warehouse_statistics(self) -> Dict[str, Any]:
-        """Get Warehouse Statistics."""
-        """Get data warehouse statistics."""
         
         stats_queries = {
             'dim_date': "SELECT COUNT(*) FROM dim_date",

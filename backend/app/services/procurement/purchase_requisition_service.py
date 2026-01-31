@@ -28,13 +28,10 @@ class PurchaseRequisitionService:
     """
     
     def __init__(self, db: Session, current_user: User):
-        """  Init  ."""
         self.db = db
         self.current_user = current_user
     
     def _generate_requisition_number(self) -> str:
-        """ Generate Requisition Number."""
-        """Generate a unique requisition number."""
         prefix = "REQ"
         timestamp = datetime.utcnow().strftime("%Y%m%d")
         
@@ -46,8 +43,6 @@ class PurchaseRequisitionService:
         return f"{prefix}-{timestamp}-{count + 1:04d}"
     
     def _calculate_total_amount(self, items: List[RequisitionItemCreate]) -> float:
-        """ Calculate Total Amount."""
-        """Calculate the total amount from requisition items."""
         return sum(item.quantity * item.unit_price for item in items)
     
     def create_requisition(

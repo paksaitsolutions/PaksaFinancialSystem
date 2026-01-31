@@ -17,7 +17,6 @@ class PayrollService:
     """Service for payroll calculations and management."""
     
     def __init__(self, db: Session):
-        """  Init  ."""
         self.db = db
     
     # Employee Management
@@ -70,13 +69,9 @@ class PayrollService:
         return query.order_by(Employee.last_name, Employee.first_name).all()
     
     def get_employee(self, employee_id: str) -> Optional[Employee]:
-        """Get Employee."""
-        """Get employee by ID."""
         return self.db.query(Employee).filter(Employee.id == employee_id).first()
     
     def update_employee(self, employee_id: str, **kwargs) -> Optional[Employee]:
-        """Update Employee."""
-        """Update employee information."""
         
         employee = self.get_employee(employee_id)
         if not employee:
@@ -137,18 +132,12 @@ class PayrollService:
         return pay_run
     
     def get_pay_runs(self, limit: int = 50) -> List[PayRun]:
-        """Get Pay Runs."""
-        """Get pay runs ordered by creation date."""
         return self.db.query(PayRun).order_by(desc(PayRun.created_at)).limit(limit).all()
     
     def get_pay_run(self, pay_run_id: str) -> Optional[PayRun]:
-        """Get Pay Run."""
-        """Get pay run by ID."""
         return self.db.query(PayRun).filter(PayRun.id == pay_run_id).first()
     
     def process_pay_run(self, pay_run_id: str) -> PayRun:
-        """Process Pay Run."""
-        """Process pay run calculations."""
         
         pay_run = self.get_pay_run(pay_run_id)
         if not pay_run:
@@ -208,8 +197,6 @@ class PayrollService:
         return pay_run
     
     def approve_pay_run(self, pay_run_id: str, approved_by: str) -> PayRun:
-        """Approve Pay Run."""
-        """Approve a pay run."""
         
         pay_run = self.get_pay_run(pay_run_id)
         if not pay_run:
@@ -228,8 +215,6 @@ class PayrollService:
         return pay_run
     
     def create_payslip(self, pay_run: PayRun, employee: Employee, pay_run_employee: PayRunEmployee) -> Payslip:
-        """Create Payslip."""
-        """Create a payslip for an employee."""
         
         payslip_number = f"PS-{employee.employee_id}-{pay_run.pay_period_start.strftime('%Y%m')}"
         
@@ -274,8 +259,6 @@ class PayrollService:
         return query.order_by(desc(Payslip.created_at)).limit(limit).all()
     
     def get_payslip(self, payslip_id: str) -> Optional[Payslip]:
-        """Get Payslip."""
-        """Get payslip by ID."""
         return self.db.query(Payslip).filter(Payslip.id == payslip_id).first()
     
     # Payroll Items Management
@@ -303,8 +286,6 @@ class PayrollService:
         return item
     
     def get_payroll_items(self, item_type: Optional[str] = None) -> List[PayrollItem]:
-        """Get Payroll Items."""
-        """Get payroll items with optional filtering."""
         
         query = self.db.query(PayrollItem).filter(PayrollItem.is_active == True)
         

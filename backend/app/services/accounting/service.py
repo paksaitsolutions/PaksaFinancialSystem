@@ -53,7 +53,6 @@ class ReconciliationService(BaseReconciliationService):
     # Reconciliation CRUD Operations
     
     def get_reconciliation(self, reconciliation_id: UUID, user_id: UUID) -> Reconciliation:
-        """Get Reconciliation."""
         """Get a reconciliation by ID with permission check.
         
         Args:
@@ -133,7 +132,6 @@ class ReconciliationService(BaseReconciliationService):
         return reconciliations, total
     
     def create_reconciliation(self, data: ReconciliationCreate, user_id: UUID) -> Reconciliation:
-        """Create Reconciliation."""
         """Create a new reconciliation.
         
         Args:

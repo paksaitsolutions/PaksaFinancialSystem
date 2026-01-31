@@ -288,7 +288,6 @@ class ReconciliationItemService(BaseReconciliationService):
         return item
     
     def delete_reconciliation_item(self, item_id: UUID, user_id: UUID) -> bool:
-        """Delete Reconciliation Item."""
         """Delete a reconciliation item.
         
         Args:

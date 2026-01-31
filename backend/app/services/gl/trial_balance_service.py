@@ -12,7 +12,6 @@ from app.schemas.gl_schemas import TrialBalance, TrialBalanceEntry
 class TrialBalanceService:
     @staticmethod
     def get_trial_balance(
-        """Get Trial Balance."""
         db: Session, 
         start_date: date, 
         end_date: date, 
@@ -79,7 +78,6 @@ class TrialBalanceService:
         
     @staticmethod
     def export_trial_balance(
-        """Export Trial Balance."""
         trial_balance: TrialBalance,
         format: str = 'csv'  # 'csv' or 'excel'
     ) -> bytes:

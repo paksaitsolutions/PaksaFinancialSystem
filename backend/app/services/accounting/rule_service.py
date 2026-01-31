@@ -52,7 +52,6 @@ class ReconciliationRuleService(BaseReconciliationService):
     # Rule CRUD Operations
     
     def get_rule(self, rule_id: UUID, user_id: UUID) -> ReconciliationRule:
-        """Get Rule."""
         """Get a reconciliation rule by ID with permission check.
         
         Args:
@@ -141,7 +140,6 @@ class ReconciliationRuleService(BaseReconciliationService):
         return rules, total
     
     def create_rule(self, data: ReconciliationRuleCreate, user_id: UUID) -> ReconciliationRule:
-        """Create Rule."""
         """Create a new reconciliation rule.
         
         Args:
@@ -392,7 +390,6 @@ class ReconciliationRuleService(BaseReconciliationService):
         return rule
     
     def delete_rule(self, rule_id: UUID, user_id: UUID) -> bool:
-        """Delete Rule."""
         """Delete a reconciliation rule.
         
         Args:

@@ -10,7 +10,6 @@ class AdvancedNLPService:
     """Advanced NLP service with context awareness."""
     
     def __init__(self):
-        """  Init  ."""
         self.conversation_context = {}
         self.intent_patterns = {
             'financial_query': r'(revenue|income|profit|expense|cost|balance|cash|financial)',
@@ -31,8 +30,6 @@ class AdvancedNLPService:
         }
     
     def process_advanced_query(self, query: str, user_id: str, session_id: str) -> Dict[str, Any]:
-        """Process Advanced Query."""
-        """Process query with advanced NLP and context awareness."""
         # Detect language
         language = self._detect_language(query)
         
@@ -61,8 +58,6 @@ class AdvancedNLPService:
         }
     
     def _detect_language(self, query: str) -> str:
-        """ Detect Language."""
-        """Detect query language."""
         query_lower = query.lower()
         
         for language, pattern in self.language_patterns.items():
@@ -72,8 +67,6 @@ class AdvancedNLPService:
         return 'english'  # Default
     
     def _get_conversation_context(self, user_id: str, session_id: str) -> Dict[str, Any]:
-        """ Get Conversation Context."""
-        """Get conversation context for user session."""
         context_key = f"{user_id}_{session_id}"
         return self.conversation_context.get(context_key, {
             "previous_queries": [],
@@ -83,8 +76,6 @@ class AdvancedNLPService:
         })
     
     def _extract_entities_with_context(self, query: str, context: Dict[str, Any]) -> Dict[str, Any]:
-        """ Extract Entities With Context."""
-        """Extract entities with context awareness."""
         entities = {}
         query_lower = query.lower()
         
@@ -120,8 +111,6 @@ class AdvancedNLPService:
         return entities
     
     def _extract_intent_with_context(self, query: str, context: Dict[str, Any]) -> str:
-        """ Extract Intent With Context."""
-        """Extract intent with context awareness."""
         query_lower = query.lower()
         
         # Primary intent detection
@@ -145,8 +134,6 @@ class AdvancedNLPService:
         return 'general_inquiry'
     
     def _extract_time_entities(self, query: str) -> Dict[str, Any]:
-        """ Extract Time Entities."""
-        """Extract time-related entities."""
         time_entities = {}
         
         # Relative time
@@ -220,8 +207,6 @@ class AdvancedNLPService:
         )
     
     def _generate_suggested_actions(self, intent: str, entities: Dict[str, Any]) -> List[str]:
-        """ Generate Suggested Actions."""
-        """Generate suggested follow-up actions."""
         suggestions = []
         
         if intent == 'financial_query':
@@ -256,8 +241,6 @@ class AdvancedNLPService:
         return suggestions[:4]  # Limit to 4 suggestions
     
     def _calculate_confidence(self, intent: str, entities: Dict[str, Any]) -> float:
-        """ Calculate Confidence."""
-        """Calculate confidence score for the interpretation."""
         base_confidence = 0.7
         
         # Boost confidence for specific entities

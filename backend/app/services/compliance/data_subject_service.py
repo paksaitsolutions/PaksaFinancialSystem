@@ -38,7 +38,6 @@ class DataSubjectService:
     """
     
     def __init__(self, db: Session):
-        """  Init  ."""
         self.db = db
     
     def create_request(
@@ -103,7 +102,6 @@ class DataSubjectService:
             raise exceptions.DataSubjectRequestError(f"Failed to create request: {str(e)}")
     
     def get_request(self, request_id: UUID) -> models.DataSubjectRightsRequest:
-        """Get Request."""
         """
         Retrieve a data subject rights request by ID.
         

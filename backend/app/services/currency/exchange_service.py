@@ -40,7 +40,6 @@ class ExchangeService:
     """Service for handling currency exchange operations."""
     
     def __init__(self, db: Session):
-        """  Init  ."""
         self.db = db
         self.base_currency = settings.BASE_CURRENCY
         self.providers = {
@@ -430,8 +429,6 @@ class ExchangeService:
             return None
     
     def _cache_rate(self, rate_result: ExchangeRateResult) -> None:
-        """ Cache Rate."""
-        """Cache an exchange rate result."""
         # This is a simplified implementation
         # In production, you'd use Redis or similar with appropriate TTL
         try:
@@ -442,8 +439,6 @@ class ExchangeService:
             logger.warning(f"Cache store error: {str(e)}")
     
     def _load_ecb_rates(self) -> List[Dict]:
-        """ Load Ecb Rates."""
-        """Load ECB rates from a static file or database."""
         # In production, implement proper ECB API integration
         # This is just a placeholder with sample data
         return [
@@ -461,6 +456,4 @@ class ExchangeService:
 
 # Singleton instance for dependency injection
 def get_exchange_service(db: Session) -> ExchangeService:
-    """Get Exchange Service."""
-    """Get an instance of the exchange service."""
     return ExchangeService(db)

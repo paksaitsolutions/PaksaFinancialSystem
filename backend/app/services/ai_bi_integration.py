@@ -21,7 +21,6 @@ class AIBIIntegrationService:
     """Service for integrating AI/BI with all financial modules"""
     
     def __init__(self, db: Session, tenant_id: str):
-        """  Init  ."""
         self.db = db
         self.tenant_id = tenant_id
         
@@ -38,8 +37,6 @@ class AIBIIntegrationService:
         self.reports_service = ReportsService(db, tenant_id)
     
     async def get_comprehensive_financial_data(self) -> Dict[str, Any]:
-        """Get Comprehensive Financial Data."""
-        """Get comprehensive financial data from all modules"""
         try:
             # Get data from all modules
             gl_data = await self._get_gl_data()
@@ -61,8 +58,6 @@ class AIBIIntegrationService:
             return self._get_mock_financial_data()
     
     async def generate_ai_insights(self) -> List[Dict[str, Any]]:
-        """Generate Ai Insights."""
-        """Generate AI-powered insights from financial data"""
         financial_data = await self.get_comprehensive_financial_data()
         insights = []
         
@@ -84,8 +79,6 @@ class AIBIIntegrationService:
         return insights
     
     async def detect_anomalies(self) -> List[Dict[str, Any]]:
-        """Detect Anomalies."""
-        """Detect anomalies across all financial modules"""
         anomalies = []
         
         try:
@@ -131,8 +124,6 @@ class AIBIIntegrationService:
         return anomalies
     
     async def generate_predictions(self) -> List[Dict[str, Any]]:
-        """Generate Predictions."""
-        """Generate AI predictions for financial metrics"""
         predictions = []
         
         try:
@@ -154,8 +145,6 @@ class AIBIIntegrationService:
     
     # Private methods for data retrieval
     async def _get_gl_data(self) -> Dict[str, Any]:
-        """Get Gl Data."""
-        """Get General Ledger data"""
         try:
             accounts = await self.gl_service.get_accounts()
             trial_balance = await self.gl_service.get_trial_balance()
@@ -177,8 +166,6 @@ class AIBIIntegrationService:
             return {"total_accounts": 156, "trial_balance": 2456789.50}
     
     async def _get_ap_data(self) -> Dict[str, Any]:
-        """Get Ap Data."""
-        """Get Accounts Payable data"""
         try:
             vendors = await self.ap_service.get_vendors()
             return {
@@ -196,8 +183,6 @@ class AIBIIntegrationService:
             return {"total_vendors": 45, "total_payable": 125430.00}
     
     async def _get_ar_data(self) -> Dict[str, Any]:
-        """Get Ar Data."""
-        """Get Accounts Receivable data"""
         try:
             customers = await self.ar_service.get_customers()
             return {
@@ -215,8 +200,6 @@ class AIBIIntegrationService:
             return {"total_customers": 234, "total_receivable": 89750.00}
     
     async def _get_cash_data(self) -> Dict[str, Any]:
-        """Get Cash Data."""
-        """Get Cash Management data"""
         try:
             accounts = await self.cash_service.get_cash_accounts()
             return {
@@ -234,8 +217,6 @@ class AIBIIntegrationService:
             return {"total_cash_accounts": 8, "total_cash": 342500.00}
     
     async def _get_budget_data(self) -> Dict[str, Any]:
-        """Get Budget Data."""
-        """Get Budget data"""
         try:
             budgets = await self.budget_service.get_budgets()
             return {
@@ -254,8 +235,6 @@ class AIBIIntegrationService:
     
     # AI Analysis methods
     def _analyze_cash_flow(self, cash_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """ Analyze Cash Flow."""
-        """Analyze cash flow patterns"""
         total_cash = cash_data.get("total_cash", 0)
         
         if total_cash < 100000:
@@ -273,8 +252,6 @@ class AIBIIntegrationService:
         return None
     
     def _analyze_payables(self, ap_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """ Analyze Payables."""
-        """Analyze accounts payable patterns"""
         total_payable = ap_data.get("total_payable", 0)
         
         if total_payable > 100000:
@@ -292,8 +269,6 @@ class AIBIIntegrationService:
         return None
     
     def _analyze_budget_variance(self, budget_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """ Analyze Budget Variance."""
-        """Analyze budget variance"""
         return {
             "id": "budget_performance",
             "type": "budget",
@@ -307,8 +282,6 @@ class AIBIIntegrationService:
     
     # Mock data methods for fallback
     def _get_mock_financial_data(self) -> Dict[str, Any]:
-        """ Get Mock Financial Data."""
-        """Return mock financial data when database is unavailable"""
         return {
             "general_ledger": {"total_accounts": 156, "trial_balance": 2456789.50},
             "accounts_payable": {"total_vendors": 45, "total_payable": 125430.00},
@@ -319,8 +292,6 @@ class AIBIIntegrationService:
         }
     
     def _get_mock_anomalies(self) -> List[Dict[str, Any]]:
-        """ Get Mock Anomalies."""
-        """Return mock anomalies"""
         return [
             {
                 "id": "anomaly_1",
@@ -334,8 +305,6 @@ class AIBIIntegrationService:
         ]
     
     def _get_mock_predictions(self) -> List[Dict[str, Any]]:
-        """ Get Mock Predictions."""
-        """Return mock predictions"""
         return [
             {
                 "id": "cash_flow_prediction",
@@ -349,8 +318,6 @@ class AIBIIntegrationService:
         ]
     
     async def _get_recent_transactions(self) -> List[Dict[str, Any]]:
-        """Get Recent Transactions."""
-        """Get recent transactions from GL"""
         # This would query the actual GL transactions table
         # For now, return mock data
         return [
@@ -363,8 +330,6 @@ class AIBIIntegrationService:
         ]
     
     async def _get_cash_flow_history(self) -> List[Dict[str, Any]]:
-        """Get Cash Flow History."""
-        """Get historical cash flow data"""
         return [
             {"date": "2024-01-01", "amount": 300000},
             {"date": "2024-01-15", "amount": 320000},
@@ -372,8 +337,6 @@ class AIBIIntegrationService:
         ]
     
     async def _get_revenue_history(self) -> List[Dict[str, Any]]:
-        """Get Revenue History."""
-        """Get historical revenue data"""
         return [
             {"month": "2024-01", "revenue": 125000},
             {"month": "2024-02", "revenue": 132000},
@@ -381,8 +344,6 @@ class AIBIIntegrationService:
         ]
     
     def _predict_cash_flow(self, historical_data: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """ Predict Cash Flow."""
-        """Predict cash flow using simple trend analysis"""
         if len(historical_data) < 2:
             return self._get_mock_predictions()[0]
         
@@ -402,8 +363,6 @@ class AIBIIntegrationService:
         }
     
     def _predict_revenue(self, historical_data: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """ Predict Revenue."""
-        """Predict revenue using simple trend analysis"""
         if len(historical_data) < 2:
             return {
                 "id": "revenue_prediction",

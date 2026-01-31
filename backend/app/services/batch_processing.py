@@ -16,13 +16,10 @@ class BatchProcessor:
     """Batch processing manager for bulk operations."""
     
     def __init__(self, batch_size: int = 100):
-        """  Init  ."""
         self.batch_size = batch_size
         self.processors: Dict[str, Callable] = {}
     
     def register_processor(self, operation_type: str, processor: Callable):
-        """Register Processor."""
-        """Register batch processor."""
         self.processors[operation_type] = processor
         logger.info(f"Registered batch processor: {operation_type}")
     
@@ -109,8 +106,6 @@ batch_processor = BatchProcessor()
 
 # Batch processing job handler
 async def batch_processing_job(payload: Dict[str, Any], tenant_id: Optional[str]):
-        """Batch Processing Job."""
-    """Background job handler for batch processing."""
     operation_type = payload["operation_type"]
     items = payload["items"]
     
@@ -125,8 +120,6 @@ job_queue.register_handler("batch_processing", batch_processing_job)
 
 # Default batch processors
 async def bulk_invoice_processor(items: List[Dict[str, Any]], tenant_id: Optional[str]) -> List[Dict[str, Any]]:
-        """Bulk Invoice Processor."""
-    """Process bulk invoice creation."""
     results = []
     
     for item in items:
@@ -150,8 +143,6 @@ async def bulk_invoice_processor(items: List[Dict[str, Any]], tenant_id: Optiona
     return results
 
 async def bulk_payment_processor(items: List[Dict[str, Any]], tenant_id: Optional[str]) -> List[Dict[str, Any]]:
-        """Bulk Payment Processor."""
-    """Process bulk payments."""
     results = []
     
     for item in items:
@@ -175,8 +166,6 @@ async def bulk_payment_processor(items: List[Dict[str, Any]], tenant_id: Optiona
     return results
 
 async def bulk_employee_import_processor(items: List[Dict[str, Any]], tenant_id: Optional[str]) -> List[Dict[str, Any]]:
-        """Bulk Employee Import Processor."""
-    """Process bulk employee import."""
     results = []
     
     for item in items:

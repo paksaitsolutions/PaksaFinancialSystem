@@ -10,12 +10,9 @@ from app.services.base import BaseService
 
 class UnifiedSettingsService(BaseService):
     def __init__(self, db: Session):
-        """  Init  ."""
         super().__init__(db, Company)
     
     def get_company_settings(self, company_id: UUID) -> dict:
-        """Get Company Settings."""
-        """Get unified company settings for all modules"""
         company = self.db.query(Company).filter(Company.id == company_id).first()
         if not company:
             return {}
@@ -54,8 +51,6 @@ class UnifiedSettingsService(BaseService):
         }
     
     def update_company_settings(self, company_id: UUID, settings: dict) -> Company:
-        """Update Company Settings."""
-        """Update unified company settings"""
         company = self.db.query(Company).filter(Company.id == company_id).first()
         if not company:
             raise ValueError("Company not found")

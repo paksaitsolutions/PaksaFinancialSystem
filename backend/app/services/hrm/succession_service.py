@@ -236,8 +236,6 @@ class SuccessionService:
         }
     
     async def _serialize_succession_plan(self, db: AsyncSession, plan: SuccessionPlan) -> Dict[str, Any]:
-        """Serialize Succession Plan."""
-        """Serialize succession plan with candidates."""
         # Get candidates
         candidates_result = await db.execute(
             select(SuccessionCandidate).where(
@@ -262,8 +260,6 @@ class SuccessionService:
         }
     
     def _serialize_candidate(self, candidate: SuccessionCandidate) -> Dict[str, Any]:
-        """ Serialize Candidate."""
-        """Serialize succession candidate."""
         return {
             "id": str(candidate.id),
             "employee_id": str(candidate.employee_id),
@@ -275,8 +271,6 @@ class SuccessionService:
         }
     
     def _serialize_development_plan(self, plan: DevelopmentPlan) -> Dict[str, Any]:
-        """ Serialize Development Plan."""
-        """Serialize development plan."""
         return {
             "id": str(plan.id),
             "plan_name": plan.plan_name,
@@ -290,8 +284,6 @@ class SuccessionService:
         }
     
     def _serialize_activity(self, activity: DevelopmentActivity) -> Dict[str, Any]:
-        """ Serialize Activity."""
-        """Serialize development activity."""
         return {
             "id": str(activity.id),
             "activity_name": activity.activity_name,

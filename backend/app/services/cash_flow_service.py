@@ -10,12 +10,9 @@ from app.models import JournalEntry, JournalEntryLine, ChartOfAccounts
 
 class CashFlowService:
     def __init__(self, db: AsyncSession):
-        """  Init  ."""
         self.db = db
     
     async def generate_cash_flow_statement(self, company_id: str, start_date: date, end_date: date) -> Dict:
-        """Generate Cash Flow Statement."""
-        """Generate cash flow statement from GL journal entries"""
         
         # Get cash accounts
         cash_accounts = await self._get_cash_accounts(company_id)
@@ -54,8 +51,6 @@ class CashFlowService:
         }
     
     async def _get_cash_accounts(self, company_id: str) -> List[ChartOfAccounts]:
-        """Get Cash Accounts."""
-        """Get all cash and cash equivalent accounts"""
         result = await self.db.execute(
             select(ChartOfAccounts).where(
                 and_(
@@ -69,8 +64,6 @@ class CashFlowService:
         return result.scalars().all()
     
     async def _get_operating_cash_flows(self, company_id: str, start_date: date, end_date: date, cash_account_ids: List[str]) -> List[Dict]:
-        """Get Operating Cash Flows."""
-        """Get operating cash flows from GL entries"""
         result = await self.db.execute(
             select(
                 JournalEntryLine.description,
@@ -99,8 +92,6 @@ class CashFlowService:
         return flows
     
     async def _get_investing_cash_flows(self, company_id: str, start_date: date, end_date: date, cash_account_ids: List[str]) -> List[Dict]:
-        """Get Investing Cash Flows."""
-        """Get investing cash flows from GL entries"""
         result = await self.db.execute(
             select(
                 JournalEntryLine.description,
@@ -128,8 +119,6 @@ class CashFlowService:
         return flows
     
     async def _get_financing_cash_flows(self, company_id: str, start_date: date, end_date: date, cash_account_ids: List[str]) -> List[Dict]:
-        """Get Financing Cash Flows."""
-        """Get financing cash flows from GL entries"""
         result = await self.db.execute(
             select(
                 JournalEntryLine.description,

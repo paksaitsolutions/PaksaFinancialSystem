@@ -24,7 +24,6 @@ class RecurringJournalService:
     
     @staticmethod
     def create_recurring_journal(
-        """Create Recurring Journal."""
         db: Session, 
         journal_data: schemas.RecurringJournalCreate,
         company_id: UUID,
@@ -72,7 +71,6 @@ class RecurringJournalService:
     
     @staticmethod
     def update_recurring_journal(
-        """Update Recurring Journal."""
         db: Session,
         journal_id: UUID,
         journal_data: schemas.RecurringJournalUpdate,
@@ -131,7 +129,6 @@ class RecurringJournalService:
     
     @staticmethod
     def process_due_entries(db: Session, company_id: UUID = None) -> Tuple[int, int]:
-        """Process Due Entries."""
         """Process all recurring journal entries that are due.
         
         Args:
@@ -205,7 +202,6 @@ class RecurringJournalService:
     
     @staticmethod
     def _calculate_next_run_date(
-        """ Calculate Next Run Date."""
         frequency: models.RecurrenceFrequency,
         interval: int,
         start_date: date,
@@ -269,8 +265,6 @@ class RecurringJournalService:
     
     @staticmethod
     def _add_months(start_date: date, months: int, current_date: date) -> date:
-        """ Add Months."""
-        """Add months to a date, handling year rollover and month-end dates."""
         year = start_date.year + (start_date.month + months - 1) // 12
         month = (start_date.month + months - 1) % 12 + 1
         
@@ -300,7 +294,6 @@ class AllocationService:
     
     @staticmethod
     def create_allocation_rule(
-        """Create Allocation Rule."""
         db: Session,
         rule_data: schemas.AllocationRuleCreate,
         company_id: UUID
@@ -347,7 +340,6 @@ class AllocationService:
     
     @staticmethod
     def update_allocation_rule(
-        """Update Allocation Rule."""
         db: Session,
         rule_id: UUID,
         rule_data: schemas.AllocationRuleUpdate,
@@ -402,7 +394,6 @@ class AllocationService:
     
     @staticmethod
     def apply_allocation_rule(
-        """Apply Allocation Rule."""
         db: Session,
         rule_id: UUID,
         amount: Decimal,
@@ -438,7 +429,6 @@ class AllocationService:
 
 # Add a function to process all due recurring entries (for scheduled tasks)
 def process_due_recurring_entries(db: Session, company_id: UUID = None) -> Dict[str, int]:
-    """Process Due Recurring Entries."""
     """Process all due recurring journal entries.
     
     This function is designed to be called from a scheduled task.

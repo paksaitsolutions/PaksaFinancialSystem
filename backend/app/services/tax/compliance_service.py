@@ -38,7 +38,6 @@ class ComplianceService:
     """Tax compliance service."""
     
     def __init__(self):
-        """  Init  ."""
         self.compliance_rules = {
             "sales_tax": {
                 "frequency": "monthly",
@@ -58,8 +57,6 @@ class ComplianceService:
         }
     
     def get_timezone(self, timezone_name: str = "UTC"):
-        """Get Timezone."""
-        """Get timezone object."""
         if PYTZ_AVAILABLE:
             try:
                 return pytz.timezone(timezone_name)
@@ -70,8 +67,6 @@ class ComplianceService:
             return timezone.utc
     
     async def check_compliance(self, request: ComplianceCheckRequest) -> Dict[str, Any]:
-        """Check Compliance."""
-        """Perform compliance check."""
         try:
             check_type = request.check_type
             
@@ -124,21 +119,15 @@ class ComplianceService:
             }
     
     def _check_filing_frequency(self, request: ComplianceCheckRequest, rules: Dict) -> bool:
-        """ Check Filing Frequency."""
-        """Check if filing frequency requirements are met."""
         # Simplified check - in real implementation, check actual filing history
         return True
     
     def _check_thresholds(self, request: ComplianceCheckRequest, rules: Dict) -> bool:
-        """ Check Thresholds."""
-        """Check if amount thresholds are within limits."""
         amount = request.data.get("amount", 0)
         threshold = rules.get("threshold", 0)
         return amount <= threshold
     
     def _calculate_next_due_date(self, rules: Dict) -> datetime:
-        """ Calculate Next Due Date."""
-        """Calculate next compliance due date."""
         now = datetime.utcnow()
         due_days = rules.get("due_days", 30)
         
@@ -147,8 +136,6 @@ class ComplianceService:
         return now + timedelta(days=due_days)
     
     async def get_compliance_calendar(self, jurisdiction: str, year: int) -> List[Dict[str, Any]]:
-        """Get Compliance Calendar."""
-        """Get compliance calendar for jurisdiction and year."""
         calendar_items = []
         
         for check_type, rules in self.compliance_rules.items():
@@ -175,8 +162,6 @@ class ComplianceService:
         return sorted(calendar_items, key=lambda x: x["due_date"])
     
     async def generate_compliance_report(self, entity_id: str, period: str) -> Dict[str, Any]:
-        """Generate Compliance Report."""
-        """Generate compliance report for entity and period."""
         return {
             "entity_id": entity_id,
             "period": period,

@@ -40,7 +40,6 @@ class AITaxOptimizationService:
     """Service for AI-powered tax optimization."""
     
     def __init__(self, db: Session):
-        """  Init  ."""
         self.db = db
         self.ai_client = TaxLLMClient(api_key=settings.AI_TAX_API_KEY)
     
@@ -79,8 +78,6 @@ class AITaxOptimizationService:
             raise
     
     def run_tax_scenario(self, scenario: TaxScenario) -> TaxScenario:
-        """Run Tax Scenario."""
-        """Run a tax scenario simulation."""
         try:
             # Validate scenario
             self._validate_scenario(scenario)
@@ -103,20 +100,14 @@ class AITaxOptimizationService:
             raise
     
     def _get_company_transactions(self, company_id: str, fiscal_year: int):
-        """ Get Company Transactions."""
-        """Get company transactions for the fiscal year."""
         # Implementation depends on your database schema
         pass
     
     def _get_company_jurisdiction(self, company_id: str) -> str:
-        """ Get Company Jurisdiction."""
-        """Get company's tax jurisdiction."""
         # Implementation depends on your database schema
         return "US"  # Default
     
     def _validate_scenario(self, scenario: TaxScenario):
-        """ Validate Scenario."""
-        """Validate tax scenario parameters."""
         if scenario.base_year < 2000 or scenario.base_year > 2100:
             raise ValueError("Invalid base year")
         if scenario.projection_years < 1 or scenario.projection_years > 10:

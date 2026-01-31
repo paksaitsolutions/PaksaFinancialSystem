@@ -91,7 +91,6 @@ class ScheduledReportsService:
     """Service for managing scheduled reports."""
 
     def __init__(self, db: AsyncSession):
-        """  Init  ."""
         self.db = db
         self.scheduled_reports: Dict[str, ScheduledReportConfig] = {}
         self.executions: Dict[str, ReportExecution] = {}
@@ -173,8 +172,6 @@ class ScheduledReportsService:
         return config
 
     async def delete_scheduled_report(self, report_id: str) -> bool:
-        """Delete Scheduled Report."""
-        """Delete a scheduled report."""
         
         if report_id not in self.scheduled_reports:
             return False
@@ -188,8 +185,6 @@ class ScheduledReportsService:
         return True
 
     async def get_scheduled_report(self, report_id: str) -> Optional[ScheduledReportConfig]:
-        """Get Scheduled Report."""
-        """Get a scheduled report by ID."""
         return self.scheduled_reports.get(report_id)
 
     async def list_scheduled_reports(
@@ -211,8 +206,6 @@ class ScheduledReportsService:
         return reports
 
     async def execute_scheduled_report(self, report_id: str) -> ReportExecution:
-        """Execute Scheduled Report."""
-        """Execute a scheduled report immediately."""
         
         config = self.scheduled_reports.get(report_id)
         if not config:
@@ -281,8 +274,6 @@ class ScheduledReportsService:
         return executions[:limit]
 
     def _generate_cron_expression(self, frequency: ScheduleFrequency) -> str:
-        """ Generate Cron Expression."""
-        """Generate cron expression based on frequency."""
         
         expressions = {
             ScheduleFrequency.DAILY: "0 9 * * *",  # 9 AM daily
@@ -295,15 +286,11 @@ class ScheduledReportsService:
         return expressions.get(frequency, "0 9 * * *")
 
     def _calculate_next_run(self, cron_expression: str) -> datetime:
-        """ Calculate Next Run."""
-        """Calculate next run time based on cron expression."""
         
         cron = croniter(cron_expression, datetime.now())
         return cron.get_next(datetime)
 
     async def _schedule_report_task(self, config: ScheduledReportConfig) -> None:
-        """Schedule Report Task."""
-        """Schedule a report task using Celery."""
         
         if not config.is_active or not config.next_run:
             return
@@ -316,8 +303,6 @@ class ScheduledReportsService:
         )
 
     async def _cancel_report_task(self, report_id: str) -> None:
-        """Cancel Report Task."""
-        """Cancel a scheduled report task."""
         
         # This would cancel the Celery task
         # Implementation depends on your Celery setup
@@ -429,8 +414,6 @@ class ScheduledReportsService:
 # Celery task for executing scheduled reports
 @celery_app.task(name='scheduled_reports.execute_report')
 def execute_report_task(report_id: str):
-    """Execute Report Task."""
-    """Celery task to execute a scheduled report."""
     
     # This would need to be implemented with proper async handling
     # and database session management for Celery

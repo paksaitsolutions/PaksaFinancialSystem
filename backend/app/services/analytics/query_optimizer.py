@@ -39,7 +39,6 @@ class QueryCache:
     """Redis-based query result cache."""
     
     def __init__(self):
-        """  Init  ."""
         self.redis_client = redis.Redis(
             host=settings.REDIS_HOST,
             port=settings.REDIS_PORT,
@@ -49,8 +48,6 @@ class QueryCache:
         self.default_ttl = 300  # 5 minutes
 
     def _generate_cache_key(self, query: str, params: Dict[str, Any]) -> str:
-        """ Generate Cache Key."""
-        """Generate cache key from query and parameters."""
         cache_data = {
             'query': query,
             'params': sorted(params.items()) if params else []
@@ -59,8 +56,6 @@ class QueryCache:
         return f"query_cache:{hashlib.md5(cache_string.encode()).hexdigest()}"
 
     async def get(self, query: str, params: Dict[str, Any] = None) -> Optional[Any]:
-        """Get."""
-        """Get cached query result."""
         cache_key = self._generate_cache_key(query, params or {})
         try:
             cached_result = self.redis_client.get(cache_key)
@@ -71,8 +66,6 @@ class QueryCache:
         return None
 
     async def set(self, query: str, result: Any, params: Dict[str, Any] = None, ttl: int = None) -> None:
-        """Set."""
-        """Cache query result."""
         cache_key = self._generate_cache_key(query, params or {})
         ttl = ttl or self.default_ttl
         try:
@@ -85,8 +78,6 @@ class QueryCache:
             pass
 
     async def invalidate_pattern(self, pattern: str) -> None:
-        """Invalidate Pattern."""
-        """Invalidate cache entries matching pattern."""
         try:
             keys = self.redis_client.keys(f"query_cache:*{pattern}*")
             if keys:
@@ -99,20 +90,15 @@ class QueryOptimizer:
     """Service for optimizing analytics queries."""
 
     def __init__(self, db: AsyncSession, company_id: UUID):
-        """  Init  ."""
         self.db = db
         self.company_id = company_id
         self.cache = QueryCache()
         self.metrics: List[QueryMetrics] = []
 
     def cached_query(self, ttl: int = 300):
-        """Cached Query."""
-        """Decorator for caching query results."""
         def decorator(func: Callable):
-            """Decorator."""
             @wraps(func)
             async def wrapper(*args, **kwargs):
-        """Wrapper."""
                 # Generate cache key from function name and arguments
                 cache_key = f"{func.__name__}:{str(args)}:{str(kwargs)}"
                 
@@ -137,8 +123,6 @@ class QueryOptimizer:
         return decorator
 
     async def optimize_financial_summary_query(self, date_range: Dict[str, datetime]) -> Dict[str, Any]:
-        """Optimize Financial Summary Query."""
-        """Optimized financial summary query with materialized aggregations."""
         
         # Use a single query with CTEs for better performance
         query = text("""
@@ -211,8 +195,6 @@ class QueryOptimizer:
 
     @cached_query(ttl=600)  # Cache for 10 minutes
     async def get_trend_data_optimized(self, metric: str, period: str, months: int) -> List[Dict[str, Any]]:
-        """Get Trend Data Optimized."""
-        """Optimized trend analysis with pre-aggregated data."""
         
         end_date = datetime.now()
         start_date = end_date - timedelta(days=months * 30)
@@ -274,8 +256,6 @@ class QueryOptimizer:
         ]
 
     async def create_analytics_indexes(self) -> None:
-        """Create Analytics Indexes."""
-        """Create database indexes for better analytics performance."""
         
         indexes = [
             # Transaction indexes
@@ -301,8 +281,6 @@ class QueryOptimizer:
                 print(f"Failed to create index {index.name}: {e}")
 
     async def analyze_query_performance(self) -> Dict[str, Any]:
-        """Analyze Query Performance."""
-        """Analyze query performance metrics."""
         
         if not self.metrics:
             return {'message': 'No metrics available'}
@@ -331,8 +309,6 @@ class QueryOptimizer:
         }
 
     def _record_metrics(self, query_hash: str, execution_time: float, rows_returned: int, cache_hit: bool) -> None:
-        """ Record Metrics."""
-        """Record query performance metrics."""
         
         metric = QueryMetrics(
             query_hash=query_hash,
@@ -349,13 +325,9 @@ class QueryOptimizer:
             self.metrics = self.metrics[-1000:]
 
     async def invalidate_cache_for_company(self) -> None:
-        """Invalidate Cache For Company."""
-        """Invalidate all cached queries for the current company."""
         await self.cache.invalidate_pattern(str(self.company_id))
 
     async def warm_cache(self) -> None:
-        """Warm Cache."""
-        """Pre-warm cache with commonly used queries."""
         
         # Warm up financial summary
         current_month = datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)

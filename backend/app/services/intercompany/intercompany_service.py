@@ -26,12 +26,9 @@ class IntercompanyService:
     """Service for managing intercompany transactions."""
     
     def __init__(self, db: Session):
-        """  Init  ."""
         self.db = db
     
     def create_transaction(self, transaction_data: Dict[str, Any], created_by: UUID) -> IntercompanyTransaction:
-        """Create Transaction."""
-        """Create a new intercompany transaction."""
         transaction_number = self._generate_transaction_number()
         
         transaction = IntercompanyTransaction(
@@ -58,8 +55,6 @@ class IntercompanyService:
         return transaction
     
     def approve_transaction(self, transaction_id: UUID, approved_by: UUID) -> IntercompanyTransaction:
-        """Approve Transaction."""
-        """Approve an intercompany transaction."""
         transaction = self.get_transaction(transaction_id)
         if not transaction:
             raise NotFoundException(f"Transaction {transaction_id} not found")
@@ -79,8 +74,6 @@ class IntercompanyService:
         return transaction
     
     def post_transaction(self, transaction_id: UUID, posted_by: UUID) -> IntercompanyTransaction:
-        """Post Transaction."""
-        """Post an intercompany transaction by creating journal entries."""
         transaction = self.get_transaction(transaction_id)
         if not transaction:
             raise NotFoundException(f"Transaction {transaction_id} not found")
@@ -118,8 +111,6 @@ class IntercompanyService:
         return transaction
     
     def get_transaction(self, transaction_id: UUID) -> Optional[IntercompanyTransaction]:
-        """Get Transaction."""
-        """Get an intercompany transaction by ID."""
         return self.db.query(IntercompanyTransaction).filter(
             IntercompanyTransaction.id == transaction_id
         ).first()
@@ -189,8 +180,6 @@ class IntercompanyService:
         return je
     
     def _determine_debit_credit(self, transaction_type: IntercompanyTransactionType, is_source: bool) -> bool:
-        """ Determine Debit Credit."""
-        """Determine if the entry should be a debit based on transaction type and source/target."""
         debit_rules = {
             IntercompanyTransactionType.SALE: is_source,
             IntercompanyTransactionType.PURCHASE: not is_source,
@@ -203,8 +192,6 @@ class IntercompanyService:
         return debit_rules.get(transaction_type, is_source)
     
     def _generate_transaction_number(self) -> str:
-        """ Generate Transaction Number."""
-        """Generate a unique transaction number."""
         last_transaction = self.db.query(IntercompanyTransaction)\
             .order_by(desc(IntercompanyTransaction.created_at))\
             .first()

@@ -13,12 +13,9 @@ from app.services.base import BaseService
 
 class FixedAssetsGLService(BaseService):
     def __init__(self, db: Session):
-        """  Init  ."""
         super().__init__(db, FixedAsset)
     
     def post_asset_purchase_to_gl(self, asset: FixedAsset) -> JournalEntry:
-        """Post Asset Purchase To Gl."""
-        """Post fixed asset purchase to GL"""
         
         journal_entry = JournalEntry(
             company_id=asset.company_id,
@@ -61,8 +58,6 @@ class FixedAssetsGLService(BaseService):
         return journal_entry
     
     def post_depreciation_to_gl(self, asset: FixedAsset, depreciation_amount: Decimal) -> JournalEntry:
-        """Post Depreciation To Gl."""
-        """Post monthly depreciation to GL"""
         
         journal_entry = JournalEntry(
             company_id=asset.company_id,
@@ -119,8 +114,6 @@ class FixedAssetsGLService(BaseService):
         return journal_entry
     
     def post_asset_disposal_to_gl(self, asset: FixedAsset, disposal_amount: Decimal, disposal_date: datetime = None) -> JournalEntry:
-        """Post Asset Disposal To Gl."""
-        """Post fixed asset disposal to GL"""
         
         if not disposal_date:
             disposal_date = datetime.now().date()
@@ -220,8 +213,6 @@ class FixedAssetsGLService(BaseService):
         return journal_entry
     
     def post_maintenance_cost_to_ap(self, asset: FixedAsset, maintenance_amount: Decimal, vendor_id: UUID, description: str) -> JournalEntry:
-        """Post Maintenance Cost To Ap."""
-        """Post asset maintenance cost to AP and GL"""
         from app.models import APInvoice, APInvoiceLineItem, Vendor
         
         # Create AP Invoice
@@ -299,8 +290,6 @@ class FixedAssetsGLService(BaseService):
         return journal_entry
     
     def _get_account(self, company_id: UUID, code: str, name: str) -> ChartOfAccounts:
-        """ Get Account."""
-        """Get or create chart of accounts"""
         account = self.db.query(ChartOfAccounts).filter(
             ChartOfAccounts.company_id == company_id,
             ChartOfAccounts.account_code == code

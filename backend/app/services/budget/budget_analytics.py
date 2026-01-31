@@ -35,7 +35,6 @@ class BudgetAnalyticsService:
         self.payroll_service = payroll_service
 
     def get_budget_performance(self, department_id: Optional[int] = None, project_id: Optional[int] = None) -> Dict:
-        """Get Budget Performance."""
         """
         Get budget performance metrics.
         """
@@ -69,7 +68,6 @@ class BudgetAnalyticsService:
         }
 
     def get_departmental_budget_analysis(self) -> List[Dict]:
-        """Get Departmental Budget Analysis."""
         """
         Get budget analysis by department.
         """
@@ -105,7 +103,6 @@ class BudgetAnalyticsService:
         return result
 
     def get_project_budget_analysis(self) -> List[Dict]:
-        """Get Project Budget Analysis."""
         """
         Get budget analysis by project.
         """
@@ -141,7 +138,6 @@ class BudgetAnalyticsService:
         return result
 
     def get_budget_trend_analysis(self, period: str = 'month', months: int = 12) -> List[Dict]:
-        """Get Budget Trend Analysis."""
         """
         Get budget trend analysis over time.
         """
@@ -184,7 +180,6 @@ class BudgetAnalyticsService:
         return result
 
     def get_budget_allocation_analysis(self, account_id: int) -> Dict:
-        """Get Budget Allocation Analysis."""
         """
         Get budget allocation analysis for a specific account.
         """
@@ -239,7 +234,6 @@ class BudgetAnalyticsService:
         }
 
     def get_budget_variance_analysis(self) -> Dict:
-        """Get Budget Variance Analysis."""
         """
         Get detailed budget variance analysis.
         """

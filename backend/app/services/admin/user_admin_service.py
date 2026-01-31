@@ -38,7 +38,6 @@ class UserAdminService:
     """Service for user administration."""
     
     def __init__(self, db: Session):
-        """  Init  ."""
         self.db = db
     
     def provision_user(
@@ -64,8 +63,6 @@ class UserAdminService:
         return provision
     
     def deactivate_user(self, user_id: UUID, company_id: UUID) -> bool:
-        """Deactivate User."""
-        """Deactivate a user."""
         provision = self.db.query(UserProvision).filter(
             UserProvision.user_id == user_id,
             UserProvision.company_id == company_id
@@ -79,8 +76,6 @@ class UserAdminService:
         return False
     
     def set_system_setting(self, key: str, value: str) -> SystemSetting:
-        """Set System Setting."""
-        """Set system setting."""
         setting = self.db.query(SystemSetting).filter(SystemSetting.key == key).first()
         
         if setting:
@@ -95,6 +90,4 @@ class UserAdminService:
         return setting
     
     def get_system_setting(self, key: str) -> Optional[SystemSetting]:
-        """Get System Setting."""
-        """Get system setting."""
         return self.db.query(SystemSetting).filter(SystemSetting.key == key).first()

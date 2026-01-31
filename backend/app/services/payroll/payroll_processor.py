@@ -37,8 +37,6 @@ class PayrollProcessor:
     """
     
     def __init__(self, db: Session):
-        """  Init  ."""
-        """Initialize the payroll processor with a database session."""
         self.db = db
     
     def initialize_pay_run(

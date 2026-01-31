@@ -23,8 +23,6 @@ class AdvancedGLService:
     """Advanced General Ledger service with enterprise features."""
     
     def __init__(self, db: Session, user: User, company_id: str):
-        """  Init  ."""
-        """  Init  ."""
         self.db = db
         self.user = user
         self.company_id = company_id
@@ -109,9 +107,6 @@ class AdvancedGLService:
         return entry
     
     async def post_journal_entry(self, entry_id: str) -> JournalEntry:
-        """Post Journal Entry."""
-        """Post Journal Entry."""
-        """Post journal entry to ledger."""
         
         if not has_permission(self.user, Permission.GL_POST):
             raise ValidationException("Insufficient permissions to post journal entries")
@@ -144,9 +139,6 @@ class AdvancedGLService:
         return entry
     
     async def _post_journal_entry(self, entry: JournalEntry):
-        """Post Journal Entry."""
-        """Post Journal Entry."""
-        """Internal method to post journal entry to ledger."""
         
         # Update account balances
         for line in entry.lines:
@@ -412,9 +404,6 @@ class AdvancedGLService:
             return total_credits - total_debits
     
     def _validate_journal_entry(self, entry_data: Dict[str, Any]):
-        """ Validate Journal Entry."""
-        """ Validate Journal Entry."""
-        """Validate journal entry data."""
         
         if not entry_data.get("entry_date"):
             raise ValidationException("Entry date is required")
@@ -440,9 +429,6 @@ class AdvancedGLService:
                 raise ValidationException(f"Line {i+1} cannot have both debit and credit amounts")
     
     async def _generate_entry_number(self) -> str:
-        """Generate Entry Number."""
-        """Generate Entry Number."""
-        """Generate unique journal entry number."""
         
         today = datetime.now().date()
         year = today.year

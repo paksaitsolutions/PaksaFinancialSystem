@@ -28,14 +28,10 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType, Respons
     """Base service class with CRUD operations."""
 
     def __init__(self, model: Type[ModelType], db: Session):
-        """  Init  ."""
-        """Initialize base service with model and database session."""
         self.model = model
         self.db = db
 
     def get(self, id: Union[UUID, str, int]) -> Optional[ModelType]:
-        """Get."""
-        """Get a single record by ID."""
         return self.db.query(self.model).filter(self.model.id == id).first()
 
     def get_multi(
@@ -53,8 +49,6 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType, Respons
         return query.offset(skip).limit(limit).all()
 
     def create(self, *, obj_in: CreateSchemaType) -> ModelType:
-        """Create."""
-        """Create a new record."""
         obj_in_data = obj_in.dict(exclude_unset=True)
         db_obj = self.model(**obj_in_data)
         self.db.add(db_obj)
@@ -87,8 +81,6 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType, Respons
         return db_obj
 
     def delete(self, *, id: Union[UUID, str, int]) -> bool:
-        """Delete."""
-        """Delete a record."""
         db_obj = self.get(id)
         if not db_obj:
             return False
@@ -98,8 +90,6 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType, Respons
         return True
         
     def get_or_404(self, id: Union[UUID, str, int], detail: str = "Not found") -> ModelType:
-        """Get Or 404."""
-        """Get a record by ID or raise 404 if not found."""
         obj = self.get(id)
         if not obj:
             raise HTTPException(
@@ -138,8 +128,6 @@ class CRUDService(
         self.response_schema = response_schema
     
     def get_response(self, db_obj: ModelType) -> ResponseSchemaType:
-        """Get Response."""
-        """Convert a database object to a response schema."""
         return self.response_schema.from_orm(db_obj)
     
     def get_multi_response(
@@ -150,16 +138,12 @@ class CRUDService(
         return [self.get_response(obj) for obj in db_objs]
     
     def get_by_id(self, id: UUID) -> Optional[ResponseSchemaType]:
-        """Get By Id."""
-        """Get a single record by ID and convert to response schema."""
         db_obj = self.get(id)
         if db_obj:
             return self.get_response(db_obj)
         return None
     
     def get_by_id_or_404(self, id: UUID) -> ResponseSchemaType:
-        """Get By Id Or 404."""
-        """Get a single record by ID or raise 404 if not found."""
         db_obj = self.get_or_404(id)
         return self.get_response(db_obj)
     

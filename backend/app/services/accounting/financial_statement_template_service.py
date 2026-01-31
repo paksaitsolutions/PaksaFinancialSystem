@@ -41,13 +41,9 @@ class FinancialStatementTemplateService:
     """Service for managing financial statement templates."""
     
     def __init__(self, db: Session):
-        """  Init  ."""
-        """Initialize the service with a database session."""
         self.db = db
     
     def get_template(self, template_id: UUID) -> TemplateModel:
-        """Get Template."""
-        """Retrieve a template by ID."""
         template = self.db.query(TemplateModel).get(template_id)
         if not template:
             raise NotFoundException(
@@ -56,8 +52,6 @@ class FinancialStatementTemplateService:
         return template
     
     def get_template_by_name(self, name: str, company_id: Optional[UUID] = None) -> Optional[TemplateModel]:
-        """Get Template By Name."""
-        """Retrieve a template by name and optionally company ID."""
         query = self.db.query(TemplateModel).filter(TemplateModel.name == name)
         
         if company_id:
@@ -94,8 +88,6 @@ class FinancialStatementTemplateService:
         return items, total
     
     def create_template(self, template_data: FinancialStatementTemplateCreate, user_id: UUID) -> TemplateModel:
-        """Create Template."""
-        """Create a new template."""
         # Check for duplicate name
         existing = self.get_template_by_name(template_data.name, template_data.company_id)
         if existing:
@@ -156,8 +148,6 @@ class FinancialStatementTemplateService:
         return db_template
     
     def delete_template(self, template_id: UUID) -> bool:
-        """Delete Template."""
-        """Delete a template."""
         db_template = self.get_template(template_id)
         
         if db_template.is_system:
@@ -255,8 +245,6 @@ class FinancialStatementTemplateService:
         return db_template
     
     def validate_template_structure(self, structure: Dict[str, Any]) -> bool:
-        """Validate Template Structure."""
-        """Validate a template structure."""
         if not isinstance(structure, dict):
             raise ValidationException(detail="Template structure must be a JSON object")
             
@@ -270,8 +258,6 @@ class FinancialStatementTemplateService:
 
 
 def get_financial_statement_template_service():
-    """Get Financial Statement Template Service."""
-    """Dependency function to get a FinancialStatementTemplateService instance."""
     db = SessionLocal()
     try:
         yield FinancialStatementTemplateService(db)

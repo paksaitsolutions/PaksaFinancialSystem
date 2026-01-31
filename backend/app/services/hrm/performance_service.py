@@ -231,8 +231,6 @@ class PerformanceService:
         }
     
     def _serialize_review(self, review: PerformanceReview) -> Dict[str, Any]:
-        """ Serialize Review."""
-        """Serialize performance review."""
         return {
             "id": str(review.id),
             "review_period_start": review.review_period_start.isoformat() if review.review_period_start else None,
@@ -244,8 +242,6 @@ class PerformanceService:
         }
     
     def _serialize_goal(self, goal: Goal) -> Dict[str, Any]:
-        """ Serialize Goal."""
-        """Serialize goal."""
         return {
             "id": str(goal.id),
             "title": goal.title,

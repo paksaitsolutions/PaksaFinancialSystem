@@ -25,8 +25,6 @@ class PayrollTaxCalculator:
     """Handles payroll tax calculations for employees."""
     
     def __init__(self, db: Session):
-        """  Init  ."""
-        """Initialize the tax calculator with a database session."""
         self.db = db
     
     def calculate_taxes(

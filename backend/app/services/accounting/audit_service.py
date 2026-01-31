@@ -37,7 +37,6 @@ class ReconciliationAuditService(BaseReconciliationService):
     """Service for handling reconciliation audit operations."""
     
     def get_audit_log(self, log_id: UUID, user_id: UUID) -> ReconciliationAuditLog:
-        """Get Audit Log."""
         """Get an audit log entry by ID.
         
         Args:
@@ -272,7 +271,6 @@ class ReconciliationAuditService(BaseReconciliationService):
             return self._export_to_xlsx(logs)
     
     def _export_to_csv(self, logs: List[ReconciliationAuditLog]) -> str:
-        """ Export To Csv."""
         """Export audit logs to CSV format.
         
         Args:
@@ -309,7 +307,6 @@ class ReconciliationAuditService(BaseReconciliationService):
         return output.getvalue()
     
     def _export_to_json(self, logs: List[ReconciliationAuditLog]) -> str:
-        """ Export To Json."""
         """Export audit logs to JSON format.
         
         Args:
@@ -337,7 +334,6 @@ class ReconciliationAuditService(BaseReconciliationService):
         return json.dumps(log_data, indent=2)
     
     def _export_to_xlsx(self, logs: List[ReconciliationAuditLog]) -> str:
-        """ Export To Xlsx."""
         """Export audit logs to Excel format.
         
         Args:
@@ -393,7 +389,6 @@ class ReconciliationAuditService(BaseReconciliationService):
         return temp_path
     
     def _is_admin(self, user_id: UUID) -> bool:
-        """ Is Admin."""
         """Check if a user is an admin.
         
         Args:

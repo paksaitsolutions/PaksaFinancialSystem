@@ -52,31 +52,22 @@ class AccountBalanceService:
     """Service for managing account balances and related operations."""
     
     def __init__(self, db: Optional[Session] = None):
-        """  Init  ."""
-        """Initialize the service with an optional database session."""
         self.db = db or SessionLocal()
     
     def __enter__(self):
-        """  Enter  ."""
-        """Context manager entry."""
         return self
     
     def __exit__(self, exc_type, exc_val, exc_tb):
-        """  Exit  ."""
-        """Context manager exit - close the session if we created it."""
         if self.db and not self.db.bind:
             self.db.close()
     
     def get_account(self, account_id: UUID) -> Account:
-        """Get Account."""
-        """Get an account by ID, raising an exception if not found."""
         account = self.db.get(Account, account_id)
         if not account:
             raise AccountNotFoundException(account_id)
         return account
     
     def get_balance_as_of(self, account_id: UUID, as_of_date: datetime = None) -> Decimal:
-        """Get Balance As Of."""
         """
         Get the balance of an account as of a specific date.
         
@@ -244,7 +235,6 @@ class AccountBalanceService:
         }
         
     def close_period(self, period_end: datetime) -> List[AccountBalance]:
-        """Close Period."""
         """
         Close an accounting period by creating balance records for all accounts.
         
@@ -396,7 +386,6 @@ class AccountBalanceService:
         return balance
     
     def get_balance_as_of(self, account_id: UUID, as_of_date: datetime = None) -> Decimal:
-        """Get Balance As Of."""
         """
         Get the balance of an account as of a specific date, using historical balances if available.
         
@@ -612,31 +601,22 @@ class AccountBalanceService:
     """Service for managing account balances and related operations."""
     
     def __init__(self, db: Optional[Session] = None):
-        """  Init  ."""
-        """Initialize the service with an optional database session."""
         self.db = db or SessionLocal()
     
     def __enter__(self):
-        """  Enter  ."""
-        """Context manager entry."""
         return self
     
     def __exit__(self, exc_type, exc_val, exc_tb):
-        """  Exit  ."""
-        """Context manager exit - close the session if we created it."""
         if self.db and not self.db.bind:
             self.db.close()
     
     def get_account(self, account_id: UUID) -> Account:
-        """Get Account."""
-        """Get an account by ID, raising an exception if not found."""
         account = self.db.get(Account, account_id)
         if not account:
             raise AccountNotFoundException(account_id)
         return account
     
     def get_balance_as_of(self, account_id: UUID, as_of_date: datetime = None) -> Decimal:
-        """Get Balance As Of."""
         """
         Get the balance of an account as of a specific date.
         
@@ -804,7 +784,6 @@ class AccountBalanceService:
         }
         
     def close_period(self, period_end: datetime) -> List[AccountBalance]:
-        """Close Period."""
         """
         Close an accounting period by creating balance records for all accounts.
         
@@ -956,7 +935,6 @@ class AccountBalanceService:
         return balance
     
     def get_balance_as_of(self, account_id: UUID, as_of_date: datetime = None) -> Decimal:
-        """Get Balance As Of."""
         """
         Get the balance of an account as of a specific date, using historical balances if available.
         

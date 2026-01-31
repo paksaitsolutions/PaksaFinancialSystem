@@ -44,8 +44,6 @@ class JournalEntryService(BaseService):
     """Service for managing journal entries and related operations."""
     
     def __init__(self, db: Session):
-        """  Init  ."""
-        """Initialize the service with a database session."""
         super().__init__(db)
         self.period_service = GLPeriodService(db)
     
@@ -176,7 +174,6 @@ class JournalEntryService(BaseService):
         return journal_entry
     
     def post_journal_entry(self, entry_id: UUID, posted_by: UUID) -> JournalEntry:
-        """Post Journal Entry."""
         """
         Post a draft journal entry.
         
@@ -307,7 +304,6 @@ class JournalEntryService(BaseService):
         return reversal_entry
     
     def get_journal_entry(self, entry_id: UUID) -> JournalEntry:
-        """Get Journal Entry."""
         """
         Get a journal entry by ID.
         
@@ -394,7 +390,6 @@ class JournalEntryService(BaseService):
         }
     
     def _get_journal_entry(self, entry_id: UUID) -> JournalEntry:
-        """ Get Journal Entry."""
         """
         Internal method to get a journal entry by ID.
         
@@ -420,7 +415,6 @@ class JournalEntryService(BaseService):
         return journal_entry
     
     def _generate_entry_number(self) -> str:
-        """ Generate Entry Number."""
         """
         Generate a unique journal entry number.
         
@@ -485,7 +479,6 @@ class JournalEntryService(BaseService):
             return None
     
     def _validate_account(self, account_id: Optional[UUID]) -> Account:
-        """ Validate Account."""
         """
         Validate that an account exists and is active.
         

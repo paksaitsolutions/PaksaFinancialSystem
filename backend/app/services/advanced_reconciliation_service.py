@@ -18,12 +18,9 @@ class AdvancedReconciliationService(BaseService):
     """Advanced reconciliation across all financial modules"""
     
     def __init__(self, db: Session):
-        """  Init  ."""
         super().__init__(db, JournalEntry)
     
     def reconcile_ap_gl(self, company_id: UUID, as_of_date: date) -> Dict[str, Any]:
-        """Reconcile Ap Gl."""
-        """Reconcile AP balances with GL"""
         # AP balance from invoices
         ap_balance = self.db.query(func.sum(APInvoice.total_amount - APInvoice.paid_amount)).filter(
             APInvoice.company_id == company_id,
@@ -52,8 +49,6 @@ class AdvancedReconciliationService(BaseService):
         }
     
     def reconcile_ar_gl(self, company_id: UUID, as_of_date: date) -> Dict[str, Any]:
-        """Reconcile Ar Gl."""
-        """Reconcile AR balances with GL"""
         # AR balance from invoices
         ar_balance = self.db.query(func.sum(ARInvoice.total_amount - ARInvoice.paid_amount)).filter(
             ARInvoice.company_id == company_id,
@@ -82,8 +77,6 @@ class AdvancedReconciliationService(BaseService):
         }
     
     def comprehensive_reconciliation(self, company_id: UUID, as_of_date: date) -> Dict[str, Any]:
-        """Comprehensive Reconciliation."""
-        """Perform comprehensive reconciliation across all modules"""
         return {
             "as_of_date": as_of_date.isoformat(),
             "ap_reconciliation": self.reconcile_ap_gl(company_id, as_of_date),

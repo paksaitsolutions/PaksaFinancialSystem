@@ -36,8 +36,6 @@ class FinancialStatementGenerator:
     """
     
     def __init__(self, db: Session):
-        """  Init  ."""
-        """Initialize the generator with a database session."""
         self.db = db
         self.fs_service = FinancialStatementService(db)
         self.period_service = PeriodService(db)
@@ -137,7 +135,6 @@ class FinancialStatementGenerator:
         }
     
     def _get_previous_period(self, period: GLPeriod) -> Optional[GLPeriod]:
-        """ Get Previous Period."""
         """
         Get the previous period for a given period.
         

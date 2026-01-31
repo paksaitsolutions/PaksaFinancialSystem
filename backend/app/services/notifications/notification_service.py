@@ -24,7 +24,6 @@ class EmailService:
     """Email notification service."""
     
     def __init__(self):
-        """  Init  ."""
         self.smtp_server = getattr(settings, 'SMTP_SERVER', 'localhost')
         self.smtp_port = getattr(settings, 'SMTP_PORT', 587)
         self.smtp_username = getattr(settings, 'SMTP_USERNAME', '')
@@ -73,13 +72,10 @@ class SMSService:
     """SMS notification service."""
     
     def __init__(self):
-        """  Init  ."""
         self.api_key = getattr(settings, 'SMS_API_KEY', '')
         self.api_url = getattr(settings, 'SMS_API_URL', '')
     
     async def send_sms(self, phone_number: str, message: str) -> bool:
-        """Send Sms."""
-        """Send SMS notification."""
         if not HTTPX_AVAILABLE:
             logger.warning("SMS service not available - httpx not installed")
             return False
@@ -114,7 +110,6 @@ class PushNotificationService:
     """Push notification service."""
     
     def __init__(self):
-        """  Init  ."""
         self.fcm_key = getattr(settings, 'FCM_SERVER_KEY', '')
         self.fcm_url = "https://fcm.googleapis.com/fcm/send"
     
@@ -172,7 +167,6 @@ class NotificationService:
     """Main notification service that coordinates all notification types."""
     
     def __init__(self):
-        """  Init  ."""
         self.email_service = EmailService()
         self.sms_service = SMSService()
         self.push_service = PushNotificationService()

@@ -19,7 +19,6 @@ class EnhancedReportsService:
     """Service for generating multi-tenant financial and operational reports."""
     
     def __init__(self, db: Session):
-        """  Init  ."""
         self.db = db
         self.audit_service = AuditService(db)
     
@@ -162,15 +161,11 @@ class EnhancedReportsService:
         return template
     
     def list_company_reports(self, company_id: UUID, limit: int = 100) -> List[CompanyReport]:
-        """List Company Reports."""
-        """List reports for a company."""
         return self.db.query(CompanyReport).filter(
             CompanyReport.company_id == company_id
         ).order_by(desc(CompanyReport.created_at)).limit(limit).all()
     
     def get_report(self, report_id: UUID) -> Optional[CompanyReport]:
-        """Get Report."""
-        """Get report by ID."""
         return self.db.query(CompanyReport).filter(CompanyReport.id == report_id).first()
     
     def _generate_income_statement_data(
@@ -202,8 +197,6 @@ class EnhancedReportsService:
         }
     
     def _generate_balance_sheet_data(self, company_id: UUID, period_end: datetime) -> Dict[str, Any]:
-        """ Generate Balance Sheet Data."""
-        """Generate balance sheet data for company."""
         return {
             "report_type": "Balance Sheet",
             "company_id": str(company_id),

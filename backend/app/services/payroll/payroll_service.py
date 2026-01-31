@@ -40,15 +40,12 @@ class PayrollService:
     """
     
     def __init__(self, db: Session):
-        """  Init  ."""
-        """Initialize the payroll service with a database session."""
         self.db = db
         self.payroll_processor = PayrollProcessor(db)
         self.tax_calculator = PayrollTaxCalculator(db)
         self.net_pay_processor = NetPayProcessor(db)
         
     def _generate_payroll_journal_entries(self, pay_run_id: UUID) -> None:
-        """ Generate Payroll Journal Entries."""
         """
         Generate journal entries for a completed pay run.
         
@@ -226,8 +223,6 @@ class PayrollService:
             )
     
     def _get_pay_run_response(self, pay_run: PayRun) -> PayRunResponse:
-        """ Get Pay Run Response."""
-        """Convert a PayRun model to a PayRunResponse schema."""
         return PayRunResponse(
             id=pay_run.id,
             pay_period_id=pay_run.pay_period_id,
@@ -342,7 +337,6 @@ class PayrollService:
             )
     
     def get_pay_run(self, pay_run_id: UUID) -> PayRunResponse:
-        """Get Pay Run."""
         """
         Get pay run details by ID with all related data.
         
@@ -384,7 +378,6 @@ class PayrollService:
         return self._get_pay_run_response(pay_run)
         
     def _generate_payroll_journal_entries(self, pay_run_id: UUID) -> None:
-        """ Generate Payroll Journal Entries."""
         """
         Generate journal entries for a processed pay run.
         
@@ -448,7 +441,6 @@ class PayrollService:
             return None
     
     def get_payslip(self, payslip_id: UUID) -> PayslipResponse:
-        """Get Payslip."""
         """
         Get details of a specific payslip.
         

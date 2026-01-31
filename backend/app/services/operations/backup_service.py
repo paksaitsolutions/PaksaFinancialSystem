@@ -28,14 +28,11 @@ class BackupService:
     """Service for backup and recovery operations."""
     
     def __init__(self, db: Session):
-        """  Init  ."""
         self.db = db
         self.backup_dir = "/app/backups"
         os.makedirs(self.backup_dir, exist_ok=True)
     
     def create_database_backup(self) -> BackupRecord:
-        """Create Database Backup."""
-        """Create a database backup."""
         timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
         backup_file = f"{self.backup_dir}/db_backup_{timestamp}.sql"
         
@@ -78,8 +75,6 @@ class BackupService:
         return backup_record
     
     def restore_database_backup(self, backup_file: str) -> bool:
-        """Restore Database Backup."""
-        """Restore database from backup."""
         try:
             cmd = [
                 "psql",
@@ -101,15 +96,11 @@ class BackupService:
             return False
     
     def get_backup_history(self, limit: int = 50) -> List[BackupRecord]:
-        """Get Backup History."""
-        """Get backup history."""
         return self.db.query(BackupRecord).order_by(
             BackupRecord.created_at.desc()
         ).limit(limit).all()
     
     def cleanup_old_backups(self, keep_days: int = 30):
-        """Cleanup Old Backups."""
-        """Clean up old backup files."""
         cutoff_date = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
         cutoff_date = cutoff_date.replace(day=cutoff_date.day - keep_days)
         

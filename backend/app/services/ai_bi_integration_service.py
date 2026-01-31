@@ -32,7 +32,6 @@ from app.services.base import BaseService
 
 class AIBIIntegrationService(BaseService):
     def __init__(self, db: Session):
-        """  Init  ."""
         super().__init__(db, AIInsight)
     
     # ========================================================================
@@ -40,8 +39,6 @@ class AIBIIntegrationService(BaseService):
     # ========================================================================
     
     def detect_financial_anomalies(self, company_id: UUID) -> List[AIAnomaly]:
-        """Detect Financial Anomalies."""
-        """Detect anomalies across all financial modules"""
         anomalies = []
         
         # AP Invoice Anomalies
@@ -62,8 +59,6 @@ class AIBIIntegrationService(BaseService):
         return anomalies
     
     def _detect_ap_anomalies(self, company_id: UUID) -> List[AIAnomaly]:
-        """ Detect Ap Anomalies."""
-        """Detect AP invoice anomalies"""
         anomalies = []
         
         # Unusual invoice amounts (3x standard deviation)
@@ -103,8 +98,6 @@ class AIBIIntegrationService(BaseService):
         return anomalies
     
     def _detect_ar_anomalies(self, company_id: UUID) -> List[AIAnomaly]:
-        """ Detect Ar Anomalies."""
-        """Detect AR invoice anomalies"""
         anomalies = []
         
         # Overdue invoices pattern analysis
@@ -136,8 +129,6 @@ class AIBIIntegrationService(BaseService):
         return anomalies
     
     def _detect_cash_anomalies(self, company_id: UUID) -> List[AIAnomaly]:
-        """ Detect Cash Anomalies."""
-        """Detect cash flow anomalies"""
         anomalies = []
         
         # Sudden large cash outflows
@@ -178,8 +169,6 @@ class AIBIIntegrationService(BaseService):
         return anomalies
     
     def _detect_payroll_anomalies(self, company_id: UUID) -> List[AIAnomaly]:
-        """ Detect Payroll Anomalies."""
-        """Detect payroll anomalies"""
         anomalies = []
         
         # Recent payroll runs with unusual totals
@@ -213,8 +202,6 @@ class AIBIIntegrationService(BaseService):
         return anomalies
     
     def _detect_inventory_anomalies(self, company_id: UUID) -> List[AIAnomaly]:
-        """ Detect Inventory Anomalies."""
-        """Detect inventory anomalies"""
         anomalies = []
         
         # Items below reorder level
@@ -249,8 +236,6 @@ class AIBIIntegrationService(BaseService):
     # ========================================================================
     
     def generate_cash_flow_prediction(self, company_id: UUID, days_ahead: int = 30) -> AIPrediction:
-        """Generate Cash Flow Prediction."""
-        """Predict cash flow for next N days"""
         
         # Get historical cash flow data
         historical_transactions = self.db.query(BankTransaction).filter(
@@ -290,8 +275,6 @@ class AIBIIntegrationService(BaseService):
         return prediction
     
     def generate_revenue_prediction(self, company_id: UUID, months_ahead: int = 3) -> AIPrediction:
-        """Generate Revenue Prediction."""
-        """Predict revenue for next N months"""
         
         # Get historical AR invoice data
         historical_invoices = self.db.query(ARInvoice).filter(
@@ -334,8 +317,6 @@ class AIBIIntegrationService(BaseService):
     # ========================================================================
     
     def generate_financial_recommendations(self, company_id: UUID) -> List[AIRecommendation]:
-        """Generate Financial Recommendations."""
-        """Generate actionable financial recommendations"""
         recommendations = []
         
         # Cash flow optimization
@@ -353,8 +334,6 @@ class AIBIIntegrationService(BaseService):
         return recommendations
     
     def _generate_cash_flow_recommendations(self, company_id: UUID) -> List[AIRecommendation]:
-        """ Generate Cash Flow Recommendations."""
-        """Generate cash flow optimization recommendations"""
         recommendations = []
         
         # Check current cash position
@@ -384,8 +363,6 @@ class AIBIIntegrationService(BaseService):
         return recommendations
     
     def _generate_ar_recommendations(self, company_id: UUID) -> List[AIRecommendation]:
-        """ Generate Ar Recommendations."""
-        """Generate AR optimization recommendations"""
         recommendations = []
         
         # Check for overdue invoices
@@ -419,8 +396,6 @@ class AIBIIntegrationService(BaseService):
         return recommendations
     
     def _generate_ap_recommendations(self, company_id: UUID) -> List[AIRecommendation]:
-        """ Generate Ap Recommendations."""
-        """Generate AP optimization recommendations"""
         recommendations = []
         
         # Check for early payment discount opportunities
@@ -458,8 +433,6 @@ class AIBIIntegrationService(BaseService):
         return recommendations
     
     def _generate_cost_recommendations(self, company_id: UUID) -> List[AIRecommendation]:
-        """ Generate Cost Recommendations."""
-        """Generate cost reduction recommendations"""
         recommendations = []
         
         # Analyze expense patterns from GL
@@ -508,8 +481,6 @@ class AIBIIntegrationService(BaseService):
     # ========================================================================
     
     def generate_comprehensive_report(self, company_id: UUID) -> AIAnalyticsReport:
-        """Generate Comprehensive Report."""
-        """Generate comprehensive AI/BI analytics report"""
         
         end_date = datetime.now()
         start_date = end_date - timedelta(days=30)

@@ -27,13 +27,10 @@ class DataAggregationService:
     """Service for aggregating financial data for analytics."""
 
     def __init__(self, db: AsyncSession, company_id: UUID):
-        """  Init  ."""
         self.db = db
         self.company_id = company_id
 
     async def get_financial_summary(self, date_range: Optional[Dict[str, datetime]] = None) -> Dict[str, Any]:
-        """Get Financial Summary."""
-        """Get comprehensive financial summary."""
         if not date_range:
             date_range = {
                 'start': datetime.now() - timedelta(days=30),
@@ -102,8 +99,6 @@ class DataAggregationService:
         }
 
     async def _get_cash_flow_summary(self, date_range: Dict[str, datetime]) -> Dict[str, Any]:
-        """Get Cash Flow Summary."""
-        """Get cash flow summary."""
         # Cash inflows (receipts)
         inflows_query = select(func.sum(Receipt.amount)).where(
             and_(
@@ -134,8 +129,6 @@ class DataAggregationService:
         }
 
     async def get_trend_analysis(self, metric: str, period: str = 'monthly', months: int = 12) -> List[Dict[str, Any]]:
-        """Get Trend Analysis."""
-        """Get trend analysis for specific metrics."""
         end_date = datetime.now()
         start_date = end_date - timedelta(days=months * 30)
 
@@ -151,8 +144,6 @@ class DataAggregationService:
             raise ValueError(f"Unsupported metric: {metric}")
 
     async def _get_revenue_trend(self, start_date: datetime, end_date: datetime, period: str) -> List[Dict[str, Any]]:
-        """Get Revenue Trend."""
-        """Get revenue trend data."""
         if period == 'monthly':
             date_format = '%Y-%m'
             date_trunc = 'month'
@@ -197,8 +188,6 @@ class DataAggregationService:
         ]
 
     async def get_kpi_dashboard(self) -> Dict[str, Any]:
-        """Get Kpi Dashboard."""
-        """Get comprehensive KPI dashboard data."""
         current_month_start = datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         current_month_end = datetime.now()
         
@@ -247,15 +236,11 @@ class DataAggregationService:
         }
 
     def _calculate_growth_rate(self, current: float, previous: float) -> float:
-        """ Calculate Growth Rate."""
-        """Calculate growth rate percentage."""
         if previous == 0:
             return 100.0 if current > 0 else 0.0
         return ((current - previous) / previous) * 100
 
     async def _get_active_customer_count(self) -> int:
-        """Get Active Customer Count."""
-        """Get count of active customers."""
         query = select(func.count(Customer.id)).where(
             and_(
                 Customer.company_id == self.company_id,
@@ -266,8 +251,6 @@ class DataAggregationService:
         return result.scalar() or 0
 
     async def _get_active_vendor_count(self) -> int:
-        """Get Active Vendor Count."""
-        """Get count of active vendors."""
         query = select(func.count(Vendor.id)).where(
             and_(
                 Vendor.company_id == self.company_id,
@@ -278,8 +261,6 @@ class DataAggregationService:
         return result.scalar() or 0
 
     async def _get_inventory_value(self) -> float:
-        """Get Inventory Value."""
-        """Get total inventory value."""
         query = select(func.sum(InventoryItem.quantity * InventoryItem.unit_cost)).where(
             and_(
                 InventoryItem.company_id == self.company_id,

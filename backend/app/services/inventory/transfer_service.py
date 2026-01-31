@@ -115,8 +115,6 @@ class TransferService:
         }
     
     async def _generate_transfer_number(self, db: AsyncSession, tenant_id: UUID) -> str:
-        """Generate Transfer Number."""
-        """Generate unique transfer number."""
         today = date.today()
         prefix = f"TRF-{today.strftime('%Y%m%d')}"
         

@@ -40,7 +40,6 @@ class JournalEntryService(BaseService):
     """Service for managing Journal Entries."""
     
     def __init__(self, db: Session):
-        """  Init  ."""
         super().__init__(db, JournalEntry)
     
     def create_entry(
@@ -189,8 +188,6 @@ class JournalEntryService(BaseService):
         return self._get_entry_response(entry_id)
     
     def delete_entry(self, entry_id: UUID, deleted_by: UUID) -> bool:
-        """Delete Entry."""
-        """Delete a journal entry."""
         entry = self.db.query(JournalEntry).get(entry_id)
         if not entry:
             raise NotFoundException(f"Journal entry {entry_id} not found")
@@ -219,8 +216,6 @@ class JournalEntryService(BaseService):
         return True
     
     def get_entry(self, entry_id: UUID) -> JournalEntryResponse:
-        """Get Entry."""
-        """Get a journal entry by ID."""
         return self._get_entry_response(entry_id)
     
     def search_entries(
@@ -318,8 +313,6 @@ class JournalEntryService(BaseService):
         return reversal_entry
     
     def _post_entry(self, entry: JournalEntry, posted_by: UUID) -> None:
-        """ Post Entry."""
-        """Post a journal entry and update account balances."""
         if entry.status == JournalEntryStatus.POSTED:
             return  # Already posted
         
@@ -479,8 +472,6 @@ class JournalEntryService(BaseService):
         return total_debit, total_credit, lines
     
     def _generate_entry_number(self, company_id: UUID) -> str:
-        """ Generate Entry Number."""
-        """Generate a unique journal entry number."""
         # Get the highest existing entry number for this company
         max_number = self.db.query(func.max(JournalEntry.entry_number)).filter(
             JournalEntry.company_id == company_id,
@@ -499,8 +490,6 @@ class JournalEntryService(BaseService):
         return "JE-000001"
     
     def _get_entry_response(self, entry_id: UUID) -> JournalEntryResponse:
-        """ Get Entry Response."""
-        """Get a journal entry with its lines as a response model."""
         entry = self.db.query(JournalEntry).options(
             joinedload(JournalEntry.line_items)
         ).get(entry_id)

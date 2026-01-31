@@ -33,7 +33,6 @@ class ConsolidatedReportingService(BaseService):
     """Service for generating consolidated financial reports across all modules."""
     
     def __init__(self, db: Session):
-        """  Init  ."""
         super().__init__(db, JournalEntry)
     
     def generate_module_activity_report(
@@ -223,8 +222,6 @@ class ConsolidatedReportingService(BaseService):
         }
     
     def generate_integration_health_report(self, company_id: UUID) -> Dict[str, Any]:
-        """Generate Integration Health Report."""
-        """Generate a report showing the health of module integrations."""
         
         # Check for orphaned records (transactions without GL entries)
         ap_without_gl = self.db.query(func.count(APInvoice.id)).outerjoin(

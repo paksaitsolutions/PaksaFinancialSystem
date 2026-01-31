@@ -45,7 +45,6 @@ class ReportingEngine:
     """Service for generating financial reports."""
 
     def __init__(self, db: AsyncSession, company_id: UUID):
-        """  Init  ."""
         self.db = db
         self.company_id = company_id
 
@@ -104,8 +103,6 @@ class ReportingEngine:
             }
 
     async def _generate_income_statement(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Generate Income Statement."""
-        """Generate income statement."""
         start_date = datetime.fromisoformat(parameters.get('start_date', (datetime.now() - timedelta(days=365)).isoformat()))
         end_date = datetime.fromisoformat(parameters.get('end_date', datetime.now().isoformat()))
 
@@ -178,8 +175,6 @@ class ReportingEngine:
         }
 
     async def _generate_balance_sheet(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Generate Balance Sheet."""
-        """Generate balance sheet."""
         as_of_date = datetime.fromisoformat(parameters.get('as_of_date', datetime.now().isoformat()))
 
         # Assets
@@ -264,8 +259,6 @@ class ReportingEngine:
         }
 
     async def _generate_cash_flow_statement(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Generate Cash Flow Statement."""
-        """Generate cash flow statement."""
         start_date = datetime.fromisoformat(parameters.get('start_date', (datetime.now() - timedelta(days=365)).isoformat()))
         end_date = datetime.fromisoformat(parameters.get('end_date', datetime.now().isoformat()))
 
@@ -312,8 +305,6 @@ class ReportingEngine:
         }
 
     async def _generate_aging_report(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Generate Aging Report."""
-        """Generate aging report for AR or AP."""
         report_type = parameters.get('type', 'ar')  # 'ar' or 'ap'
         as_of_date = datetime.fromisoformat(parameters.get('as_of_date', datetime.now().isoformat()))
 
@@ -323,8 +314,6 @@ class ReportingEngine:
             return await self._generate_ap_aging(as_of_date)
 
     async def _generate_ar_aging(self, as_of_date: datetime) -> Dict[str, Any]:
-        """Generate Ar Aging."""
-        """Generate AR aging report."""
         query = select(
             Customer.name,
             ARInvoice.invoice_number,
@@ -392,8 +381,6 @@ class ReportingEngine:
         }
 
     async def _generate_custom_report(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Generate Custom Report."""
-        """Generate custom report based on SQL query."""
         query_text = parameters.get('query')
         if not query_text:
             raise ValueError("Custom report requires 'query' parameter")
@@ -422,8 +409,6 @@ class ReportingEngine:
             raise ValueError(f"Query execution failed: {str(e)}")
 
     def _group_by_subtype(self, rows) -> Dict[str, Any]:
-        """ Group By Subtype."""
-        """Group account rows by subtype."""
         grouped = {}
         for row in rows:
             subtype = row.account_subtype or 'Other'
@@ -446,8 +431,6 @@ class ReportingEngine:
         return grouped
 
     async def _format_report(self, data: Dict[str, Any], format: ReportFormat) -> Any:
-        """Format Report."""
-        """Format report data according to specified format."""
         if format == ReportFormat.JSON:
             return data
         elif format == ReportFormat.CSV:
@@ -460,8 +443,6 @@ class ReportingEngine:
             return data
 
     def _to_csv(self, data: Dict[str, Any]) -> str:
-        """ To Csv."""
-        """Convert report data to CSV format."""
         # This is a simplified implementation
         # In practice, you'd want more sophisticated CSV generation
         if 'data' in data and isinstance(data['data'], list):
@@ -470,8 +451,6 @@ class ReportingEngine:
         return ""
 
     def _to_excel(self, data: Dict[str, Any]) -> bytes:
-        """ To Excel."""
-        """Convert report data to Excel format."""
         output = BytesIO()
         if 'data' in data and isinstance(data['data'], list):
             df = pd.DataFrame(data['data'])
@@ -479,8 +458,6 @@ class ReportingEngine:
         return output.getvalue()
 
     def _to_pdf(self, data: Dict[str, Any]) -> bytes:
-        """ To Pdf."""
-        """Convert report data to PDF format."""
         # This would require a PDF library like reportlab
         # For now, return placeholder
         return b"PDF generation not implemented"

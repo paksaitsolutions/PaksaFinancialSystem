@@ -10,24 +10,20 @@ from app.models.core_models import Customer, ARInvoice, ARPayment
 
 class ARService:
     def __init__(self, db: Session, tenant_id: str):
-        """  Init  ."""
         self.db = db
         self.tenant_id = tenant_id
     
     # Customer methods
     async def get_customers(self):
-        """Get Customers."""
         return self.db.query(Customer).filter(Customer.company_id == self.tenant_id).all()
     
     async def get_customer(self, customer_id: str):
-        """Get Customer."""
         return self.db.query(Customer).filter(
             Customer.id == customer_id,
             Customer.company_id == self.tenant_id
         ).first()
     
     async def create_customer(self, customer_data: dict):
-        """Create Customer."""
         customer = Customer(
             company_id=self.tenant_id,
             customer_code=f"CUST{len(self.db.query(Customer).all()) + 1:04d}",
@@ -47,7 +43,6 @@ class ARService:
         return customer
     
     async def update_customer(self, customer_id: str, customer_data: dict):
-        """Update Customer."""
         customer = await self.get_customer(customer_id)
         if not customer:
             return None
@@ -62,7 +57,6 @@ class ARService:
         return customer
     
     async def delete_customer(self, customer_id: str) -> bool:
-        """Delete Customer."""
         customer = await self.get_customer(customer_id)
         if not customer:
             return False
@@ -73,11 +67,9 @@ class ARService:
     
     # Invoice methods
     async def get_invoices(self) -> List[Invoice]:
-        """Get Invoices."""
         return self.db.query(Invoice).filter(Invoice.tenant_id == self.tenant_id).all()
     
     async def create_invoice(self, invoice_data: dict) -> Invoice:
-        """Create Invoice."""
         invoice = Invoice(
             tenant_id=self.tenant_id,
             customer_id=invoice_data.get("customer_id"),
@@ -95,7 +87,6 @@ class ARService:
     
     # Payment methods
     async def record_payment(self, payment_data: dict) -> Payment:
-        """Record Payment."""
         payment = Payment(
             tenant_id=self.tenant_id,
             invoice_id=payment_data.get("invoice_id"),

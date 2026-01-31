@@ -14,7 +14,6 @@ class WorkflowEngine:
     """Simple workflow engine for business processes."""
     
     def __init__(self):
-        """  Init  ."""
         self.workflows = {}
         self.templates = {
             "invoice_approval": {
@@ -59,8 +58,6 @@ class WorkflowEngine:
         return workflow_id
     
     async def execute_workflow(self, workflow_id: str) -> bool:
-        """Execute Workflow."""
-        """Execute workflow step."""
         if workflow_id not in self.workflows:
             raise ValueError(f"Workflow not found: {workflow_id}")
         
@@ -90,16 +87,12 @@ class WorkflowEngine:
         return False
     
     async def get_workflow_status(self, workflow_id: str) -> Dict[str, Any]:
-        """Get Workflow Status."""
-        """Get workflow status."""
         if workflow_id not in self.workflows:
             raise ValueError(f"Workflow not found: {workflow_id}")
         
         return self.workflows[workflow_id]
     
     async def list_workflows(self, tenant_id: str) -> List[Dict[str, Any]]:
-        """List Workflows."""
-        """List workflows for tenant."""
         return [
             workflow for workflow in self.workflows.values()
             if workflow["tenant_id"] == tenant_id

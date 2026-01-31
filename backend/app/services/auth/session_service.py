@@ -21,7 +21,6 @@ class SessionService:
     """Service for managing user sessions."""
     
     def __init__(self, db: Session):
-        """  Init  ."""
         self.db = db
     
     def create_session(
@@ -94,8 +93,6 @@ class SessionService:
         }
     
     def extend_session(self, session_token: str, duration_minutes: int = None) -> UserSession:
-        """Extend Session."""
-        """Extend session expiration."""
         session = self.get_session(session_token)
         if not session or not session.is_active():
             raise ValidationException("Invalid or inactive session")
@@ -110,8 +107,6 @@ class SessionService:
         return session
     
     def terminate_session(self, session_token: str, reason: str = "User logout") -> bool:
-        """Terminate Session."""
-        """Terminate a specific session."""
         session = self.get_session(session_token)
         if not session:
             return False
@@ -124,8 +119,6 @@ class SessionService:
         return True
     
     def terminate_user_sessions(self, user_id: UUID, except_session: str = None, reason: str = "Admin action") -> int:
-        """Terminate User Sessions."""
-        """Terminate all sessions for a user except optionally one."""
         query = self.db.query(UserSession).filter(
             and_(
                 UserSession.user_id == user_id,
@@ -147,8 +140,6 @@ class SessionService:
         return len(sessions)
     
     def get_user_sessions(self, user_id: UUID, active_only: bool = True) -> List[UserSession]:
-        """Get User Sessions."""
-        """Get all sessions for a user."""
         query = self.db.query(UserSession).filter(UserSession.user_id == user_id)
         
         if active_only:
@@ -157,8 +148,6 @@ class SessionService:
         return query.order_by(desc(UserSession.last_activity)).all()
     
     def cleanup_expired_sessions(self) -> int:
-        """Cleanup Expired Sessions."""
-        """Clean up expired sessions."""
         expired_sessions = self.db.query(UserSession).filter(
             and_(
                 UserSession.status == SessionStatus.ACTIVE,
@@ -173,8 +162,6 @@ class SessionService:
         return len(expired_sessions)
     
     def get_active_config(self) -> SessionConfig:
-        """Get Active Config."""
-        """Get active session configuration."""
         config = self.db.query(SessionConfig).filter(
             SessionConfig.is_active == True
         ).first()
@@ -185,8 +172,6 @@ class SessionService:
         return config
     
     def is_fresh_login_required(self, session_token: str) -> bool:
-        """Is Fresh Login Required."""
-        """Check if fresh login is required for sensitive operations."""
         session = self.get_session(session_token)
         if not session or not session.is_active():
             return True
@@ -197,8 +182,6 @@ class SessionService:
         return session.created_at < fresh_login_threshold
     
     def _enforce_concurrent_session_limit(self, user_id: UUID, max_sessions: int):
-        """ Enforce Concurrent Session Limit."""
-        """Enforce concurrent session limit by terminating oldest sessions."""
         active_sessions = self.get_user_sessions(user_id, active_only=True)
         
         if len(active_sessions) >= max_sessions:
@@ -213,20 +196,14 @@ class SessionService:
             self.db.commit()
     
     def _expire_session(self, session: UserSession):
-        """ Expire Session."""
-        """Mark session as expired."""
         session.status = SessionStatus.EXPIRED
         session.terminated_at = datetime.utcnow()
         session.termination_reason = "Session expired"
     
     def _generate_session_token(self) -> str:
-        """ Generate Session Token."""
-        """Generate a secure session token."""
         return secrets.token_urlsafe(32)
     
     def _create_default_config(self) -> SessionConfig:
-        """ Create Default Config."""
-        """Create default session configuration."""
         config = SessionConfig(
             name="Default Session Configuration",
             description="Default session management settings",

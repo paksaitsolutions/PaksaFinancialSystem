@@ -35,8 +35,6 @@ class GLPeriodService(BaseService):
     """Service for managing GL periods and related operations."""
     
     def __init__(self, db: Session):
-        """  Init  ."""
-        """Initialize the service with a database session."""
         super().__init__(db)
     
     def create_period(
@@ -194,7 +192,6 @@ class GLPeriodService(BaseService):
         return period
     
     def reopen_period(self, period_id: UUID, reopened_by: UUID) -> GLPeriod:
-        """Reopen Period."""
         """
         Reopen a closed GL period.
         
@@ -231,7 +228,6 @@ class GLPeriodService(BaseService):
         return period
     
     def get_period(self, period_id: UUID) -> GLPeriod:
-        """Get Period."""
         """
         Get a GL period by ID.
         
@@ -247,7 +243,6 @@ class GLPeriodService(BaseService):
         return self._get_period(period_id)
     
     def get_period_for_date(self, target_date: date) -> Optional[GLPeriod]:
-        """Get Period For Date."""
         """
         Get the GL period that contains the specified date.
         
@@ -268,7 +263,6 @@ class GLPeriodService(BaseService):
         )
     
     def get_current_period(self) -> Optional[GLPeriod]:
-        """Get Current Period."""
         """
         Get the current GL period based on the current date.
         
@@ -353,7 +347,6 @@ class GLPeriodService(BaseService):
         }
     
     def is_period_open(self, target_date: date) -> bool:
-        """Is Period Open."""
         """
         Check if the period containing the given date is open.
         
@@ -441,7 +434,6 @@ class GLPeriodService(BaseService):
         return results
     
     def _get_period(self, period_id: UUID) -> GLPeriod:
-        """ Get Period."""
         """
         Internal method to get a period by ID.
         

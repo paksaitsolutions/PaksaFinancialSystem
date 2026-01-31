@@ -8,19 +8,16 @@ from app.models import JournalEntry, JournalEntryLine, ChartOfAccounts, BankAcco
 
 class CashService:
     def __init__(self, db: AsyncSession, tenant_id: str):
-        """  Init  ."""
         self.db = db
         self.tenant_id = tenant_id
     
     async def get_bank_accounts(self) -> List[BankAccount]:
-        """Get Bank Accounts."""
         result = await self.db.execute(
             select(BankAccount).where(BankAccount.is_active == True)
         )
         return result.scalars().all()
     
     async def create_bank_account(self, account_data: dict) -> BankAccount:
-        """Create Bank Account."""
         account = BankAccount(
             name=account_data['name'],
             account_number=account_data['account_number'],
@@ -34,7 +31,6 @@ class CashService:
         return account
     
     async def create_transaction(self, transaction_data: dict) -> BankTransaction:
-        """Create Transaction."""
         transaction = BankTransaction(
             account_id=transaction_data['account_id'],
             transaction_date=transaction_data['transaction_date'],
@@ -55,8 +51,6 @@ class CashService:
         return transaction
     
     async def _create_cash_journal_entry(self, transaction: BankTransaction, transaction_data: dict):
-        """Create Cash Journal Entry."""
-        """Create journal entry for cash transaction"""
         journal_entry = JournalEntry(
             company_id=transaction_data.get('company_id'),
             entry_number=f"CASH-{transaction.reference_number or transaction.id}",
@@ -114,8 +108,6 @@ class CashService:
         self.db.add(source_line)
     
     async def create_reconciliation(self, reconciliation_data: dict) -> BankReconciliation:
-        """Create Reconciliation."""
-        """Create a new bank reconciliation"""
         reconciliation = BankReconciliation(
             account_id=reconciliation_data['account_id'],
             reconciliation_date=reconciliation_data['reconciliation_date'],
@@ -143,8 +135,6 @@ class CashService:
         return reconciliation
     
     async def complete_reconciliation(self, reconciliation_id: str, reconciliation_data: dict):
-        """Complete Reconciliation."""
-        """Complete reconciliation and update GL balances"""
         reconciliation = await self.db.get(BankReconciliation, reconciliation_id)
         if not reconciliation:
             raise ValueError("Reconciliation not found")
@@ -166,8 +156,6 @@ class CashService:
         await self.db.commit()
     
     async def _create_reconciliation_adjustment(self, reconciliation: BankReconciliation, reconciliation_data: dict):
-        """Create Reconciliation Adjustment."""
-        """Create GL adjustment for reconciliation differences"""
         journal_entry = JournalEntry(
             company_id=reconciliation_data.get('company_id'),
             entry_number=f"RECON-{reconciliation.id}",

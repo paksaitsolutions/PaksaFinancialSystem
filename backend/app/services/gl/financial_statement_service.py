@@ -10,17 +10,13 @@ from sqlalchemy.orm import Session, joinedload
 from uuid import UUID
 
 from app.exceptions import (
-from app.models import (
-from app.schemas.gl_schemas import (
-from app.services.base import BaseService
-
-
-
     NotFoundException,
     ValidationException,
     BusinessRuleException
 )
+from app.models import (
     GLChartOfAccounts,
+    ChartOfAccounts,
     JournalEntryLine,
     JournalEntry,
     TrialBalance,
@@ -31,12 +27,14 @@ from app.services.base import BaseService
     FinancialStatementType,
     AccountType
 )
+from app.schemas.gl_schemas import (
     FinancialStatementResponse,
     FinancialStatementType as FSType,
     FinancialStatementCreate,
     FinancialStatementLineCreate,
     FinancialStatementSectionCreate
 )
+from app.services.base import BaseService
 
 
 class FinancialStatementService(BaseService):
