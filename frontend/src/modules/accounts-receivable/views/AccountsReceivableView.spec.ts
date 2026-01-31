@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { createTestWrapper, mockApiResponse } from '../../components/test/utils'
+import { createTestWrapper, mockApiResponse } from '../../../test/utils'
 import AccountsReceivableView from '@/modules/accounts-receivable/views/AccountsReceivableView.vue'
 
 vi.mock('@/api/arService', () => ({

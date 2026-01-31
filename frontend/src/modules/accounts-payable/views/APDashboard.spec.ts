@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { createTestWrapper, mockApiResponse } from '../test/utils'
+import { createTestWrapper, mockApiResponse } from '../../../test/utils'
 import APDashboard from '@/modules/accounts-payable/views/APDashboard.vue'
 
 vi.mock('@/api/apService', () => ({

@@ -2,8 +2,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useAuthStore } from '@/stores/auth'
 
-vi.mock('@/utils/apiClient', () => ({
-  apiClient: {
+vi.mock('@/utils/api', () => ({
+  api: {
     post: vi.fn(),
     get: vi.fn()
   }
@@ -13,6 +13,8 @@ describe('Auth Store', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
+    localStorage.clear()
+    sessionStorage.clear()
   })
 
   it('initializes with default state', () => {
@@ -25,15 +27,17 @@ describe('Auth Store', () => {
 
   it('sets user and token on login', async () => {
     const authStore = useAuthStore()
-    const mockUser = { id: 1, email: 'test@example.com', name: 'Test User' }
+    const mockUser = { id: '1', email: 'test@example.com', full_name: 'Test User' }
     const mockToken = 'mock-jwt-token'
 
-    const { apiClient } = await import('@/utils/apiClient')
-    vi.mocked(apiClient.post).mockResolvedValue({
-      data: { user: mockUser, token: mockToken }
+    const { api } = await import('@/utils/api')
+    vi.mocked(api.post).mockResolvedValue({
+      access_token: mockToken,
+      user: mockUser
     })
+    vi.mocked(api.get).mockResolvedValue({ data: [] })
 
-    await authStore.login('test@example.com', 'password')
+    await authStore.login({ email: 'test@example.com', password: 'password' })
 
     expect(authStore.user).toEqual(mockUser)
     expect(authStore.token).toBe(mockToken)
@@ -43,8 +47,7 @@ describe('Auth Store', () => {
   it('clears state on logout', () => {
     const authStore = useAuthStore()
     
-    // Set initial state
-    authStore.user = { id: 1, email: 'test@example.com', name: 'Test User' }
+    authStore.user = { id: '1', email: 'test@example.com', full_name: 'Test User', is_active: true, is_superuser: false, created_at: '2024-01-01' }
     authStore.token = 'mock-token'
 
     authStore.logout()
@@ -57,11 +60,11 @@ describe('Auth Store', () => {
   it('handles login error', async () => {
     const authStore = useAuthStore()
 
-    const { apiClient } = await import('@/utils/apiClient')
-    vi.mocked(apiClient.post).mockRejectedValue(new Error('Invalid credentials'))
+    const { api } = await import('@/utils/api')
+    vi.mocked(api.post).mockRejectedValue({ response: { status: 401 } })
 
-    await expect(authStore.login('test@example.com', 'wrong-password'))
-      .rejects.toThrow('Invalid credentials')
+    await expect(authStore.login({ email: 'test@example.com', password: 'wrong' }))
+      .rejects.toThrow('Invalid email or password')
 
     expect(authStore.isAuthenticated).toBe(false)
   })

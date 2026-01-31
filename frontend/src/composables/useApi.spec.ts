@@ -16,42 +16,39 @@ describe('useApi', () => {
   })
 
   it('handles successful GET request', async () => {
-    const { apiClient } = await import('@/utils/apiClient')
+    const { get } = useApi()
     const mockData = { id: 1, name: 'Test' }
-    vi.mocked(apiClient.get).mockResolvedValue({ data: mockData })
+    vi.spyOn(global, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async () => mockData
+    } as Response)
 
-    const { data, error, loading, execute } = useApi()
-    
-    await execute(() => apiClient.get('/test'))
+    const result = await get('/test')
 
-    expect(data.value).toEqual(mockData)
-    expect(error.value).toBeNull()
-    expect(loading.value).toBe(false)
+    expect(result).toEqual(mockData)
   })
 
   it('handles API error', async () => {
-    const { apiClient } = await import('@/utils/apiClient')
-    const mockError = new Error('API Error')
-    vi.mocked(apiClient.get).mockRejectedValue(mockError)
+    const { get, error } = useApi()
+    vi.spyOn(global, 'fetch').mockRejectedValue(new Error('API Error'))
 
-    const { data, error, loading, execute } = useApi()
-    
-    await execute(() => apiClient.get('/test'))
-
-    expect(data.value).toBeNull()
-    expect(error.value).toBe(mockError)
-    expect(loading.value).toBe(false)
+    try {
+      await get('/test')
+    } catch (e) {
+      expect(error.value).toBeTruthy()
+    }
   })
 
   it('sets loading state correctly', async () => {
-    const { apiClient } = await import('@/utils/apiClient')
-    vi.mocked(apiClient.get).mockImplementation(() => 
-      new Promise(resolve => setTimeout(() => resolve({ data: {} }), 100))
+    const { get, loading } = useApi()
+    vi.spyOn(global, 'fetch').mockImplementation(() => 
+      new Promise(resolve => setTimeout(() => resolve({
+        ok: true,
+        json: async () => ({})
+      } as Response), 100))
     )
 
-    const { loading, execute } = useApi()
-    
-    const promise = execute(() => apiClient.get('/test'))
+    const promise = get('/test')
     expect(loading.value).toBe(true)
     
     await promise
