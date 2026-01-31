@@ -30,6 +30,13 @@ SessionLocal = sessionmaker(
     bind=engine
 )
 
+# Test session factory for pytest
+TestingSessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine
+)
+
 # Import Base from core_models to ensure consistency
 try:
     from app.models.base import Base
