@@ -92,6 +92,7 @@
   - [x] Fixed assets tests (`tests/test_fixed_assets_module.py`) ✅ **FIXED & PASSING**
   - [x] Test configuration and fixtures (`tests/conftest.py`) ✅ **COMPLETED & WORKING**
   - [x] Import issues resolved (JournalEntryStatus enum, model imports) ✅ **FIXED**
+  - [x] CI/CD workflow fixed (`.github/workflows/ci-cd.yml`) ✅ **FIXED - PYTHONPATH + Postgres config**
 - [x] **Backend Integration Tests** ✅ COMPLETED
   - [x] API endpoint tests
   - [x] Database migration tests

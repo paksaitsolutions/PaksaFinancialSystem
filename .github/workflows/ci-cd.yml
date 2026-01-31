@@ -17,10 +17,11 @@ jobs:
       postgres:
         image: postgres:15
         env:
+          POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: test_db
         options: >-
-          --health-cmd pg_isready
+          --health-cmd "pg_isready -U postgres"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -35,18 +36,19 @@ jobs:
       with:
         python-version: ${{ env.PYTHON_VERSION }}
     
+    - name: Add backend to PYTHONPATH
+      run: echo "PYTHONPATH=${{ github.workspace }}/backend" >> $GITHUB_ENV
+    
     - name: Install dependencies
       run: |
-        cd backend
-        pip install -r requirements.txt
+        python -m pip install --upgrade pip
+        pip install -r backend/requirements.txt
         pip install pytest pytest-cov pytest-asyncio
     
     - name: Run tests
       env:
         DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
-      run: |
-        cd backend
-        pytest --cov=app --cov-report=xml
+      run: pytest backend/tests --cov=app --cov-report=xml
     
     - name: Upload coverage
       uses: codecov/codecov-action@v3
