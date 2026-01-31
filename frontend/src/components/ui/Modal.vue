@@ -57,6 +57,13 @@
 import { defineComponent, ref, watch, computed, onMounted, onUnmounted } from 'vue';
 import Button from './Button.vue';
 
+
+/**
+ * Modal Component
+ * 
+ * @component
+ */
+
 export default defineComponent({
   name: 'Modal',
   

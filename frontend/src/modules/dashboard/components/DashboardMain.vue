@@ -109,10 +109,6 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { Chart, registerables } from 'chart.js'
-import KPIWidget from './KPIWidget.vue'
-import AlertsPanel from './AlertsPanel.vue'
-import QuickActions from './QuickActions.vue'
-import ActivityFeed from './ActivityFeed.vue'
 
 Chart.register(...registerables)
 

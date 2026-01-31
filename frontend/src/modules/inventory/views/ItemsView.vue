@@ -12,8 +12,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useToast } from 'primevue/usetoast'
-import InventoryList from '../components/InventoryList.vue'
-import ItemForm from '../components/ItemForm.vue'
 
 const toast = useToast()
 const showForm = ref(false)

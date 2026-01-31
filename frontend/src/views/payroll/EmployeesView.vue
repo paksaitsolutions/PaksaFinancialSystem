@@ -298,19 +298,6 @@ import { useToast } from 'primevue/usetoast';
 import { FilterMatchMode } from 'primevue/api';
 
 // Components
-import Card from 'primevue/card';
-import Button from 'primevue/button';
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
-import InputText from 'primevue/inputtext';
-import Dialog from 'primevue/dialog';
-import Dropdown from 'primevue/dropdown';
-import Calendar from 'primevue/calendar';
-import InputNumber from 'primevue/inputnumber';
-import RadioButton from 'primevue/radiobutton';
-import Avatar from 'primevue/avatar';
-import Tag from 'primevue/tag';
-import Message from 'primevue/message';
 
 type EmployeeStatus = 'Active' | 'On Leave' | 'Terminated';
 

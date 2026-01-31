@@ -9,8 +9,6 @@
     
     <template #content>
 
-
-
       <div class="content-grid">
         <Card>
           <template #header>

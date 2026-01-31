@@ -33,7 +33,6 @@
 import { ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAppStore } from '@/store/app';
-import Dropdown from 'primevue/dropdown';
 
 interface LanguageOption {
   code: string;

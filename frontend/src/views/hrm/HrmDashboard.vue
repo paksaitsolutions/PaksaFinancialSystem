@@ -100,7 +100,6 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
-import { hrmService, type HRAnalytics } from '@/services/hrmService';
 
 const toast = useToast();
 
@@ -176,8 +175,6 @@ const navigateTo = (path: string) => {
 const formatNumber = (value: number): string => {
   return new Intl.NumberFormat().format(value);
 };
-
-
 
 const getTrendIcon = (trend: number): string => {
   return trend > 0 ? 'pi pi-arrow-up' : trend < 0 ? 'pi pi-arrow-down' : 'pi pi-minus';

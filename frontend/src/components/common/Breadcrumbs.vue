@@ -15,7 +15,6 @@
 
 <script setup lang="ts">
 import { useBreadcrumbs } from '@/composables/useBreadcrumbs'
-import Breadcrumb from 'primevue/breadcrumb'
 
 const { breadcrumbs } = useBreadcrumbs()
 </script>

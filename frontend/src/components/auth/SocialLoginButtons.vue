@@ -39,6 +39,13 @@
 </template>
 
 <script>
+
+/**
+ * SocialLoginButtons Component
+ * 
+ * @component
+ */
+
 export default {
   methods: {
     handleSocialLogin(provider) {

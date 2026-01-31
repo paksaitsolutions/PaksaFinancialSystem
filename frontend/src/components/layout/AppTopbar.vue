@@ -53,10 +53,6 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useNotifications } from '@/composables/useNotifications'
-import InputText from 'primevue/inputtext'
-import Avatar from 'primevue/avatar'
-import Menu from 'primevue/menu'
-import Button from 'primevue/button'
 
 defineEmits(['menu-toggle'])
 

@@ -86,8 +86,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useEnhancedReports } from '@/composables/useEnhancedReports';
-import { formatCurrency } from '@/utils/formatters';
-import ReportHeader from '@/components/reports/ReportHeader.vue';
 
 const { loading, exportLoading, generateReport, exportReport } = useEnhancedReports();
 

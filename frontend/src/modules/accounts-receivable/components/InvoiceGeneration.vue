@@ -130,18 +130,6 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import ResponsiveContainer from '@/components/layout/ResponsiveContainer.vue'
-import Card from 'primevue/card'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import Button from 'primevue/button'
-import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
-import InputNumber from 'primevue/inputnumber'
-import Textarea from 'primevue/textarea'
-import Dropdown from 'primevue/dropdown'
-import Calendar from 'primevue/calendar'
-import Tag from 'primevue/tag'
 
 const loading = ref(false)
 const invoiceDialog = ref(false)

@@ -336,23 +336,10 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue';
-import { useToast } from 'primevue/usetoast';
-import { useConfirm } from 'primevue/useconfirm';
-import { useIntercompanyStore } from '@/stores/intercompany';
 import { useCompanyStore } from '@/stores/company';
 
 // PrimeVue Components
 import Button from 'primevue/button';
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
-import Tag from 'primevue/tag';
-import Dialog from 'primevue/dialog';
-import Dropdown from 'primevue/dropdown';
-import InputNumber from 'primevue/inputnumber';
-import Calendar from 'primevue/calendar';
-import Textarea from 'primevue/textarea';
-import Toolbar from 'primevue/toolbar';
-import Tooltip from 'primevue/tooltip';
     const companyStore = useCompanyStore();
     const authStore = useAuthStore();
     

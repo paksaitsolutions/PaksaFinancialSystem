@@ -109,10 +109,6 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import Card from 'primevue/card';
-import Button from 'primevue/button';
-import Dialog from 'primevue/dialog';
-import Message from 'primevue/message';
 import { useToast } from 'primevue/usetoast';
 
 const toast = useToast();

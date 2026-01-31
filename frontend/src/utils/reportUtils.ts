@@ -1,4 +1,3 @@
-import { ref, Ref } from 'vue';
 import { format, subDays, startOfMonth, endOfMonth, startOfYear, endOfYear, subMonths } from 'date-fns';
 
 export interface DateRange {

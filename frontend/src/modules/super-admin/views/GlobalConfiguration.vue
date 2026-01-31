@@ -481,18 +481,6 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
-import TabView from 'primevue/tabview'
-import TabPanel from 'primevue/tabpanel'
-import Card from 'primevue/card'
-import InputText from 'primevue/inputtext'
-import Dropdown from 'primevue/dropdown'
-import InputNumber from 'primevue/inputnumber'
-import InputSwitch from 'primevue/inputswitch'
-import Button from 'primevue/button'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import Dialog from 'primevue/dialog'
-import Textarea from 'primevue/textarea'
 import {
   CURRENCIES, TIME_ZONES, DATE_FORMATS, NUMBER_FORMATS, THEMES, MONTHS,
   PAYMENT_TERMS, COSTING_METHODS, DEPRECIATION_METHODS, PAY_FREQUENCIES,

@@ -7,7 +7,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import { useRoute, type RouteLocationRaw } from 'vue-router';
-import Menu from 'primevue/menu';
 import type { MenuItem } from 'primevue/menuitem';
 
 interface MenuItemWithTo extends MenuItem {

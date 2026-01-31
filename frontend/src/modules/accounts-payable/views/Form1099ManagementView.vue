@@ -153,9 +153,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
 import { useSnackbar } from '@/composables/useSnackbar';
-import { formatCurrency } from '@/utils/formatters';
 import { apiClient } from '@/utils/apiClient';
-import Form1099List from '../components/form-1099/Form1099List.vue';
 
 // Composables
 const { showSnackbar } = useSnackbar();

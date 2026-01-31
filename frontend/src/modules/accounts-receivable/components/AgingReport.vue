@@ -117,13 +117,6 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import ResponsiveContainer from '@/components/layout/ResponsiveContainer.vue'
-import Card from 'primevue/card'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import Button from 'primevue/button'
-import Dialog from 'primevue/dialog'
-import Tag from 'primevue/tag'
 
 const loading = ref(false)
 const detailDialog = ref(false)

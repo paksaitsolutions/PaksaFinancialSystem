@@ -177,7 +177,6 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import CreditMemoList from '../components/credit-memo/CreditMemoList.vue';
 
 type CreditMemo = {
   credit_memo_number: string;

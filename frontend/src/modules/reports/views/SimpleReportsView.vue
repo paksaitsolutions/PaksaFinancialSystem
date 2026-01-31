@@ -27,7 +27,6 @@
 </template>
 
 <script setup lang="ts">
-import AppLayout from '@/layouts/AppLayout.vue'
 
 const reports = [
   { name: 'Income Statement', icon: 'mdi-chart-line', color: 'green', description: 'Profit & Loss report' },

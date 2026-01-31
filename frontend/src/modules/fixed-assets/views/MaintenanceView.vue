@@ -209,7 +209,6 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { fixedAssetsService, type FixedAsset, type AssetMaintenance } from '@/services/fixedAssetsService'
-import { formatCurrency } from '@/utils/formatters'
 
 const toast = useToast()
 const loading = ref(false)

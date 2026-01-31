@@ -49,7 +49,6 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
 import type { MenuModule } from '@/store/menu';
 
 const props = defineProps<{

@@ -78,6 +78,13 @@ import { useTenantStore } from '@/stores/tenant'
 import { useFeatureFlags } from '@/composables/useFeatureFlags'
 import CompanySwitcher from '@/components/tenant/CompanySwitcher.vue'
 
+
+/**
+ * TenantNavigation Component
+ * 
+ * @component
+ */
+
 export default {
   name: 'TenantNavigation',
   components: { CompanySwitcher },

@@ -224,6 +224,13 @@
 <script lang="ts">
 import { defineComponent, ref, watch } from 'vue';
 
+
+/**
+ * ExportDialog Component
+ * 
+ * @component
+ */
+
 export default defineComponent({
   name: 'ExportDialog',
   props: {

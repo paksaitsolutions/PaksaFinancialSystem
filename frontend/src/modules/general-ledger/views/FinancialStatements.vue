@@ -300,10 +300,6 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { useSnackbar } from '@/composables/useSnackbar'
-import UnifiedDashboard from '@/components/ui/UnifiedDashboard.vue'
-import Dialog from 'primevue/dialog'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
 
 const { showSuccess, showInfo, showError } = useSnackbar()
 const generating = ref(false)

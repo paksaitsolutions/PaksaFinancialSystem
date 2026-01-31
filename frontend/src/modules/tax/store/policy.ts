@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { TaxPolicy, TaxRate, TaxExemption } from '@/types/tax';
-import { taxReportingService } from '@/services/api/taxReportingService';
 
 interface TaxPolicyState {
   currentPolicy: TaxPolicy | null;

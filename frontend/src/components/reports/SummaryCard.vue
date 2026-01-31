@@ -34,7 +34,6 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import ProgressSpinner from 'vue/progressspinner';
 
 const props = defineProps({
   title: {

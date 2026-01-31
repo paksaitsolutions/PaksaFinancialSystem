@@ -47,11 +47,6 @@
 
 <script setup>
 import { ref } from 'vue'
-import PaymentBatchList from '../components/payment/PaymentBatchList.vue'
-import IndividualPayments from '../components/payment/IndividualPayments.vue'
-import PaymentMethods from '../components/payment/PaymentMethods.vue'
-import PaymentApprovals from '../components/payment/PaymentApprovals.vue'
-import PaymentBatchDialog from '../components/payment/PaymentBatchDialog.vue'
 import { usePaymentStore } from '../store/payments'
 
 const paymentStore = usePaymentStore()

@@ -1,5 +1,4 @@
 import { useToast } from 'primevue/usetoast';
-import { ToastServiceMethods } from 'primevue/toastservice';
 
 type NotificationType = 'success' | 'info' | 'warn' | 'error';
 

@@ -34,7 +34,5 @@ export type {
   GlAccountBulkUpdateDto
 } from './types';
 
-
-
 // Export services
 export * from './services';

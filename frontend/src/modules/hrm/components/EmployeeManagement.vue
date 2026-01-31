@@ -256,7 +256,6 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
 import { useSnackbar } from '@/composables/useSnackbar';
-import { formatDate } from '@/utils/formatters';
 import { apiClient } from '@/utils/apiClient';
 
 const { showSnackbar } = useSnackbar();

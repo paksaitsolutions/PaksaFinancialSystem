@@ -369,10 +369,8 @@
 <script>
 import { ref, computed, onMounted } from 'vue';
 // Removed PrimeVue useToast - using Vuetify snackbar instead
-import { useRouter } from 'vue-router';
 import ExportDialog from '@/components/common/ExportDialog.vue';
-// import { FilterMatchMode } from 'primevue/api';
-
+// 
 // Mock data
 const mockAccounts = [
   { id: '1', code: '1000', name: 'Cash and Cash Equivalents', type: 'asset' },

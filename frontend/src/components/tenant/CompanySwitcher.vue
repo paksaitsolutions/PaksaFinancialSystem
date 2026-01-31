@@ -63,6 +63,13 @@ import { useTenantStore } from '@/stores/tenant'
 import { ref, computed, onMounted } from 'vue'
 import { useTenantStore } from '@/stores/tenant'
 
+
+/**
+ * CompanySwitcher Component
+ * 
+ * @component
+ */
+
 export default {
   name: 'CompanySwitcher',
   

@@ -95,14 +95,6 @@ import { ref, computed, onMounted } from 'vue'
 import { useBudgetStore } from '../store/budgetStore'
 
 // PrimeVue Components
-import Card from 'primevue/card'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import Button from 'primevue/button'
-import Tag from 'primevue/tag'
-import Dropdown from 'primevue/dropdown'
-import ProgressBar from 'primevue/progressbar'
-import Chart from 'primevue/chart'
 
 const budgetStore = useBudgetStore()
 

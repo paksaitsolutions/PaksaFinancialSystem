@@ -7,5 +7,4 @@
 </template>
 
 <script setup>
-import UserInviteDialog from '../components/UserInviteDialog.vue'
 </script>

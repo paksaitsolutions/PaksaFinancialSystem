@@ -166,14 +166,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
-import { formatCurrency } from '@/utils/formatters'
 import { apiClient } from '@/utils/apiClient'
-import Card from 'primevue/card'
-import Button from 'primevue/button'
-import Dropdown from 'primevue/dropdown'
-import InputNumber from 'primevue/inputnumber'
-import Textarea from 'primevue/textarea'
-import Calendar from 'primevue/calendar'
 
 // Emits
 const emit = defineEmits(['saved', 'cancelled'])

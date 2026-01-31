@@ -220,13 +220,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
-import { formatCurrency } from '@/utils/formatters'
 import { apiClient } from '@/utils/apiClient'
-import Card from 'primevue/card'
-import Button from 'primevue/button'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import Tag from 'primevue/tag'
 
 // Composables
 const toast = useToast()

@@ -144,7 +144,6 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { formatCurrency, formatDate } from '@/utils/formatters';
 
 const props = defineProps({
   items: {

@@ -194,9 +194,6 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import Chart from 'primevue/chart'
-import Card from 'primevue/card'
-import Button from 'primevue/button'
-import Tag from 'primevue/tag'
 import { inventoryService } from '@/services/inventoryService'
 
 const router = useRouter()

@@ -164,7 +164,6 @@
 <script setup>
 import { ref, reactive, computed, onMounted, watch } from 'vue';
 import { useSnackbar } from '@/composables/useSnackbar';
-import { formatCurrency, formatDate } from '@/utils/formatters';
 import { apiClient } from '@/utils/apiClient';
 
 // Emits

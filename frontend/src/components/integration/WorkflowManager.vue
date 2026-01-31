@@ -131,6 +131,13 @@
 import { ref, onMounted } from 'vue'
 import { useIntegrationStore } from '@/stores/integration'
 
+
+/**
+ * WorkflowManager Component
+ * 
+ * @component
+ */
+
 export default {
   name: 'WorkflowManager',
   setup() {

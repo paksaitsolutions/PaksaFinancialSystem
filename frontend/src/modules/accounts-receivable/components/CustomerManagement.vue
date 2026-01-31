@@ -97,17 +97,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import ResponsiveContainer from '@/components/layout/ResponsiveContainer.vue'
-import Card from 'primevue/card'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import Button from 'primevue/button'
-import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
-import InputNumber from 'primevue/inputnumber'
-import Textarea from 'primevue/textarea'
-import Checkbox from 'primevue/checkbox'
-import Tag from 'primevue/tag'
 
 const router = useRouter()
 

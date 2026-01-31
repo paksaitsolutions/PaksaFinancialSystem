@@ -1,4 +1,3 @@
-import { computed } from 'vue';
 import { PayrollRecord, PayrollDeduction } from '../services/payrollApiService';
 
 export const usePayrollCalculations = () => {

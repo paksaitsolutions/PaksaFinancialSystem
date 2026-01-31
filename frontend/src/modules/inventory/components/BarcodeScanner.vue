@@ -103,12 +103,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
-import { formatCurrency } from '@/utils/formatters'
 import { inventoryService } from '@/services/inventoryService'
-import Card from 'primevue/card'
-import Button from 'primevue/button'
-import InputText from 'primevue/inputtext'
-import Message from 'primevue/message'
 
 // Emits
 const emit = defineEmits(['close', 'item-selected']);

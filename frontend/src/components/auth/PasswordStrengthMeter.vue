@@ -13,6 +13,13 @@
 </template>
 
 <script>
+
+/**
+ * PasswordStrengthMeter Component
+ * 
+ * @component
+ */
+
 export default {
   props: {
     password: {

@@ -206,13 +206,6 @@ import { useI18n } from 'vue-i18n';
 import { useExport } from '@/core/utils/export';
 
 // PrimeVue components
-import Dialog from 'primevue/dialog';
-import Dropdown from 'primevue/dropdown';
-import SelectButton from 'primevue/selectbutton';
-import InputText from 'primevue/inputtext';
-import Button from 'primevue/button';
-import Checkbox from 'primevue/checkbox';
-import ProgressBar from 'primevue/progressbar';
 
 const { t } = useI18n();
 const emit = defineEmits(['export', 'error', 'success']);

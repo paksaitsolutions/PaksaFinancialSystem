@@ -81,7 +81,6 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { inventoryService, type InventoryAdjustment } from '@/services/inventoryService'
-import { formatCurrency } from '@/utils/formatters'
 
 const toast = useToast()
 const loading = ref(false)

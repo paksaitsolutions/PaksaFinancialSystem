@@ -2,7 +2,6 @@ import { ref, computed } from 'vue';
 import { useTaxPolicyStore } from '@/modules/tax/store/policy';
 import { TaxPolicy, TaxRate, TaxExemption, TaxBracket } from '@/types/tax';
 import { EmployeePayrollInfo, Payslip, PayRun } from '@/types/payroll';
-import { formatCurrency } from '@/utils/formatting';
 
 interface TaxCalculationResult {
   taxAmount: number;

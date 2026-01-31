@@ -561,7 +561,6 @@ onMounted(() => {
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useTaxAnalyticsService } from '@/services/analytics/taxAnalyticsService';
-import { formatCurrency } from '@/utils/formatters';
 
 const taxAnalyticsService = useTaxAnalyticsService();
 

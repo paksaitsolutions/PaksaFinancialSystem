@@ -187,9 +187,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
 import { useSnackbar } from '@/composables/useSnackbar';
-import { formatCurrency, formatDate } from '@/utils/formatters';
 import { apiClient } from '@/utils/apiClient';
-import InvoiceForm from './InvoiceForm.vue';
 
 const { showSnackbar } = useSnackbar();
 

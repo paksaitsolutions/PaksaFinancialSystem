@@ -361,21 +361,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
-import { formatCurrency } from '@/utils/formatters'
-import Card from 'primevue/card'
-import TabView from 'primevue/tabview'
-import TabPanel from 'primevue/tabpanel'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import Button from 'primevue/button'
-import Dropdown from 'primevue/dropdown'
-import MultiSelect from 'primevue/multiselect'
-import Calendar from 'primevue/calendar'
 import Chart from 'primevue/chart'
-import Tag from 'primevue/tag'
-import ProgressBar from 'primevue/progressbar'
-import Dialog from 'primevue/dialog'
-import Checkbox from 'primevue/checkbox'
 
 // Composables
 const toast = useToast()

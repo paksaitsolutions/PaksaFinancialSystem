@@ -30,6 +30,13 @@
 <script>
 import { ref, onMounted, onUnmounted } from 'vue';
 
+
+/**
+ * AppSnackbar Component
+ * 
+ * @component
+ */
+
 export default {
   name: 'AppSnackbar',
   

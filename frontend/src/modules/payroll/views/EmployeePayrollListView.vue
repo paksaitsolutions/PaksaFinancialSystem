@@ -219,7 +219,6 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useSnackbar } from '@/composables/useSnackbar';
-import { formatCurrency, formatDate } from '@/utils/formatters';
 
 // Router
 const router = useRouter();

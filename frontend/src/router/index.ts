@@ -36,8 +36,7 @@ declare module 'vue-router' {
 }
 
 // Import for functional components (commented out since not currently used)
-// import { h } from 'vue';
-
+// 
 // Base route type that matches Vue Router's expectations
 type AppRouteRecordRaw = Omit<RouteRecordRaw, 'children' | 'redirect' | 'meta'> & {
   children?: AppRouteRecordRaw[];

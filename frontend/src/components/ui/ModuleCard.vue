@@ -48,6 +48,13 @@
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
 
+
+/**
+ * ModuleCard Component
+ * 
+ * @component
+ */
+
 export interface ModuleAction {
   label: string;
   to: string;

@@ -13,7 +13,6 @@
 </template>
 
 <script setup lang="ts">
-import Card from 'primevue/card'
 
 interface Metric {
   id: string

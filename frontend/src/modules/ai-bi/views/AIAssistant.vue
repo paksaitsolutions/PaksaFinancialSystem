@@ -135,7 +135,6 @@
 <script setup lang="ts">
 import { ref, onMounted, nextTick, computed, onUnmounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
-import Chart from 'primevue/chart'
 
 interface Message {
   id: number

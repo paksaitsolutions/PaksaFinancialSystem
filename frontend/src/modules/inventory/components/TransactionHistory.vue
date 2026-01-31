@@ -275,17 +275,8 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
-import { formatCurrency, formatDate } from '@/utils/formatters'
 import { apiClient } from '@/utils/apiClient'
-import Card from 'primevue/card'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import Button from 'primevue/button'
-import Dropdown from 'primevue/dropdown'
-import Calendar from 'primevue/calendar'
 import Dialog from 'primevue/dialog'
-import Tag from 'primevue/tag'
-import Divider from 'primevue/divider'
 
 // Composables
 const toast = useToast()

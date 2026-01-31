@@ -34,6 +34,13 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 
+
+/**
+ * Button Component
+ * 
+ * @component
+ */
+
 export default defineComponent({
   name: 'Button',
   

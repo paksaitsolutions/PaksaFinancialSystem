@@ -50,6 +50,13 @@
 import { ref, onMounted } from 'vue'
 import { useIntegrationStore } from '@/stores/integration'
 
+
+/**
+ * ExecutiveDashboard Component
+ * 
+ * @component
+ */
+
 export default {
   name: 'ExecutiveDashboard',
   setup() {

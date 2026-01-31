@@ -47,6 +47,13 @@
 <script>
 import { useTenantStore } from '@/stores/tenant'
 
+
+/**
+ * CompanySelector Component
+ * 
+ * @component
+ */
+
 export default {
   name: 'CompanySelector',
   

@@ -85,7 +85,6 @@
 import { ref, onMounted } from 'vue';
 import { useCompanyStore } from '@/stores/company';
 import { useTaxPolicyStore } from '@/modules/tax/store/policy';
-import { formatDate } from '@/utils/date';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 

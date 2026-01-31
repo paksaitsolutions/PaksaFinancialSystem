@@ -303,7 +303,6 @@
 import { ref, reactive, onMounted, computed } from 'vue';
 import { useSnackbar } from '@/composables/useSnackbar';
 import { debounce } from '@/utils/debounce';
-import { formatCurrency, formatDate } from '@/utils/formatters';
 import { apiClient } from '@/utils/apiClient';
 
 // Composables

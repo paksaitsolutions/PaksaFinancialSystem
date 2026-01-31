@@ -30,9 +30,6 @@
 
 <script setup>
 import { ref } from 'vue'
-import BankStatementImportInterface from '../components/BankStatementImportInterface.vue'
-import PaymentProcessingDashboard from '../components/PaymentProcessingDashboard.vue'
-import BankingFeeTracking from '../components/BankingFeeTracking.vue'
 import { useCashManagementStore } from '../store/cash-management'
 
 const cashStore = useCashManagementStore()

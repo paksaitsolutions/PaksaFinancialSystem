@@ -108,15 +108,6 @@
 import { ref, onMounted } from 'vue';
 import { useToast } from 'primevue/usetoast';
 import { FilterMatchMode } from 'vue/api';
-import DataTable from 'vue/datatable';
-import Column from 'vue/column';
-import Button from 'vue/button';
-import InputText from 'vue/inputtext';
-import Dialog from 'vue/dialog';
-import Card from 'vue/card';
-import Toolbar from 'vue/toolbar';
-import Tag from 'vue/tag';
-import Toast from 'vue/toast';
 import { format } from 'date-fns';
 import apiClient from '@/services/api';
 

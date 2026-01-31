@@ -28,9 +28,6 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import CashFlowForecastingDashboard from '../components/CashFlowForecastingDashboard.vue'
-import BankReconciliationInterface from '../components/BankReconciliationInterface.vue'
-import CashPositionMonitoring from '../components/CashPositionMonitoring.vue'
 import { useCashManagementStore } from '../store/cash-management'
 
 const cashStore = useCashManagementStore()

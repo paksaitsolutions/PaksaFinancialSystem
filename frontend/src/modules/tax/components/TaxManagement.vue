@@ -221,7 +221,6 @@ import { useToast } from 'primevue/usetoast';
 
 const toast = useToast();
 
-
 // Data
 const activeTab = ref(0);
 const submitted = ref(false);

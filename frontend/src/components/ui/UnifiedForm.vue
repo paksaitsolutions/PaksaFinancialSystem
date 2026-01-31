@@ -31,8 +31,6 @@
 </template>
 
 <script setup lang="ts">
-import Card from 'primevue/card'
-import Button from 'primevue/button'
 
 interface Props {
   title?: string

@@ -82,6 +82,13 @@
 <script lang="ts">
 import { defineComponent, computed, ref, watch } from 'vue';
 
+
+/**
+ * DataTable Component
+ * 
+ * @component
+ */
+
 export interface DataTableHeader {
   key: string;
   title: string;

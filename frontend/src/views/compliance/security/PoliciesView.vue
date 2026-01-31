@@ -87,8 +87,6 @@ import Button from 'primevue/button';
 import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
 import Textarea from 'primevue/textarea';
-import Checkbox from 'primevue/checkbox';
-import Toolbar from 'primevue/toolbar';
 import Tag from 'primevue/tag';
 import { format } from 'date-fns';
 

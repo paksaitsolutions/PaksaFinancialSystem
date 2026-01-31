@@ -87,9 +87,6 @@
 
 <script setup>
 import { ref } from 'vue';
-import PaymentList from '../components/payment/PaymentList.vue';
-import PaymentDetail from '../components/payment/PaymentDetail.vue';
-import PaymentForm from '../components/payment/PaymentForm.vue';
 
 // Data
 const activeTab = ref('all');

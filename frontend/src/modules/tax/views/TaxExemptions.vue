@@ -182,21 +182,9 @@ import { ref, onMounted } from 'vue';
 import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
 import { useAuthStore } from '@/stores/auth';
-import { formatDate, formatPercentage } from '@/utils/formatters';
 import { useTaxStore } from '@/stores/tax';
 
 // UI Components
-import Button from 'primevue/button';
-import Card from 'primevue/card';
-import Column from 'primevue/column';
-import DataTable from 'primevue/datatable';
-import Dialog from 'primevue/dialog';
-import InputText from 'primevue/inputtext';
-import Textarea from 'primevue/textarea';
-import InputNumber from 'primevue/inputnumber';
-import Calendar from 'primevue/calendar';
-import ConfirmDialog from 'primevue/confirmdialog';
-import { PlusIcon } from '@heroicons/vue/24/outline';
 
 // Types
 interface TaxExemption {

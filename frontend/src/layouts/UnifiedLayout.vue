@@ -109,7 +109,6 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/modules/auth/store'
 import { useTheme } from '@/composables/useTheme'
 import { useUnifiedNotifications } from '@/composables/useUnifiedNotifications'
-import Button from 'primevue/button'
 
 const route = useRoute()
 const router = useRouter()

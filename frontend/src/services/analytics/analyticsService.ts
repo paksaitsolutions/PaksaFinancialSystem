@@ -5,7 +5,6 @@
  * replacing mock data with real API calls to the analytics backend.
  */
 import { ref, computed } from 'vue';
-import axios from 'axios';
 import { useApi } from '@/composables/useApi';
 import { useAuthStore } from '@/stores/auth';
 

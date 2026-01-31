@@ -48,11 +48,6 @@
 
 <script setup>
 import { ref } from 'vue'
-import BillList from '../components/bill/BillList.vue'
-import BillApprovals from '../components/bill/BillApprovals.vue'
-import ThreeWayMatching from '../components/bill/ThreeWayMatching.vue'
-import PaymentScheduling from '../components/bill/PaymentScheduling.vue'
-import BillFormDialog from '../components/bill/BillFormDialog.vue'
 import { useBillStore } from '../store/bills'
 
 const billStore = useBillStore()

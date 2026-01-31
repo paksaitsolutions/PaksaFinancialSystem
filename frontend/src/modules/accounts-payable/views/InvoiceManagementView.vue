@@ -92,9 +92,6 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import InvoiceList from '../components/invoice/InvoiceList.vue';
-import InvoiceDetail from '../components/invoice/InvoiceDetail.vue';
-import InvoiceForm from '../components/invoice/InvoiceForm.vue';
 
 // Data
 const activeTab = ref('invoices');

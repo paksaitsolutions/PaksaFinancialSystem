@@ -3,7 +3,6 @@ import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useToast } from 'primevue/usetoast';
 import { api } from '@/api';
-import { AxiosResponse } from 'axios';
 
 export interface DeductionBenefit {
   id?: string;

@@ -105,11 +105,6 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import Dialog from 'primevue/dialog';
-import Button from 'primevue/button';
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
-import ProgressSpinner from 'primevue/progressspinner';
 import { useFormatting } from '@/composables/useFormatting';
 
 const props = defineProps({

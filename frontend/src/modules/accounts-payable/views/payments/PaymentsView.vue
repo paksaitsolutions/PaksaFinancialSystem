@@ -205,7 +205,6 @@
       </Card>
     </div>
 
-
   </div>
   
   <!-- Confirm Dialog -->
@@ -412,8 +411,6 @@ const summaryCards = ref<SummaryCard[]>([
     trendLabel: 'past due date' 
   }
 ]);
-
-
 
 // Methods
 const handleNewPayment = (): void => {

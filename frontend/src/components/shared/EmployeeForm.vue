@@ -180,7 +180,6 @@
 
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
-import { hrmService, type Employee, type Department } from '@/services/hrmService'
 import { useToast } from 'primevue/usetoast'
 
 interface Props {

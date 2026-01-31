@@ -42,6 +42,13 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 
+
+/**
+ * ConfirmationDialog Component
+ * 
+ * @component
+ */
+
 export default defineComponent({
   name: 'ConfirmationDialog',
   

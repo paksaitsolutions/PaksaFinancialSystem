@@ -61,11 +61,6 @@ import { ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useToast } from 'primevue/usetoast';
 import { useReportExport } from '@/composables/useReportExport';
-import DataTable from 'vue/datatable';
-import Column from 'vue/column';
-import Button from 'vue/button';
-import Tag from 'vue/tag';
-import ExportDialog from '@/components/common/ExportDialog.vue';
 
 const { t } = useI18n();
 const toast = useToast();

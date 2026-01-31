@@ -425,7 +425,6 @@ const invoiceForm = ref<Omit<InvoiceForm, 'lines'> & { lines: Array<Omit<Invoice
   ]
 })
 
-
 // Filter invoices based on search query, status, and vendor
 // Filter invoices based on search query, status, and vendor
 const filteredInvoices = computed<Invoice[]>(() => {

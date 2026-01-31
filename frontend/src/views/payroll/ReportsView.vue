@@ -120,13 +120,6 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import Card from 'primevue/card';
-import Button from 'primevue/button';
-import Message from 'primevue/message';
-import Dropdown from 'primevue/dropdown';
-import Calendar from 'primevue/calendar';
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
 import { useToast } from 'primevue/usetoast';
 
 const toast = useToast();

@@ -209,10 +209,6 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useToast } from 'vue-toastification';
-import { VDataTable } from 'vuetify/labs/VDataTable';
-import PageHeader from '@/components/layout/PageHeader.vue';
-import ConfirmDialog from '@/components/common/ConfirmDialog.vue';
-import TaxRuleFormDialog from '@/components/tax/TaxRuleFormDialog.vue';
 import { taxPolicyService } from '@/services/taxPolicyService';
 import type { TaxRule, TaxType, TaxRuleFormData } from '@/types/tax';
 

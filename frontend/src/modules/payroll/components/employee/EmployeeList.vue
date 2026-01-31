@@ -72,7 +72,6 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick } from 'vue'
-import EmployeeForm from '@/components/shared/EmployeeForm.vue'
 
 const search = ref('')
 const loading = ref(false)

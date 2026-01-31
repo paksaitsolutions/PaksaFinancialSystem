@@ -5,7 +5,6 @@
 </template>
 
 <script setup>
-import TaxManagement from '../components/TaxManagement.vue';
 </script>
 
 <style scoped>

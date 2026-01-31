@@ -75,8 +75,6 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { useNavigationStore } from '@/stores/navigation';
 import { useResponsive } from '@/composables/useResponsive';
-import ThemeToggle from '@/components/common/ThemeToggle.vue';
-import KeyboardShortcutsDialog from '@/components/common/KeyboardShortcutsDialog.vue';
 
 const props = defineProps({
   drawer: {

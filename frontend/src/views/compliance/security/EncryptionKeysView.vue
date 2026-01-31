@@ -272,9 +272,6 @@ import { useToast } from 'primevue/usetoast';
 import { format, addMonths, addYears, isBefore, addDays, parseISO } from 'date-fns';
 
 // Components
-import KeyDetails from './components/KeyDetails.vue';
-import KeyForm from './components/KeyForm.vue';
-import KeyRotationDialog from './components/KeyRotationDialog.vue';
 
 // --- INTERFACES ---
 
@@ -577,7 +574,6 @@ const rotateSingleKey = (key: EncryptionKey) => {
   // We can't pre-select in the dialog easily with current setup,
   // but opening the dialog is a good first step.
 };
-
 
 // Lifecycle hooks
 onMounted(() => {

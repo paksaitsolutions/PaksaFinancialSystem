@@ -27,6 +27,13 @@
 <script lang="ts">
 import { defineComponent, ref, onMounted, onUnmounted } from 'vue';
 
+
+/**
+ * Notification Component
+ * 
+ * @component
+ */
+
 type NotificationType = 'success' | 'error' | 'info' | 'warning';
 type NotificationPosition = 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
 

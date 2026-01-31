@@ -51,7 +51,6 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import EmployeeList from '../components/employee/EmployeeList.vue'
 import { payrollService } from '@/services/payrollService'
 
 const activeTab = ref(0)

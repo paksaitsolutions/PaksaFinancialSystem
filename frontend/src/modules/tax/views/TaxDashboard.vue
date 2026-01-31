@@ -57,13 +57,6 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { formatCurrency } from '@/utils/formatters'
-import UnifiedDashboard from '@/components/ui/UnifiedDashboard.vue'
-import UnifiedMetrics from '@/components/ui/UnifiedMetrics.vue'
-import Card from 'primevue/card'
-import Button from 'primevue/button'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import Tag from 'primevue/tag'
 
 const router = useRouter()
 

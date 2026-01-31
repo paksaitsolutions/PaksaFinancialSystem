@@ -348,20 +348,8 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useToast } from 'primevue/usetoast'
-import { formatCurrency } from '@/utils/formatters'
 import { apiClient } from '@/utils/apiClient'
 import { addToDate } from '@/utils/date'
-import Card from 'primevue/card'
-import Button from 'primevue/button'
-import InputText from 'primevue/inputtext'
-import InputNumber from 'primevue/inputnumber'
-import Textarea from 'primevue/textarea'
-import Calendar from 'primevue/calendar'
-import Dropdown from 'primevue/dropdown'
-import Checkbox from 'primevue/checkbox'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import Dialog from 'primevue/dialog'
 
 // Props
 const props = defineProps({

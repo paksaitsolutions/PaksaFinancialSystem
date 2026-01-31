@@ -194,14 +194,7 @@ import { ref, computed, watch } from 'vue'
 import type { BudgetCreate, BudgetLineItem } from '../types/budget'
 
 // PrimeVue Components
-import InputText from 'primevue/inputtext'
-import InputNumber from 'primevue/inputnumber'
-import Dropdown from 'primevue/dropdown'
 import Calendar from 'primevue/calendar'
-import Textarea from 'primevue/textarea'
-import Button from 'primevue/button'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
 
 interface Props {
   initialData?: Partial<BudgetCreate>

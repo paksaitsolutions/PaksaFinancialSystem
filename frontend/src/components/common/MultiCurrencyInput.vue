@@ -34,7 +34,6 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue';
-import CurrencySelector from './CurrencySelector.vue';
 import currencyService from '@/services/currencyService';
 
 interface Currency {

@@ -114,14 +114,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import Calendar from 'primevue/calendar';
-import Dropdown from 'primevue/dropdown';
-import Button from 'primevue/button';
-import SplitButton from 'primevue/splitbutton';
-import ReportHeader from '@/components/reports/ReportHeader.vue';
 import { useReportExport } from '@/composables/useReportExport';
 import { formatCurrency } from '@/utils/formatters';
-import { reportsService } from '@/api/reportsService';
 
 const { exportToCSV, exportToPDF, printReport } = useReportExport();
 const loading = ref(false);

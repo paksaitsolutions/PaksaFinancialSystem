@@ -55,7 +55,6 @@
 
 <script setup lang="ts">
 import { watch, onMounted, onUnmounted } from 'vue'
-import Button from 'primevue/button'
 
 interface Props {
   visible: boolean

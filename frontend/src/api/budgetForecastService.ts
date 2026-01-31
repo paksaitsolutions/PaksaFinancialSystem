@@ -1,4 +1,3 @@
-import { api as apiClient } from './index.js'
 
 export interface BudgetForecastDetail {
   id?: number

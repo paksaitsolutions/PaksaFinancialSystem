@@ -293,7 +293,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
-import axios from 'axios'
 
 interface User {
   id?: string

@@ -186,6 +186,13 @@
 import { ref, onMounted } from 'vue'
 import { useIntegrationStore } from '@/stores/integration'
 
+
+/**
+ * IntegratedReports Component
+ * 
+ * @component
+ */
+
 export default {
   name: 'IntegratedReports',
   setup() {

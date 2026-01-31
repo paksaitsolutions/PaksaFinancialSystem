@@ -277,7 +277,6 @@
 import { ref, computed, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
-import UnifiedDashboard from '@/components/ui/UnifiedDashboard.vue'
 
 interface ChecklistItem {
   id: string

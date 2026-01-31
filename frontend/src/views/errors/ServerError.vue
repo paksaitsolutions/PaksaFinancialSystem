@@ -65,8 +65,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import Button from 'primevue/button';
-import Divider from 'primevue/divider';
 
 const route = useRoute();
 const router = useRouter();

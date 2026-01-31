@@ -116,7 +116,6 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import ResponsiveContainer from '@/components/layout/ResponsiveContainer.vue'
 
 const loading = ref(false)
 const reportData = ref(null)

@@ -96,13 +96,6 @@ import { useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
 import { useTaxReporting } from '@/composables/useTaxReporting';
 import { formatDate } from '@/utils/formatters';
-import TaxLiabilityFilters from '@/components/tax/reporting/TaxLiabilityFilters.vue';
-import TaxLiabilitySummary from '@/components/tax/reporting/TaxLiabilitySummary.vue';
-import TaxLiabilityPeriodsTable from '@/components/tax/reporting/TaxLiabilityPeriodsTable.vue';
-import TaxLiabilityTaxTypeTable from '@/components/tax/reporting/TaxLiabilityTaxTypeTable.vue';
-import TaxLiabilityJurisdictionTable from '@/components/tax/reporting/TaxLiabilityJurisdictionTable.vue';
-import TaxLiabilityCharts from '@/components/tax/reporting/TaxLiabilityCharts.vue';
-import TaxLiabilityExportDialog from '@/components/tax/reporting/TaxLiabilityExportDialog.vue';
 
 const router = useRouter();
 const toast = useToast();

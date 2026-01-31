@@ -1,8 +1,6 @@
 import { ref, computed } from 'vue';
-import axios from 'axios';
 import { useApi } from '@/composables/useApi';
 import { useAuthStore } from '@/stores/auth';
-import { formatCurrency, formatDate } from '@/utils/formatters';
 
 interface AIService {
   generateInsights: (data: any) => Promise<any>;

@@ -31,6 +31,13 @@ import { defineComponent, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import type { MenuItem } from 'primevue/menuitem';
 
+
+/**
+ * HrmMenu Component
+ * 
+ * @component
+ */
+
 interface MenuItemRoute {
   name: string;
   query?: Record<string, string | number | undefined>;

@@ -76,7 +76,6 @@
 
 <script setup lang="ts">
 import { defineProps } from 'vue';
-import { formatCurrency } from '@/utils/formatters';
 
 const props = defineProps({
   reportData: {

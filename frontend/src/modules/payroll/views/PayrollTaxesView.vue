@@ -350,12 +350,6 @@ import { ref, computed, onMounted, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { useSnackbar } from '@/composables/useSnackbar';
 import { useTaxStore } from '@/modules/payroll/stores/taxStore';
-import TaxRuleForm from '@/modules/payroll/components/taxes/TaxRuleForm.vue';
-import TaxFilingForm from '@/modules/payroll/components/taxes/TaxFilingForm.vue';
-import TaxCalculationExample from '@/modules/payroll/components/taxes/TaxCalculationExample.vue';
-import TaxWithholdingCalculator from '@/modules/payroll/components/taxes/TaxWithholdingCalculator.vue';
-import TaxFilingsTable from '@/modules/payroll/components/taxes/TaxFilingsTable.vue';
-import TaxRulesTable from '@/modules/payroll/components/taxes/TaxRulesTable.vue';
 
 // Types
 interface TaxRule {

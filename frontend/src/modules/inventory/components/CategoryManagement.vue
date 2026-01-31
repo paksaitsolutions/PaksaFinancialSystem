@@ -234,15 +234,7 @@ import { ref, reactive, onMounted, computed } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { debounce } from '@/utils/debounce'
 import { apiClient } from '@/utils/apiClient'
-import Card from 'primevue/card'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import Button from 'primevue/button'
-import InputText from 'primevue/inputtext'
-import Textarea from 'primevue/textarea'
-import Dropdown from 'primevue/dropdown'
 import Dialog from 'primevue/dialog'
-import Tag from 'primevue/tag'
 
 // Composables
 const toast = useToast()

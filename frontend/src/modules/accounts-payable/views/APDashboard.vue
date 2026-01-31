@@ -13,8 +13,6 @@
     
     <template #content>
 
-
-
       <Card class="mb-4">
         <template #header>
           <h3 class="card-title">Accounts Payable Modules</h3>

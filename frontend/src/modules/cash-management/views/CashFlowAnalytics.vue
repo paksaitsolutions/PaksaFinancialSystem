@@ -64,7 +64,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { cashService } from '@/api/cashService'
-import Chart from 'primevue/chart'
 
 const forecastChartData = ref({})
 const liquidityMetrics = ref([])

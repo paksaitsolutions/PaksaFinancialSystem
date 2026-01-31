@@ -213,7 +213,6 @@
 <script setup>
 import { ref, reactive, computed, onMounted, watch } from 'vue';
 import { useSnackbar } from '@/composables/useSnackbar';
-import { formatCurrency } from '@/utils/formatters';
 import { apiClient } from '@/utils/apiClient';
 
 const { showSnackbar } = useSnackbar();

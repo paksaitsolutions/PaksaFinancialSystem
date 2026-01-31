@@ -313,17 +313,6 @@
 import { ref, reactive, onMounted, watch } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { inventoryService, type InventoryItem } from '@/services/inventoryService'
-import Card from 'primevue/card'
-import TabView from 'primevue/tabview'
-import TabPanel from 'primevue/tabpanel'
-import InputText from 'primevue/inputtext'
-import InputNumber from 'primevue/inputnumber'
-import Textarea from 'primevue/textarea'
-import Dropdown from 'primevue/dropdown'
-import Checkbox from 'primevue/checkbox'
-import Button from 'primevue/button'
-import FileUpload from 'primevue/fileupload'
-import Message from 'primevue/message'
 
 // Props
 const props = defineProps({

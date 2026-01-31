@@ -53,8 +53,6 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { useNotifications } from '@/composables/useNotifications'
-import Button from 'primevue/button'
-import Card from 'primevue/card'
 
 const { notifications, unreadCount, fetchNotifications, markAsRead, markAllAsRead } = useNotifications()
 

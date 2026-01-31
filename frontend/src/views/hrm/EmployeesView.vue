@@ -60,7 +60,6 @@
 import { ref, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { hrmService, type Employee, type Department } from '@/services/hrmService'
-import EmployeeForm from '@/components/shared/EmployeeForm.vue'
 
 const toast = useToast()
 const loading = ref(false)
@@ -122,8 +121,6 @@ const deleteEmployee = async () => {
     toast.add({ severity: 'error', summary: 'Error', detail: error.message || 'Delete failed', life: 3000 })
   }
 }
-
-
 
 const loadEmployees = async () => {
   loading.value = true

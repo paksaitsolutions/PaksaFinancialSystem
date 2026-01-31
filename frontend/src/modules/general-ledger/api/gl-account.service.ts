@@ -17,12 +17,6 @@ import type {
   GlAccountBulkUpdateDto
 } from '../types/gl-account';
 
-
-
-
-
-
-
 class GlAccountService extends BaseService {
   constructor() {
     super('gl/accounts');

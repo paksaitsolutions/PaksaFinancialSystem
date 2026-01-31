@@ -92,7 +92,6 @@
 import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/modules/auth/store'
-import Button from 'primevue/button'
 
 const route = useRoute()
 const authStore = useAuthStore()

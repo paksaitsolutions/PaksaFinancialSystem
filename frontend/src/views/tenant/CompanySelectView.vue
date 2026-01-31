@@ -53,9 +53,6 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useTenantStore } from '@/stores/tenant';
-import Card from 'primevue/card';
-import Avatar from 'primevue/avatar';
-import ProgressSpinner from 'primevue/progressspinner';
 
 const loading = ref(false);
 const router = useRouter();

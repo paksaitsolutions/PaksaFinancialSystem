@@ -68,8 +68,6 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import Card from 'primevue/card'
-import ProgressSpinner from 'primevue/progressspinner'
 import axios from 'axios'
 
 const loading = ref(true)

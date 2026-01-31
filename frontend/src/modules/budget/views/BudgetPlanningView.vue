@@ -107,16 +107,6 @@ import { useToast } from 'primevue/usetoast'
 import { useBudgetStore } from '../store/budgetStore'
 
 // PrimeVue Components
-import Card from 'primevue/card'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import Button from 'primevue/button'
-import InputText from 'primevue/inputtext'
-import InputNumber from 'primevue/inputnumber'
-import Dropdown from 'primevue/dropdown'
-import Calendar from 'primevue/calendar'
-import TabView from 'primevue/tabview'
-import TabPanel from 'primevue/tabpanel'
 
 const toast = useToast()
 const budgetStore = useBudgetStore()

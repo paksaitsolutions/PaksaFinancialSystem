@@ -37,6 +37,13 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 
+
+/**
+ * ConfirmDialog Component
+ * 
+ * @component
+ */
+
 export default defineComponent({
   name: 'ConfirmDialog',
   props: {

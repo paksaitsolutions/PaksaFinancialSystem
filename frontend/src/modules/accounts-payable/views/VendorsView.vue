@@ -12,7 +12,6 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import VendorList from '@/modules/accounts-payable/components/vendor/VendorList.vue'
 
 const home = ref({ icon: 'pi pi-home', to: '/' })
 const breadcrumbItems = ref([
