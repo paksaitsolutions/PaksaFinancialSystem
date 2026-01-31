@@ -1,4 +1,9 @@
 /**
+ * Paksa Financial System - Service Worker Utilities
+ * Copyright (c) 2025 Paksa IT Solutions. All rights reserved.
+ */
+
+/**
  * Register service worker for offline caching
  */
 export const registerServiceWorker = async () => {

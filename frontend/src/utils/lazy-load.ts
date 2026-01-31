@@ -1,3 +1,7 @@
+/**
+ * Paksa Financial System - Lazy Loading Utilities
+ * Copyright (c) 2025 Paksa IT Solutions. All rights reserved.
+ */
 import { defineAsyncComponent, Component } from 'vue';
 import type { AsyncComponentLoader } from 'vue';
 

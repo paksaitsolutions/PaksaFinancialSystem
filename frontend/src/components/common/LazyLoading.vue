@@ -1,3 +1,7 @@
+<!--
+  Paksa Financial System - Lazy Loading Component
+  Copyright (c) 2025 Paksa IT Solutions. All rights reserved.
+-->
 <template>
   <div class="lazy-loading">
     <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>

@@ -1,3 +1,7 @@
+<!--
+  Paksa Financial System - Lazy Error Component
+  Copyright (c) 2025 Paksa IT Solutions. All rights reserved.
+-->
 <template>
   <div class="lazy-error">
     <i class="pi pi-exclamation-triangle" style="font-size: 2rem; color: var(--red-500)"></i>
