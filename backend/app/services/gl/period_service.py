@@ -2,19 +2,24 @@
 Service layer for managing accounting periods and period closing.
 """
 from datetime import date, datetime, timedelta
-from decimal import Decimal
 from typing import List, Optional, Dict, Any, Tuple
+
+from decimal import Decimal
+from sqlalchemy import func, and_, or_, select, update, delete
+from sqlalchemy.orm import Session, joinedload
 from uuid import UUID, uuid4
 
-from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import func, and_, or_, select, update, delete
-
 from app.exceptions import (
+from app.models.gl_models import (
+from app.schemas.gl_schemas import (
+from app.services.base import BaseService
+
+
+
     NotFoundException,
     ValidationException,
     BusinessRuleException
 )
-from app.models.gl_models import (
     AccountingPeriod,
     JournalEntry,
     JournalEntryStatus,
@@ -23,26 +28,27 @@ from app.models.gl_models import (
     TrialBalance,
     TrialBalanceAccount
 )
-from app.schemas.gl_schemas import (
     AccountingPeriodCreate,
     AccountingPeriodUpdate,
     AccountingPeriodResponse,
     TrialBalanceCreate,
     TrialBalanceResponse
 )
-from app.services.base import BaseService
 
 class PeriodService(BaseService):
     """Service for managing accounting periods and period closing."""
     
     def __init__(self, db: Session):
+        """  Init  ."""
         super().__init__(db, AccountingPeriod)
     
     def create_period(
+        """Create Period."""
         self, 
         period_data: AccountingPeriodCreate, 
         created_by: UUID
     ) -> AccountingPeriodResponse:
+        """Create Period."""
         """Create a new accounting period."""
         # Check for date overlaps
         overlapping = self.db.query(AccountingPeriod).filter(
@@ -84,11 +90,13 @@ class PeriodService(BaseService):
         return AccountingPeriodResponse.from_orm(period)
     
     def close_period(
+        """Close Period."""
         self, 
         period_id: UUID, 
         closed_by: UUID,
         force: bool = False
     ) -> AccountingPeriodResponse:
+        """Close Period."""
         """Close an accounting period."""
         period = self.db.query(AccountingPeriod).get(period_id)
         if not period:
@@ -136,10 +144,12 @@ class PeriodService(BaseService):
         return AccountingPeriodResponse.from_orm(period)
     
     def reopen_period(
+        """Reopen Period."""
         self, 
         period_id: UUID, 
         updated_by: UUID
     ) -> AccountingPeriodResponse:
+        """Reopen Period."""
         """Reopen a closed accounting period."""
         period = self.db.query(AccountingPeriod).get(period_id)
         if not period:
@@ -174,12 +184,14 @@ class PeriodService(BaseService):
         return AccountingPeriodResponse.from_orm(period)
     
     def _generate_trial_balance(
+        """ Generate Trial Balance."""
         self,
         company_id: UUID,
         as_of_date: date,
         period_id: UUID,
         created_by: UUID
     ) -> TrialBalance:
+        """ Generate Trial Balance."""
         """Generate a trial balance for a specific date."""
         # Get all accounts with their balances
         account_balances = self.db.query(
@@ -234,11 +246,13 @@ class PeriodService(BaseService):
         return trial_balance
     
     def _update_ledger_balances(
+        """ Update Ledger Balances."""
         self,
         company_id: UUID,
         as_of_date: date,
         updated_by: UUID
     ) -> None:
+        """ Update Ledger Balances."""
         """Update ledger balances for all accounts up to the given date."""
         # Get all active accounts
         accounts = self.db.query(ChartOfAccounts).filter(
@@ -310,12 +324,14 @@ class PeriodService(BaseService):
         self.db.commit()
 
     def get_period_by_date(
+        """Get Period By Date."""
         self,
         company_id: UUID,
         target_date: date,
         create_if_missing: bool = False,
         created_by: Optional[UUID] = None
     ) -> Optional[AccountingPeriod]:
+        """Get Period By Date."""
         """Get the accounting period for a specific date."""
         period = self.db.query(AccountingPeriod).filter(
             AccountingPeriod.company_id == company_id,

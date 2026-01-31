@@ -3,12 +3,15 @@ User activity and management service.
 """
 from datetime import datetime, timedelta
 from typing import List, Optional, Dict, Any
+
+from sqlalchemy import and_, desc, func
+from sqlalchemy.orm import Session
 from uuid import UUID
 
-from sqlalchemy.orm import Session
-from sqlalchemy import and_, desc, func
-
 from app.models.user_activity import (
+
+
+
     LoginHistory, UserActivity, CompanyPasswordPolicy, 
     CrossCompanyAccess, UserSessionActivity, ActivityType
 )
@@ -18,9 +21,11 @@ class UserActivityService:
     """Service for user activity tracking and management."""
     
     def __init__(self, db: Session):
+        """  Init  ."""
         self.db = db
     
     def log_login(
+        """Log Login."""
         self,
         user_id: UUID,
         company_id: UUID,
@@ -30,6 +35,7 @@ class UserActivityService:
         ip_address: Optional[str] = None,
         user_agent: Optional[str] = None
     ) -> LoginHistory:
+        """Log Login."""
         """Log user login attempt."""
         login_record = LoginHistory(
             user_id=user_id,
@@ -48,6 +54,7 @@ class UserActivityService:
         return login_record
     
     def log_activity(
+        """Log Activity."""
         self,
         user_id: UUID,
         company_id: UUID,
@@ -58,6 +65,7 @@ class UserActivityService:
         resource_id: Optional[UUID] = None,
         metadata: Optional[Dict[str, Any]] = None
     ) -> UserActivity:
+        """Log Activity."""
         """Log user activity."""
         activity = UserActivity(
             user_id=user_id,
@@ -77,11 +85,13 @@ class UserActivityService:
         return activity
     
     def get_login_history(
+        """Get Login History."""
         self,
         user_id: Optional[UUID] = None,
         company_id: Optional[UUID] = None,
         limit: int = 100
     ) -> List[LoginHistory]:
+        """Get Login History."""
         """Get login history with filters."""
         query = self.db.query(LoginHistory)
         
@@ -94,10 +104,12 @@ class UserActivityService:
         return query.order_by(desc(LoginHistory.login_time)).limit(limit).all()
     
     def create_password_policy(
+        """Create Password Policy."""
         self,
         company_id: UUID,
         policy_data: Dict[str, Any]
     ) -> CompanyPasswordPolicy:
+        """Create Password Policy."""
         """Create password policy for a company."""
         policy = CompanyPasswordPolicy(
             company_id=company_id,
@@ -120,6 +132,7 @@ class UserActivityService:
         return policy
     
     def grant_cross_company_access(
+        """Grant Cross Company Access."""
         self,
         user_id: UUID,
         source_company_id: UUID,
@@ -128,6 +141,7 @@ class UserActivityService:
         approved_by: UUID,
         permissions: Optional[Dict[str, Any]] = None
     ) -> CrossCompanyAccess:
+        """Grant Cross Company Access."""
         """Grant cross-company access to a user."""
         access = CrossCompanyAccess(
             user_id=user_id,

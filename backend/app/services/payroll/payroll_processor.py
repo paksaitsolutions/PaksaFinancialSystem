@@ -2,25 +2,28 @@
 Payroll processor service that handles the core payroll processing logic.
 """
 from datetime import date, datetime, timedelta
-from decimal import Decimal, ROUND_HALF_UP
 from typing import Dict, List, Optional, Tuple, Union
-from uuid import UUID
 
+from ..models.payroll_models import (
+from ..schemas.payroll_schemas import (
+from decimal import Decimal, ROUND_HALF_UP
 from fastapi import HTTPException, status
-from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import and_, or_, func, select
+from sqlalchemy.orm import Session, joinedload
+from uuid import UUID
 
 from app.core.config import settings
 from app.core.exceptions import AppException
 from app.core.logging import logger
 
-from ..models.payroll_models import (
+
+
+
     Employee, PayPeriod, PayRun, Payslip, PayslipEarning, PayslipDeduction,
     PayslipTax, PayslipBenefit, PayComponent, PayComponentType, PaySchedule,
     TaxCode, BenefitPlan, BenefitEnrollment, LeaveRequest, AttendanceRecord,
     BankAccount, PayRunStatus, PayFrequency, EmploymentType, PayRunStatus
 )
-from ..schemas.payroll_schemas import (
     PayRunCreate, PayRunUpdate, PayRunResponse, PayslipResponse,
     PayslipEarningResponse, PayslipDeductionResponse, PayslipTaxResponse,
     PayslipBenefitResponse, PayrollProcessingRequest, PayrollProcessingResult,
@@ -34,10 +37,12 @@ class PayrollProcessor:
     """
     
     def __init__(self, db: Session):
+        """  Init  ."""
         """Initialize the payroll processor with a database session."""
         self.db = db
     
     def initialize_pay_run(
+        """Initialize Pay Run."""
         self,
         pay_period_id: UUID,
         created_by: UUID,
@@ -46,6 +51,7 @@ class PayrollProcessor:
         process_benefits: bool = True,
         dry_run: bool = False
     ) -> PayRun:
+        """Initialize Pay Run."""
         """
         Initialize a new pay run for the specified pay period.
         
@@ -107,12 +113,14 @@ class PayrollProcessor:
         return pay_run
     
     def process_pay_run(
+        """Process Pay Run."""
         self,
         pay_run_id: UUID,
         processed_by: UUID,
         employee_ids: Optional[List[UUID]] = None,
         recalculate: bool = False
     ) -> PayRun:
+        """Process Pay Run."""
         """
         Process a pay run by calculating payslips for all eligible employees.
         
@@ -154,7 +162,6 @@ class PayrollProcessor:
             pay_run.processed_at = datetime.utcnow()
             self.db.commit()
             
-            # TODO: Implement payslip generation for each employee
             # This is a placeholder - actual implementation will process each employee
             
             # Update pay run status to completed
@@ -177,11 +184,13 @@ class PayrollProcessor:
             )
     
     def _get_eligible_employees(
+        """ Get Eligible Employees."""
         self,
         company_id: UUID,
         pay_period: PayPeriod,
         employee_ids: Optional[List[UUID]] = None
     ) -> List[Employee]:
+        """ Get Eligible Employees."""
         """
         Get list of employees eligible for payroll processing.
         
@@ -209,11 +218,13 @@ class PayrollProcessor:
         return query.all()
     
     def _calculate_employee_pay(
+        """ Calculate Employee Pay."""
         self,
         employee: Employee,
         pay_period: PayPeriod,
         pay_run: PayRun
     ) -> Dict:
+        """ Calculate Employee Pay."""
         """
         Calculate pay for a single employee for the pay period.
         
@@ -225,7 +236,6 @@ class PayrollProcessor:
         Returns:
             Dictionary containing pay calculation results
         """
-        # TODO: Implement actual pay calculation logic
         # This is a placeholder - actual implementation will calculate:
         # - Regular hours and pay
         # - Overtime hours and pay

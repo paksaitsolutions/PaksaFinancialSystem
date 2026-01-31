@@ -1,14 +1,17 @@
 """
 AI Assistant Service - Initializes and manages all AI modules
 """
-from typing import Dict, Type, Optional
 from pathlib import Path
+from typing import Dict, Type, Optional
+
 import logging
 
-from app.services.ai.assistant import AIAssistant
+from app.modules.fixed_assets.ai_integration import FixedAssetsAIModule
 from app.modules.payroll.ai_integration import PayrollAIModule
 from app.modules.tax.ai_integration import TaxAIModule
-from app.modules.fixed_assets.ai_integration import FixedAssetsAIModule
+from app.services.ai.assistant import AIAssistant
+
+
 
 logger = logging.getLogger(__name__)
 
@@ -17,12 +20,14 @@ class AIAssistantManager:
     _instance = None
     
     def __new__(cls):
+        """  New  ."""
         if cls._instance is None:
             cls._instance = super(AIAssistantManager, cls).__new__(cls)
             cls._instance._initialized = False
         return cls._instance
     
     def __init__(self):
+        """  Init  ."""
         if self._initialized:
             return
             
@@ -31,6 +36,7 @@ class AIAssistantManager:
         self._initialize_modules()
     
     def _initialize_modules(self):
+        """ Initialize Modules."""
         """Initialize all AI modules and register them with the assistant."""
         try:
             # Register modules directly without async
@@ -47,6 +53,7 @@ class AIAssistantManager:
             pass
     
     def get_assistant(self) -> AIAssistant:
+        """Get Assistant."""
         """Get the initialized AI assistant instance."""
         return self.assistant
 
@@ -54,5 +61,6 @@ class AIAssistantManager:
 ai_assistant_manager = AIAssistantManager()
 
 def get_ai_assistant() -> AIAssistant:
+    """Get Ai Assistant."""
     """Dependency function to get the AI assistant instance."""
     return ai_assistant_manager.get_assistant()

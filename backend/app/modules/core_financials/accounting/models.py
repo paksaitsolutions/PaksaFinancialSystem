@@ -11,10 +11,17 @@ from app.models.core_models import (
     ChartOfAccounts,
     Vendor,
     Customer,
-    Invoice,
-    Bill,
-    Payment
+    APInvoice,
+    ARInvoice,
+    APPayment,
+    ARPayment
 )
+
+# Aliases for backward compatibility
+GLAccount = ChartOfAccounts
+Invoice = ARInvoice  # Default to AR Invoice
+Bill = APInvoice
+Payment = ARPayment  # Default to AR Payment
 
 # Keep enums for backward compatibility
 from enum import Enum

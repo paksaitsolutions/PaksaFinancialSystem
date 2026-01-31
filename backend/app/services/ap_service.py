@@ -1,22 +1,28 @@
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from app.models import Vendor, APInvoice, APPayment, JournalEntry, JournalEntryLine, ChartOfAccounts
-from typing import List
-from uuid import uuid4
 from datetime import datetime
+from typing import List
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from uuid import uuid4
+
+from app.models import Vendor, APInvoice, APPayment, JournalEntry, JournalEntryLine, ChartOfAccounts
+
 
 class APService:
     def __init__(self, db: AsyncSession, tenant_id: str):
+        """  Init  ."""
         self.db = db
         self.tenant_id = tenant_id
     
     async def get_vendors(self) -> List[Vendor]:
+        """Get Vendors."""
         result = await self.db.execute(
             select(Vendor).where(Vendor.tenant_id == self.tenant_id, Vendor.is_active == True)
         )
         return result.scalars().all()
     
     async def create_vendor(self, vendor_data: dict) -> Vendor:
+        """Create Vendor."""
         vendor = Vendor(
             tenant_id=self.tenant_id,
             vendor_code=vendor_data['vendor_code'],
@@ -33,6 +39,7 @@ class APService:
         return vendor
     
     async def create_invoice(self, invoice_data: dict) -> APInvoice:
+        """Create Invoice."""
         invoice = APInvoice(
             company_id=self.tenant_id,
             vendor_id=invoice_data['vendor_id'],
@@ -52,6 +59,7 @@ class APService:
         return invoice
     
     async def _create_ap_invoice_journal_entry(self, invoice: APInvoice, invoice_data: dict):
+        """Create Ap Invoice Journal Entry."""
         """Create journal entry for AP invoice: Dr. Expense, Cr. Accounts Payable"""
         journal_entry = JournalEntry(
             company_id=self.tenant_id,
@@ -90,6 +98,7 @@ class APService:
         self.db.add(ap_line)
     
     async def create_payment(self, payment_data: dict) -> APPayment:
+        """Create Payment."""
         payment = APPayment(
             company_id=self.tenant_id,
             vendor_id=payment_data['vendor_id'],
@@ -110,6 +119,7 @@ class APService:
         return payment
     
     async def _create_ap_payment_journal_entry(self, payment: APPayment, payment_data: dict):
+        """Create Ap Payment Journal Entry."""
         """Create journal entry for AP payment: Dr. Accounts Payable, Cr. Cash"""
         journal_entry = JournalEntry(
             company_id=self.tenant_id,

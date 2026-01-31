@@ -6,14 +6,17 @@ This module provides services for managing GL (General Ledger) periods.
 """
 from datetime import date, datetime, timedelta
 from typing import List, Dict, Optional, Tuple, Union, Any
-from uuid import UUID, uuid4
-
-from dateutil.relativedelta import relativedelta
-from sqlalchemy import and_, or_, func, case, text, extract
-from sqlalchemy.orm import Session, joinedload
 
 from ...base.service import BaseService
 from ..exceptions import (
+from ..models import (
+from dateutil.relativedelta import relativedelta
+from sqlalchemy import and_, or_, func, case, text, extract
+from sqlalchemy.orm import Session, joinedload
+from uuid import UUID, uuid4
+
+
+
     PeriodNotFoundException,
     InvalidPeriodException,
     PeriodAlreadyClosedException,
@@ -21,7 +24,6 @@ from ..exceptions import (
     PeriodOverlapException,
     PeriodInUseException
 )
-from ..models import (
     GLPeriod,
     GLPeriodStatus,
     JournalEntry,
@@ -33,10 +35,12 @@ class GLPeriodService(BaseService):
     """Service for managing GL periods and related operations."""
     
     def __init__(self, db: Session):
+        """  Init  ."""
         """Initialize the service with a database session."""
         super().__init__(db)
     
     def create_period(
+        """Create Period."""
         self,
         name: str,
         start_date: date,
@@ -49,6 +53,7 @@ class GLPeriodService(BaseService):
         parent_period_id: Optional[UUID] = None,
         **kwargs
     ) -> GLPeriod:
+        """Create Period."""
         """
         Create a new GL period.
         
@@ -123,12 +128,14 @@ class GLPeriodService(BaseService):
         return period
     
     def close_period(
+        """Close Period."""
         self, 
         period_id: UUID, 
         closed_by: UUID,
         force: bool = False,
         permanent: bool = False
     ) -> GLPeriod:
+        """Close Period."""
         """
         Close a GL period.
         
@@ -189,6 +196,7 @@ class GLPeriodService(BaseService):
         return period
     
     def reopen_period(self, period_id: UUID, reopened_by: UUID) -> GLPeriod:
+        """Reopen Period."""
         """
         Reopen a closed GL period.
         
@@ -225,6 +233,7 @@ class GLPeriodService(BaseService):
         return period
     
     def get_period(self, period_id: UUID) -> GLPeriod:
+        """Get Period."""
         """
         Get a GL period by ID.
         
@@ -240,6 +249,7 @@ class GLPeriodService(BaseService):
         return self._get_period(period_id)
     
     def get_period_for_date(self, target_date: date) -> Optional[GLPeriod]:
+        """Get Period For Date."""
         """
         Get the GL period that contains the specified date.
         
@@ -260,6 +270,7 @@ class GLPeriodService(BaseService):
         )
     
     def get_current_period(self) -> Optional[GLPeriod]:
+        """Get Current Period."""
         """
         Get the current GL period based on the current date.
         
@@ -270,6 +281,7 @@ class GLPeriodService(BaseService):
         return self.get_period_for_date(today)
     
     def list_periods(
+        """List Periods."""
         self,
         fiscal_year: Optional[str] = None,
         status: Optional[Union[GLPeriodStatus, str]] = None,
@@ -278,6 +290,7 @@ class GLPeriodService(BaseService):
         page_size: int = 50,
         include_children: bool = False
     ) -> Dict[str, Any]:
+        """List Periods."""
         """
         List GL periods with optional filtering and pagination.
         
@@ -343,6 +356,7 @@ class GLPeriodService(BaseService):
         }
     
     def is_period_open(self, target_date: date) -> bool:
+        """Is Period Open."""
         """
         Check if the period containing the given date is open.
         
@@ -356,11 +370,13 @@ class GLPeriodService(BaseService):
         return period is not None and period.status == GLPeriodStatus.OPEN
     
     def get_period_balances(
+        """Get Period Balances."""
         self,
         period_id: UUID,
         account_ids: Optional[List[UUID]] = None,
         include_children: bool = False
     ) -> List[Dict[str, Any]]:
+        """Get Period Balances."""
         """
         Get account balances for a specific period.
         
@@ -429,6 +445,7 @@ class GLPeriodService(BaseService):
         return results
     
     def _get_period(self, period_id: UUID) -> GLPeriod:
+        """ Get Period."""
         """
         Internal method to get a period by ID.
         

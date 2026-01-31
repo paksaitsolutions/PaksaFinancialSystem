@@ -1,18 +1,22 @@
-from typing import List, Dict, Optional
 from datetime import datetime, timedelta
+from typing import List, Dict, Optional
+
 from fastapi import HTTPException
-from sqlalchemy.orm import Session
 from sqlalchemy import func
+from sqlalchemy.orm import Session
+
 from app.models import Budget, BudgetLine, BudgetAllocation
-from app.services.budget import BudgetService
-from app.services.gl import GLService
 from app.services.ap import APService
 from app.services.ar import ARService
-from app.services.procurement import ProcurementService
+from app.services.budget import BudgetService
+from app.services.gl import GLService
 from app.services.payroll import PayrollService
+from app.services.procurement import ProcurementService
+
 
 class BudgetAnalyticsService:
     def __init__(
+        """  Init  ."""
         self,
         db: Session,
         budget_service: BudgetService,
@@ -22,6 +26,7 @@ class BudgetAnalyticsService:
         procurement_service: ProcurementService,
         payroll_service: PayrollService
     ):
+        """  Init  ."""
         self.db = db
         self.budget_service = budget_service
         self.gl_service = gl_service
@@ -31,6 +36,7 @@ class BudgetAnalyticsService:
         self.payroll_service = payroll_service
 
     def get_budget_performance(self, department_id: Optional[int] = None, project_id: Optional[int] = None) -> Dict:
+        """Get Budget Performance."""
         """
         Get budget performance metrics.
         """
@@ -64,6 +70,7 @@ class BudgetAnalyticsService:
         }
 
     def get_departmental_budget_analysis(self) -> List[Dict]:
+        """Get Departmental Budget Analysis."""
         """
         Get budget analysis by department.
         """
@@ -99,6 +106,7 @@ class BudgetAnalyticsService:
         return result
 
     def get_project_budget_analysis(self) -> List[Dict]:
+        """Get Project Budget Analysis."""
         """
         Get budget analysis by project.
         """
@@ -134,6 +142,7 @@ class BudgetAnalyticsService:
         return result
 
     def get_budget_trend_analysis(self, period: str = 'month', months: int = 12) -> List[Dict]:
+        """Get Budget Trend Analysis."""
         """
         Get budget trend analysis over time.
         """
@@ -176,6 +185,7 @@ class BudgetAnalyticsService:
         return result
 
     def get_budget_allocation_analysis(self, account_id: int) -> Dict:
+        """Get Budget Allocation Analysis."""
         """
         Get budget allocation analysis for a specific account.
         """
@@ -230,6 +240,7 @@ class BudgetAnalyticsService:
         }
 
     def get_budget_variance_analysis(self) -> Dict:
+        """Get Budget Variance Analysis."""
         """
         Get detailed budget variance analysis.
         """

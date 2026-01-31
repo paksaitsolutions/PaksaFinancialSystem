@@ -2,23 +2,28 @@
 RBAC service for managing roles, permissions, and access control.
 """
 from typing import List, Optional, Dict, Any
+
+from sqlalchemy import and_, or_
+from sqlalchemy.orm import Session
 from uuid import UUID
 
-from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_
-
+from app.core.exceptions import NotFoundException, ValidationException
 from app.models.rbac import Role, Permission, user_roles, role_permissions
 from app.models.user import User
-from app.core.exceptions import NotFoundException, ValidationException
+
+
+
 
 
 class RBACService:
     """Service for managing RBAC operations."""
     
     def __init__(self, db: Session):
+        """  Init  ."""
         self.db = db
     
     def create_permission(self, permission_data: Dict[str, Any], created_by: UUID) -> Permission:
+        """Create Permission."""
         """Create a new permission."""
         permission = Permission(
             name=permission_data['name'],
@@ -37,6 +42,7 @@ class RBACService:
         return permission
     
     def create_role(self, role_data: Dict[str, Any], created_by: UUID) -> Role:
+        """Create Role."""
         """Create a new role."""
         role = Role(
             name=role_data['name'],
@@ -54,6 +60,7 @@ class RBACService:
         return role
     
     def assign_permission_to_role(self, role_id: UUID, permission_id: UUID) -> Role:
+        """Assign Permission To Role."""
         """Assign a permission to a role."""
         role = self.get_role(role_id)
         permission = self.get_permission(permission_id)
@@ -70,6 +77,7 @@ class RBACService:
         return role
     
     def assign_role_to_user(self, user_id: UUID, role_id: UUID) -> User:
+        """Assign Role To User."""
         """Assign a role to a user."""
         user = self.db.query(User).filter(User.id == user_id).first()
         role = self.get_role(role_id)
@@ -86,6 +94,7 @@ class RBACService:
         return user
     
     def check_permission(self, user_id: UUID, resource: str, action: str) -> bool:
+        """Check Permission."""
         """Check if a user has permission for a specific resource and action."""
         user = self.db.query(User).filter(User.id == user_id).first()
         if not user:
@@ -102,6 +111,7 @@ class RBACService:
         return False
     
     def get_user_permissions(self, user_id: UUID) -> List[Permission]:
+        """Get User Permissions."""
         """Get all permissions for a user."""
         user = self.db.query(User).filter(User.id == user_id).first()
         if not user:
@@ -115,22 +125,27 @@ class RBACService:
         return list(set(permissions))
     
     def get_role(self, role_id: UUID) -> Optional[Role]:
+        """Get Role."""
         """Get a role by ID."""
         return self.db.query(Role).filter(Role.id == role_id).first()
     
     def get_permission(self, permission_id: UUID) -> Optional[Permission]:
+        """Get Permission."""
         """Get a permission by ID."""
         return self.db.query(Permission).filter(Permission.id == permission_id).first()
     
     def list_roles(self, skip: int = 0, limit: int = 100) -> List[Role]:
+        """List Roles."""
         """List all roles."""
         return self.db.query(Role).offset(skip).limit(limit).all()
     
     def list_permissions(self, skip: int = 0, limit: int = 100) -> List[Permission]:
+        """List Permissions."""
         """List all permissions."""
         return self.db.query(Permission).offset(skip).limit(limit).all()
     
     def initialize_default_permissions(self):
+        """Initialize Default Permissions."""
         """Initialize default permissions for the system."""
         default_permissions = [
             {'name': 'Create Users', 'code': 'users.create', 'resource': 'users', 'action': 'create'},
@@ -164,6 +179,7 @@ class RBACService:
         self.db.commit()
     
     def initialize_default_roles(self):
+        """Initialize Default Roles."""
         """Initialize default roles for the system."""
         default_roles = [
             {

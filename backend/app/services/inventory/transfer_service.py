@@ -1,27 +1,32 @@
 """
 Multi-location transfer service.
 """
-from typing import List, Dict, Any, Optional
-from uuid import UUID
 from datetime import date, datetime
-from decimal import Decimal
+from typing import List, Dict, Any, Optional
 
-from sqlalchemy.ext.asyncio import AsyncSession
+from decimal import Decimal
 from sqlalchemy import select, func, and_, or_
+from sqlalchemy.ext.asyncio import AsyncSession
+from uuid import UUID
 
 from app.models.inventory.item import InventoryItem, InventoryLocation
-from app.models.inventory.transfer import LocationTransfer, TransferItem
 from app.models.inventory.transaction import InventoryTransaction
+from app.models.inventory.transfer import LocationTransfer, TransferItem
+
+
+
 
 class TransferService:
     """Multi-location transfer service."""
     
     async def create_transfer(
+        """Create Transfer."""
         self,
         db: AsyncSession,
         tenant_id: UUID,
         transfer_data: Dict[str, Any]
     ) -> LocationTransfer:
+        """Create Transfer."""
         """Create a new location transfer."""
         transfer_number = await self._generate_transfer_number(db, tenant_id)
         
@@ -36,11 +41,13 @@ class TransferService:
         return transfer
     
     async def approve_transfer(
+        """Approve Transfer."""
         self,
         db: AsyncSession,
         transfer_id: UUID,
         approved_by: UUID
     ) -> LocationTransfer:
+        """Approve Transfer."""
         """Approve transfer request."""
         result = await db.execute(
             select(LocationTransfer).where(LocationTransfer.id == transfer_id)
@@ -59,11 +66,13 @@ class TransferService:
         return transfer
     
     async def ship_transfer(
+        """Ship Transfer."""
         self,
         db: AsyncSession,
         transfer_id: UUID,
         shipping_data: Dict[str, Any]
     ) -> LocationTransfer:
+        """Ship Transfer."""
         """Ship transfer items."""
         result = await db.execute(
             select(LocationTransfer).where(LocationTransfer.id == transfer_id)
@@ -83,10 +92,12 @@ class TransferService:
         return transfer
     
     async def get_transfer_status(
+        """Get Transfer Status."""
         self,
         db: AsyncSession,
         transfer_id: UUID
     ) -> Dict[str, Any]:
+        """Get Transfer Status."""
         """Get detailed transfer status."""
         result = await db.execute(
             select(LocationTransfer).where(LocationTransfer.id == transfer_id)
@@ -108,6 +119,7 @@ class TransferService:
         }
     
     async def _generate_transfer_number(self, db: AsyncSession, tenant_id: UUID) -> str:
+        """Generate Transfer Number."""
         """Generate unique transfer number."""
         today = date.today()
         prefix = f"TRF-{today.strftime('%Y%m%d')}"

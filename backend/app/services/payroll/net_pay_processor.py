@@ -2,21 +2,24 @@
 Net pay calculation and payment processing for payroll.
 """
 from datetime import date, datetime
-from decimal import Decimal, ROUND_HALF_UP
 from typing import Dict, List, Optional, Union
-from uuid import UUID
 
-from sqlalchemy.orm import Session
+from ..models.payroll_models import (
+from ..schemas.payroll_schemas import (
+from decimal import Decimal, ROUND_HALF_UP
 from sqlalchemy import and_, or_
+from sqlalchemy.orm import Session
+from uuid import UUID
 
 from app.core.config import settings
 from app.core.logging import logger
 
-from ..models.payroll_models import (
+
+
+
     Employee, Payslip, PayRun, BankAccount, PaymentMethod, 
     PayrollDisbursement, PayrollDeduction
 )
-from ..schemas.payroll_schemas import (
     NetPayCalculation, PaymentDisbursement, PayrollDeductionItem
 )
 
@@ -24,10 +27,12 @@ class NetPayProcessor:
     """Handles net pay calculation and payment processing."""
     
     def __init__(self, db: Session):
+        """  Init  ."""
         """Initialize the net pay processor with a database session."""
         self.db = db
     
     def calculate_net_pay(
+        """Calculate Net Pay."""
         self,
         gross_pay: Decimal,
         pre_tax_deductions: List[PayrollDeductionItem],
@@ -35,6 +40,7 @@ class NetPayProcessor:
         post_tax_deductions: List[PayrollDeductionItem],
         benefits: List[Dict]
     ) -> NetPayCalculation:
+        """Calculate Net Pay."""
         """
         Calculate net pay from gross pay and deductions.
         
@@ -101,12 +107,14 @@ class NetPayProcessor:
         )
     
     def process_payments(
+        """Process Payments."""
         self,
         pay_run_id: UUID,
         processed_by: UUID,
         payment_date: Optional[date] = None,
         dry_run: bool = False
     ) -> List[PaymentDisbursement]:
+        """Process Payments."""
         """
         Process payments for all payslips in a pay run.
         
@@ -176,12 +184,14 @@ class NetPayProcessor:
         return disbursements
     
     def _process_employee_payment(
+        """ Process Employee Payment."""
         self,
         payslip: Payslip,
         payment_date: date,
         processed_by: UUID,
         dry_run: bool = False
     ) -> PaymentDisbursement:
+        """ Process Employee Payment."""
         """
         Process payment for a single employee's payslip.
         
@@ -282,10 +292,12 @@ class NetPayProcessor:
             )
     
     def _get_payment_method(
+        """ Get Payment Method."""
         self,
         employee: Employee,
         method_code: Optional[str] = None
     ) -> Optional[PaymentMethod]:
+        """ Get Payment Method."""
         """
         Get the payment method for an employee.
         

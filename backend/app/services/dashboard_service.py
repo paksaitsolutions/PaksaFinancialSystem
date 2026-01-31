@@ -1,20 +1,24 @@
 """
 Dashboard Service - Real-time KPIs, Charts, Alerts, Quick Actions, Activity Feed
 """
-from sqlalchemy.orm import Session
-from sqlalchemy import text, func, and_, or_
-from app.models.financial_core import *
-from app.models.workflow import WorkflowInstance
 from datetime import datetime, timedelta
 from typing import Dict, List
-from decimal import Decimal
 import json
+
+from decimal import Decimal
+from sqlalchemy import text, func, and_, or_
+from sqlalchemy.orm import Session
+
+from app.models.financial_core import *
+from app.models.workflow import WorkflowInstance
+
 
 class DashboardService:
     """Core dashboard data service"""
     
     @staticmethod
     def get_financial_kpis(db: Session) -> Dict:
+        """Get Financial Kpis."""
         """Get real-time financial KPIs"""
         # Cash position
         cash_balance = db.execute(text(
@@ -99,6 +103,7 @@ class DashboardService:
     
     @staticmethod
     def get_chart_data(db: Session, chart_type: str, period: str = "30d") -> Dict:
+        """Get Chart Data."""
         """Get chart data for various visualizations"""
         if chart_type == "revenue_trend":
             return DashboardService._get_revenue_trend(db, period)
@@ -115,6 +120,7 @@ class DashboardService:
     
     @staticmethod
     def _get_revenue_trend(db: Session, period: str) -> Dict:
+        """ Get Revenue Trend."""
         """Get revenue trend chart data"""
         # Simplified revenue trend (last 12 months)
         months = []
@@ -142,6 +148,7 @@ class DashboardService:
     
     @staticmethod
     def _get_expense_breakdown(db: Session, period: str) -> Dict:
+        """ Get Expense Breakdown."""
         """Get expense breakdown pie chart data"""
         expense_categories = [
             {"label": "Salaries & Benefits", "value": 45000, "color": "#ef4444"},
@@ -162,6 +169,7 @@ class DashboardService:
     
     @staticmethod
     def _get_cash_flow_chart(db: Session, period: str) -> Dict:
+        """ Get Cash Flow Chart."""
         """Get cash flow chart data"""
         weeks = []
         inflow_data = []
@@ -196,6 +204,7 @@ class DashboardService:
     
     @staticmethod
     def _get_ap_aging(db: Session) -> Dict:
+        """ Get Ap Aging."""
         """Get accounts payable aging data"""
         aging_buckets = [
             {"label": "Current", "value": 25000},
@@ -215,6 +224,7 @@ class DashboardService:
     
     @staticmethod
     def _get_ar_aging(db: Session) -> Dict:
+        """ Get Ar Aging."""
         """Get accounts receivable aging data"""
         aging_buckets = [
             {"label": "Current", "value": 35000},
@@ -237,6 +247,7 @@ class AlertService:
     
     @staticmethod
     def get_active_alerts(db: Session, user_id: str) -> List[Dict]:
+        """Get Active Alerts."""
         """Get active alerts for user"""
         alerts = []
         
@@ -302,6 +313,7 @@ class AlertService:
     
     @staticmethod
     def dismiss_alert(db: Session, alert_id: str, user_id: str) -> bool:
+        """Dismiss Alert."""
         """Dismiss an alert for user"""
         # In production, store dismissed alerts in database
         return True
@@ -311,6 +323,7 @@ class QuickActionsService:
     
     @staticmethod
     def get_quick_actions(db: Session, user_id: str) -> List[Dict]:
+        """Get Quick Actions."""
         """Get available quick actions for user"""
         actions = [
             {
@@ -370,6 +383,7 @@ class ActivityFeedService:
     
     @staticmethod
     def get_recent_activity(db: Session, user_id: str, limit: int = 20) -> List[Dict]:
+        """Get Recent Activity."""
         """Get recent activity feed"""
         activities = []
         
@@ -454,6 +468,7 @@ class DashboardMetrics:
     
     @staticmethod
     def calculate_financial_ratios(db: Session) -> Dict:
+        """Calculate Financial Ratios."""
         """Calculate key financial ratios"""
         # Get balance sheet totals
         total_assets = db.execute(text(
@@ -499,6 +514,7 @@ class DashboardMetrics:
     
     @staticmethod
     def get_performance_indicators(db: Session) -> Dict:
+        """Get Performance Indicators."""
         """Get performance indicators"""
         # Days Sales Outstanding (DSO)
         ar_balance = db.execute(text(

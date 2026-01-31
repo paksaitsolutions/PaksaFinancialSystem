@@ -1,24 +1,29 @@
 """
 Company management service.
 """
-import secrets
 from datetime import datetime, timedelta
 from typing import List, Optional, Dict, Any
-from uuid import UUID
 
-from sqlalchemy.orm import Session
 from sqlalchemy import and_, desc
+from sqlalchemy.orm import Session
+from uuid import UUID
+import secrets
 
 from app.models.company import Company, CompanyUser, CompanySettings, CompanyStatus, SubscriptionTier
+
+
+
 
 
 class CompanyService:
     """Service for managing company profiles and multi-tenant operations."""
     
     def __init__(self, db: Session):
+        """  Init  ."""
         self.db = db
     
     def register_company(self, company_data: Dict[str, Any], admin_user_id: UUID) -> Company:
+        """Register Company."""
         """Register a new company."""
         company_code = self._generate_company_code(company_data['company_name'])
         
@@ -64,6 +69,7 @@ class CompanyService:
         return company
     
     def update_company(self, company_id: UUID, company_data: Dict[str, Any], updated_by: UUID) -> Company:
+        """Update Company."""
         """Update company information."""
         company = self.get_company(company_id)
         if not company:
@@ -82,6 +88,7 @@ class CompanyService:
         return company
     
     def add_user_to_company(
+        """Add User To Company."""
         self, 
         company_id: UUID, 
         user_id: UUID, 
@@ -89,6 +96,7 @@ class CompanyService:
         is_admin: bool = False,
         permissions: Optional[Dict] = None
     ) -> CompanyUser:
+        """Add User To Company."""
         """Add a user to a company."""
         existing = self.db.query(CompanyUser).filter(
             and_(
@@ -117,14 +125,17 @@ class CompanyService:
         return company_user
     
     def get_company(self, company_id: UUID) -> Optional[Company]:
+        """Get Company."""
         """Get company by ID."""
         return self.db.query(Company).filter(Company.id == company_id).first()
     
     def get_company_by_code(self, company_code: str) -> Optional[Company]:
+        """Get Company By Code."""
         """Get company by code."""
         return self.db.query(Company).filter(Company.company_code == company_code).first()
     
     def list_companies(self, status: Optional[str] = None, limit: int = 100) -> List[Company]:
+        """List Companies."""
         """List companies with optional status filter."""
         query = self.db.query(Company)
         
@@ -134,6 +145,7 @@ class CompanyService:
         return query.order_by(desc(Company.created_at)).limit(limit).all()
     
     def get_company_users(self, company_id: UUID, active_only: bool = True) -> List[CompanyUser]:
+        """Get Company Users."""
         """Get users associated with a company."""
         query = self.db.query(CompanyUser).filter(CompanyUser.company_id == company_id)
         
@@ -143,6 +155,7 @@ class CompanyService:
         return query.all()
     
     def get_user_companies(self, user_id: UUID, active_only: bool = True) -> List[Company]:
+        """Get User Companies."""
         """Get companies associated with a user."""
         query = self.db.query(Company).join(CompanyUser).filter(
             CompanyUser.user_id == user_id
@@ -159,6 +172,7 @@ class CompanyService:
         return query.all()
     
     def _generate_company_code(self, company_name: str) -> str:
+        """ Generate Company Code."""
         """Generate unique company code."""
         base_code = ''.join(c.upper() for c in company_name if c.isalnum())[:6]
         suffix = secrets.token_hex(2).upper()
@@ -171,6 +185,7 @@ class CompanyService:
         return company_code
     
     def _get_default_modules(self) -> Dict[str, bool]:
+        """ Get Default Modules."""
         """Get default enabled modules for new companies."""
         return {
             "general_ledger": True,
@@ -185,6 +200,7 @@ class CompanyService:
         }
     
     def _get_default_numbering_formats(self) -> Dict[str, str]:
+        """ Get Default Numbering Formats."""
         """Get default numbering formats."""
         return {
             "invoice": "INV-{YYYY}-{####}",
@@ -196,6 +212,7 @@ class CompanyService:
         }
     
     def _create_default_settings(self, company_id: UUID):
+        """ Create Default Settings."""
         """Create default settings for a new company."""
         settings = CompanySettings(
             company_id=company_id,

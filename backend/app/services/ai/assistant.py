@@ -3,16 +3,20 @@ AI Assistant Core Service
 Handles the main AI assistant functionality including context management,
 module integration, and response generation.
 """
-from typing import Dict, List, Optional, Any
-from pydantic import BaseModel
-import logging
 from datetime import datetime, timedelta
 from functools import wraps
+from typing import Dict, List, Optional, Any
+
+from pydantic import BaseModel
+import logging
+
 
 def handle_ai_errors(func):
+    """Handle Ai Errors."""
     """Decorator to handle AI errors gracefully"""
     @wraps(func)
     async def wrapper(*args, **kwargs):
+        """Wrapper."""
         try:
             return await func(*args, **kwargs)
         except Exception as e:
@@ -48,6 +52,7 @@ class AIAssistant:
     """
     
     def __init__(self, debug_mode: bool = False):
+        """  Init  ."""
         """
         Initialize the AI Assistant.
         
@@ -68,6 +73,7 @@ class AIAssistant:
     
     @handle_ai_errors
     async def register_module(self, module_id: str, module: Any) -> Dict[str, Any]:
+        """Register Module."""
         """
         Register an AI module with the assistant.
         
@@ -111,6 +117,7 @@ class AIAssistant:
         query: str = "",
         context: Dict[str, Any] = None
     ) -> Dict:
+        """Process Query."""
         """
         Process a user query through the appropriate AI module.
         
@@ -247,6 +254,7 @@ class AIAssistant:
         module: Optional[str] = None,
         context: Dict[str, Any] = None
     ) -> List[str]:
+        """Get Suggestions."""
         """
         Get context-aware suggestions from the specified or most relevant modules.
         
@@ -301,6 +309,7 @@ class AIAssistant:
         return all_suggestions[:10]
     
     def get_metrics(self) -> Dict[str, Any]:
+        """Get Metrics."""
         """
         Get performance and usage metrics for the AI Assistant.
         
@@ -322,6 +331,7 @@ class AIAssistant:
         }
     
     def _determine_module(self, query: str, context: Dict[str, Any]) -> Optional[str]:
+        """ Determine Module."""
         """
         Determine the most relevant module for a query using keyword matching.
         
@@ -395,6 +405,7 @@ class AIAssistant:
         return None
     
     def _generate_fallback_response(self, query: str, context: Dict[str, Any]) -> Dict:
+        """ Generate Fallback Response."""
         """
         Generate a fallback response when no module is found.
         

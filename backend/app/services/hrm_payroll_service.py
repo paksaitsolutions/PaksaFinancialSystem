@@ -1,16 +1,20 @@
 """
 HRM Payroll Integration Service
 """
-from uuid import UUID
 from sqlalchemy.orm import Session
+from uuid import UUID
+
 from app.models import Employee, Department, PayrollRun, PayrollEntry
 from app.services.base import BaseService
 
+
 class HRMPayrollService(BaseService):
     def __init__(self, db: Session):
+        """  Init  ."""
         super().__init__(db, Employee)
     
     def sync_employee_to_payroll(self, employee: Employee) -> None:
+        """Sync Employee To Payroll."""
         """Sync employee changes to payroll system"""
         # Employee data is already unified, no sync needed
         # This method handles any payroll-specific updates
@@ -27,6 +31,7 @@ class HRMPayrollService(BaseService):
                 entry.net_pay = employee.salary - entry.total_deductions
     
     def create_payroll_run_for_department(self, department_id: UUID, pay_period_start, pay_period_end, pay_date) -> PayrollRun:
+        """Create Payroll Run For Department."""
         """Create payroll run for all employees in department"""
         
         department = self.db.query(Department).filter(Department.id == department_id).first()
@@ -74,6 +79,7 @@ class HRMPayrollService(BaseService):
         return payroll_run
     
     def get_employee_payroll_summary(self, employee_id: UUID) -> dict:
+        """Get Employee Payroll Summary."""
         """Get unified employee and payroll summary"""
         
         employee = self.db.query(Employee).filter(Employee.id == employee_id).first()

@@ -2,19 +2,24 @@
 Service layer for generating financial statements.
 """
 from datetime import date, datetime
-from decimal import Decimal
 from typing import List, Dict, Any, Optional, Tuple
+
+from decimal import Decimal
+from sqlalchemy import func, and_, or_, select, text
+from sqlalchemy.orm import Session, joinedload
 from uuid import UUID
 
-from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import func, and_, or_, select, text
-
 from app.exceptions import (
+from app.models import (
+from app.schemas.gl_schemas import (
+from app.services.base import BaseService
+
+
+
     NotFoundException,
     ValidationException,
     BusinessRuleException
 )
-from app.models import (
     GLChartOfAccounts,
     JournalEntryLine,
     JournalEntry,
@@ -26,23 +31,23 @@ from app.models import (
     FinancialStatementType,
     AccountType
 )
-from app.schemas.gl_schemas import (
     FinancialStatementResponse,
     FinancialStatementType as FSType,
     FinancialStatementCreate,
     FinancialStatementLineCreate,
     FinancialStatementSectionCreate
 )
-from app.services.base import BaseService
 
 
 class FinancialStatementService(BaseService):
     """Service for generating and managing financial statements."""
     
     def __init__(self, db: Session):
+        """  Init  ."""
         super().__init__(db, FinancialStatement)
     
     def generate_financial_statement(
+        """Generate Financial Statement."""
         self,
         statement_type: FSType,
         company_id: UUID,
@@ -53,6 +58,7 @@ class FinancialStatementService(BaseService):
         is_final: bool = False,
         name: Optional[str] = None
     ) -> FinancialStatementResponse:
+        """Generate Financial Statement."""
         """
         Generate a financial statement of the specified type.
         
@@ -121,11 +127,13 @@ class FinancialStatementService(BaseService):
         return self._format_statement_response(statement)
     
     def _get_trial_balance(
+        """ Get Trial Balance."""
         self, 
         company_id: UUID, 
         as_of_date: date,
         period_id: Optional[UUID] = None
     ) -> TrialBalance:
+        """ Get Trial Balance."""
         """Get or generate a trial balance for the given date."""
         # Try to find an existing trial balance
         query = self.db.query(TrialBalance).filter(
@@ -153,10 +161,12 @@ class FinancialStatementService(BaseService):
         return trial_balance
     
     def _generate_balance_sheet(
+        """ Generate Balance Sheet."""
         self, 
         trial_balance: TrialBalance,
         as_of_date: date
     ) -> Dict[str, Any]:
+        """ Generate Balance Sheet."""
         """Generate balance sheet data consolidating all modules."""
         # Get consolidated account balances from unified GL across all modules
         accounts = self.db.query(
@@ -265,12 +275,14 @@ class FinancialStatementService(BaseService):
         }
     
     def _generate_income_statement(
+        """ Generate Income Statement."""
         self,
         company_id: UUID,
         start_date: date,
         end_date: date,
         trial_balance: TrialBalance
     ) -> Dict[str, Any]:
+        """ Generate Income Statement."""
         """Generate income statement data consolidating all modules."""
         # Get revenue and expense accounts with consolidated balances from all modules
         accounts = self.db.query(
@@ -378,12 +390,14 @@ class FinancialStatementService(BaseService):
         }
     
     def _generate_cash_flow_statement(
+        """ Generate Cash Flow Statement."""
         self,
         company_id: UUID,
         start_date: date,
         end_date: date,
         trial_balance: TrialBalance
     ) -> Dict[str, Any]:
+        """ Generate Cash Flow Statement."""
         """Generate cash flow statement data for the given date range."""
         # This is a simplified implementation
         # In a real system, you'd need to analyze changes in balance sheet accounts
@@ -435,11 +449,13 @@ class FinancialStatementService(BaseService):
         }
     
     def _save_statement_structure(
+        """ Save Statement Structure."""
         self,
         statement_id: UUID,
         statement_data: Dict[str, Any],
         created_by: UUID
     ) -> None:
+        """ Save Statement Structure."""
         """Save the financial statement structure to the database."""
         sections = statement_data.get("sections", [])
         
@@ -477,9 +493,11 @@ class FinancialStatementService(BaseService):
                 self.db.add(line)
     
     def _format_statement_response(
+        """ Format Statement Response."""
         self, 
         statement: FinancialStatement
     ) -> FinancialStatementResponse:
+        """ Format Statement Response."""
         """Format a financial statement for the API response."""
         # Get sections and lines
         sections = self.db.query(FinancialStatementSection).filter(
@@ -535,12 +553,14 @@ class FinancialStatementService(BaseService):
         )
     
     def _get_company_currency(self, company_id: UUID) -> str:
+        """ Get Company Currency."""
         """Get company's default currency from settings."""
         from app.models.company import Company
         company = self.db.query(Company).filter(Company.id == company_id).first()
         return company.default_currency if company else "USD"
     
     def _generate_cash_flow_from_gl(self, company_id: UUID, start_date: date, end_date: date) -> Dict[str, Any]:
+        """ Generate Cash Flow From Gl."""
         """Generate cash flow statement consolidating all modules through GL journal entries"""
         # Get cash accounts from unified chart of accounts
         cash_accounts = self.db.query(ChartOfAccounts).filter(

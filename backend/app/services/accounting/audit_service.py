@@ -5,27 +5,30 @@ This module provides services for managing reconciliation audit logs.
 """
 from datetime import datetime
 from typing import List, Optional, Dict, Any, Tuple
-from uuid import UUID
 
+from ...models.reconciliation import (
+from ...models.user import User
+from ...schemas.reconciliation import (
+from .base import BaseReconciliationService
 from sqlalchemy import and_, or_, func, select, desc, asc
 from sqlalchemy.orm import Session, joinedload
+from uuid import UUID
 
 from app.core.exceptions import (
+from app.core.logging import get_logger
+
+
+
     NotFoundException,
     ValidationException,
     ForbiddenException
 )
-from app.core.logging import get_logger
 
-from ...models.reconciliation import (
     ReconciliationAuditLog,
     Reconciliation
 )
-from ...models.user import User
-from ...schemas.reconciliation import (
     ReconciliationAuditLogCreate
 )
-from .base import BaseReconciliationService
 
 logger = get_logger(__name__)
 
@@ -34,6 +37,7 @@ class ReconciliationAuditService(BaseReconciliationService):
     """Service for handling reconciliation audit operations."""
     
     def get_audit_log(self, log_id: UUID, user_id: UUID) -> ReconciliationAuditLog:
+        """Get Audit Log."""
         """Get an audit log entry by ID.
         
         Args:
@@ -66,6 +70,7 @@ class ReconciliationAuditService(BaseReconciliationService):
         return log
     
     def list_audit_logs(
+        """List Audit Logs."""
         self,
         reconciliation_id: UUID,
         user_id: UUID,
@@ -78,6 +83,7 @@ class ReconciliationAuditService(BaseReconciliationService):
         sort_by: str = "created_at",
         sort_order: str = "desc"
     ) -> Tuple[List[ReconciliationAuditLog], int]:
+        """List Audit Logs."""
         """List audit logs for a reconciliation with optional filtering and sorting.
         
         Args:
@@ -160,12 +166,14 @@ class ReconciliationAuditService(BaseReconciliationService):
         return logs, total
     
     def create_audit_log(
+        """Create Audit Log."""
         self, 
         reconciliation_id: UUID, 
         action: str, 
         user_id: UUID, 
         details: Optional[Dict[str, Any]] = None
     ) -> ReconciliationAuditLog:
+        """Create Audit Log."""
         """Create a new audit log entry.
         
         Args:
@@ -214,11 +222,13 @@ class ReconciliationAuditService(BaseReconciliationService):
         return log
     
     def export_audit_logs(
+        """Export Audit Logs."""
         self, 
         reconciliation_id: UUID, 
         user_id: UUID,
         format: str = "csv"
     ) -> str:
+        """Export Audit Logs."""
         """Export audit logs for a reconciliation in the specified format.
         
         Args:
@@ -265,6 +275,7 @@ class ReconciliationAuditService(BaseReconciliationService):
             return self._export_to_xlsx(logs)
     
     def _export_to_csv(self, logs: List[ReconciliationAuditLog]) -> str:
+        """ Export To Csv."""
         """Export audit logs to CSV format.
         
         Args:
@@ -301,6 +312,7 @@ class ReconciliationAuditService(BaseReconciliationService):
         return output.getvalue()
     
     def _export_to_json(self, logs: List[ReconciliationAuditLog]) -> str:
+        """ Export To Json."""
         """Export audit logs to JSON format.
         
         Args:
@@ -328,6 +340,7 @@ class ReconciliationAuditService(BaseReconciliationService):
         return json.dumps(log_data, indent=2)
     
     def _export_to_xlsx(self, logs: List[ReconciliationAuditLog]) -> str:
+        """ Export To Xlsx."""
         """Export audit logs to Excel format.
         
         Args:
@@ -383,6 +396,7 @@ class ReconciliationAuditService(BaseReconciliationService):
         return temp_path
     
     def _is_admin(self, user_id: UUID) -> bool:
+        """ Is Admin."""
         """Check if a user is an admin.
         
         Args:
@@ -391,6 +405,5 @@ class ReconciliationAuditService(BaseReconciliationService):
         Returns:
             True if the user is an admin, False otherwise
         """
-        # TODO: Implement proper admin check based on your user/role system
         # This is a placeholder implementation
         return False

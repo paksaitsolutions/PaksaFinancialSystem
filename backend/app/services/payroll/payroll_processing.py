@@ -1,6 +1,8 @@
     def _calculate_overtime_pay(
+        """ Calculate Overtime Pay."""
         self, overtime_hours: Decimal, pay_rate: Decimal, pay_type: str
     ) -> Decimal:
+        """ Calculate Overtime Pay."""
         """Calculate overtime pay based on hours worked and pay rate/type."""
         if overtime_hours <= 0:
             return Decimal("0.00")
@@ -19,12 +21,14 @@
             return (overtime_hours * overtime_rate).quantize(Decimal("0.01"), ROUND_HALF_UP)
 
     def _calculate_earnings(
+        """ Calculate Earnings."""
         self, 
         employee: Employee, 
         pay_period: PayPeriod,
         regular_pay: Decimal,
         overtime_pay: Decimal
     ) -> List[Dict]:
+        """ Calculate Earnings."""
         """
         Calculate all earnings for an employee for the pay period.
         
@@ -65,8 +69,10 @@
         return earnings
     
     def _get_other_earnings(
+        """ Get Other Earnings."""
         self, employee: Employee, pay_period: PayPeriod
     ) -> List[Dict]:
+        """ Get Other Earnings."""
         """
         Get other earnings like bonuses, commissions, etc.
         
@@ -114,11 +120,13 @@
         return earnings
     
     def _get_sales_amount(
+        """ Get Sales Amount."""
         self, 
         employee_id: UUID, 
         pay_period: PayPeriod,
         bonus: EmployeeEarning
     ) -> Decimal:
+        """ Get Sales Amount."""
         """
         Get sales amount for commission calculation.
         
@@ -136,11 +144,13 @@
         return Decimal("0.00")
     
     def _calculate_pre_tax_deductions(
+        """ Calculate Pre Tax Deductions."""
         self, 
         employee: Employee, 
         pay_period: PayPeriod,
         earnings: List[Dict]
     ) -> List[Dict]:
+        """ Calculate Pre Tax Deductions."""
         """
         Calculate pre-tax deductions (retirement, benefits, etc.).
         
@@ -206,11 +216,13 @@
         return deductions
     
     def _get_ytd_deductions(
+        """ Get Ytd Deductions."""
         self, 
         employee_id: UUID, 
         benefit_plan_id: UUID,
         year: int
     ) -> Decimal:
+        """ Get Ytd Deductions."""
         """
         Get year-to-date deductions for a benefit plan.
         

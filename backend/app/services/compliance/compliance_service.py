@@ -1,30 +1,35 @@
 """
 Compliance reporting service.
 """
-import json
-import os
 from datetime import datetime, timedelta
 from typing import List, Optional, Dict, Any
+import json
+import os
+
+from sqlalchemy import and_, or_, desc, func
+from sqlalchemy.orm import Session
 from uuid import UUID
 
-from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_, desc, func
-
-from app.models.compliance import ComplianceReport, CompliancePolicy, ComplianceReportType, ComplianceReportStatus
 from app.models.audit import AuditLog
-from app.models.user import User
+from app.models.compliance import ComplianceReport, CompliancePolicy, ComplianceReportType, ComplianceReportStatus
 from app.models.session import UserSession
+from app.models.user import User
 from app.services.audit.audit_service import AuditService
+
+
+
 
 
 class ComplianceService:
     """Service for generating compliance reports."""
     
     def __init__(self, db: Session):
+        """  Init  ."""
         self.db = db
         self.audit_service = AuditService(db)
     
     def generate_report(
+        """Generate Report."""
         self,
         report_type: str,
         start_date: datetime,
@@ -33,6 +38,7 @@ class ComplianceService:
         filters: Optional[Dict] = None,
         description: Optional[str] = None
     ) -> ComplianceReport:
+        """Generate Report."""
         """Generate a compliance report."""
         report_number = self._generate_report_number(report_type)
         
@@ -71,18 +77,21 @@ class ComplianceService:
         return report
     
     def get_report(self, report_id: UUID) -> Optional[ComplianceReport]:
+        """Get Report."""
         """Get a compliance report by ID."""
         return self.db.query(ComplianceReport).filter(
             ComplianceReport.id == report_id
         ).first()
     
     def list_reports(
+        """List Reports."""
         self,
         report_type: Optional[str] = None,
         status: Optional[str] = None,
         skip: int = 0,
         limit: int = 100
     ) -> List[ComplianceReport]:
+        """List Reports."""
         """List compliance reports with filters."""
         query = self.db.query(ComplianceReport)
         
@@ -96,6 +105,7 @@ class ComplianceService:
                    .offset(skip).limit(limit).all()
     
     def create_policy(self, policy_data: Dict[str, Any], created_by: UUID) -> CompliancePolicy:
+        """Create Policy."""
         """Create a compliance policy."""
         policy = CompliancePolicy(
             policy_name=policy_data['policy_name'],
@@ -116,6 +126,7 @@ class ComplianceService:
         return policy
     
     def list_policies(self, active_only: bool = True) -> List[CompliancePolicy]:
+        """List Policies."""
         """List compliance policies."""
         query = self.db.query(CompliancePolicy)
         
@@ -125,12 +136,14 @@ class ComplianceService:
         return query.order_by(CompliancePolicy.policy_name).all()
     
     def _generate_report_data(
+        """ Generate Report Data."""
         self,
         report_type: str,
         start_date: datetime,
         end_date: datetime,
         filters: Optional[Dict] = None
     ) -> Dict[str, Any]:
+        """ Generate Report Data."""
         """Generate report data based on report type."""
         if report_type == ComplianceReportType.AUDIT_TRAIL:
             return self._generate_audit_trail_report(start_date, end_date, filters)
@@ -146,11 +159,13 @@ class ComplianceService:
             raise ValueError(f"Unsupported report type: {report_type}")
     
     def _generate_audit_trail_report(
+        """ Generate Audit Trail Report."""
         self,
         start_date: datetime,
         end_date: datetime,
         filters: Optional[Dict] = None
     ) -> Dict[str, Any]:
+        """ Generate Audit Trail Report."""
         """Generate audit trail compliance report."""
         logs = self.audit_service.get_audit_logs(
             start_date=start_date,
@@ -200,11 +215,13 @@ class ComplianceService:
         }
     
     def _generate_access_control_report(
+        """ Generate Access Control Report."""
         self,
         start_date: datetime,
         end_date: datetime,
         filters: Optional[Dict] = None
     ) -> Dict[str, Any]:
+        """ Generate Access Control Report."""
         """Generate access control compliance report."""
         # Get user sessions in period
         sessions = self.db.query(UserSession).filter(
@@ -252,11 +269,13 @@ class ComplianceService:
         }
     
     def _generate_user_activity_report(
+        """ Generate User Activity Report."""
         self,
         start_date: datetime,
         end_date: datetime,
         filters: Optional[Dict] = None
     ) -> Dict[str, Any]:
+        """ Generate User Activity Report."""
         """Generate user activity compliance report."""
         # Get all users
         users = self.db.query(User).all()
@@ -302,11 +321,13 @@ class ComplianceService:
         }
     
     def _generate_security_assessment_report(
+        """ Generate Security Assessment Report."""
         self,
         start_date: datetime,
         end_date: datetime,
         filters: Optional[Dict] = None
     ) -> Dict[str, Any]:
+        """ Generate Security Assessment Report."""
         """Generate security assessment compliance report."""
         # Get security-related audit logs
         security_logs = self.audit_service.get_audit_logs(
@@ -352,11 +373,13 @@ class ComplianceService:
         }
     
     def _generate_sox_compliance_report(
+        """ Generate Sox Compliance Report."""
         self,
         start_date: datetime,
         end_date: datetime,
         filters: Optional[Dict] = None
     ) -> Dict[str, Any]:
+        """ Generate Sox Compliance Report."""
         """Generate SOX compliance report."""
         # Get financial-related audit logs
         financial_logs = self.audit_service.get_audit_logs(
@@ -397,6 +420,7 @@ class ComplianceService:
         }
     
     def _get_report_name(self, report_type: str) -> str:
+        """ Get Report Name."""
         """Get human-readable report name."""
         names = {
             ComplianceReportType.AUDIT_TRAIL: "Audit Trail Compliance Report",
@@ -408,6 +432,7 @@ class ComplianceService:
         return names.get(report_type, f"Compliance Report - {report_type}")
     
     def _generate_report_number(self, report_type: str) -> str:
+        """ Generate Report Number."""
         """Generate unique report number."""
         prefix = report_type.upper()[:3]
         timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S")

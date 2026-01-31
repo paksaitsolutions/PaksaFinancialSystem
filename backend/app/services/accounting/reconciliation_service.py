@@ -4,28 +4,32 @@ Reconciliation Service
 This module provides services for managing account reconciliations.
 """
 from typing import Any, Dict, List, Optional, Type, TypeVar
-from uuid import UUID
 
-from sqlalchemy import and_, or_, func, select
-from sqlalchemy.orm import Session, joinedload
-
-from app.services.base import BaseService
 from .. import models, schemas
 from ..exceptions import (
+from .account_balance_service import AccountBalanceService
+from sqlalchemy import and_, or_, func, select
+from sqlalchemy.orm import Session, joinedload
+from uuid import UUID
+
+from app.services.audit.audit_service import AuditService
+from app.services.base import BaseService
+
+
+
     AccountNotFoundException,
     InvalidReconciliationStateException,
     JournalEntryNotFoundException,
     ReconciliationItemNotFoundException,
     ReconciliationNotFoundException,
 )
-from .account_balance_service import AccountBalanceService
-from app.services.audit.audit_service import AuditService
 
 
 class ReconciliationService(BaseService[models.Reconciliation, schemas.ReconciliationCreate, schemas.ReconciliationUpdate]):
     """Service for managing account reconciliations."""
     
     def __init__(self, db: Optional[Session] = None):
+        """  Init  ."""
         """
         Initialize the service with an optional database session.
         
@@ -38,6 +42,7 @@ class ReconciliationService(BaseService[models.Reconciliation, schemas.Reconcili
         self.balance_service = AccountBalanceService(db)
     
     def _get_db(self) -> Session:
+        """ Get Db."""
         """Get a database session."""
         if self.db is None:
             from app.core.database import SessionLocal
@@ -45,6 +50,7 @@ class ReconciliationService(BaseService[models.Reconciliation, schemas.Reconcili
         return self.db
     
     def _get_reconciliation_or_404(self, reconciliation_id: UUID) -> models.Reconciliation:
+        """ Get Reconciliation Or 404."""
         """Get a reconciliation by ID or raise appropriate exception."""
         return self._get_or_404(
             self._get_db(), 
@@ -54,6 +60,7 @@ class ReconciliationService(BaseService[models.Reconciliation, schemas.Reconcili
         )
     
     def _get_reconciliation_item_or_404(self, item_id: UUID) -> models.ReconciliationItem:
+        """ Get Reconciliation Item Or 404."""
         """Get a reconciliation item by ID or raise appropriate exception."""
         return self._get_or_404(
             self._get_db(),
@@ -63,6 +70,7 @@ class ReconciliationService(BaseService[models.Reconciliation, schemas.Reconcili
         )
     
     def _get_account_or_404(self, account_id: UUID) -> models.Account:
+        """ Get Account Or 404."""
         """Get an account by ID or raise appropriate exception."""
         return self._get_or_404(
             self._get_db(),
@@ -72,11 +80,13 @@ class ReconciliationService(BaseService[models.Reconciliation, schemas.Reconcili
         )
         
     def _validate_reconciliation_state(
+        """ Validate Reconciliation State."""
         self, 
         reconciliation: models.Reconciliation, 
         required_status: Optional[models.ReconciliationStatus] = None,
         check_items: bool = False
     ) -> None:
+        """ Validate Reconciliation State."""
         """
         Validate reconciliation state.
         
@@ -102,6 +112,7 @@ class ReconciliationService(BaseService[models.Reconciliation, schemas.Reconcili
                 )
     
     def _count_unmatched_items(self, reconciliation_id: UUID) -> int:
+        """ Count Unmatched Items."""
         """
         Count unmatched items for a reconciliation.
         
@@ -118,12 +129,14 @@ class ReconciliationService(BaseService[models.Reconciliation, schemas.Reconcili
         ).count()
         
     def _create_audit_log(
+        """ Create Audit Log."""
         self,
         reconciliation_id: UUID,
         user_id: UUID,
         action: str,
         details: Dict[str, Any]
     ) -> None:
+        """ Create Audit Log."""
         """
         Create an audit log entry for a reconciliation.
         
@@ -150,10 +163,12 @@ class ReconciliationService(BaseService[models.Reconciliation, schemas.Reconcili
         db.refresh(log)
         return log
     def create_reconciliation(
+        """Create Reconciliation."""
         self,
         reconciliation: schemas.ReconciliationCreate,
         user_id: UUID
     ) -> models.Reconciliation:
+        """Create Reconciliation."""
         """
         Create a new reconciliation.
         
@@ -191,10 +206,12 @@ class ReconciliationService(BaseService[models.Reconciliation, schemas.Reconcili
         return db_reconciliation
     
     def get_reconciliation(
+        """Get Reconciliation."""
         self,
         reconciliation_id: UUID,
         user_id: UUID
     ) -> Optional[models.Reconciliation]:
+        """Get Reconciliation."""
         """
         Get a reconciliation by ID with related data.
         
@@ -214,6 +231,7 @@ class ReconciliationService(BaseService[models.Reconciliation, schemas.Reconcili
         ).first()
     
     def get_reconciliations(
+        """Get Reconciliations."""
         self,
         user_id: UUID,
         account_id: Optional[UUID] = None,
@@ -223,6 +241,7 @@ class ReconciliationService(BaseService[models.Reconciliation, schemas.Reconcili
         skip: int = 0,
         limit: int = 100
     ) -> List[models.Reconciliation]:
+        """Get Reconciliations."""
         """
         Get a list of reconciliations with optional filtering.
         
@@ -263,11 +282,13 @@ class ReconciliationService(BaseService[models.Reconciliation, schemas.Reconcili
         ).offset(skip).limit(limit).all()
     
     def update_reconciliation(
+        """Update Reconciliation."""
         self,
         reconciliation_id: UUID,
         reconciliation_update: schemas.ReconciliationUpdate,
         user_id: UUID
     ) -> models.Reconciliation:
+        """Update Reconciliation."""
         """
         Update a reconciliation.
         
@@ -324,10 +345,12 @@ class ReconciliationService(BaseService[models.Reconciliation, schemas.Reconcili
         return db_reconciliation
     
     def delete_reconciliation(
+        """Delete Reconciliation."""
         self,
         reconciliation_id: UUID,
         user_id: UUID
     ) -> bool:
+        """Delete Reconciliation."""
         """
         Delete a reconciliation.
         
@@ -370,11 +393,13 @@ class ReconciliationService(BaseService[models.Reconciliation, schemas.Reconcili
         return True
     
     def add_reconciliation_item(
+        """Add Reconciliation Item."""
         self,
         reconciliation_id: UUID,
         item: schemas.ReconciliationItemCreate,
         user_id: UUID
     ) -> models.ReconciliationItem:
+        """Add Reconciliation Item."""
         """
         Add an item to a reconciliation.
         
@@ -431,11 +456,13 @@ class ReconciliationService(BaseService[models.Reconciliation, schemas.Reconcili
         return db_item
     
     def update_reconciliation_item(
+        """Update Reconciliation Item."""
         self,
         item_id: UUID,
         item_update: schemas.ReconciliationItemUpdate,
         user_id: UUID
     ) -> models.ReconciliationItem:
+        """Update Reconciliation Item."""
         """
         Update a reconciliation item.
         
@@ -499,10 +526,12 @@ class ReconciliationService(BaseService[models.Reconciliation, schemas.Reconcili
         db.commit()
 
     def complete_reconciliation(
+        """Complete Reconciliation."""
         self,
         reconciliation_id: UUID,
         user_id: UUID
     ) -> models.Reconciliation:
+        """Complete Reconciliation."""
         """
         Mark a reconciliation as completed.
         
@@ -557,12 +586,14 @@ class ReconciliationService(BaseService[models.Reconciliation, schemas.Reconcili
         return db_reconciliation
     
     def get_unreconciled_transactions(
+        """Get Unreconciled Transactions."""
         self,
         account_id: UUID,
         start_date: datetime,
         end_date: datetime,
         user_id: UUID
     ) -> List[Dict[str, Any]]:
+        """Get Unreconciled Transactions."""
         """
         Get unreconciled transactions for an account within a date range.
         

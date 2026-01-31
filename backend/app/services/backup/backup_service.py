@@ -1,35 +1,41 @@
 """
 Backup and restore service.
 """
-import os
-import subprocess
-import hashlib
 from datetime import datetime, timedelta
 from typing import List, Optional, Dict, Any
-from uuid import UUID
+import os
 
-from sqlalchemy.orm import Session
 from sqlalchemy import desc
+from sqlalchemy.orm import Session
+from uuid import UUID
+import hashlib
+import subprocess
 
 from app.models.backup import Backup, RestoreOperation, BackupSchedule, BackupType, BackupStatus, RestoreStatus
+
+
+
 
 
 class BackupService:
     """Service for database backup and restore operations."""
     
     def __init__(self, db: Session):
+        """  Init  ."""
         self.db = db
         from app.core.config import settings
         self.backup_dir = os.path.join(settings.UPLOAD_DIR, 'backups')
         os.makedirs(self.backup_dir, exist_ok=True)
     
     def create_backup(
+        """Create Backup."""
         self,
         backup_name: str,
         backup_type: str = BackupType.FULL,
         initiated_by: UUID = None,
         tables: Optional[List[str]] = None
     ) -> Backup:
+        """Create Backup."""
         """Create a database backup."""
         backup = Backup(
             backup_name=backup_name,
@@ -70,6 +76,7 @@ class BackupService:
         return backup
     
     def restore_backup(
+        """Restore Backup."""
         self,
         backup_id: UUID,
         restore_name: str,
@@ -77,6 +84,7 @@ class BackupService:
         tables_to_restore: Optional[List[str]] = None,
         overwrite_existing: bool = False
     ) -> RestoreOperation:
+        """Restore Backup."""
         """Restore from a backup."""
         backup = self.get_backup(backup_id)
         if not backup:
@@ -120,6 +128,7 @@ class BackupService:
         return restore_op
     
     def create_schedule(self, schedule_data: Dict[str, Any], created_by: UUID) -> BackupSchedule:
+        """Create Schedule."""
         """Create a backup schedule."""
         schedule = BackupSchedule(
             schedule_name=schedule_data['schedule_name'],
@@ -139,22 +148,26 @@ class BackupService:
         return schedule
     
     def get_backup(self, backup_id: UUID) -> Optional[Backup]:
+        """Get Backup."""
         """Get a backup by ID."""
         return self.db.query(Backup).filter(Backup.id == backup_id).first()
     
     def list_backups(self, limit: int = 100) -> List[Backup]:
+        """List Backups."""
         """List backups."""
         return self.db.query(Backup)\
                    .order_by(desc(Backup.created_at))\
                    .limit(limit).all()
     
     def list_restore_operations(self, limit: int = 100) -> List[RestoreOperation]:
+        """List Restore Operations."""
         """List restore operations."""
         return self.db.query(RestoreOperation)\
                    .order_by(desc(RestoreOperation.created_at))\
                    .limit(limit).all()
     
     def list_schedules(self, active_only: bool = True) -> List[BackupSchedule]:
+        """List Schedules."""
         """List backup schedules."""
         query = self.db.query(BackupSchedule)
         
@@ -164,6 +177,7 @@ class BackupService:
         return query.order_by(BackupSchedule.schedule_name).all()
     
     def cleanup_old_backups(self, retention_days: int = 30) -> int:
+        """Cleanup Old Backups."""
         """Clean up old backup files."""
         cutoff_date = datetime.utcnow() - timedelta(days=retention_days)
         
@@ -186,6 +200,7 @@ class BackupService:
         return cleaned_count
     
     def _perform_backup(self, backup: Backup) -> str:
+        """ Perform Backup."""
         """Perform the actual backup operation."""
         timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
         filename = f"{backup.backup_name}_{timestamp}.sql"
@@ -201,6 +216,7 @@ class BackupService:
         return file_path
     
     def _perform_restore(self, backup: Backup, restore_op: RestoreOperation) -> int:
+        """ Perform Restore."""
         """Perform the actual restore operation."""
         if not backup.file_path or not os.path.exists(backup.file_path):
             raise Exception(f"Backup file not found: {backup.file_path}")
@@ -209,6 +225,7 @@ class BackupService:
         return 1000
     
     def _calculate_checksum(self, file_path: str) -> str:
+        """ Calculate Checksum."""
         """Calculate SHA-256 checksum of backup file."""
         sha256_hash = hashlib.sha256()
         with open(file_path, "rb") as f:

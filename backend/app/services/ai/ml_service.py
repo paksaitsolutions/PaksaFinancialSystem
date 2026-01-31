@@ -1,18 +1,22 @@
 """
 Advanced machine learning service for financial predictions.
 """
-import numpy as np
-from typing import List, Dict, Any, Optional
 from datetime import datetime, timedelta
+from typing import List, Dict, Any, Optional
+
+import numpy as np
+
 
 class MLService:
     """Advanced machine learning service."""
     
     def __init__(self):
+        """  Init  ."""
         self.models = {}
         self.model_metadata = {}
     
     def predict_cash_flow(self, historical_data: List[Dict[str, Any]], days_ahead: int = 30) -> Dict[str, Any]:
+        """Predict Cash Flow."""
         """Predict cash flow using advanced algorithms."""
         if len(historical_data) < 10:
             return {"error": "Insufficient data for prediction"}
@@ -42,6 +46,7 @@ class MLService:
         }
     
     def detect_anomalies(self, transaction_data: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Detect Anomalies."""
         """Detect anomalous transactions."""
         if len(transaction_data) < 20:
             return {"error": "Insufficient data for anomaly detection"}
@@ -70,6 +75,7 @@ class MLService:
         }
     
     def predict_customer_churn(self, customer_data: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Predict Customer Churn."""
         """Predict customer churn probability."""
         if len(customer_data) < 10:
             return {"error": "Insufficient customer data"}
@@ -99,6 +105,7 @@ class MLService:
         }
     
     def generate_financial_insights(self, financial_data: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Generate Financial Insights."""
         """Generate AI-powered financial insights."""
         insights = []
         
@@ -123,6 +130,7 @@ class MLService:
         return insights
     
     def _calculate_seasonal_factor(self, amounts: List[float]) -> float:
+        """ Calculate Seasonal Factor."""
         """Calculate seasonal adjustment factor."""
         if len(amounts) < 12:
             return 1.0
@@ -134,6 +142,7 @@ class MLService:
         return recent_avg / historical_avg if historical_avg != 0 else 1.0
     
     def _calculate_churn_risk(self, customer: Dict[str, Any]) -> float:
+        """ Calculate Churn Risk."""
         """Calculate customer churn risk score."""
         risk_score = 0.0
         
@@ -162,6 +171,7 @@ class MLService:
         return min(1.0, risk_score)
     
     def _analyze_revenue(self, revenue_data: List[Dict]) -> Optional[Dict[str, Any]]:
+        """ Analyze Revenue."""
         """Analyze revenue trends."""
         if len(revenue_data) < 3:
             return None
@@ -189,6 +199,7 @@ class MLService:
         return None
     
     def _analyze_expenses(self, expense_data: List[Dict]) -> Optional[Dict[str, Any]]:
+        """ Analyze Expenses."""
         """Analyze expense patterns."""
         if len(expense_data) < 5:
             return None
@@ -209,6 +220,7 @@ class MLService:
         return None
     
     def _analyze_cash_flow(self, cash_flow_data: List[Dict]) -> Optional[Dict[str, Any]]:
+        """ Analyze Cash Flow."""
         """Analyze cash flow patterns."""
         if len(cash_flow_data) < 5:
             return None

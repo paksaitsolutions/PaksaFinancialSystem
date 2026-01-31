@@ -1,27 +1,31 @@
 """
 Reporting Engine - PDF/Excel Generation, Financial Statements, Scheduling
 """
-from sqlalchemy.orm import Session
-from sqlalchemy import text, func
-from app.models.financial_core import *
-from decimal import Decimal
 from datetime import datetime, date
-import json
-import uuid
-from typing import Dict, List, Any
-import pandas as pd
-from reportlab.lib.pagesizes import letter, A4
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter, A4
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from typing import Dict, List, Any
+import json
 import os
+
+from decimal import Decimal
+from sqlalchemy import text, func
+from sqlalchemy.orm import Session
+import pandas as pd
+import uuid
+
+from app.models.financial_core import *
+
 
 class ReportGenerator:
     """Core report generation engine"""
     
     @staticmethod
     def generate_trial_balance(db: Session, as_of_date: date = None) -> Dict:
+        """Generate Trial Balance."""
         """Generate trial balance report"""
         if not as_of_date:
             as_of_date = date.today()
@@ -64,6 +68,7 @@ class ReportGenerator:
     
     @staticmethod
     def generate_balance_sheet(db: Session, as_of_date: date = None) -> Dict:
+        """Generate Balance Sheet."""
         """Generate balance sheet"""
         if not as_of_date:
             as_of_date = date.today()
@@ -87,6 +92,7 @@ class ReportGenerator:
         ).order_by(ChartOfAccounts.account_code).all()
         
         def format_accounts(accounts):
+            """Format Accounts."""
             return [{
                 "account_code": acc.account_code,
                 "account_name": acc.account_name,
@@ -117,6 +123,7 @@ class ReportGenerator:
     
     @staticmethod
     def generate_income_statement(db: Session, start_date: date, end_date: date) -> Dict:
+        """Generate Income Statement."""
         """Generate profit & loss statement"""
         # Revenue
         revenue = db.query(ChartOfAccounts).filter(
@@ -131,6 +138,7 @@ class ReportGenerator:
         ).order_by(ChartOfAccounts.account_code).all()
         
         def format_accounts(accounts):
+            """Format Accounts."""
             return [{
                 "account_code": acc.account_code,
                 "account_name": acc.account_name,
@@ -158,6 +166,7 @@ class ReportGenerator:
     
     @staticmethod
     def generate_cash_flow(db: Session, start_date: date, end_date: date) -> Dict:
+        """Generate Cash Flow."""
         """Generate cash flow statement"""
         # Get cash accounts
         cash_accounts = db.query(ChartOfAccounts).filter(
@@ -215,6 +224,7 @@ class PDFReportGenerator:
     
     @staticmethod
     def create_pdf_report(report_data: Dict, output_path: str) -> str:
+        """Create Pdf Report."""
         """Generate PDF report from data"""
         doc = SimpleDocTemplate(output_path, pagesize=letter)
         styles = getSampleStyleSheet()
@@ -255,6 +265,7 @@ class PDFReportGenerator:
     
     @staticmethod
     def _create_trial_balance_table(story, data, styles):
+        """ Create Trial Balance Table."""
         """Create trial balance table"""
         table_data = [['Account Code', 'Account Name', 'Debit', 'Credit']]
         
@@ -287,6 +298,7 @@ class PDFReportGenerator:
     
     @staticmethod
     def _create_balance_sheet_table(story, data, styles):
+        """ Create Balance Sheet Table."""
         """Create balance sheet table"""
         # Assets
         story.append(Paragraph("ASSETS", styles['Heading2']))
@@ -329,6 +341,7 @@ class PDFReportGenerator:
     
     @staticmethod
     def _create_income_statement_table(story, data, styles):
+        """ Create Income Statement Table."""
         """Create income statement table"""
         # Revenue
         story.append(Paragraph("REVENUE", styles['Heading2']))
@@ -376,6 +389,7 @@ class PDFReportGenerator:
     
     @staticmethod
     def _create_cash_flow_table(story, data, styles):
+        """ Create Cash Flow Table."""
         """Create cash flow statement table"""
         cash_flow_data = [['Cash Flow Item', 'Amount']]
         
@@ -405,6 +419,7 @@ class ExcelReportGenerator:
     
     @staticmethod
     def create_excel_report(report_data: Dict, output_path: str) -> str:
+        """Create Excel Report."""
         """Generate Excel report from data"""
         with pd.ExcelWriter(output_path, engine='openpyxl') as writer:
             if report_data['report_type'] == 'trial_balance':
@@ -420,6 +435,7 @@ class ExcelReportGenerator:
     
     @staticmethod
     def _create_trial_balance_excel(data, writer):
+        """ Create Trial Balance Excel."""
         """Create trial balance Excel sheet"""
         df_data = []
         for account in data['accounts']:
@@ -443,6 +459,7 @@ class ExcelReportGenerator:
     
     @staticmethod
     def _create_balance_sheet_excel(data, writer):
+        """ Create Balance Sheet Excel."""
         """Create balance sheet Excel sheet"""
         # Assets
         assets_data = []
@@ -465,6 +482,7 @@ class ExcelReportGenerator:
     
     @staticmethod
     def _create_income_statement_excel(data, writer):
+        """ Create Income Statement Excel."""
         """Create income statement Excel sheet"""
         income_data = []
         
@@ -485,6 +503,7 @@ class ExcelReportGenerator:
     
     @staticmethod
     def _create_cash_flow_excel(data, writer):
+        """ Create Cash Flow Excel."""
         """Create cash flow Excel sheet"""
         cash_flow_data = []
         
@@ -505,6 +524,7 @@ class ReportScheduler:
     
     @staticmethod
     def schedule_report(db: Session, template_id: str, schedule_config: Dict, user_id: str) -> str:
+        """Schedule Report."""
         """Schedule a report for automatic generation"""
         from app.models.financial_core import ReportRun
         
@@ -523,6 +543,7 @@ class ReportScheduler:
     
     @staticmethod
     def execute_scheduled_reports(db: Session) -> List[str]:
+        """Execute Scheduled Reports."""
         """Execute all pending scheduled reports"""
         from app.models.financial_core import ReportRun, ReportTemplate
         
@@ -561,6 +582,7 @@ class ReportScheduler:
     
     @staticmethod
     def _generate_scheduled_report(db: Session, template: Any, parameters: Dict) -> str:
+        """ Generate Scheduled Report."""
         """Generate report from template and parameters"""
         report_type = template.report_type
         
@@ -595,6 +617,7 @@ class CustomReportBuilder:
     
     @staticmethod
     def create_custom_report_template(db: Session, template_config: Dict, user_id: str) -> str:
+        """Create Custom Report Template."""
         """Create custom report template"""
         from app.models.financial_core import ReportTemplate
         
@@ -612,6 +635,7 @@ class CustomReportBuilder:
     
     @staticmethod
     def generate_custom_report(db: Session, template_id: str, parameters: Dict = None) -> Dict:
+        """Generate Custom Report."""
         """Generate report from custom template"""
         from app.models.financial_core import ReportTemplate
         
@@ -670,6 +694,7 @@ class CustomReportBuilder:
     
     @staticmethod
     def get_available_fields() -> Dict:
+        """Get Available Fields."""
         """Get available fields for report builder"""
         return {
             "chart_of_accounts": [

@@ -14,6 +14,8 @@ from app.api import deps
 from app.core.config import settings
 from app.core.security import get_current_active_user
 from app.core.database import get_db
+from app.core.api_response import success_response, paginated_response, error_response
+from app.core.pagination import PaginationParams, paginate_query
 from app.services.gl import account_service, journal_service, period_service, financial_statement_service
 
 router = APIRouter()
@@ -57,12 +59,10 @@ async def create_account(
     """
     service = get_account_service(db)
     try:
-        return service.create_account(account_in, current_user.id)
+        account = service.create_account(account_in, current_user.id)
+        return success_response(data=account, message="Account created successfully")
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        return error_response(message=str(e), status_code=400)
 
 @router.get(
     "/accounts/{account_id}",
@@ -159,15 +159,14 @@ async def delete_account(
 
 @router.get(
     "/accounts/",
-    response_model=schemas.PaginatedResponse[schemas.AccountResponse],
     summary="List accounts",
     description="List all accounts with optional filtering and pagination.",
     response_description="Paginated list of accounts",
     tags=["Chart of Accounts"]
 )
 async def list_accounts(
-    skip: int = 0,
-    limit: int = 100,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
     query: Optional[str] = None,
     account_type: Optional[schemas.AccountType] = None,
     status: Optional[schemas.AccountStatus] = None,
@@ -181,20 +180,33 @@ async def list_accounts(
     service = get_account_service(db)
     try:
         filter_params = {
-            "skip": skip,
-            "limit": limit,
+            "skip": (page - 1) * page_size,
+            "limit": page_size,
             "query": query,
             "account_type": account_type,
             "status": status,
             "company_id": company_id
         }
         accounts = service.list(filter_params)
-        return accounts
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
+        
+        # Convert to paginated response format
+        pagination_meta = {
+            "total": len(accounts) if isinstance(accounts, list) else accounts.get('total', 0),
+            "page": page,
+            "page_size": page_size,
+            "pages": ((len(accounts) if isinstance(accounts, list) else accounts.get('total', 0)) + page_size - 1) // page_size,
+            "has_next": page * page_size < (len(accounts) if isinstance(accounts, list) else accounts.get('total', 0)),
+            "has_prev": page > 1
+        }
+        
+        data = accounts if isinstance(accounts, list) else accounts.get('items', [])
+        return paginated_response(
+            data=data,
+            pagination_meta=pagination_meta,
+            message="Accounts retrieved successfully"
         )
+    except Exception as e:
+        return error_response(message=str(e), status_code=400)
 
 @router.get(
     "/accounts/tree",

@@ -4,22 +4,29 @@ Reconciliation Service
 This module provides the main service implementation for account reconciliation functionality.
 """
 from datetime import datetime
-from decimal import Decimal
 from typing import List, Optional, Tuple, Dict, Any, Union
-from uuid import UUID, uuid4
 
+from ...models.account import Account
+from ...models.journal import JournalEntry, JournalEntryLine, JournalEntryStatus
+from ...models.reconciliation import (
+from ...schemas.reconciliation import (
+from .base import BaseReconciliationService
+from decimal import Decimal
 from sqlalchemy import and_, or_, func, select
 from sqlalchemy.orm import Session, joinedload
+from uuid import UUID, uuid4
 
 from app.core.exceptions import (
+from app.core.logging import get_logger
+
+
+
     NotFoundException,
     ValidationException,
     ForbiddenException,
     ConflictException
 )
-from app.core.logging import get_logger
 
-from ...models.reconciliation import (
     Reconciliation,
     ReconciliationItem,
     ReconciliationRule,
@@ -27,9 +34,6 @@ from ...models.reconciliation import (
     ReconciliationStatus,
     ReconciliationMatchType
 )
-from ...models.account import Account
-from ...models.journal import JournalEntry, JournalEntryLine, JournalEntryStatus
-from ...schemas.reconciliation import (
     ReconciliationCreate,
     ReconciliationUpdate,
     ReconciliationItemCreate,
@@ -39,7 +43,6 @@ from ...schemas.reconciliation import (
     ReconciliationAuditLogCreate
 )
 
-from .base import BaseReconciliationService
 
 logger = get_logger(__name__)
 
@@ -50,6 +53,7 @@ class ReconciliationService(BaseReconciliationService):
     # Reconciliation CRUD Operations
     
     def get_reconciliation(self, reconciliation_id: UUID, user_id: UUID) -> Reconciliation:
+        """Get Reconciliation."""
         """Get a reconciliation by ID with permission check.
         
         Args:
@@ -68,7 +72,6 @@ class ReconciliationService(BaseReconciliationService):
         if not reconciliation:
             raise NotFoundException("Reconciliation not found")
             
-        # TODO: Add permission check based on user's access to the account
         # For now, just check if the user created the reconciliation
         if reconciliation.created_by != user_id:
             raise ForbiddenException("You don't have permission to access this reconciliation")
@@ -76,6 +79,7 @@ class ReconciliationService(BaseReconciliationService):
         return reconciliation
     
     def list_reconciliations(
+        """List Reconciliations."""
         self,
         user_id: UUID,
         account_id: Optional[UUID] = None,
@@ -85,6 +89,7 @@ class ReconciliationService(BaseReconciliationService):
         skip: int = 0,
         limit: int = 100
     ) -> Tuple[List[Reconciliation], int]:
+        """List Reconciliations."""
         """List reconciliations with optional filtering.
         
         Args:
@@ -102,7 +107,6 @@ class ReconciliationService(BaseReconciliationService):
         query = self.db.query(Reconciliation)
         
         # Apply filters
-        # TODO: Add permission filtering based on user's access to accounts
         # For now, just filter by created_by
         query = query.filter(Reconciliation.created_by == user_id)
         
@@ -130,6 +134,7 @@ class ReconciliationService(BaseReconciliationService):
         return reconciliations, total
     
     def create_reconciliation(self, data: ReconciliationCreate, user_id: UUID) -> Reconciliation:
+        """Create Reconciliation."""
         """Create a new reconciliation.
         
         Args:

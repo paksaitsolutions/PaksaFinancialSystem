@@ -2,9 +2,12 @@
 Internationalization service.
 """
 from typing import Dict, Any, List, Optional
-from sqlalchemy.orm import Session
+
 from sqlalchemy import Column, String, Text, Boolean, JSON
+from sqlalchemy.orm import Session
+
 from app.models.base import BaseModel
+
 
 
 class Language(BaseModel):
@@ -41,9 +44,11 @@ class I18nService:
     """Service for internationalization."""
     
     def __init__(self, db: Session):
+        """  Init  ."""
         self.db = db
     
     def get_translation(self, key: str, language_code: str = "en") -> str:
+        """Get Translation."""
         """Get translation for a key."""
         translation = self.db.query(Translation).filter(
             Translation.key == key,
@@ -53,6 +58,7 @@ class I18nService:
         return translation.value if translation else key
     
     def set_translation(self, key: str, language_code: str, value: str) -> Translation:
+        """Set Translation."""
         """Set translation for a key."""
         translation = self.db.query(Translation).filter(
             Translation.key == key,
@@ -75,10 +81,12 @@ class I18nService:
         return translation
     
     def get_supported_languages(self) -> List[Language]:
+        """Get Supported Languages."""
         """Get supported languages."""
         return self.db.query(Language).filter(Language.is_active == True).all()
     
     def format_currency(self, amount: float, currency_code: str) -> str:
+        """Format Currency."""
         """Format currency amount."""
         currency_symbols = {
             "USD": "$",

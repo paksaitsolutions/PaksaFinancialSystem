@@ -2,24 +2,29 @@
 Currency service for managing currencies and exchange rates.
 """
 from datetime import date, datetime
-from decimal import Decimal
 from typing import List, Optional, Dict, Any
+
+from decimal import Decimal
+from sqlalchemy import and_, or_, func, desc
+from sqlalchemy.orm import Session
 from uuid import UUID
 
-from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_, func, desc
-
-from app.models.currency import Currency, ExchangeRate, ExchangeRateType, CurrencyStatus
 from app.core.exceptions import NotFoundException, ValidationException
+from app.models.currency import Currency, ExchangeRate, ExchangeRateType, CurrencyStatus
+
+
+
 
 
 class CurrencyService:
     """Service for managing currencies and exchange rates."""
     
     def __init__(self, db: Session):
+        """  Init  ."""
         self.db = db
     
     def get_all_currencies(self, include_inactive: bool = False) -> List[Currency]:
+        """Get All Currencies."""
         """
         Get all currencies.
         
@@ -37,6 +42,7 @@ class CurrencyService:
         return query.order_by(Currency.code).all()
     
     def get_currency_by_code(self, code: str) -> Optional[Currency]:
+        """Get Currency By Code."""
         """
         Get a currency by its code.
         
@@ -49,6 +55,7 @@ class CurrencyService:
         return self.db.query(Currency).filter(Currency.code == code.upper()).first()
     
     def get_currency_by_id(self, currency_id: UUID) -> Optional[Currency]:
+        """Get Currency By Id."""
         """
         Get a currency by its ID.
         
@@ -61,6 +68,7 @@ class CurrencyService:
         return self.db.query(Currency).filter(Currency.id == currency_id).first()
     
     def get_base_currency(self) -> Optional[Currency]:
+        """Get Base Currency."""
         """
         Get the base currency for the system.
         
@@ -70,6 +78,7 @@ class CurrencyService:
         return self.db.query(Currency).filter(Currency.is_base_currency == True).first()
     
     def create_currency(self, currency_data: Dict[str, Any], created_by: UUID) -> Currency:
+        """Create Currency."""
         """
         Create a new currency.
         
@@ -111,6 +120,7 @@ class CurrencyService:
         return currency
     
     def update_currency(self, currency_id: UUID, currency_data: Dict[str, Any], updated_by: UUID) -> Currency:
+        """Update Currency."""
         """
         Update an existing currency.
         
@@ -166,6 +176,7 @@ class CurrencyService:
         return currency
     
     def delete_currency(self, currency_id: UUID) -> bool:
+        """Delete Currency."""
         """
         Delete a currency.
         
@@ -205,12 +216,14 @@ class CurrencyService:
         return True
     
     def get_exchange_rate(
+        """Get Exchange Rate."""
         self,
         source_currency_code: str,
         target_currency_code: str,
         rate_date: date = None,
         rate_type: ExchangeRateType = ExchangeRateType.SPOT
     ) -> Optional[Decimal]:
+        """Get Exchange Rate."""
         """
         Get the exchange rate between two currencies.
         
@@ -298,6 +311,7 @@ class CurrencyService:
         return source_to_base * base_to_target
     
     def create_exchange_rate(self, rate_data: Dict[str, Any], created_by: UUID) -> ExchangeRate:
+        """Create Exchange Rate."""
         """
         Create a new exchange rate.
         
@@ -357,6 +371,7 @@ class CurrencyService:
         return exchange_rate
     
     def _unset_existing_base_currency(self) -> None:
+        """ Unset Existing Base Currency."""
         """Unset any existing base currency."""
         base_currency = self.get_base_currency()
         if base_currency:

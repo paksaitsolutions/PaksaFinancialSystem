@@ -6,25 +6,28 @@ This module provides services for managing financial statement templates.
 """
 from datetime import datetime
 from typing import List, Optional, Dict, Any, Union
-from uuid import UUID, uuid4
 
+from ..models.financial_statement_template import (
+from ..schemas.financial_statement_template import (
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
+from uuid import UUID, uuid4
+
+from app.core.db.session import SessionLocal
+from app.db.session import SessionLocal
+from app.exceptions import NotFoundException, ValidationException
+
+
 
 """
 Financial statement template service placeholder.
 """
-from app.db.session import SessionLocal
 =======
-from app.core.db.session import SessionLocal
 >>>>>>> e96df7278ce4216131b6c65d411c0723f4de7f91:backend/app/services/accounting/financial_statement_template_service.py
-from app.exceptions import NotFoundException, ValidationException
-from ..models.financial_statement_template import (
     FinancialStatementTemplate as TemplateModel,
     FinancialStatementLineTemplate as LineTemplateModel,
     TemplateType
 )
-from ..schemas.financial_statement_template import (
     FinancialStatementTemplateCreate,
     FinancialStatementTemplateUpdate,
     FinancialStatementTemplate,
@@ -38,10 +41,12 @@ class FinancialStatementTemplateService:
     """Service for managing financial statement templates."""
     
     def __init__(self, db: Session):
+        """  Init  ."""
         """Initialize the service with a database session."""
         self.db = db
     
     def get_template(self, template_id: UUID) -> TemplateModel:
+        """Get Template."""
         """Retrieve a template by ID."""
         template = self.db.query(TemplateModel).get(template_id)
         if not template:
@@ -51,6 +56,7 @@ class FinancialStatementTemplateService:
         return template
     
     def get_template_by_name(self, name: str, company_id: Optional[UUID] = None) -> Optional[TemplateModel]:
+        """Get Template By Name."""
         """Retrieve a template by name and optionally company ID."""
         query = self.db.query(TemplateModel).filter(TemplateModel.name == name)
         
@@ -62,6 +68,7 @@ class FinancialStatementTemplateService:
         return query.first()
     
     def list_templates(
+        """List Templates."""
         self, 
         skip: int = 0, 
         limit: int = 100,
@@ -69,6 +76,7 @@ class FinancialStatementTemplateService:
         company_id: Optional[UUID] = None,
         include_system: bool = False
     ) -> tuple[List[TemplateModel], int]:
+        """List Templates."""
         """List templates with optional filtering."""
         query = self.db.query(TemplateModel)
         
@@ -87,6 +95,7 @@ class FinancialStatementTemplateService:
         return items, total
     
     def create_template(self, template_data: FinancialStatementTemplateCreate, user_id: UUID) -> TemplateModel:
+        """Create Template."""
         """Create a new template."""
         # Check for duplicate name
         existing = self.get_template_by_name(template_data.name, template_data.company_id)
@@ -112,11 +121,13 @@ class FinancialStatementTemplateService:
         return db_template
     
     def update_template(
+        """Update Template."""
         self, 
         template_id: UUID, 
         template_data: FinancialStatementTemplateUpdate,
         user_id: UUID
     ) -> TemplateModel:
+        """Update Template."""
         """Update an existing template."""
         db_template = self.get_template(template_id)
         
@@ -147,6 +158,7 @@ class FinancialStatementTemplateService:
         return db_template
     
     def delete_template(self, template_id: UUID) -> bool:
+        """Delete Template."""
         """Delete a template."""
         db_template = self.get_template(template_id)
         
@@ -156,18 +168,19 @@ class FinancialStatementTemplateService:
             )
             
         # Check if template is in use
-        # TODO: Add checks for template usage before allowing deletion
         
         self.db.delete(db_template)
         self.db.commit()
         return True
     
     def set_default_template(
+        """Set Default Template."""
         self, 
         template_id: UUID, 
         template_type: Optional[TemplateType] = None,
         company_id: Optional[UUID] = None
     ) -> TemplateModel:
+        """Set Default Template."""
         """Set a template as the default for its type and company."""
         # Get the template to be set as default
         db_template = self.get_template(template_id)
@@ -192,10 +205,12 @@ class FinancialStatementTemplateService:
         return db_template
     
     def get_default_template(
+        """Get Default Template."""
         self, 
         template_type: TemplateType,
         company_id: Optional[UUID] = None
     ) -> Optional[TemplateModel]:
+        """Get Default Template."""
         """Get the default template for a given type and company."""
         query = self.db.query(TemplateModel).filter(
             TemplateModel.template_type == template_type,
@@ -206,12 +221,14 @@ class FinancialStatementTemplateService:
         return query.first()
     
     def clone_template(
+        """Clone Template."""
         self, 
         template_id: UUID, 
         new_name: str,
         user_id: UUID,
         company_id: Optional[UUID] = None
     ) -> TemplateModel:
+        """Clone Template."""
         """Create a copy of an existing template."""
         source_template = self.get_template(template_id)
         
@@ -243,8 +260,8 @@ class FinancialStatementTemplateService:
         return db_template
     
     def validate_template_structure(self, structure: Dict[str, Any]) -> bool:
+        """Validate Template Structure."""
         """Validate a template structure."""
-        # TODO: Implement comprehensive structure validation
         if not isinstance(structure, dict):
             raise ValidationException(detail="Template structure must be a JSON object")
             
@@ -258,6 +275,7 @@ class FinancialStatementTemplateService:
 
 
 def get_financial_statement_template_service():
+    """Get Financial Statement Template Service."""
     """Dependency function to get a FinancialStatementTemplateService instance."""
     db = SessionLocal()
     try:

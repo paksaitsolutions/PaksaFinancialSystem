@@ -1,22 +1,27 @@
 """
 Microservices service registry and discovery.
 """
-import asyncio
-import httpx
-from typing import Dict, List, Optional
 from datetime import datetime
+from typing import Dict, List, Optional
+import asyncio
+
+import httpx
 
 from app.core.logging import logger
+
+
 # from app.core.cache import cache_manager
 
 class ServiceRegistry:
     """Service registry for microservices discovery."""
     
     def __init__(self):
+        """  Init  ."""
         self.services: Dict[str, Dict] = {}
         self.running = False
     
     async def register_service(self, service_name: str, service_url: str, health_check_url: str):
+        """Register Service."""
         """Register a microservice."""
         service_info = {
             "name": service_name,
@@ -32,6 +37,7 @@ class ServiceRegistry:
         logger.info(f"Registered service: {service_name} at {service_url}")
     
     async def get_service(self, service_name: str) -> Optional[Dict]:
+        """Get Service."""
         """Get service information."""
         # service_info = await cache_manager.get(f"service:{service_name}")
         # if service_info:
@@ -39,6 +45,7 @@ class ServiceRegistry:
         return self.services.get(service_name)
     
     async def start_health_checks(self):
+        """Start Health Checks."""
         """Start health check monitoring."""
         self.running = True
         while self.running:
@@ -46,6 +53,7 @@ class ServiceRegistry:
             await asyncio.sleep(30)
     
     async def _perform_health_checks(self):
+        """Perform Health Checks."""
         """Perform health checks on all registered services."""
         for service_name, service_info in self.services.items():
             try:
@@ -62,9 +70,11 @@ class ServiceClient:
     """Client for making requests to microservices."""
     
     def __init__(self, service_registry: ServiceRegistry):
+        """  Init  ."""
         self.registry = service_registry
     
     async def call_service(self, service_name: str, endpoint: str, method: str = "GET", data: Optional[Dict] = None) -> Optional[Dict]:
+        """Call Service."""
         """Make a request to a microservice."""
         service_info = await self.registry.get_service(service_name)
         

@@ -2,30 +2,35 @@
 Payroll tax calculation utilities for the payroll processing service.
 """
 from datetime import date
-from decimal import Decimal, ROUND_HALF_UP
 from typing import Dict, List, Optional, Tuple
-from uuid import UUID
 
-from sqlalchemy.orm import Session
+from ..models.payroll_models import (
+from ..schemas.payroll_schemas import PayrollTaxItem
+from decimal import Decimal, ROUND_HALF_UP
 from sqlalchemy import and_, or_
+from sqlalchemy.orm import Session
+from uuid import UUID
 
 from app.core.config import settings
 from app.core.logging import logger
 
-from ..models.payroll_models import (
+
+
+
     Employee, TaxCode, TaxBracket, TaxCalculation, Payslip, PayPeriod
 )
-from ..schemas.payroll_schemas import PayrollTaxItem
 
 
 class PayrollTaxCalculator:
     """Handles payroll tax calculations for employees."""
     
     def __init__(self, db: Session):
+        """  Init  ."""
         """Initialize the tax calculator with a database session."""
         self.db = db
     
     def calculate_taxes(
+        """Calculate Taxes."""
         self,
         employee: Employee,
         pay_period: PayPeriod,
@@ -33,6 +38,7 @@ class PayrollTaxCalculator:
         pay_date: date,
         is_regular_pay: bool = True
     ) -> List[PayrollTaxItem]:
+        """Calculate Taxes."""
         """
         Calculate all applicable taxes for an employee.
         
@@ -82,11 +88,13 @@ class PayrollTaxCalculator:
         return taxes
     
     def _get_applicable_tax_codes(
+        """ Get Applicable Tax Codes."""
         self,
         employee: Employee,
         pay_date: date,
         is_regular_pay: bool = True
     ) -> List[TaxCode]:
+        """ Get Applicable Tax Codes."""
         """
         Get all tax codes that apply to the employee based on their location.
         
@@ -138,12 +146,14 @@ class PayrollTaxCalculator:
         return query.all()
     
     def _calculate_tax_amount(
+        """ Calculate Tax Amount."""
         self,
         tax_code: TaxCode,
         taxable_income: Decimal,
         pay_period: PayPeriod,
         employee: Employee
     ) -> Decimal:
+        """ Calculate Tax Amount."""
         """
         Calculate tax amount based on tax code and taxable income.
         
@@ -182,12 +192,14 @@ class PayrollTaxCalculator:
         return Decimal("0.00")
     
     def _calculate_bracketed_tax(
+        """ Calculate Bracketed Tax."""
         self,
         tax_code: TaxCode,
         taxable_income: Decimal,
         pay_period: PayPeriod,
         employee: Employee
     ) -> Decimal:
+        """ Calculate Bracketed Tax."""
         """
         Calculate tax using tax brackets.
         
@@ -258,11 +270,13 @@ class PayrollTaxCalculator:
         return total_tax.quantize(Decimal("0.01"), ROUND_HALF_UP)
     
     def _get_ytd_taxes(
+        """ Get Ytd Taxes."""
         self,
         employee_id: UUID,
         tax_code_id: UUID,
         year: int
     ) -> Decimal:
+        """ Get Ytd Taxes."""
         """
         Get year-to-date taxes paid for a specific tax code.
         

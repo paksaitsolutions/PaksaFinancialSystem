@@ -8,17 +8,20 @@ Use is subject to license terms and restrictions.
 
 Service for managing audit logs and related operations.
 """
-
 from datetime import datetime, timedelta
 from typing import List, Optional, Dict, Any
-from uuid import UUID, uuid4
 
-from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_, desc, func
-
-from app.core.security import get_password_hash, verify_password
 from .. import models, schemas, exceptions
 from ...core.database import Base
+from sqlalchemy import and_, or_, desc, func
+from sqlalchemy.orm import Session
+from uuid import UUID, uuid4
+
+from app.core.security import get_password_hash, verify_password
+
+
+
+
 
 
 class AuditService:
@@ -30,9 +33,11 @@ class AuditService:
     """
     
     def __init__(self, db: Session):
+        """  Init  ."""
         self.db = db
     
     def create_audit_log(
+        """Create Audit Log."""
         self,
         action: models.AuditActionType,
         resource_type: str,
@@ -44,6 +49,7 @@ class AuditService:
         status_code: Optional[int] = None,
         details: Optional[Dict[str, Any]] = None
     ) -> models.AuditLog:
+        """Create Audit Log."""
         """
         Create a new audit log entry.
         
@@ -86,6 +92,7 @@ class AuditService:
             raise exceptions.AuditLogError(f"Failed to create audit log: {str(e)}")
     
     def get_audit_log(self, log_id: UUID) -> models.AuditLog:
+        """Get Audit Log."""
         """
         Retrieve an audit log entry by ID.
         
@@ -104,6 +111,7 @@ class AuditService:
         return log
     
     def list_audit_logs(
+        """List Audit Logs."""
         self,
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None,
@@ -119,6 +127,7 @@ class AuditService:
         order_by: str = "timestamp",
         order_desc: bool = True
     ) -> tuple[list[models.AuditLog], int]:
+        """List Audit Logs."""
         """
         List audit logs with filtering and pagination.
         
@@ -180,6 +189,7 @@ class AuditService:
         return logs, total
     
     def get_audit_summary(
+        """Get Audit Summary."""
         self,
         start_date: datetime,
         end_date: datetime,
@@ -188,6 +198,7 @@ class AuditService:
         action: Optional[models.AuditActionType] = None,
         resource_type: Optional[str] = None
     ) -> List[Dict[str, Any]]:
+        """Get Audit Summary."""
         """
         Get a summary of audit logs grouped by time period.
         
@@ -253,10 +264,12 @@ class AuditService:
         return summary
     
     def cleanup_old_logs(
+        """Cleanup Old Logs."""
         self,
         older_than_days: int = 365,
         batch_size: int = 1000
     ) -> int:
+        """Cleanup Old Logs."""
         """
         Delete audit logs older than the specified number of days.
         

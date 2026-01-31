@@ -5,6 +5,8 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from app.api import deps
 from app.models.user import User
+from app.core.api_response import success_response, paginated_response, error_response
+from app.core.pagination import PaginationParams, paginate_query
 import io
 import csv
 
@@ -83,7 +85,7 @@ async def get_payroll_kpis(current_user: User = Depends(deps.get_current_active_
     total_employees = len([e for e in MOCK_EMPLOYEES if e["status"] == "active"])
     average_salary = sum(e["base_salary"] for e in MOCK_EMPLOYEES if e.get("base_salary")) / len([e for e in MOCK_EMPLOYEES if e.get("base_salary")])
     
-    return {
+    data = {
         "total_payroll": total_payroll,
         "payroll_change": 5.2,
         "total_employees": total_employees,
@@ -92,6 +94,7 @@ async def get_payroll_kpis(current_user: User = Depends(deps.get_current_active_
         "salary_change": -1.5,
         "upcoming_payroll": 98200.00
     }
+    return success_response(data=data, message="Payroll KPIs retrieved successfully")
 
 @router.get("/dashboard/summary")
 async def get_payroll_summary(
@@ -111,11 +114,12 @@ async def get_payroll_summary(
             "actual": base_actual + (i * 7000)
         })
     
-    return {
+    data = {
         "monthly_data": monthly_data,
         "total_budget": sum(d["budget"] for d in monthly_data),
         "total_actual": sum(d["actual"] for d in monthly_data)
     }
+    return success_response(data=data, message="Payroll summary retrieved successfully")
 
 @router.get("/dashboard/activity")
 async def get_recent_activity(
@@ -129,12 +133,12 @@ async def get_recent_activity(
         {"id": 3, "type": "tax_filing", "title": "Tax Filing", "details": "Q4 2023 Tax Report submitted", "timestamp": "2024-01-18T09:15:00Z", "user": "Payroll Admin"},
         {"id": 4, "type": "bonus_processed", "title": "Bonus Processed", "details": "Q4 Performance Bonuses", "timestamp": "2024-01-15T16:45:00Z", "user": "Admin User"}
     ]
-    return activities[:limit]
+    return success_response(data=activities[:limit], message="Recent activity retrieved successfully")
 
 @router.get("/employees")
 async def get_employees(
     page: int = Query(1, ge=1),
-    limit: int = Query(50, ge=1, le=100),
+    page_size: int = Query(20, ge=1, le=100),
     search: Optional[str] = None,
     department: Optional[str] = None,
     status: Optional[str] = None,
@@ -152,16 +156,25 @@ async def get_employees(
     if status:
         employees = [e for e in employees if e["status"] == status]
     
-    total = len(employees)
-    start = (page - 1) * limit
-    end = start + limit
+    # Simulate pagination
+    start = (page - 1) * page_size
+    end = start + page_size
+    paginated_employees = employees[start:end]
     
-    return {
-        "employees": employees[start:end],
-        "total": total,
+    pagination_meta = {
+        "total": len(employees),
         "page": page,
-        "limit": limit
+        "page_size": page_size,
+        "pages": (len(employees) + page_size - 1) // page_size,
+        "has_next": end < len(employees),
+        "has_prev": page > 1
     }
+    
+    return paginated_response(
+        data=paginated_employees,
+        pagination_meta=pagination_meta,
+        message="Employees retrieved successfully"
+    )
 
 @router.get("/employees/{employee_id}")
 async def get_employee(

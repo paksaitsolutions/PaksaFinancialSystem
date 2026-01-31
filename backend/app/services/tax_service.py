@@ -2,16 +2,20 @@
 Tax Service with AP/AR Integration
 """
 from decimal import Decimal
-from uuid import UUID
 from sqlalchemy.orm import Session
+from uuid import UUID
+
 from app.models import TaxRate, APInvoice, ARInvoice, JournalEntry, JournalEntryLine
 from app.services.base import BaseService
 
+
 class TaxService(BaseService):
     def __init__(self, db: Session):
+        """  Init  ."""
         super().__init__(db, TaxRate)
     
     def calculate_tax_for_ap_invoice(self, invoice: APInvoice) -> Decimal:
+        """Calculate Tax For Ap Invoice."""
         """Calculate tax for AP invoice and update amounts"""
         tax_rate = self.db.query(TaxRate).filter(
             TaxRate.company_id == invoice.company_id,
@@ -27,6 +31,7 @@ class TaxService(BaseService):
         return tax_amount
     
     def calculate_tax_for_ar_invoice(self, invoice: ARInvoice) -> Decimal:
+        """Calculate Tax For Ar Invoice."""
         """Calculate tax for AR invoice and update amounts"""
         tax_rate = self.db.query(TaxRate).filter(
             TaxRate.company_id == invoice.company_id,

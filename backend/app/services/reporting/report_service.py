@@ -1,37 +1,40 @@
 """Advanced reporting service for generating financial and analytical reports."""
 from datetime import datetime, date, timedelta
-from enum import Enum
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Union, Tuple, Callable
 from typing_extensions import Literal
+import json
+import os
+
 from dataclasses import dataclass, field
 from decimal import Decimal
-import json
-import logging
-import os
-import tempfile
-from pathlib import Path
-
+from enum import Enum
 from fastapi import HTTPException
+from plotly.subplots import make_subplots
 from pydantic import BaseModel, Field, validator
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func, select, and_, or_
-import pandas as pd
+import logging
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
+import tempfile
 
+from app.core.cache import cache
 from app.core.config import settings
+from app.core.notifications import NotificationService
 from app.core.security import get_password_hash
 from app.models import (
+from app.schemas.report_schemas import (
+
+
+
     User, Company, GeneralLedger, Account, JournalEntry, 
     TaxTransaction, TaxRate, ComplianceCheck
 )
-from app.schemas.report_schemas import (
     ReportDefinition, ReportFilter, ReportColumn, 
     ReportOutputFormat, ReportSchedule, ReportStatus
 )
-from app.core.cache import cache
-from app.core.notifications import NotificationService
 
 logger = logging.getLogger(__name__)
 
@@ -70,15 +73,18 @@ class ReportService:
     """Service for generating and managing financial reports."""
     
     def __init__(self, db: Session):
+        """  Init  ."""
         self.db = db
         self.notification_service = NotificationService()
     
     async def generate_report(
+        """Generate Report."""
         self,
         report_definition: ReportDefinition,
         context: ReportContext,
         async_mode: bool = True
     ) -> Dict[str, Any]:
+        """Generate Report."""
         """
         Generate a report based on the provided definition and context.
         
@@ -125,6 +131,7 @@ class ReportService:
             )
     
     async def get_report_status(self, report_id: str) -> Dict[str, Any]:
+        """Get Report Status."""
         """
         Get the status of a report.
         
@@ -145,10 +152,12 @@ class ReportService:
         }
     
     async def download_report(
+        """Download Report."""
         self, 
         report_id: str,
         format: ReportOutputFormat = ReportOutputFormat.PDF
     ) -> Tuple[bytes, str]:
+        """Download Report."""
         """
         Download a generated report.
         
@@ -286,12 +295,14 @@ class ReportService:
             )
     
     async def schedule_report(
+        """Schedule Report."""
         self,
         report_definition: ReportDefinition,
         schedule: ReportSchedule,
         recipients: List[str],
         context: ReportContext
     ) -> Dict[str, Any]:
+        """Schedule Report."""
         """
         Schedule a report to be generated and delivered periodically.
         
@@ -316,6 +327,7 @@ class ReportService:
     # --- Helper Methods ---
     
     def _validate_report_definition(self, definition: ReportDefinition) -> None:
+        """ Validate Report Definition."""
         """Validate a report definition."""
         if not definition.name or not definition.name.strip():
             raise ValueError("Report name is required")
@@ -326,10 +338,12 @@ class ReportService:
         # Add more validation as needed
     
     def _create_report_record(
+        """ Create Report Record."""
         self,
         definition: ReportDefinition,
         context: ReportContext
     ) -> Dict[str, Any]:
+        """ Create Report Record."""
         """Create a report record in the database."""
         # In a real implementation, this would save to the database
         # For now, we'll just return a dictionary
@@ -347,6 +361,7 @@ class ReportService:
         }
     
     def _generate_report_async(self, report_id: str) -> None:
+        """ Generate Report Async."""
         """Generate a report asynchronously."""
         # In a real implementation, this would queue a background task
         # For now, we'll just log a message
@@ -356,6 +371,7 @@ class ReportService:
         import threading
         
         def process():
+            """Process."""
             try:
                 # Simulate processing time
                 import time
@@ -373,6 +389,7 @@ class ReportService:
         thread.start()
     
     async def _generate_report(self, report_id: str) -> Dict[str, Any]:
+        """Generate Report."""
         """Generate a report synchronously."""
         # In a real implementation, this would generate the actual report
         # For now, we'll just return a mock response
@@ -389,5 +406,6 @@ class ReportService:
 
 # Singleton instance for dependency injection
 def get_report_service(db: Session) -> ReportService:
+    """Get Report Service."""
     """Get an instance of the report service."""
     return ReportService(db)

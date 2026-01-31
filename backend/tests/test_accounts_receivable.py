@@ -14,7 +14,8 @@ from app.main import app
 from app.modules.core_financials.accounts_receivable import models, schemas, services
 from app.modules.core_financials.accounts_receivable.models import Customer
 from app.modules.core_financials.accounting.models import GLAccount
-from app.modules.cross_cutting.auth.models import User, Role, Permission
+from app.modules.cross_cutting.auth.models import User
+from app.models.core_models import User as CoreUser  # Alternative import
 from core.database import Base, engine, TestingSessionLocal
 from core.security import get_password_hash
 
@@ -38,12 +39,6 @@ TEST_USER = {
     "full_name": "Test User",
 }
 
-TEST_ROLE = {
-    "name": "TestRole",
-    "description": "Test Role",
-    "permissions": ["read", "write", "admin"],
-}
-
 # Fixtures
 @pytest.fixture(scope="module")
 def db():
@@ -60,20 +55,11 @@ def db():
         Base.metadata.drop_all(bind=engine)
 
 @pytest.fixture(scope="module")
-def test_role(db: Session):
-    """Create a test role."""
-    role = Role(**TEST_ROLE)
-    db.add(role)
-    db.commit()
-    db.refresh(role)
-    return role
-
-@pytest.fixture(scope="module")
-def test_user(db: Session, test_role: Role):
+def test_user(db: Session):
     """Create a test user."""
     user_data = TEST_USER.copy()
     user_data["hashed_password"] = get_password_hash(user_data.pop("password"))
-    user = User(**user_data, role_id=test_role.id)
+    user = User(**user_data)
     db.add(user)
     db.commit()
     db.refresh(user)

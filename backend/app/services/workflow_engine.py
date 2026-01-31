@@ -1,23 +1,28 @@
 """
 Workflow Engine - Approval Workflows, Email Notifications, Hierarchy, Delegation
 """
-from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_
-from app.models.financial_core import *
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional
 import json
-import uuid
-import smtplib
-from email.mime.text import MimeText
+
 from email.mime.multipart import MimeMultipart
+from email.mime.text import MimeText
+from sqlalchemy import and_, or_
+from sqlalchemy.orm import Session
+import smtplib
+import uuid
+
+from app.models.financial_core import *
+
 
 class WorkflowEngine:
     """Core workflow processing engine"""
     
     @staticmethod
     def create_workflow(db: Session, workflow_type: str, entity_id: str, 
+        """Create Workflow."""
                        amount: float, created_by: str) -> str:
+        """Create Workflow."""
         """Create new workflow instance"""
         from app.models.workflow import WorkflowInstance, WorkflowStep
         
@@ -63,7 +68,9 @@ class WorkflowEngine:
     
     @staticmethod
     def approve_step(db: Session, workflow_id: str, step_number: int, 
+        """Approve Step."""
                     approver_id: str, comments: str = None) -> Dict:
+        """Approve Step."""
         """Approve workflow step"""
         from app.models.workflow import WorkflowInstance, WorkflowStep, WorkflowApproval
         
@@ -143,7 +150,9 @@ class WorkflowEngine:
     
     @staticmethod
     def reject_step(db: Session, workflow_id: str, step_number: int, 
+        """Reject Step."""
                    approver_id: str, comments: str) -> Dict:
+        """Reject Step."""
         """Reject workflow step"""
         from app.models.workflow import WorkflowInstance, WorkflowStep, WorkflowApproval
         
@@ -190,7 +199,9 @@ class WorkflowEngine:
     
     @staticmethod
     def delegate_approval(db: Session, workflow_id: str, step_number: int, 
+        """Delegate Approval."""
                          from_user: str, to_user: str, reason: str) -> Dict:
+        """Delegate Approval."""
         """Delegate approval to another user"""
         from app.models.workflow import WorkflowStep, WorkflowDelegation
         
@@ -232,6 +243,7 @@ class WorkflowEngine:
     
     @staticmethod
     def _get_workflow_definition(workflow_type: str, amount: float) -> Dict:
+        """ Get Workflow Definition."""
         """Get workflow definition based on type and amount"""
         definitions = {
             'journal_entry': {
@@ -263,6 +275,7 @@ class WorkflowEngine:
     
     @staticmethod
     def _get_entity_type(workflow_type: str) -> str:
+        """ Get Entity Type."""
         """Get entity type from workflow type"""
         mapping = {
             'journal_entry': 'JournalEntry',
@@ -275,6 +288,7 @@ class WorkflowEngine:
     
     @staticmethod
     def _can_approve(db: Session, step, user_id: str) -> bool:
+        """ Can Approve."""
         """Check if user can approve step"""
         # Check direct assignment
         if step.approver_user == user_id:
@@ -296,6 +310,7 @@ class WorkflowEngine:
     
     @staticmethod
     def _execute_final_action(db: Session, workflow):
+        """ Execute Final Action."""
         """Execute final action when workflow is approved"""
         if workflow.entity_type == 'JournalEntry':
             # Auto-post journal entry
@@ -311,6 +326,7 @@ class WorkflowEngine:
     
     @staticmethod
     def _send_notification(db: Session, workflow_id: str, notification_type: str, step_id: str = None):
+        """ Send Notification."""
         """Send workflow notification"""
         try:
             EmailNotificationService.send_workflow_notification(
@@ -329,7 +345,9 @@ class EmailNotificationService:
     
     @staticmethod
     def send_workflow_notification(db: Session, workflow_id: str, 
+        """Send Workflow Notification."""
                                  notification_type: str, step_id: str = None):
+        """Send Workflow Notification."""
         """Send workflow email notification"""
         from app.models.workflow import WorkflowInstance, WorkflowStep
         from app.models.user_enhanced import User
@@ -355,6 +373,7 @@ class EmailNotificationService:
     
     @staticmethod
     def _get_recipients(db: Session, workflow, notification_type: str, step_id: str = None) -> List[str]:
+        """ Get Recipients."""
         """Get email recipients for notification"""
         from app.models.workflow import WorkflowStep
         from app.models.user_enhanced import User
@@ -404,6 +423,7 @@ class EmailNotificationService:
     
     @staticmethod
     def _generate_email_content(workflow, notification_type: str, step_id: str = None) -> tuple:
+        """ Generate Email Content."""
         """Generate email subject and body"""
         base_url = "http://localhost:3000"
         
@@ -458,6 +478,7 @@ View details at: {base_url}/workflows/{workflow.id}
     
     @staticmethod
     def _send_email(to_email: str, subject: str, body: str):
+        """ Send Email."""
         """Send email using SMTP"""
         try:
             msg = MimeMultipart()
@@ -485,7 +506,9 @@ class ApprovalHierarchy:
     
     @staticmethod
     def get_approval_chain(db: Session, workflow_type: str, amount: float, 
+        """Get Approval Chain."""
                           department: str = None) -> List[Dict]:
+        """Get Approval Chain."""
         """Get approval chain for workflow"""
         chain = []
         
@@ -519,6 +542,7 @@ class ApprovalHierarchy:
     
     @staticmethod
     def get_next_approver(db: Session, workflow_id: str) -> Optional[Dict]:
+        """Get Next Approver."""
         """Get next approver in chain"""
         from app.models.workflow import WorkflowInstance, WorkflowStep
         
@@ -553,6 +577,7 @@ class WorkflowDashboard:
     
     @staticmethod
     def get_pending_approvals(db: Session, user_id: str) -> List[Dict]:
+        """Get Pending Approvals."""
         """Get pending approvals for user"""
         from app.models.workflow import WorkflowInstance, WorkflowStep
         
@@ -592,6 +617,7 @@ class WorkflowDashboard:
     
     @staticmethod
     def get_workflow_history(db: Session, user_id: str, limit: int = 50) -> List[Dict]:
+        """Get Workflow History."""
         """Get workflow history for user"""
         from app.models.workflow import WorkflowInstance, WorkflowApproval
         
@@ -624,6 +650,7 @@ class WorkflowDashboard:
     
     @staticmethod
     def get_workflow_metrics(db: Session, start_date: datetime, end_date: datetime) -> Dict:
+        """Get Workflow Metrics."""
         """Get workflow metrics for date range"""
         from app.models.workflow import WorkflowInstance
         

@@ -2,30 +2,35 @@
 Intercompany transaction service.
 """
 from datetime import date, datetime
-from decimal import Decimal
 from typing import List, Optional, Dict, Any
+
+from decimal import Decimal
+from sqlalchemy import and_, or_, func, desc
+from sqlalchemy.orm import Session
 from uuid import UUID
 
-from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_, func, desc
-
+from app.core.exceptions import NotFoundException, ValidationException
 from app.models.intercompany import (
+from app.models.journal_entry import JournalEntry, JournalEntryLine, JournalEntryStatus
+
+
+
     IntercompanyTransaction, 
     IntercompanyTransactionType, 
     IntercompanyTransactionStatus,
     IntercompanyReconciliation
 )
-from app.models.journal_entry import JournalEntry, JournalEntryLine, JournalEntryStatus
-from app.core.exceptions import NotFoundException, ValidationException
 
 
 class IntercompanyService:
     """Service for managing intercompany transactions."""
     
     def __init__(self, db: Session):
+        """  Init  ."""
         self.db = db
     
     def create_transaction(self, transaction_data: Dict[str, Any], created_by: UUID) -> IntercompanyTransaction:
+        """Create Transaction."""
         """Create a new intercompany transaction."""
         transaction_number = self._generate_transaction_number()
         
@@ -53,6 +58,7 @@ class IntercompanyService:
         return transaction
     
     def approve_transaction(self, transaction_id: UUID, approved_by: UUID) -> IntercompanyTransaction:
+        """Approve Transaction."""
         """Approve an intercompany transaction."""
         transaction = self.get_transaction(transaction_id)
         if not transaction:
@@ -73,6 +79,7 @@ class IntercompanyService:
         return transaction
     
     def post_transaction(self, transaction_id: UUID, posted_by: UUID) -> IntercompanyTransaction:
+        """Post Transaction."""
         """Post an intercompany transaction by creating journal entries."""
         transaction = self.get_transaction(transaction_id)
         if not transaction:
@@ -111,18 +118,21 @@ class IntercompanyService:
         return transaction
     
     def get_transaction(self, transaction_id: UUID) -> Optional[IntercompanyTransaction]:
+        """Get Transaction."""
         """Get an intercompany transaction by ID."""
         return self.db.query(IntercompanyTransaction).filter(
             IntercompanyTransaction.id == transaction_id
         ).first()
     
     def list_transactions(
+        """List Transactions."""
         self, 
         company_id: Optional[UUID] = None,
         status: Optional[IntercompanyTransactionStatus] = None,
         skip: int = 0,
         limit: int = 100
     ) -> List[IntercompanyTransaction]:
+        """List Transactions."""
         """List intercompany transactions with filters."""
         query = self.db.query(IntercompanyTransaction)
         
@@ -141,6 +151,7 @@ class IntercompanyService:
                    .offset(skip).limit(limit).all()
     
     def _create_journal_entry(
+        """ Create Journal Entry."""
         self, 
         transaction: IntercompanyTransaction, 
         company_id: UUID,
@@ -148,6 +159,7 @@ class IntercompanyService:
         is_source: bool,
         created_by: UUID
     ) -> JournalEntry:
+        """ Create Journal Entry."""
         """Create a journal entry for an intercompany transaction."""
         is_debit = self._determine_debit_credit(transaction.transaction_type, is_source)
         
@@ -179,6 +191,7 @@ class IntercompanyService:
         return je
     
     def _determine_debit_credit(self, transaction_type: IntercompanyTransactionType, is_source: bool) -> bool:
+        """ Determine Debit Credit."""
         """Determine if the entry should be a debit based on transaction type and source/target."""
         debit_rules = {
             IntercompanyTransactionType.SALE: is_source,
@@ -192,6 +205,7 @@ class IntercompanyService:
         return debit_rules.get(transaction_type, is_source)
     
     def _generate_transaction_number(self) -> str:
+        """ Generate Transaction Number."""
         """Generate a unique transaction number."""
         last_transaction = self.db.query(IntercompanyTransaction)\
             .order_by(desc(IntercompanyTransaction.created_at))\

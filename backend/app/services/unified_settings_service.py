@@ -1,16 +1,20 @@
 """
 Unified Settings Service for all modules
 """
-from uuid import UUID
 from sqlalchemy.orm import Session
+from uuid import UUID
+
 from app.models import Company, TaxRate, ChartOfAccounts
 from app.services.base import BaseService
 
+
 class UnifiedSettingsService(BaseService):
     def __init__(self, db: Session):
+        """  Init  ."""
         super().__init__(db, Company)
     
     def get_company_settings(self, company_id: UUID) -> dict:
+        """Get Company Settings."""
         """Get unified company settings for all modules"""
         company = self.db.query(Company).filter(Company.id == company_id).first()
         if not company:
@@ -50,6 +54,7 @@ class UnifiedSettingsService(BaseService):
         }
     
     def update_company_settings(self, company_id: UUID, settings: dict) -> Company:
+        """Update Company Settings."""
         """Update unified company settings"""
         company = self.db.query(Company).filter(Company.id == company_id).first()
         if not company:

@@ -2,16 +2,20 @@
 Inventory GL Integration Service
 """
 from decimal import Decimal
-from uuid import UUID
 from sqlalchemy.orm import Session
+from uuid import UUID
+
 from app.models import InventoryItem, PurchaseOrder, JournalEntry, JournalEntryLine, ChartOfAccounts
 from app.services.base import BaseService
 
+
 class InventoryGLService(BaseService):
     def __init__(self, db: Session):
+        """  Init  ."""
         super().__init__(db, InventoryItem)
     
     def post_inventory_receipt_to_gl(self, po: PurchaseOrder) -> JournalEntry:
+        """Post Inventory Receipt To Gl."""
         """Post inventory receipt to GL"""
         
         journal_entry = JournalEntry(
@@ -55,6 +59,7 @@ class InventoryGLService(BaseService):
         return journal_entry
     
     def post_inventory_issue_to_gl(self, item: InventoryItem, quantity: Decimal, cost: Decimal) -> JournalEntry:
+        """Post Inventory Issue To Gl."""
         """Post inventory issue to GL"""
         
         total_cost = quantity * cost
@@ -100,6 +105,7 @@ class InventoryGLService(BaseService):
         return journal_entry
     
     def post_inventory_adjustment_to_gl(self, item: InventoryItem, adjustment_quantity: Decimal, adjustment_reason: str) -> JournalEntry:
+        """Post Inventory Adjustment To Gl."""
         """Post inventory adjustment to GL"""
         from datetime import datetime
         
@@ -170,6 +176,7 @@ class InventoryGLService(BaseService):
         return journal_entry
     
     def _get_account(self, company_id: UUID, code: str, name: str) -> ChartOfAccounts:
+        """ Get Account."""
         """Get or create chart of accounts"""
         account = self.db.query(ChartOfAccounts).filter(
             ChartOfAccounts.company_id == company_id,

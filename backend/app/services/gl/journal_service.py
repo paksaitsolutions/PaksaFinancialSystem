@@ -2,20 +2,25 @@
 Service layer for Journal Entry management.
 """
 from datetime import datetime, date
-from decimal import Decimal
 from typing import List, Optional, Tuple, Dict, Any
-from uuid import UUID, uuid4
 
-from sqlalchemy.orm import Session, joinedload
+from decimal import Decimal
 from sqlalchemy import func, and_, or_, select
+from sqlalchemy.orm import Session, joinedload
+from uuid import UUID, uuid4
 
 from app.core.security import get_password_hash
 from app.exceptions import (
+from app.models.gl_models import (
+from app.schemas.gl_schemas import (
+from app.services.base import BaseService
+
+
+
     NotFoundException,
     ValidationException,
     BusinessRuleException
 )
-from app.models.gl_models import (
     JournalEntry,
     JournalEntryLine,
     JournalEntryStatus,
@@ -23,7 +28,6 @@ from app.models.gl_models import (
     AccountingPeriod,
     LedgerBalance
 )
-from app.schemas.gl_schemas import (
     JournalEntryCreate,
     JournalEntryUpdate,
     JournalEntryLineCreate,
@@ -31,19 +35,21 @@ from app.schemas.gl_schemas import (
     JournalEntryLineResponse,
     JournalEntrySearch
 )
-from app.services.base import BaseService
 
 class JournalEntryService(BaseService):
     """Service for managing Journal Entries."""
     
     def __init__(self, db: Session):
+        """  Init  ."""
         super().__init__(db, JournalEntry)
     
     def create_entry(
+        """Create Entry."""
         self, 
         entry_data: JournalEntryCreate, 
         created_by: UUID
     ) -> JournalEntryResponse:
+        """Create Entry."""
         """Create a new journal entry."""
         # Validate accounting period
         period = self._validate_accounting_period(entry_data.entry_date, entry_data.company_id)
@@ -96,11 +102,13 @@ class JournalEntryService(BaseService):
         return self._get_entry_response(entry.id)
     
     def update_entry(
+        """Update Entry."""
         self, 
         entry_id: UUID, 
         entry_data: JournalEntryUpdate, 
         updated_by: UUID
     ) -> JournalEntryResponse:
+        """Update Entry."""
         """Update an existing journal entry."""
         entry = self.db.query(JournalEntry).get(entry_id)
         if not entry:
@@ -183,6 +191,7 @@ class JournalEntryService(BaseService):
         return self._get_entry_response(entry_id)
     
     def delete_entry(self, entry_id: UUID, deleted_by: UUID) -> bool:
+        """Delete Entry."""
         """Delete a journal entry."""
         entry = self.db.query(JournalEntry).get(entry_id)
         if not entry:
@@ -212,14 +221,17 @@ class JournalEntryService(BaseService):
         return True
     
     def get_entry(self, entry_id: UUID) -> JournalEntryResponse:
+        """Get Entry."""
         """Get a journal entry by ID."""
         return self._get_entry_response(entry_id)
     
     def search_entries(
+        """Search Entries."""
         self, 
         search_params: JournalEntrySearch,
         company_id: UUID
     ) -> Tuple[List[JournalEntryResponse], int]:
+        """Search Entries."""
         """Search journal entries with pagination and filtering."""
         query = self.db.query(JournalEntry).filter(
             JournalEntry.company_id == company_id,
@@ -261,12 +273,14 @@ class JournalEntryService(BaseService):
         return entry_responses, total
     
     def reverse_entry(
+        """Reverse Entry."""
         self, 
         entry_id: UUID, 
         reversal_date: date,
         reversal_reference: Optional[str] = None,
         created_by: UUID = None
     ) -> JournalEntryResponse:
+        """Reverse Entry."""
         """Create a reversing journal entry."""
         original_entry = self.db.query(JournalEntry).get(entry_id)
         if not original_entry or not original_entry.is_active:
@@ -308,6 +322,7 @@ class JournalEntryService(BaseService):
         return reversal_entry
     
     def _post_entry(self, entry: JournalEntry, posted_by: UUID) -> None:
+        """ Post Entry."""
         """Post a journal entry and update account balances."""
         if entry.status == JournalEntryStatus.POSTED:
             return  # Already posted
@@ -327,12 +342,14 @@ class JournalEntryService(BaseService):
             )
     
     def _update_account_balance(
+        """ Update Account Balance."""
         self, 
         account_id: UUID, 
         debit: Decimal, 
         credit: Decimal,
         period_id: UUID
     ) -> None:
+        """ Update Account Balance."""
         """Update the balance of an account for a specific period."""
         if debit == 0 and credit == 0:
             return  # No change
@@ -364,10 +381,12 @@ class JournalEntryService(BaseService):
         balance.closing_balance = balance.opening_balance + balance.period_debit - balance.period_credit
     
     def _get_previous_period_balance(
+        """ Get Previous Period Balance."""
         self, 
         account_id: UUID, 
         period_id: UUID
     ) -> Decimal:
+        """ Get Previous Period Balance."""
         """Get the closing balance from the previous period."""
         # Get the current period to find the previous one
         current_period = self.db.query(AccountingPeriod).get(period_id)
@@ -395,10 +414,12 @@ class JournalEntryService(BaseService):
         return prev_balance.closing_balance if prev_balance else Decimal('0')
     
     def _validate_accounting_period(
+        """ Validate Accounting Period."""
         self, 
         entry_date: date, 
         company_id: UUID
     ) -> Optional[AccountingPeriod]:
+        """ Validate Accounting Period."""
         """Validate that the entry date falls within an open accounting period."""
         period = self.db.query(AccountingPeriod).filter(
             AccountingPeriod.company_id == company_id,
@@ -416,10 +437,12 @@ class JournalEntryService(BaseService):
         return period
     
     def _validate_journal_entry(
+        """ Validate Journal Entry."""
         self, 
         lines: List[JournalEntryLineCreate], 
         company_id: UUID
     ) -> Tuple[Decimal, Decimal, List[JournalEntryLineCreate]]:
+        """ Validate Journal Entry."""
         """Validate journal entry lines and calculate totals."""
         if not lines or len(lines) < 2:
             raise ValidationException("Journal entry must have at least two lines")
@@ -464,6 +487,7 @@ class JournalEntryService(BaseService):
         return total_debit, total_credit, lines
     
     def _generate_entry_number(self, company_id: UUID) -> str:
+        """ Generate Entry Number."""
         """Generate a unique journal entry number."""
         # Get the highest existing entry number for this company
         max_number = self.db.query(func.max(JournalEntry.entry_number)).filter(
@@ -483,6 +507,7 @@ class JournalEntryService(BaseService):
         return "JE-000001"
     
     def _get_entry_response(self, entry_id: UUID) -> JournalEntryResponse:
+        """ Get Entry Response."""
         """Get a journal entry with its lines as a response model."""
         entry = self.db.query(JournalEntry).options(
             joinedload(JournalEntry.line_items)

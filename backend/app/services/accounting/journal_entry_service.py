@@ -5,16 +5,20 @@ Journal Entry Service
 This module provides services for managing journal entries in the general ledger.
 """
 from datetime import datetime, date, timedelta
-from decimal import Decimal, ROUND_HALF_UP
 from typing import List, Dict, Optional, Tuple, Union, Any
-from uuid import UUID, uuid4
-
-from dateutil.relativedelta import relativedelta
-from sqlalchemy import and_, or_, func, case, text
-from sqlalchemy.orm import Session, joinedload
 
 from ...base.service import BaseService
 from ..exceptions import (
+from ..models import (
+from .gl_period_service import GLPeriodService
+from dateutil.relativedelta import relativedelta
+from decimal import Decimal, ROUND_HALF_UP
+from sqlalchemy import and_, or_, func, case, text
+from sqlalchemy.orm import Session, joinedload
+from uuid import UUID, uuid4
+
+
+
     JournalEntryNotFoundException,
     InvalidJournalEntryException,
     PeriodClosedException,
@@ -26,7 +30,6 @@ from ..exceptions import (
     JournalEntryAlreadyReversedException,
     InvalidRecurringEntryException
 )
-from ..models import (
     JournalEntry,
     JournalEntryLine,
     JournalEntryStatus,
@@ -35,18 +38,19 @@ from ..models import (
     Account,
     AccountType
 )
-from .gl_period_service import GLPeriodService
 
 
 class JournalEntryService(BaseService):
     """Service for managing journal entries and related operations."""
     
     def __init__(self, db: Session):
+        """  Init  ."""
         """Initialize the service with a database session."""
         super().__init__(db)
         self.period_service = GLPeriodService(db)
     
     def create_journal_entry(
+        """Create Journal Entry."""
         self,
         entry_date: date,
         lines: List[Dict[str, Any]],
@@ -59,6 +63,7 @@ class JournalEntryService(BaseService):
         created_by: Optional[UUID] = None,
         **kwargs
     ) -> JournalEntry:
+        """Create Journal Entry."""
         """
         Create a new journal entry.
         
@@ -172,6 +177,7 @@ class JournalEntryService(BaseService):
         return journal_entry
     
     def post_journal_entry(self, entry_id: UUID, posted_by: UUID) -> JournalEntry:
+        """Post Journal Entry."""
         """
         Post a draft journal entry.
         
@@ -218,12 +224,14 @@ class JournalEntryService(BaseService):
         return journal_entry
     
     def reverse_journal_entry(
+        """Reverse Journal Entry."""
         self, 
         entry_id: UUID, 
         reversal_date: Optional[date] = None,
         reversal_description: Optional[str] = None,
         reversed_by: Optional[UUID] = None
     ) -> JournalEntry:
+        """Reverse Journal Entry."""
         """
         Reverse a posted journal entry.
         
@@ -301,6 +309,7 @@ class JournalEntryService(BaseService):
         return reversal_entry
     
     def get_journal_entry(self, entry_id: UUID) -> JournalEntry:
+        """Get Journal Entry."""
         """
         Get a journal entry by ID.
         
@@ -316,6 +325,7 @@ class JournalEntryService(BaseService):
         return self._get_journal_entry(entry_id)
     
     def list_journal_entries(
+        """List Journal Entries."""
         self,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
@@ -326,6 +336,7 @@ class JournalEntryService(BaseService):
         page: int = 1,
         page_size: int = 50
     ) -> Dict[str, Any]:
+        """List Journal Entries."""
         """
         List journal entries with optional filtering and pagination.
         
@@ -386,6 +397,7 @@ class JournalEntryService(BaseService):
         }
     
     def _get_journal_entry(self, entry_id: UUID) -> JournalEntry:
+        """ Get Journal Entry."""
         """
         Internal method to get a journal entry by ID.
         
@@ -411,6 +423,7 @@ class JournalEntryService(BaseService):
         return journal_entry
     
     def _generate_entry_number(self) -> str:
+        """ Generate Entry Number."""
         """
         Generate a unique journal entry number.
         
@@ -441,10 +454,12 @@ class JournalEntryService(BaseService):
         return f"{prefix}-{seq:05d}"
     
     def _calculate_next_recurring_date(
+        """ Calculate Next Recurring Date."""
         self, 
         last_date: date, 
         frequency: str
     ) -> Optional[date]:
+        """ Calculate Next Recurring Date."""
         """
         Calculate the next recurring date based on frequency.
         
@@ -474,6 +489,7 @@ class JournalEntryService(BaseService):
             return None
     
     def _validate_account(self, account_id: Optional[UUID]) -> Account:
+        """ Validate Account."""
         """
         Validate that an account exists and is active.
         

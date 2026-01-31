@@ -1,9 +1,9 @@
 # Development and testing dependencies
-uvicorn==0.24.0
-requests==2.32.5
 pytest==7.4.3
 pytest-asyncio==0.21.1
-httpx==0.25.2
+black==24.3.0
+isort==5.12.0
+flake8==6.1.0
 
 # Include production requirements
 -r requirements.txt

@@ -2,34 +2,37 @@
 Main payroll service that orchestrates the entire payroll processing workflow.
 """
 from datetime import date, datetime, timedelta
-from decimal import Decimal, ROUND_HALF_UP
 from typing import Dict, List, Optional, Tuple, Union
-from uuid import UUID
 
+from ..models.payroll_models import (
+from ..schemas.payroll_schemas import (
+from .net_pay_processor import NetPayProcessor
+from .payroll_processor import PayrollProcessor
+from .payroll_tax_calculator import PayrollTaxCalculator
+from decimal import Decimal, ROUND_HALF_UP
 from fastapi import HTTPException, status
-from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, func
+from sqlalchemy.orm import Session
+from uuid import UUID
 
 from app.core.config import settings
 from app.core.exceptions import AppException
 from app.core.logging import logger
 
-from ..models.payroll_models import (
+
+
+
     Employee, PayPeriod, PayRun, Payslip, PayslipEarning, PayslipDeduction,
     PayslipTax, PayslipBenefit, PayComponent, PayComponentType, PaySchedule,
     TaxCode, BenefitPlan, BenefitEnrollment, LeaveRequest, AttendanceRecord,
     BankAccount, PayRunStatus, PayFrequency, EmploymentType
 )
-from ..schemas.payroll_schemas import (
     PayRunCreate, PayRunUpdate, PayRunResponse, PayslipResponse,
     PayslipEarningResponse, PayslipDeductionResponse, PayslipTaxResponse,
     PayslipBenefitResponse, PayrollProcessingRequest, PayrollProcessingResult,
     PayrollCalculationResult, PayrollEarningItem, PayrollDeductionItem,
     PayrollTaxItem, PayrollBenefitItem, PayrollNetPayCalculation
 )
-from .payroll_processor import PayrollProcessor
-from .payroll_tax_calculator import PayrollTaxCalculator
-from .net_pay_processor import NetPayProcessor
 
 class PayrollService:
     """
@@ -37,6 +40,7 @@ class PayrollService:
     """
     
     def __init__(self, db: Session):
+        """  Init  ."""
         """Initialize the payroll service with a database session."""
         self.db = db
         self.payroll_processor = PayrollProcessor(db)
@@ -44,6 +48,7 @@ class PayrollService:
         self.net_pay_processor = NetPayProcessor(db)
         
     def _generate_payroll_journal_entries(self, pay_run_id: UUID) -> None:
+        """ Generate Payroll Journal Entries."""
         """
         Generate journal entries for a completed pay run.
         
@@ -221,6 +226,7 @@ class PayrollService:
             )
     
     def _get_pay_run_response(self, pay_run: PayRun) -> PayRunResponse:
+        """ Get Pay Run Response."""
         """Convert a PayRun model to a PayRunResponse schema."""
         return PayRunResponse(
             id=pay_run.id,
@@ -244,6 +250,7 @@ class PayrollService:
         )
     
     def process_payroll(
+        """Process Payroll."""
         self,
         pay_period_id: UUID,
         company_id: UUID,
@@ -253,6 +260,7 @@ class PayrollService:
         process_benefits: bool = True,
         dry_run: bool = False
     ) -> PayRunResponse:
+        """Process Payroll."""
         """
         Process payroll for a specific pay period.
         
@@ -335,6 +343,7 @@ class PayrollService:
             )
     
     def get_pay_run(self, pay_run_id: UUID) -> PayRunResponse:
+        """Get Pay Run."""
         """
         Get pay run details by ID with all related data.
         
@@ -376,6 +385,7 @@ class PayrollService:
         return self._get_pay_run_response(pay_run)
         
     def _generate_payroll_journal_entries(self, pay_run_id: UUID) -> None:
+        """ Generate Payroll Journal Entries."""
         """
         Generate journal entries for a processed pay run.
         
@@ -412,7 +422,6 @@ class PayrollService:
                     message=f"Pay run {pay_run_id} not found"
                 )
                 
-            # TODO: Implement actual journal entry generation
             # This is a placeholder - actual implementation will:
             # 1. Create a journal entry for the pay run
             # 2. Add debit entries for salary/wage expenses
@@ -427,7 +436,6 @@ class PayrollService:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 message=f"Failed to generate payroll journal entries: {str(e)}"
             )
-            # TODO: Implement actual journal entry generation
             # This is a placeholder - actual implementation will:
             # 1. Create a journal entry for the pay run
             # 2. Add debit entries for salary/wage expenses
@@ -441,6 +449,7 @@ class PayrollService:
             return None
     
     def get_payslip(self, payslip_id: UUID) -> PayslipResponse:
+        """Get Payslip."""
         """
         Get details of a specific payslip.
         
@@ -570,12 +579,14 @@ class PayrollService:
         )
     
     def process_payments(
+        """Process Payments."""
         self,
         pay_run_id: UUID,
         processed_by: UUID,
         payment_date: Optional[date] = None,
         dry_run: bool = False
     ) -> List[Dict]:
+        """Process Payments."""
         """
         Process payments for all payslips in a pay run.
         
@@ -596,6 +607,7 @@ class PayrollService:
         )
     
     def get_employee_pay_history(
+        """Get Employee Pay History."""
         self,
         employee_id: UUID,
         start_date: Optional[date] = None,
@@ -603,6 +615,7 @@ class PayrollService:
         limit: int = 12,
         offset: int = 0
     ) -> Tuple[List[PayslipResponse], int]:
+        """Get Employee Pay History."""
         """
         Get pay history for an employee.
         

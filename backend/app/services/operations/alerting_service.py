@@ -3,9 +3,12 @@ Alerting service for system notifications.
 """
 from datetime import datetime
 from typing import Dict, Any, List, Optional
-from sqlalchemy.orm import Session
+
 from sqlalchemy import Column, String, DateTime, Boolean, Text, JSON
+from sqlalchemy.orm import Session
+
 from app.models.base import BaseModel, GUID
+
 
 
 class SystemAlert(BaseModel):
@@ -25,9 +28,11 @@ class AlertingService:
     """Service for system alerting."""
     
     def __init__(self, db: Session):
+        """  Init  ."""
         self.db = db
     
     def create_alert(
+        """Create Alert."""
         self,
         alert_type: str,
         severity: str,
@@ -35,6 +40,7 @@ class AlertingService:
         message: str,
         metadata: Optional[Dict[str, Any]] = None
     ) -> SystemAlert:
+        """Create Alert."""
         """Create a new system alert."""
         alert = SystemAlert(
             alert_type=alert_type,
@@ -51,6 +57,7 @@ class AlertingService:
         return alert
     
     def resolve_alert(self, alert_id: str) -> bool:
+        """Resolve Alert."""
         """Resolve an alert."""
         alert = self.db.query(SystemAlert).filter(SystemAlert.id == alert_id).first()
         if alert:
@@ -61,12 +68,14 @@ class AlertingService:
         return False
     
     def get_active_alerts(self) -> List[SystemAlert]:
+        """Get Active Alerts."""
         """Get all active (unresolved) alerts."""
         return self.db.query(SystemAlert).filter(
             SystemAlert.resolved == False
         ).order_by(SystemAlert.created_at.desc()).all()
     
     def check_system_thresholds(self, metrics: Dict[str, Any]):
+        """Check System Thresholds."""
         """Check system metrics against thresholds and create alerts."""
         # CPU threshold
         if metrics.get("cpu", {}).get("usage_percent", 0) > 80:

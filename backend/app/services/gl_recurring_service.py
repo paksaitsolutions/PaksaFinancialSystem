@@ -2,18 +2,21 @@
 Services for managing recurring journal entries and allocation rules.
 """
 from datetime import date, datetime, timedelta
-from decimal import Decimal, InvalidOperation
 from typing import List, Dict, Any, Optional, Tuple
-from uuid import UUID, uuid4
 
+from decimal import Decimal, InvalidOperation
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session, joinedload
+from uuid import UUID, uuid4
 
-from app.models import gl_recurring_models as models
-from app.schemas import gl_recurring_schemas as schemas
 from app.core.config import settings
 from app.core.logging import logger
+from app.models import gl_recurring_models as models
+from app.schemas import gl_recurring_schemas as schemas
 from app.services import gl_service
+
+
+
 
 
 class RecurringJournalService:
@@ -21,11 +24,13 @@ class RecurringJournalService:
     
     @staticmethod
     def create_recurring_journal(
+        """Create Recurring Journal."""
         db: Session, 
         journal_data: schemas.RecurringJournalCreate,
         company_id: UUID,
         user_id: UUID
     ) -> models.RecurringJournalEntry:
+        """Create Recurring Journal."""
         """Create a new recurring journal entry template."""
         # Validate the recurrence pattern
         next_run_date = RecurringJournalService._calculate_next_run_date(
@@ -67,11 +72,13 @@ class RecurringJournalService:
     
     @staticmethod
     def update_recurring_journal(
+        """Update Recurring Journal."""
         db: Session,
         journal_id: UUID,
         journal_data: schemas.RecurringJournalUpdate,
         company_id: UUID
     ) -> models.RecurringJournalEntry:
+        """Update Recurring Journal."""
         """Update an existing recurring journal entry."""
         db_journal = db.query(models.RecurringJournalEntry).filter(
             models.RecurringJournalEntry.id == journal_id,
@@ -124,6 +131,7 @@ class RecurringJournalService:
     
     @staticmethod
     def process_due_entries(db: Session, company_id: UUID = None) -> Tuple[int, int]:
+        """Process Due Entries."""
         """Process all recurring journal entries that are due.
         
         Args:
@@ -197,11 +205,13 @@ class RecurringJournalService:
     
     @staticmethod
     def _calculate_next_run_date(
+        """ Calculate Next Run Date."""
         frequency: models.RecurrenceFrequency,
         interval: int,
         start_date: date,
         current_date: date
     ) -> Optional[date]:
+        """ Calculate Next Run Date."""
         """Calculate the next run date based on frequency and interval."""
         if start_date > current_date:
             return start_date
@@ -259,6 +269,7 @@ class RecurringJournalService:
     
     @staticmethod
     def _add_months(start_date: date, months: int, current_date: date) -> date:
+        """ Add Months."""
         """Add months to a date, handling year rollover and month-end dates."""
         year = start_date.year + (start_date.month + months - 1) // 12
         month = (start_date.month + months - 1) % 12 + 1
@@ -289,10 +300,12 @@ class AllocationService:
     
     @staticmethod
     def create_allocation_rule(
+        """Create Allocation Rule."""
         db: Session,
         rule_data: schemas.AllocationRuleCreate,
         company_id: UUID
     ) -> models.AllocationRule:
+        """Create Allocation Rule."""
         """Create a new allocation rule."""
         # Validate the allocation method
         if rule_data.allocation_method == "percentage":
@@ -334,11 +347,13 @@ class AllocationService:
     
     @staticmethod
     def update_allocation_rule(
+        """Update Allocation Rule."""
         db: Session,
         rule_id: UUID,
         rule_data: schemas.AllocationRuleUpdate,
         company_id: UUID
     ) -> models.AllocationRule:
+        """Update Allocation Rule."""
         """Update an existing allocation rule."""
         db_rule = db.query(models.AllocationRule).filter(
             models.AllocationRule.id == rule_id,
@@ -387,11 +402,13 @@ class AllocationService:
     
     @staticmethod
     def apply_allocation_rule(
+        """Apply Allocation Rule."""
         db: Session,
         rule_id: UUID,
         amount: Decimal,
         company_id: UUID
     ) -> List[Dict[str, Any]]:
+        """Apply Allocation Rule."""
         """Apply an allocation rule to an amount."""
         db_rule = db.query(models.AllocationRule).filter(
             models.AllocationRule.id == rule_id,
@@ -421,6 +438,7 @@ class AllocationService:
 
 # Add a function to process all due recurring entries (for scheduled tasks)
 def process_due_recurring_entries(db: Session, company_id: UUID = None) -> Dict[str, int]:
+    """Process Due Recurring Entries."""
     """Process all due recurring journal entries.
     
     This function is designed to be called from a scheduled task.

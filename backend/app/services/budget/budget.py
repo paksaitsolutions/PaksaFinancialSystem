@@ -1,33 +1,37 @@
-from typing import List, Optional, Dict, Any
 from datetime import datetime
-from sqlalchemy.orm import Session
+from typing import List, Optional, Dict, Any
+
+from ..core.exceptions import BudgetException
+from ..models.account import Account
+from ..models.budget import (
+from ..models.department import Department
+from ..models.project import Project
+from ..schemas.budget import (
 from fastapi import HTTPException
 from sqlalchemy import func
+from sqlalchemy.orm import Session
 
-from ..models.budget import (
+
     Budget,
     BudgetLine,
     BudgetAllocation,
     BudgetApproval,
     BudgetRule
 )
-from ..schemas.budget import (
     BudgetCreate,
     BudgetUpdate,
     BudgetApprovalCreate,
     BudgetResponse,
     BudgetListResponse
 )
-from ..models.account import Account
-from ..models.department import Department
-from ..models.project import Project
-from ..core.exceptions import BudgetException
 
 class BudgetService:
     def __init__(self, db: Session):
+        """  Init  ."""
         self.db = db
 
     def create_budget(self, budget_data: BudgetCreate, current_user: str) -> BudgetResponse:
+        """Create Budget."""
         try:
             # Validate dates
             if budget_data.start_date >= budget_data.end_date:
@@ -127,17 +131,20 @@ class BudgetService:
             raise HTTPException(status_code=400, detail=str(e))
 
     def get_budget(self, budget_id: int) -> Optional[BudgetResponse]:
+        """Get Budget."""
         budget = self.db.query(Budget).filter(Budget.id == budget_id).first()
         if not budget:
             raise HTTPException(status_code=404, detail="Budget not found")
         return budget
 
     def list_budgets(self, skip: int = 0, limit: int = 100) -> BudgetListResponse:
+        """List Budgets."""
         total = self.db.query(func.count(Budget.id)).scalar()
         budgets = self.db.query(Budget).offset(skip).limit(limit).all()
         return BudgetListResponse(budgets=budgets, total=total, page=skip // limit + 1, limit=limit)
 
     def update_budget(self, budget_id: int, budget_data: BudgetUpdate, current_user: str) -> BudgetResponse:
+        """Update Budget."""
         budget = self.db.query(Budget).filter(Budget.id == budget_id).first()
         if not budget:
             raise HTTPException(status_code=404, detail="Budget not found")
@@ -187,6 +194,7 @@ class BudgetService:
         return budget
 
     def approve_budget(self, budget_id: int, approval_data: BudgetApprovalCreate, current_user: str) -> BudgetResponse:
+        """Approve Budget."""
         budget = self.db.query(Budget).filter(Budget.id == budget_id).first()
         if not budget:
             raise HTTPException(status_code=404, detail="Budget not found")
@@ -225,6 +233,7 @@ class BudgetService:
         return budget
 
     def reject_budget(self, budget_id: int, current_user: str, notes: str) -> BudgetResponse:
+        """Reject Budget."""
         budget = self.db.query(Budget).filter(Budget.id == budget_id).first()
         if not budget:
             raise HTTPException(status_code=404, detail="Budget not found")
@@ -244,6 +253,7 @@ class BudgetService:
         return budget
 
     def archive_budget(self, budget_id: int, current_user: str) -> BudgetResponse:
+        """Archive Budget."""
         budget = self.db.query(Budget).filter(Budget.id == budget_id).first()
         if not budget:
             raise HTTPException(status_code=404, detail="Budget not found")
@@ -258,6 +268,7 @@ class BudgetService:
         return budget
 
     def _get_required_approvals(self, budget: Budget) -> int:
+        """ Get Required Approvals."""
         """Determine required number of approvals based on budget rules"""
         required_approvals = 1  # Default minimum
         for rule in budget.rules:

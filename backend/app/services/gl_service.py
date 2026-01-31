@@ -1,22 +1,28 @@
-from sqlalchemy.ext.asyncio import AsyncSession
+from typing import List, Optional
+
 from sqlalchemy import select, func
+from sqlalchemy.ext.asyncio import AsyncSession
+from uuid import uuid4
+
 from app.models import ChartOfAccounts as GLAccount
 from app.models import JournalEntry, JournalEntryLine
-from typing import List, Optional
-from uuid import uuid4
+
 
 class GLService:
     def __init__(self, db: AsyncSession, tenant_id: str):
+        """  Init  ."""
         self.db = db
         self.tenant_id = tenant_id
     
     async def get_accounts(self) -> List[GLAccount]:
+        """Get Accounts."""
         result = await self.db.execute(
             select(GLAccount).where(GLAccount.tenant_id == self.tenant_id, GLAccount.is_active == True)
         )
         return result.scalars().all()
     
     async def create_account(self, account_data: dict) -> GLAccount:
+        """Create Account."""
         account = GLAccount(
             tenant_id=self.tenant_id,
             account_code=account_data['account_code'],
@@ -30,6 +36,7 @@ class GLService:
         return account
     
     async def create_journal_entry(self, entry_data: dict) -> JournalEntry:
+        """Create Journal Entry."""
         entry = JournalEntry(
             tenant_id=self.tenant_id,
             entry_number=f"JE-{uuid4().hex[:8].upper()}",
@@ -56,6 +63,7 @@ class GLService:
         return entry
     
     async def get_trial_balance(self) -> List[dict]:
+        """Get Trial Balance."""
         result = await self.db.execute(
             select(GLAccount.account_code, GLAccount.account_name, GLAccount.balance)
             .where(GLAccount.tenant_id == self.tenant_id, GLAccount.is_active == True)

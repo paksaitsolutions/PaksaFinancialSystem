@@ -1,14 +1,17 @@
 """
 Notification service for sending emails, SMS, and push notifications.
 """
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from typing import Dict, List, Any, Optional
 from datetime import datetime
+from typing import Dict, List, Any, Optional
+
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+import smtplib
 
 from app.core.config import settings
 from app.core.logging import logger
+
+
 
 # Try to import httpx, but make it optional
 try:
@@ -21,6 +24,7 @@ class EmailService:
     """Email notification service."""
     
     def __init__(self):
+        """  Init  ."""
         self.smtp_server = getattr(settings, 'SMTP_SERVER', 'localhost')
         self.smtp_port = getattr(settings, 'SMTP_PORT', 587)
         self.smtp_username = getattr(settings, 'SMTP_USERNAME', '')
@@ -34,6 +38,7 @@ class EmailService:
         body: str,
         html_body: Optional[str] = None
     ) -> bool:
+        """Send Email."""
         """Send email notification."""
         try:
             msg = MIMEMultipart('alternative')
@@ -68,10 +73,12 @@ class SMSService:
     """SMS notification service."""
     
     def __init__(self):
+        """  Init  ."""
         self.api_key = getattr(settings, 'SMS_API_KEY', '')
         self.api_url = getattr(settings, 'SMS_API_URL', '')
     
     async def send_sms(self, phone_number: str, message: str) -> bool:
+        """Send Sms."""
         """Send SMS notification."""
         if not HTTPX_AVAILABLE:
             logger.warning("SMS service not available - httpx not installed")
@@ -107,6 +114,7 @@ class PushNotificationService:
     """Push notification service."""
     
     def __init__(self):
+        """  Init  ."""
         self.fcm_key = getattr(settings, 'FCM_SERVER_KEY', '')
         self.fcm_url = "https://fcm.googleapis.com/fcm/send"
     
@@ -117,6 +125,7 @@ class PushNotificationService:
         body: str,
         data: Optional[Dict[str, Any]] = None
     ) -> bool:
+        """Send Push Notification."""
         """Send push notification."""
         if not HTTPX_AVAILABLE:
             logger.warning("Push notification service not available - httpx not installed")
@@ -163,11 +172,13 @@ class NotificationService:
     """Main notification service that coordinates all notification types."""
     
     def __init__(self):
+        """  Init  ."""
         self.email_service = EmailService()
         self.sms_service = SMSService()
         self.push_service = PushNotificationService()
     
     async def send_notification(
+        """Send Notification."""
         self,
         notification_type: str,
         recipient: str,
@@ -175,6 +186,7 @@ class NotificationService:
         message: str,
         **kwargs
     ) -> bool:
+        """Send Notification."""
         """Send notification via specified type."""
         if notification_type == "email":
             return await self.email_service.send_email(
@@ -191,6 +203,7 @@ class NotificationService:
             return False
     
     async def send_multi_channel_notification(
+        """Send Multi Channel Notification."""
         self,
         channels: List[str],
         recipients: Dict[str, str],
@@ -198,6 +211,7 @@ class NotificationService:
         message: str,
         **kwargs
     ) -> Dict[str, bool]:
+        """Send Multi Channel Notification."""
         """Send notification via multiple channels."""
         results = {}
         

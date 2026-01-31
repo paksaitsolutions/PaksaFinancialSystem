@@ -1,20 +1,24 @@
 """
 Cross-module workflow integration service
 """
-from uuid import UUID
 from sqlalchemy.orm import Session
+from uuid import UUID
+
 from app.models import APInvoice, ARInvoice, PayrollRun, Employee, JournalEntry
 from app.services.base import BaseService
-from app.services.tax_service import TaxService
 from app.services.payroll_gl_service import PayrollGLService
+from app.services.tax_service import TaxService
+
 
 class WorkflowService(BaseService):
     def __init__(self, db: Session):
+        """  Init  ."""
         super().__init__(db, JournalEntry)
         self.tax_service = TaxService(db)
         self.payroll_gl_service = PayrollGLService(db)
     
     def process_ap_invoice_workflow(self, invoice: APInvoice) -> dict:
+        """Process Ap Invoice Workflow."""
         """Complete AP invoice workflow with tax and GL integration"""
         
         # Step 1: Calculate taxes
@@ -34,6 +38,7 @@ class WorkflowService(BaseService):
         }
     
     def process_payroll_workflow(self, payroll_run: PayrollRun) -> dict:
+        """Process Payroll Workflow."""
         """Complete payroll workflow with GL integration"""
         
         # Step 1: Process payroll run
@@ -58,6 +63,7 @@ class WorkflowService(BaseService):
         }
     
     def get_workflow_status(self, entity_type: str, entity_id: UUID) -> dict:
+        """Get Workflow Status."""
         """Get workflow status for any entity"""
         
         if entity_type == "ap_invoice":

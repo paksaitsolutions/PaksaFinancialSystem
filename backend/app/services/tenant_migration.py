@@ -1,19 +1,23 @@
 """
 Tenant-aware database migration service.
 """
-import asyncio
 from typing import List, Dict, Any
-from uuid import UUID
-from sqlalchemy.ext.asyncio import AsyncSession
+import asyncio
+
 from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
+from uuid import UUID
 
 from app.core.db.session import get_db
 from app.core.logging import logger
+
+
 
 class TenantMigrationService:
     """Service for managing tenant-specific database operations."""
     
     def __init__(self):
+        """  Init  ."""
         self.migration_scripts = {
             "create_tenant_schema": """
                 -- Create tenant-specific views and functions if needed
@@ -66,6 +70,7 @@ class TenantMigrationService:
         }
     
     async def setup_tenant_environment(self, tenant_id: UUID) -> bool:
+        """Setup Tenant Environment."""
         """Setup database environment for a new tenant."""
         try:
             async with get_db() as db:
@@ -89,6 +94,7 @@ class TenantMigrationService:
             return False
     
     async def migrate_tenant_data(self, tenant_id: UUID, migration_name: str) -> bool:
+        """Migrate Tenant Data."""
         """Run specific migration for a tenant."""
         try:
             async with get_db() as db:
@@ -131,6 +137,7 @@ class TenantMigrationService:
             return False
     
     async def get_tenant_stats(self, tenant_id: UUID) -> Dict[str, Any]:
+        """Get Tenant Stats."""
         """Get statistics for a specific tenant."""
         try:
             async with get_db() as db:
@@ -161,6 +168,7 @@ class TenantMigrationService:
             return {}
     
     async def cleanup_tenant_data(self, tenant_id: UUID) -> bool:
+        """Cleanup Tenant Data."""
         """Clean up all data for a tenant (use with caution)."""
         try:
             async with get_db() as db:

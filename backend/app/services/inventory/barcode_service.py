@@ -1,20 +1,24 @@
 """
 Barcode scanning and management service.
 """
-from typing import List, Dict, Any, Optional
-from uuid import UUID
 from datetime import datetime
+from typing import List, Dict, Any, Optional
 
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_
+from sqlalchemy.ext.asyncio import AsyncSession
+from uuid import UUID
 
 from app.models.inventory.item import InventoryItem
 from app.models.inventory.transfer import BarcodeMapping
+
+
+
 
 class BarcodeService:
     """Barcode scanning and management service."""
     
     async def create_barcode_mapping(
+        """Create Barcode Mapping."""
         self,
         db: AsyncSession,
         tenant_id: UUID,
@@ -23,6 +27,7 @@ class BarcodeService:
         barcode_type: str = "UPC",
         is_primary: bool = False
     ) -> BarcodeMapping:
+        """Create Barcode Mapping."""
         """Create barcode mapping for item."""
         # Check if barcode already exists
         existing_result = await db.execute(
@@ -55,11 +60,13 @@ class BarcodeService:
         return mapping
     
     async def scan_barcode(
+        """Scan Barcode."""
         self,
         db: AsyncSession,
         tenant_id: UUID,
         barcode: str
     ) -> Dict[str, Any]:
+        """Scan Barcode."""
         """Scan barcode and return item information."""
         # First check barcode mappings
         mapping_result = await db.execute(
@@ -121,10 +128,12 @@ class BarcodeService:
         }
     
     async def get_item_barcodes(
+        """Get Item Barcodes."""
         self,
         db: AsyncSession,
         item_id: UUID
     ) -> List[Dict[str, Any]]:
+        """Get Item Barcodes."""
         """Get all barcodes for an item."""
         result = await db.execute(
             select(BarcodeMapping).where(
@@ -149,6 +158,7 @@ class BarcodeService:
         return barcodes
     
     async def update_item_quantity_by_barcode(
+        """Update Item Quantity By Barcode."""
         self,
         db: AsyncSession,
         tenant_id: UUID,
@@ -157,6 +167,7 @@ class BarcodeService:
         transaction_type: str = "adjustment",
         notes: Optional[str] = None
     ) -> Dict[str, Any]:
+        """Update Item Quantity By Barcode."""
         """Update item quantity using barcode scan."""
         scan_result = await self.scan_barcode(db, tenant_id, barcode)
         
@@ -195,11 +206,13 @@ class BarcodeService:
         }
     
     async def generate_barcode_report(
+        """Generate Barcode Report."""
         self,
         db: AsyncSession,
         tenant_id: UUID,
         barcode_type: Optional[str] = None
     ) -> Dict[str, Any]:
+        """Generate Barcode Report."""
         """Generate barcode usage report."""
         filters = [BarcodeMapping.tenant_id == tenant_id, BarcodeMapping.is_active == True]
         
@@ -224,6 +237,7 @@ class BarcodeService:
         }
     
     async def _unset_primary_barcodes(self, db: AsyncSession, item_id: UUID) -> None:
+        """Unset Primary Barcodes."""
         """Unset primary flag for all barcodes of an item."""
         result = await db.execute(
             select(BarcodeMapping).where(

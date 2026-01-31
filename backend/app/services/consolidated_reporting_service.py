@@ -3,14 +3,18 @@ Consolidated Financial Reporting Service
 Consolidates data from all modules (AP, AR, Cash, Payroll, GL) for comprehensive reporting.
 """
 from datetime import date, datetime
-from decimal import Decimal
 from typing import List, Dict, Any, Optional
+
+from decimal import Decimal
+from sqlalchemy import func, and_, or_
+from sqlalchemy.orm import Session
 from uuid import UUID
 
-from sqlalchemy.orm import Session
-from sqlalchemy import func, and_, or_
-
 from app.models import (
+from app.services.base import BaseService
+
+
+
     ChartOfAccounts,
     JournalEntry,
     JournalEntryLine,
@@ -23,21 +27,23 @@ from app.models import (
     BankTransaction,
     Company
 )
-from app.services.base import BaseService
 
 
 class ConsolidatedReportingService(BaseService):
     """Service for generating consolidated financial reports across all modules."""
     
     def __init__(self, db: Session):
+        """  Init  ."""
         super().__init__(db, JournalEntry)
     
     def generate_module_activity_report(
+        """Generate Module Activity Report."""
         self,
         company_id: UUID,
         start_date: date,
         end_date: date
     ) -> Dict[str, Any]:
+        """Generate Module Activity Report."""
         """Generate a report showing activity across all modules."""
         
         # AP Module Activity
@@ -128,12 +134,14 @@ class ConsolidatedReportingService(BaseService):
         }
     
     def generate_account_activity_summary(
+        """Generate Account Activity Summary."""
         self,
         company_id: UUID,
         start_date: date,
         end_date: date,
         account_types: Optional[List[str]] = None
     ) -> Dict[str, Any]:
+        """Generate Account Activity Summary."""
         """Generate summary of account activity across all modules."""
         
         query = self.db.query(
@@ -217,6 +225,7 @@ class ConsolidatedReportingService(BaseService):
         }
     
     def generate_integration_health_report(self, company_id: UUID) -> Dict[str, Any]:
+        """Generate Integration Health Report."""
         """Generate a report showing the health of module integrations."""
         
         # Check for orphaned records (transactions without GL entries)
@@ -276,11 +285,13 @@ class ConsolidatedReportingService(BaseService):
         }
     
     def _calculate_integration_health_score(
+        """ Calculate Integration Health Score."""
         self, 
         ap_orphaned: int, 
         ar_orphaned: int, 
         integrated_modules: int
     ) -> float:
+        """ Calculate Integration Health Score."""
         """Calculate a health score for module integration (0-100)."""
         base_score = 100.0
         
@@ -295,11 +306,13 @@ class ConsolidatedReportingService(BaseService):
         return max(0, min(100, base_score))
     
     def _generate_integration_recommendations(
+        """ Generate Integration Recommendations."""
         self, 
         ap_orphaned: int, 
         ar_orphaned: int, 
         modules_with_gl: List
     ) -> List[str]:
+        """ Generate Integration Recommendations."""
         """Generate recommendations for improving integration."""
         recommendations = []
         

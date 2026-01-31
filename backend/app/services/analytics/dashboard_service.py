@@ -4,19 +4,22 @@ Dashboard Service
 This service provides functional dashboard capabilities, replacing UI-only dashboards
 with real data-driven functionality.
 """
-from typing import Dict, List, Any, Optional, Union
 from datetime import datetime, timedelta
-from uuid import UUID, uuid4
-from enum import Enum
+from typing import Dict, List, Any, Optional, Union
 import asyncio
-
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_, or_
 
 from .data_aggregation_service import DataAggregationService
 from .reporting_engine import ReportingEngine
-from app.ai.services.predictive_analytics import PredictiveAnalyticsService
+from enum import Enum
+from sqlalchemy import select, func, and_, or_
+from sqlalchemy.ext.asyncio import AsyncSession
+from uuid import UUID, uuid4
+
 from app.ai.services.anomaly_detection import AnomalyDetectionService
+from app.ai.services.predictive_analytics import PredictiveAnalyticsService
+
+
+
 
 
 class WidgetType(str, Enum):
@@ -40,6 +43,7 @@ class DashboardService:
     """Service for creating and managing functional dashboards."""
 
     def __init__(self, db: AsyncSession, company_id: UUID):
+        """  Init  ."""
         self.db = db
         self.company_id = company_id
         self.data_service = DataAggregationService(db, company_id)
@@ -48,6 +52,7 @@ class DashboardService:
         self.anomaly_service = AnomalyDetectionService()
 
     async def get_executive_dashboard(self) -> Dict[str, Any]:
+        """Get Executive Dashboard."""
         """Get executive dashboard with high-level KPIs and insights."""
         
         # Run multiple data fetches concurrently
@@ -142,6 +147,7 @@ class DashboardService:
         }
 
     async def get_financial_dashboard(self) -> Dict[str, Any]:
+        """Get Financial Dashboard."""
         """Get detailed financial dashboard."""
         
         # Get comprehensive financial data
@@ -211,6 +217,7 @@ class DashboardService:
         }
 
     async def get_operational_dashboard(self) -> Dict[str, Any]:
+        """Get Operational Dashboard."""
         """Get operational metrics dashboard."""
         
         kpi_data = await self.data_service.get_kpi_dashboard()
@@ -253,6 +260,7 @@ class DashboardService:
         }
 
     async def get_custom_dashboard(self, dashboard_config: Dict[str, Any]) -> Dict[str, Any]:
+        """Get Custom Dashboard."""
         """Generate custom dashboard based on configuration."""
         
         widgets = []
@@ -270,6 +278,7 @@ class DashboardService:
         }
 
     async def _create_widget(self, config: Dict[str, Any]) -> Dict[str, Any]:
+        """Create Widget."""
         """Create a widget based on configuration."""
         
         widget_type = config.get('type')
@@ -286,6 +295,7 @@ class DashboardService:
             raise ValueError(f"Unsupported widget type: {widget_type}")
 
     async def _create_kpi_widget(self, config: Dict[str, Any]) -> Dict[str, Any]:
+        """Create Kpi Widget."""
         """Create KPI card widget."""
         
         # Get data based on metric
@@ -308,6 +318,7 @@ class DashboardService:
         }
 
     async def _create_chart_widget(self, config: Dict[str, Any]) -> Dict[str, Any]:
+        """Create Chart Widget."""
         """Create chart widget."""
         
         # Get data based on data source
@@ -330,6 +341,7 @@ class DashboardService:
         }
 
     async def _get_financial_alerts(self) -> List[Dict[str, Any]]:
+        """Get Financial Alerts."""
         """Get financial alerts and warnings."""
         alerts = []
         
@@ -366,6 +378,7 @@ class DashboardService:
         return alerts
 
     async def _get_performance_metrics(self) -> List[Dict[str, Any]]:
+        """Get Performance Metrics."""
         """Get performance metrics for table widget."""
         summary = await self.data_service.get_financial_summary()
         
@@ -385,6 +398,7 @@ class DashboardService:
         ]
 
     async def _get_predictive_insights(self) -> Dict[str, Any]:
+        """Get Predictive Insights."""
         """Get AI-powered predictive insights."""
         # This would integrate with the AI services
         return {

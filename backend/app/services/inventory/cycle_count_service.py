@@ -1,26 +1,31 @@
 """
 Cycle counting service.
 """
-from typing import List, Dict, Any, Optional
-from uuid import UUID
 from datetime import date, datetime
-from decimal import Decimal
+from typing import List, Dict, Any, Optional
 
-from sqlalchemy.ext.asyncio import AsyncSession
+from decimal import Decimal
 from sqlalchemy import select, func, and_
+from sqlalchemy.ext.asyncio import AsyncSession
+from uuid import UUID
 
 from app.models.inventory.item import InventoryItem
 from app.models.inventory.transfer import CycleCount, CycleCountItem
+
+
+
 
 class CycleCountService:
     """Cycle counting service."""
     
     async def create_cycle_count(
+        """Create Cycle Count."""
         self,
         db: AsyncSession,
         tenant_id: UUID,
         count_data: Dict[str, Any]
     ) -> CycleCount:
+        """Create Cycle Count."""
         """Create a new cycle count."""
         count_number = await self._generate_count_number(db, tenant_id)
         
@@ -35,11 +40,13 @@ class CycleCountService:
         return cycle_count
     
     async def add_items_to_count(
+        """Add Items To Count."""
         self,
         db: AsyncSession,
         cycle_count_id: UUID,
         item_ids: List[UUID]
     ) -> List[CycleCountItem]:
+        """Add Items To Count."""
         """Add items to cycle count."""
         count_items = []
         
@@ -64,12 +71,14 @@ class CycleCountService:
         return count_items
     
     async def record_count(
+        """Record Count."""
         self,
         db: AsyncSession,
         cycle_count_id: UUID,
         item_id: UUID,
         counted_quantity: Decimal
     ) -> CycleCountItem:
+        """Record Count."""
         """Record counted quantity for an item."""
         result = await db.execute(
             select(CycleCountItem).where(
@@ -94,11 +103,13 @@ class CycleCountService:
         return count_item
     
     async def complete_cycle_count(
+        """Complete Cycle Count."""
         self,
         db: AsyncSession,
         cycle_count_id: UUID,
         completed_by: UUID
     ) -> CycleCount:
+        """Complete Cycle Count."""
         """Complete cycle count and calculate variances."""
         result = await db.execute(
             select(CycleCount).where(CycleCount.id == cycle_count_id)
@@ -131,10 +142,12 @@ class CycleCountService:
         return cycle_count
     
     async def get_cycle_count_report(
+        """Get Cycle Count Report."""
         self,
         db: AsyncSession,
         cycle_count_id: UUID
     ) -> Dict[str, Any]:
+        """Get Cycle Count Report."""
         """Get detailed cycle count report."""
         result = await db.execute(
             select(CycleCount).where(CycleCount.id == cycle_count_id)
@@ -166,12 +179,14 @@ class CycleCountService:
         }
     
     async def get_location_cycle_counts(
+        """Get Location Cycle Counts."""
         self,
         db: AsyncSession,
         tenant_id: UUID,
         location_id: Optional[UUID] = None,
         status: Optional[str] = None
     ) -> List[Dict[str, Any]]:
+        """Get Location Cycle Counts."""
         """Get cycle counts for location."""
         filters = [CycleCount.tenant_id == tenant_id]
         
@@ -191,6 +206,7 @@ class CycleCountService:
         return [self._serialize_cycle_count(count) for count in counts]
     
     async def _generate_count_number(self, db: AsyncSession, tenant_id: UUID) -> str:
+        """Generate Count Number."""
         """Generate unique count number."""
         today = date.today()
         prefix = f"CC-{today.strftime('%Y%m%d')}"
@@ -209,6 +225,7 @@ class CycleCountService:
         return f"{prefix}-{count + 1:04d}"
     
     def _serialize_count_item(self, item: CycleCountItem) -> Dict[str, Any]:
+        """ Serialize Count Item."""
         """Serialize count item."""
         return {
             "item_id": str(item.item_id),
@@ -220,6 +237,7 @@ class CycleCountService:
         }
     
     def _serialize_cycle_count(self, count: CycleCount) -> Dict[str, Any]:
+        """ Serialize Cycle Count."""
         """Serialize cycle count."""
         return {
             "id": str(count.id),
@@ -233,6 +251,7 @@ class CycleCountService:
         }
     
     def _calculate_accuracy(self, items: List[CycleCountItem]) -> float:
+        """ Calculate Accuracy."""
         """Calculate count accuracy percentage."""
         if not items:
             return 100.0

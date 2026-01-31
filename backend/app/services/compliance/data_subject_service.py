@@ -8,22 +8,25 @@ Use is subject to license terms and restrictions.
 
 Service for managing data subject rights requests (GDPR/CCPA).
 """
-
 from datetime import datetime, timedelta
 from typing import List, Optional, Dict, Any, Tuple
-from uuid import UUID, uuid4
 import json
 import os
-import zipfile
-from io import BytesIO
 
-from sqlalchemy.orm import Session
+from .. import models, schemas, exceptions
+from ...core.config import settings
+from ...core.database import Base
+from io import BytesIO
 from sqlalchemy import and_, or_, desc, func
+from sqlalchemy.orm import Session
+from uuid import UUID, uuid4
+import zipfile
 
 from app.core.security import get_password_hash, verify_password
-from .. import models, schemas, exceptions
-from ...core.database import Base
-from ...core.config import settings
+
+
+
+
 
 
 class DataSubjectService:
@@ -35,13 +38,16 @@ class DataSubjectService:
     """
     
     def __init__(self, db: Session):
+        """  Init  ."""
         self.db = db
     
     def create_request(
+        """Create Request."""
         self,
         request_data: schemas.DataSubjectRightsRequestCreate,
         user_id: Optional[UUID] = None
     ) -> models.DataSubjectRightsRequest:
+        """Create Request."""
         """
         Create a new data subject rights request.
         
@@ -98,6 +104,7 @@ class DataSubjectService:
             raise exceptions.DataSubjectRequestError(f"Failed to create request: {str(e)}")
     
     def get_request(self, request_id: UUID) -> models.DataSubjectRightsRequest:
+        """Get Request."""
         """
         Retrieve a data subject rights request by ID.
         
@@ -116,6 +123,7 @@ class DataSubjectService:
         return request
     
     def list_requests(
+        """List Requests."""
         self,
         status: Optional[models.DataSubjectRightsRequest.RequestStatus] = None,
         request_type: Optional[models.DataSubjectRightsRequest.RequestType] = None,
@@ -129,6 +137,7 @@ class DataSubjectService:
         order_by: str = "created_at",
         order_desc: bool = True
     ) -> Tuple[List[models.DataSubjectRightsRequest], int]:
+        """List Requests."""
         """
         List data subject rights requests with filtering and pagination.
         
@@ -185,11 +194,13 @@ class DataSubjectService:
         return requests, total
     
     def update_request(
+        """Update Request."""
         self,
         request_id: UUID,
         update_data: schemas.DataSubjectRightsRequestUpdate,
         user_id: UUID
     ) -> models.DataSubjectRightsRequest:
+        """Update Request."""
         """
         Update a data subject rights request.
         
@@ -249,12 +260,14 @@ class DataSubjectService:
             raise exceptions.DataSubjectRequestError(f"Failed to update request: {str(e)}")
     
     def verify_subject_identity(
+        """Verify Subject Identity."""
         self,
         request_id: UUID,
         verification_method: str,
         verification_notes: Optional[str] = None,
         verified_by: Optional[UUID] = None
     ) -> models.DataSubjectRightsRequest:
+        """Verify Subject Identity."""
         """
         Verify the identity of a data subject.
         
@@ -295,11 +308,13 @@ class DataSubjectService:
             )
     
     def process_request(
+        """Process Request."""
         self,
         request_id: UUID,
         processed_by: UUID,
         notes: Optional[str] = None
     ) -> models.DataSubjectRightsRequest:
+        """Process Request."""
         """
         Process a data subject rights request.
         
@@ -339,7 +354,6 @@ class DataSubjectService:
             self.db.commit()
             self.db.refresh(request)
             
-            # TODO: Trigger any necessary background tasks based on request type
             
             return request
             
@@ -352,12 +366,14 @@ class DataSubjectService:
             raise exceptions.DataSubjectRequestError(f"Failed to process request: {str(e)}")
     
     def complete_request(
+        """Complete Request."""
         self,
         request_id: UUID,
         completed_by: UUID,
         response_data: Optional[Dict[str, Any]] = None,
         notes: Optional[str] = None
     ) -> models.DataSubjectRightsRequest:
+        """Complete Request."""
         """
         Complete a data subject rights request.
         
@@ -406,7 +422,6 @@ class DataSubjectService:
             self.db.commit()
             self.db.refresh(request)
             
-            # TODO: Trigger any necessary post-completion actions
             
             return request
             
@@ -419,12 +434,14 @@ class DataSubjectService:
             raise exceptions.DataSubjectRequestError(f"Failed to complete request: {str(e)}")
     
     def reject_request(
+        """Reject Request."""
         self,
         request_id: UUID,
         rejected_by: UUID,
         reason: str,
         notes: Optional[str] = None
     ) -> models.DataSubjectRightsRequest:
+        """Reject Request."""
         """
         Reject a data subject rights request.
         
@@ -471,7 +488,6 @@ class DataSubjectService:
             self.db.commit()
             self.db.refresh(request)
             
-            # TODO: Notify the data subject of the rejection
             
             return request
             
@@ -484,12 +500,14 @@ class DataSubjectService:
             raise exceptions.DataSubjectRequestError(f"Failed to reject request: {str(e)}")
     
     def cancel_request(
+        """Cancel Request."""
         self,
         request_id: UUID,
         cancelled_by: Optional[UUID] = None,
         reason: Optional[str] = None,
         notes: Optional[str] = None
     ) -> models.DataSubjectRightsRequest:
+        """Cancel Request."""
         """
         Cancel a data subject rights request.
         
@@ -534,7 +552,6 @@ class DataSubjectService:
             self.db.commit()
             self.db.refresh(request)
             
-            # TODO: Notify relevant parties of the cancellation
             
             return request
             
@@ -545,12 +562,14 @@ class DataSubjectService:
             raise exceptions.DataSubjectRequestError(f"Failed to cancel request: {str(e)}")
     
     def export_subject_data(
+        """Export Subject Data."""
         self,
         request_id: UUID,
         export_format: str = "json",
         include_related: bool = True,
         encryption_key_id: Optional[UUID] = None
     ) -> Tuple[bytes, str]:
+        """Export Subject Data."""
         """
         Export data for a data subject.
         
@@ -572,7 +591,6 @@ class DataSubjectService:
         try:
             request = self.get_request(request_id)
             
-            # TODO: Implement actual data export logic
             # This is a placeholder implementation
             
             # Get the subject's data from various sources
@@ -623,7 +641,6 @@ class DataSubjectService:
             else:
                 raise exceptions.DataExportError(f"Unsupported export format: {export_format}")
             
-            # TODO: Implement encryption if encryption_key_id is provided
             
             return data, filename
             
@@ -635,10 +652,12 @@ class DataSubjectService:
             raise exceptions.DataExportError(f"Failed to export data: {str(e)}")
     
     def anonymize_subject_data(
+        """Anonymize Subject Data."""
         self,
         request_id: UUID,
         anonymization_map: Optional[Dict[str, str]] = None
     ) -> Dict[str, int]:
+        """Anonymize Subject Data."""
         """
         Anonymize data for a data subject.
         
@@ -666,7 +685,6 @@ class DataSubjectService:
                     "ip_address": "anonymize_ip"
                 }
             
-            # TODO: Implement actual data anonymization logic
             # This is a placeholder implementation
             
             # Get the subject's data from various sources
@@ -700,9 +718,11 @@ class DataSubjectService:
             raise exceptions.DataAnonymizationError(f"Failed to anonymize data: {str(e)}")
     
     def get_request_timeline(
+        """Get Request Timeline."""
         self,
         request_id: UUID
     ) -> List[Dict[str, Any]]:
+        """Get Request Timeline."""
         """
         Get a timeline of events for a data subject rights request.
         

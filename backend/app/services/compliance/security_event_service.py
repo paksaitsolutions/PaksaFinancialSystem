@@ -8,18 +8,20 @@ Use is subject to license terms and restrictions.
 
 Service for managing and processing security events and alerts.
 """
-
-import json
 from datetime import datetime, timedelta
 from typing import List, Optional, Dict, Any, Tuple, Union
-from uuid import UUID, uuid4
-
-from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_, desc, func, text
+import json
 
 from .. import models, schemas, exceptions
-from ...core.database import Base
 from ...core.config import settings
+from ...core.database import Base
+from sqlalchemy import and_, or_, desc, func, text
+from sqlalchemy.orm import Session
+from uuid import UUID, uuid4
+
+
+
+
 
 
 class SecurityEventService:
@@ -31,9 +33,11 @@ class SecurityEventService:
     """
     
     def __init__(self, db: Session):
+        """  Init  ."""
         self.db = db
     
     def create_event(
+        """Create Event."""
         self,
         event_type: models.SecurityEventType,
         severity: models.SecurityEventSeverity,
@@ -48,6 +52,7 @@ class SecurityEventService:
         details: Optional[Dict[str, Any]] = None,
         metadata: Optional[Dict[str, Any]] = None
     ) -> models.SecurityEvent:
+        """Create Event."""
         """
         Create a new security event.
         

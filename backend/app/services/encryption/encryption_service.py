@@ -1,25 +1,30 @@
 """
 Encryption management service.
 """
-import os
 from typing import Dict, List, Optional, Any
-from uuid import UUID
+import os
 
-from sqlalchemy.orm import Session
 from sqlalchemy import text
+from sqlalchemy.orm import Session
+from uuid import UUID
 
 from app.core.security.encryption import EncryptionService, get_encryption_service
 from app.models.encrypted_user import EncryptedUserProfile
+
+
+
 
 
 class EncryptionManagementService:
     """Service for managing data encryption operations."""
     
     def __init__(self, db: Session):
+        """  Init  ."""
         self.db = db
         self.encryption_service = get_encryption_service()
     
     def encrypt_user_profile(self, user_id: str, profile_data: Dict[str, Any]) -> EncryptedUserProfile:
+        """Encrypt User Profile."""
         """Create or update encrypted user profile."""
         profile = self.db.query(EncryptedUserProfile).filter(
             EncryptedUserProfile.user_id == user_id
@@ -42,12 +47,14 @@ class EncryptionManagementService:
         return profile
     
     def get_user_profile(self, user_id: str) -> Optional[EncryptedUserProfile]:
+        """Get User Profile."""
         """Get decrypted user profile."""
         return self.db.query(EncryptedUserProfile).filter(
             EncryptedUserProfile.user_id == user_id
         ).first()
     
     def encrypt_existing_data(self, table_name: str, fields: List[str]) -> int:
+        """Encrypt Existing Data."""
         """Encrypt existing plain text data in specified table fields."""
         count = 0
         
@@ -83,6 +90,7 @@ class EncryptionManagementService:
         return count
     
     def decrypt_field_for_search(self, encrypted_value: str) -> str:
+        """Decrypt Field For Search."""
         """Decrypt a field value for search operations."""
         try:
             return self.encryption_service.decrypt(encrypted_value)
@@ -90,6 +98,7 @@ class EncryptionManagementService:
             return encrypted_value
     
     def get_encryption_status(self) -> Dict[str, Any]:
+        """Get Encryption Status."""
         """Get encryption status and statistics."""
         key_configured = bool(os.getenv('ENCRYPTION_KEY'))
         encrypted_profiles = self.db.query(EncryptedUserProfile).count()
@@ -103,6 +112,7 @@ class EncryptionManagementService:
         }
     
     def _is_encrypted(self, value: str) -> bool:
+        """ Is Encrypted."""
         """Check if a value appears to be encrypted."""
         try:
             self.encryption_service.decrypt(value)

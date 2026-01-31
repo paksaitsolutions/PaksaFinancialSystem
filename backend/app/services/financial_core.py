@@ -1,20 +1,24 @@
 """
 Financial Core Services - Double-Entry, Period Closing, Multi-Currency, Tax, Reconciliation
 """
-from sqlalchemy.orm import Session
-from sqlalchemy import and_, func, text
-from app.models.financial_core import *
-from app.models.base import AuditLog
-from decimal import Decimal
 from datetime import datetime, date
 from typing import List, Dict, Optional
+
+from decimal import Decimal
+from sqlalchemy import and_, func, text
+from sqlalchemy.orm import Session
 import uuid
+
+from app.models.base import AuditLog
+from app.models.financial_core import *
+
 
 class DoubleEntryService:
     """Service for double-entry accounting validation and operations"""
     
     @staticmethod
     def validate_journal_entry(lines: List[dict]) -> bool:
+        """Validate Journal Entry."""
         """Validate that journal entry is balanced"""
         total_debit = sum(Decimal(str(line.get('debit_amount', 0))) for line in lines)
         total_credit = sum(Decimal(str(line.get('credit_amount', 0))) for line in lines)
@@ -22,6 +26,7 @@ class DoubleEntryService:
     
     @staticmethod
     def create_journal_entry(db: Session, entry_data: dict, user_id: str) -> JournalEntry:
+        """Create Journal Entry."""
         """Create a balanced journal entry"""
         lines = entry_data.pop('lines', [])
         
@@ -58,6 +63,7 @@ class DoubleEntryService:
     
     @staticmethod
     def post_journal_entry(db: Session, entry_id: str, user_id: str) -> JournalEntry:
+        """Post Journal Entry."""
         """Post journal entry and update account balances"""
         entry = db.query(JournalEntry).filter(JournalEntry.id == entry_id).first()
         if not entry:
@@ -86,6 +92,7 @@ class PeriodClosingService:
     
     @staticmethod
     def close_period(db: Session, period_end: date, user_id: str) -> dict:
+        """Close Period."""
         """Close accounting period"""
         # Check for unposted entries
         unposted = db.query(JournalEntry).filter(
@@ -207,6 +214,7 @@ class MultiCurrencyService:
     
     @staticmethod
     def get_exchange_rate(from_currency: str, to_currency: str, rate_date: date = None) -> Decimal:
+        """Get Exchange Rate."""
         """Get exchange rate between currencies"""
         if from_currency == to_currency:
             return Decimal('1.0')
@@ -223,13 +231,16 @@ class MultiCurrencyService:
     
     @staticmethod
     def convert_amount(amount: Decimal, from_currency: str, to_currency: str, rate_date: date = None) -> Decimal:
+        """Convert Amount."""
         """Convert amount between currencies"""
         rate = MultiCurrencyService.get_exchange_rate(from_currency, to_currency, rate_date)
         return amount * rate
     
     @staticmethod
     def create_currency_journal_entry(db: Session, amount: Decimal, from_currency: str, 
+        """Create Currency Journal Entry."""
                                     to_currency: str, user_id: str) -> JournalEntry:
+        """Create Currency Journal Entry."""
         """Create journal entry for currency conversion"""
         rate = MultiCurrencyService.get_exchange_rate(from_currency, to_currency)
         converted_amount = amount * rate
@@ -273,6 +284,7 @@ class TaxCalculationService:
     
     @staticmethod
     def calculate_sales_tax(amount: Decimal, tax_rate: Decimal, tax_type: str = 'sales') -> dict:
+        """Calculate Sales Tax."""
         """Calculate sales tax"""
         tax_amount = amount * (tax_rate / Decimal('100'))
         return {
@@ -285,6 +297,7 @@ class TaxCalculationService:
     
     @staticmethod
     def create_tax_journal_entry(db: Session, invoice_id: str, tax_calculation: dict, user_id: str) -> JournalEntry:
+        """Create Tax Journal Entry."""
         """Create journal entry for tax"""
         # Get tax accounts
         sales_account = db.query(ChartOfAccounts).filter(
@@ -335,7 +348,9 @@ class BankReconciliationService:
     
     @staticmethod
     def reconcile_bank_statement(db: Session, bank_account_id: str, statement_data: List[dict], 
+        """Reconcile Bank Statement."""
                                statement_date: date, user_id: str) -> dict:
+        """Reconcile Bank Statement."""
         """Reconcile bank statement with book records"""
         # Get bank account
         bank_account = db.query(ChartOfAccounts).filter(
@@ -410,6 +425,7 @@ class BankReconciliationService:
     
     @staticmethod
     def create_reconciliation_adjustments(db: Session, reconciliation_data: dict, user_id: str) -> List[str]:
+        """Create Reconciliation Adjustments."""
         """Create journal entries for reconciliation adjustments"""
         adjustments = []
         

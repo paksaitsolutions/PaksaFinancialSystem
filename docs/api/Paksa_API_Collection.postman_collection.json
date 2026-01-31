@@ -1,0 +1,151 @@
+{
+  "info": {
+    "name": "Paksa Financial System API",
+    "description": "Complete API collection for Paksa Financial System",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "var jsonData = pm.response.json();",
+                  "pm.environment.set(\"access_token\", jsonData.access_token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@paksa.com\",\n  \"password\": \"admin123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Accounts Payable",
+      "item": [
+        {
+          "name": "Get Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/ap/dashboard/stats"
+          }
+        },
+        {
+          "name": "List Vendors",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/ap/vendors?page=1&page_size=20",
+              "host": ["{{base_url}}"],
+              "path": ["api", "ap", "vendors"],
+              "query": [
+                {"key": "page", "value": "1"},
+                {"key": "page_size", "value": "20"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Vendor",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vendor_code\": \"V001\",\n  \"vendor_name\": \"Test Vendor\",\n  \"email\": \"vendor@test.com\",\n  \"phone\": \"123-456-7890\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": "{{base_url}}/api/ap/vendors"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Accounts Receivable",
+      "item": [
+        {
+          "name": "Get Analytics",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/ar/analytics"
+          }
+        },
+        {
+          "name": "List Customers",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/ar/customers?page=1&page_size=20",
+              "host": ["{{base_url}}"],
+              "path": ["api", "ar", "customers"],
+              "query": [
+                {"key": "page", "value": "1"},
+                {"key": "page_size", "value": "20"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Invoice",
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer_id\": \"{{customer_id}}\",\n  \"invoice_date\": \"2024-01-15\",\n  \"due_date\": \"2024-02-15\",\n  \"line_items\": [\n    {\n      \"description\": \"Services\",\n      \"quantity\": 1,\n      \"unit_price\": 1000.00,\n      \"amount\": 1000.00\n    }\n  ]\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": "{{base_url}}/api/ar/invoices"
+          }
+        }
+      ]
+    }
+  ]
+}

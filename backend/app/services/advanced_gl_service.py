@@ -1,35 +1,43 @@
 """
 Advanced General Ledger Service with enterprise features.
 """
-from typing import List, Dict, Any, Optional, Tuple
 from datetime import datetime, date
+from typing import List, Dict, Any, Optional, Tuple
+
 from decimal import Decimal
-from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, func, select
-from app.models.gl_models import (
-    ChartOfAccounts, JournalEntry, JournalEntryLine,
-    AccountingPeriod, LedgerBalance, TrialBalance
-)
+from sqlalchemy.orm import Session
+
 from app.core.audit import AuditLogger, AuditAction, AuditLevel
 from app.core.exceptions import ValidationException, NotFoundException
 from app.core.permissions import Permission, has_permission
+from app.models.gl_models import (
 from app.models.user import User
+
+    ChartOfAccounts, JournalEntry, JournalEntryLine,
+    AccountingPeriod, LedgerBalance, TrialBalance
+)
 
 
 class AdvancedGLService:
     """Advanced General Ledger service with enterprise features."""
     
     def __init__(self, db: Session, user: User, company_id: str):
+        """  Init  ."""
+        """  Init  ."""
         self.db = db
         self.user = user
         self.company_id = company_id
         self.audit_logger = AuditLogger(db)
     
     async def create_journal_entry(
+        """Create Journal Entry."""
         self,
         entry_data: Dict[str, Any],
         auto_post: bool = False
     ) -> JournalEntry:
+        """Create Journal Entry."""
+        """Create Journal Entry."""
         """Create journal entry with validation and audit trail."""
         
         # Validate permissions
@@ -102,6 +110,8 @@ class AdvancedGLService:
         return entry
     
     async def post_journal_entry(self, entry_id: str) -> JournalEntry:
+        """Post Journal Entry."""
+        """Post Journal Entry."""
         """Post journal entry to ledger."""
         
         if not has_permission(self.user, Permission.GL_POST):
@@ -135,6 +145,8 @@ class AdvancedGLService:
         return entry
     
     async def _post_journal_entry(self, entry: JournalEntry):
+        """Post Journal Entry."""
+        """Post Journal Entry."""
         """Internal method to post journal entry to ledger."""
         
         # Update account balances
@@ -198,10 +210,13 @@ class AdvancedGLService:
         entry.posted_by = str(self.user.id)
     
     async def generate_trial_balance(
+        """Generate Trial Balance."""
         self,
         as_of_date: date,
         include_zero_balances: bool = False
     ) -> Dict[str, Any]:
+        """Generate Trial Balance."""
+        """Generate Trial Balance."""
         """Generate trial balance report."""
         
         if not has_permission(self.user, Permission.REPORTS_GENERATE):
@@ -288,10 +303,13 @@ class AdvancedGLService:
         }
     
     async def close_accounting_period(
+        """Close Accounting Period."""
         self,
         period_year: int,
         period_month: int
     ) -> AccountingPeriod:
+        """Close Accounting Period."""
+        """Close Accounting Period."""
         """Close accounting period with proper validations."""
         
         if not has_permission(self.user, Permission.GL_CLOSE_PERIOD):
@@ -359,10 +377,13 @@ class AdvancedGLService:
         return period
     
     async def _calculate_account_balance(
+        """ Calculate Account Balance."""
         self,
         account_id: str,
         as_of_date: date
     ) -> Decimal:
+        """Calculate Account Balance."""
+        """Calculate Account Balance."""
         """Calculate account balance as of specific date."""
         
         # Get all posted journal entry lines for this account up to the date
@@ -395,6 +416,8 @@ class AdvancedGLService:
             return total_credits - total_debits
     
     def _validate_journal_entry(self, entry_data: Dict[str, Any]):
+        """ Validate Journal Entry."""
+        """ Validate Journal Entry."""
         """Validate journal entry data."""
         
         if not entry_data.get("entry_date"):
@@ -421,6 +444,8 @@ class AdvancedGLService:
                 raise ValidationException(f"Line {i+1} cannot have both debit and credit amounts")
     
     async def _generate_entry_number(self) -> str:
+        """Generate Entry Number."""
+        """Generate Entry Number."""
         """Generate unique journal entry number."""
         
         today = datetime.now().date()

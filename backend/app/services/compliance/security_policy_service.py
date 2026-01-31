@@ -8,19 +8,22 @@ Use is subject to license terms and restrictions.
 
 Service for managing security policies and configurations.
 """
-
 from datetime import datetime
 from typing import List, Optional, Dict, Any, Tuple
-from uuid import UUID, uuid4
 import json
 
-from sqlalchemy.orm import Session
+from .. import models, schemas, exceptions
+from ...core.config import settings
+from ...core.database import Base
 from sqlalchemy import and_, or_, desc, func, update
+from sqlalchemy.orm import Session
+from uuid import UUID, uuid4
 
 from app.core.security import get_password_hash, verify_password
-from .. import models, schemas, exceptions
-from ...core.database import Base
-from ...core.config import settings
+
+
+
+
 
 
 class SecurityPolicyService:
@@ -32,13 +35,16 @@ class SecurityPolicyService:
     """
     
     def __init__(self, db: Session):
+        """  Init  ."""
         self.db = db
     
     def create_policy(
+        """Create Policy."""
         self,
         policy_data: schemas.SecurityPolicyCreate,
         created_by: UUID
     ) -> models.SecurityPolicy:
+        """Create Policy."""
         """
         Create a new security policy.
         
@@ -89,10 +95,12 @@ class SecurityPolicyService:
             raise exceptions.SecurityPolicyError(f"Failed to create policy: {str(e)}")
     
     def get_policy(
+        """Get Policy."""
         self,
         policy_id: Optional[UUID] = None,
         name: Optional[str] = None
     ) -> models.SecurityPolicy:
+        """Get Policy."""
         """
         Retrieve a security policy by ID or name.
         
@@ -127,6 +135,7 @@ class SecurityPolicyService:
         return policy
     
     def list_policies(
+        """List Policies."""
         self,
         is_enabled: Optional[bool] = None,
         search: Optional[str] = None,
@@ -135,6 +144,7 @@ class SecurityPolicyService:
         order_by: str = "name",
         order_desc: bool = False
     ) -> Tuple[List[models.SecurityPolicy], int]:
+        """List Policies."""
         """
         List security policies with filtering and pagination.
         
@@ -181,11 +191,13 @@ class SecurityPolicyService:
         return policies, total
     
     def update_policy(
+        """Update Policy."""
         self,
         policy_id: UUID,
         policy_data: schemas.SecurityPolicyUpdate,
         updated_by: UUID
     ) -> models.SecurityPolicy:
+        """Update Policy."""
         """
         Update a security policy.
         
@@ -231,6 +243,7 @@ class SecurityPolicyService:
             raise exceptions.SecurityPolicyError(f"Failed to update policy: {str(e)}")
     
     def delete_policy(self, policy_id: UUID) -> None:
+        """Delete Policy."""
         """
         Delete a security policy.
         
@@ -262,10 +275,12 @@ class SecurityPolicyService:
             raise exceptions.SecurityPolicyError(f"Failed to delete policy: {str(e)}")
     
     def get_policy_config(
+        """Get Policy Config."""
         self,
         policy_name: str,
         default_config: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
+        """Get Policy Config."""
         """
         Get the configuration for a security policy by name.
         
@@ -285,6 +300,7 @@ class SecurityPolicyService:
             return default_config or {}
     
     def get_password_policy(self) -> Dict[str, Any]:
+        """Get Password Policy."""
         """
         Get the current password policy configuration.
         
@@ -306,6 +322,7 @@ class SecurityPolicyService:
         return self.get_policy_config("password_policy", default_policy)
     
     def get_mfa_policy(self) -> Dict[str, Any]:
+        """Get Mfa Policy."""
         """
         Get the current MFA policy configuration.
         
@@ -324,6 +341,7 @@ class SecurityPolicyService:
         return self.get_policy_config("mfa_policy", default_policy)
     
     def get_login_policy(self) -> Dict[str, Any]:
+        """Get Login Policy."""
         """
         Get the current login policy configuration.
         
@@ -344,6 +362,7 @@ class SecurityPolicyService:
         return self.get_policy_config("login_policy", default_policy)
     
     def get_audit_policy(self) -> Dict[str, Any]:
+        """Get Audit Policy."""
         """
         Get the current audit policy configuration.
         
@@ -364,6 +383,7 @@ class SecurityPolicyService:
         return self.get_policy_config("audit_policy", default_policy)
     
     def get_data_retention_policy(self) -> Dict[str, Any]:
+        """Get Data Retention Policy."""
         """
         Get the current data retention policy configuration.
         
@@ -389,6 +409,7 @@ class SecurityPolicyService:
         return self.get_policy_config("data_retention_policy", default_policy)
     
     def get_privacy_policy(self) -> Dict[str, Any]:
+        """Get Privacy Policy."""
         """
         Get the current privacy policy configuration.
         
@@ -413,6 +434,7 @@ class SecurityPolicyService:
         return self.get_policy_config("privacy_policy", default_policy)
     
     def get_api_security_policy(self) -> Dict[str, Any]:
+        """Get Api Security Policy."""
         """
         Get the current API security policy configuration.
         
@@ -453,6 +475,7 @@ class SecurityPolicyService:
         return self.get_policy_config("api_security_policy", default_policy)
     
     def get_notification_policy(self) -> Dict[str, Any]:
+        """Get Notification Policy."""
         """
         Get the current notification policy configuration.
         
@@ -497,6 +520,7 @@ class SecurityPolicyService:
         return self.get_policy_config("notification_policy", default_policy)
     
     def get_backup_policy(self) -> Dict[str, Any]:
+        """Get Backup Policy."""
         """
         Get the current backup policy configuration.
         
@@ -534,6 +558,7 @@ class SecurityPolicyService:
         return self.get_policy_config("backup_policy", default_policy)
     
     def get_compliance_policy(self) -> Dict[str, Any]:
+        """Get Compliance Policy."""
         """
         Get the current compliance policy configuration.
         
@@ -598,6 +623,7 @@ class SecurityPolicyService:
         return self.get_policy_config("compliance_policy", default_policy)
     
     def get_security_headers_policy(self) -> Dict[str, Any]:
+        """Get Security Headers Policy."""
         """
         Get the current security headers policy configuration.
         

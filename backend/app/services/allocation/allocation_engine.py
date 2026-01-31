@@ -2,14 +2,19 @@
 Allocation rules engine for automatic transaction allocation.
 """
 from datetime import date, datetime
-from decimal import Decimal, ROUND_HALF_UP
 from typing import List, Optional, Dict, Any
+
+from decimal import Decimal, ROUND_HALF_UP
+from sqlalchemy import and_, or_, func, desc
+from sqlalchemy.orm import Session
 from uuid import UUID
 
-from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_, func, desc
-
+from app.core.exceptions import NotFoundException, ValidationException
 from app.models.allocation import (
+from app.models.journal_entry import JournalEntry, JournalEntryLine, JournalEntryStatus
+
+
+
     AllocationRule, 
     AllocationRuleLine, 
     Allocation, 
@@ -17,17 +22,17 @@ from app.models.allocation import (
     AllocationMethod,
     AllocationStatus
 )
-from app.models.journal_entry import JournalEntry, JournalEntryLine, JournalEntryStatus
-from app.core.exceptions import NotFoundException, ValidationException
 
 
 class AllocationEngine:
     """Engine for processing allocation rules and creating allocations."""
     
     def __init__(self, db: Session):
+        """  Init  ."""
         self.db = db
     
     def create_allocation_rule(self, rule_data: Dict[str, Any], created_by: UUID) -> AllocationRule:
+        """Create Allocation Rule."""
         """Create a new allocation rule."""
         if not rule_data.get('rule_code'):
             rule_data['rule_code'] = self._generate_rule_code()
@@ -68,6 +73,7 @@ class AllocationEngine:
         return rule
     
     def process_allocation(self, journal_entry_id: UUID, created_by: UUID) -> Optional[Allocation]:
+        """Process Allocation."""
         """Process allocation for a journal entry based on matching rules."""
         journal_entry = self.db.query(JournalEntry).filter(
             JournalEntry.id == journal_entry_id
@@ -113,18 +119,21 @@ class AllocationEngine:
         return allocation
     
     def get_allocation_rules(self, skip: int = 0, limit: int = 100) -> List[AllocationRule]:
+        """Get Allocation Rules."""
         """Get allocation rules."""
         return self.db.query(AllocationRule)\
                    .order_by(AllocationRule.priority, AllocationRule.rule_name)\
                    .offset(skip).limit(limit).all()
     
     def get_allocation_rule(self, rule_id: UUID) -> Optional[AllocationRule]:
+        """Get Allocation Rule."""
         """Get an allocation rule by ID."""
         return self.db.query(AllocationRule).filter(
             AllocationRule.id == rule_id
         ).first()
     
     def _find_matching_rules(self, journal_entry: JournalEntry) -> List[AllocationRule]:
+        """ Find Matching Rules."""
         """Find allocation rules that match a journal entry."""
         query = self.db.query(AllocationRule).filter(
             and_(
@@ -140,12 +149,14 @@ class AllocationEngine:
         return query.order_by(AllocationRule.priority).all()
     
     def _create_allocation_entries(
+        """ Create Allocation Entries."""
         self, 
         allocation: Allocation, 
         rule: AllocationRule, 
         total_amount: Decimal,
         created_by: UUID
     ) -> List[AllocationEntry]:
+        """ Create Allocation Entries."""
         """Create allocation entries based on the rule."""
         entries = []
         
@@ -157,12 +168,14 @@ class AllocationEngine:
         return entries
     
     def _allocate_by_percentage(
+        """ Allocate By Percentage."""
         self, 
         allocation: Allocation, 
         rule: AllocationRule, 
         total_amount: Decimal,
         created_by: UUID
     ) -> List[AllocationEntry]:
+        """ Allocate By Percentage."""
         """Allocate amount based on percentages."""
         entries = []
         
@@ -188,12 +201,14 @@ class AllocationEngine:
         return entries
     
     def _allocate_equally(
+        """ Allocate Equally."""
         self, 
         allocation: Allocation, 
         rule: AllocationRule, 
         total_amount: Decimal,
         created_by: UUID
     ) -> List[AllocationEntry]:
+        """ Allocate Equally."""
         """Allocate amount equally among targets."""
         entries = []
         line_count = len(rule.allocation_lines)
@@ -222,11 +237,13 @@ class AllocationEngine:
         return entries
     
     def _create_allocation_journal_entry(
+        """ Create Allocation Journal Entry."""
         self, 
         allocation_entry: AllocationEntry, 
         source_je: JournalEntry,
         created_by: UUID
     ) -> JournalEntry:
+        """ Create Allocation Journal Entry."""
         """Create a journal entry for an allocation entry."""
         je = JournalEntry(
             entry_number=f"ALLOC-{allocation_entry.allocation.allocation_number}",
@@ -268,6 +285,7 @@ class AllocationEngine:
         return je
     
     def _generate_rule_code(self) -> str:
+        """ Generate Rule Code."""
         """Generate a unique rule code."""
         last_rule = self.db.query(AllocationRule)\
             .order_by(desc(AllocationRule.created_at))\
@@ -285,6 +303,7 @@ class AllocationEngine:
         return f"AR-{next_num:04d}"
     
     def _generate_allocation_number(self) -> str:
+        """ Generate Allocation Number."""
         """Generate a unique allocation number."""
         last_allocation = self.db.query(Allocation)\
             .order_by(desc(Allocation.created_at))\

@@ -1,15 +1,18 @@
 """Automated tax filing service."""
 from datetime import date, datetime
-from enum import Enum
-import logging
 from typing import Dict, List, Optional, Any
 
+from enum import Enum
 from pydantic import BaseModel, Field, validator
 from sqlalchemy.orm import Session
+import logging
 
 from app.core.config import settings
-from app.models.tax_models import TaxFiling, TaxForm, TaxAuthority
 from app.core.integrations.tax_authority import TaxAuthorityClient
+from app.models.tax_models import TaxFiling, TaxForm, TaxAuthority
+
+
+
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +40,7 @@ class TaxFilingRequest(BaseModel):
     
     @validator('tax_year')
     def validate_tax_year(cls, v):
+        """Validate Tax Year."""
         current_year = datetime.now().year
         if v < 2000 or v > current_year + 1:
             raise ValueError(f"Tax year must be between 2000 and {current_year + 1}")
@@ -58,6 +62,7 @@ class TaxFilingService:
     """Service for automated tax filing."""
     
     def __init__(self, db: Session):
+        """  Init  ."""
         self.db = db
         self.tax_authority_client = TaxAuthorityClient(
             api_key=settings.TAX_AUTHORITY_API_KEY,
@@ -65,6 +70,7 @@ class TaxFilingService:
         )
     
     def submit_filing(self, request: TaxFilingRequest, user_id: str) -> TaxFilingResponse:
+        """Submit Filing."""
         """Submit a tax filing to the appropriate tax authority."""
         try:
             # Validate request
@@ -106,6 +112,7 @@ class TaxFilingService:
             raise
     
     def get_filing_status(self, filing_id: str) -> Dict:
+        """Get Filing Status."""
         """Get the status of a tax filing."""
         filing = self.db.query(TaxFiling).filter(TaxFiling.id == filing_id).first()
         if not filing:
@@ -130,16 +137,19 @@ class TaxFilingService:
         }
     
     def _validate_filing_request(self, request: TaxFilingRequest):
+        """ Validate Filing Request."""
         """Validate the tax filing request."""
         # Add validation logic here
         pass
     
     def _generate_forms(self, request: TaxFilingRequest) -> List[TaxForm]:
+        """ Generate Forms."""
         """Generate tax forms based on filing data."""
         # Add form generation logic here
         return []
     
     def _create_filing_record(self, request: TaxFilingRequest, forms: List[TaxForm], user_id: str) -> TaxFiling:
+        """ Create Filing Record."""
         """Create a tax filing record in the database."""
         filing = TaxFiling(
             tax_year=request.tax_year,
@@ -155,6 +165,7 @@ class TaxFilingService:
         return filing
     
     def _submit_to_authority(self, filing: TaxFiling, request: TaxFilingRequest) -> Dict:
+        """ Submit To Authority."""
         """Submit the filing to the tax authority."""
         try:
             # Get the appropriate tax authority
@@ -175,6 +186,7 @@ class TaxFilingService:
             raise
     
     def _update_filing_status(self, filing: TaxFiling, status_data: Dict):
+        """ Update Filing Status."""
         """Update the filing status based on tax authority response."""
         filing.status = status_data.get("status", filing.status)
         filing.submission_id = status_data.get("submission_id", filing.submission_id)
@@ -187,11 +199,13 @@ class TaxFilingService:
         self.db.commit()
     
     def _process_payment(self, filing: TaxFiling, request: TaxFilingRequest):
+        """ Process Payment."""
         """Process tax payment based on the selected strategy."""
         # Add payment processing logic here
         pass
     
     def _get_tax_authority(self, jurisdiction: str, tax_type: str) -> TaxAuthority:
+        """ Get Tax Authority."""
         """Get the tax authority for the given jurisdiction and tax type."""
         # Add logic to retrieve tax authority
         pass

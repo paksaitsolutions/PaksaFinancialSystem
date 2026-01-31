@@ -1,20 +1,23 @@
 """Currency exchange rate service for handling multi-currency support."""
 from datetime import datetime, timedelta
-from decimal import Decimal, ROUND_HALF_UP
+from functools import lru_cache
 from typing import Dict, List, Optional, Tuple
-import logging
 import json
 import os
-from functools import lru_cache
 
-import httpx
+from decimal import Decimal, ROUND_HALF_UP
 from fastapi import HTTPException
 from pydantic import BaseModel, Field, validator
 from sqlalchemy.orm import Session
+import httpx
+import logging
 
 from app.core.config import settings
 from app.models.currency import ExchangeRate, Currency
 from app.schemas.currency_schemas import ExchangeRateCreate, ExchangeRateUpdate
+
+
+
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +40,7 @@ class ExchangeService:
     """Service for handling currency exchange operations."""
     
     def __init__(self, db: Session):
+        """  Init  ."""
         self.db = db
         self.base_currency = settings.BASE_CURRENCY
         self.providers = {
@@ -48,12 +52,14 @@ class ExchangeService:
         self.active_providers = settings.EXCHANGE_RATE_PROVIDERS
         
     async def get_rate(
+        """Get Rate."""
         self,
         from_currency: str,
         to_currency: str,
         date: Optional[datetime] = None,
         force_refresh: bool = False
     ) -> ExchangeRateResult:
+        """Get Rate."""
         """
         Get the exchange rate between two currencies.
         
@@ -133,6 +139,7 @@ class ExchangeService:
         )
     
     async def convert_amount(
+        """Convert Amount."""
         self,
         amount: Decimal,
         from_currency: str,
@@ -140,6 +147,7 @@ class ExchangeService:
         date: Optional[datetime] = None,
         force_refresh: bool = False
     ) -> Tuple[Decimal, ExchangeRateResult]:
+        """Convert Amount."""
         """
         Convert an amount from one currency to another.
         
@@ -170,6 +178,7 @@ class ExchangeService:
         return converted, rate_result
     
     async def get_historical_rates(
+        """Get Historical Rates."""
         self,
         base_currency: str,
         target_currencies: List[str],
@@ -177,6 +186,7 @@ class ExchangeService:
         end_date: Optional[datetime] = None,
         frequency: str = 'daily'
     ) -> Dict[str, Dict[datetime, Decimal]]:
+        """Get Historical Rates."""
         """
         Get historical exchange rates for multiple currencies over a date range.
         
@@ -196,11 +206,13 @@ class ExchangeService:
     # --- Provider Implementations ---
     
     async def _get_openexchangerates_rate(
+        """ Get Openexchangerates Rate."""
         self,
         from_currency: str,
         to_currency: str,
         date: Optional[datetime] = None
     ) -> Optional[ExchangeRateResult]:
+        """Get Openexchangerates Rate."""
         """Get exchange rate from Open Exchange Rates API."""
         if not settings.OPENEXCHANGERATES_APP_ID:
             return None
@@ -239,11 +251,13 @@ class ExchangeService:
             return None
     
     async def _get_ecb_rate(
+        """ Get Ecb Rate."""
         self,
         from_currency: str,
         to_currency: str,
         date: Optional[datetime] = None
     ) -> Optional[ExchangeRateResult]:
+        """Get Ecb Rate."""
         """Get exchange rate from European Central Bank."""
         # ECB only provides rates against EUR
         if from_currency != 'EUR' and to_currency != 'EUR':
@@ -293,11 +307,13 @@ class ExchangeService:
             return None
     
     async def _get_fixer_rate(
+        """ Get Fixer Rate."""
         self,
         from_currency: str,
         to_currency: str,
         date: Optional[datetime] = None
     ) -> Optional[ExchangeRateResult]:
+        """Get Fixer Rate."""
         """Get exchange rate from Fixer.io API."""
         if not settings.FIXER_API_KEY:
             return None
@@ -341,11 +357,13 @@ class ExchangeService:
             return None
     
     async def _get_fallback_rate(
+        """ Get Fallback Rate."""
         self,
         from_currency: str,
         to_currency: str,
         date: Optional[datetime] = None
     ) -> Optional[ExchangeRateResult]:
+        """Get Fallback Rate."""
         """Fallback method to get exchange rate from database."""
         try:
             # Try to get rate from database
@@ -401,11 +419,13 @@ class ExchangeService:
     # --- Helper Methods ---
     
     def _get_cached_rate(
+        """ Get Cached Rate."""
         self,
         from_currency: str,
         to_currency: str,
         date: Optional[datetime] = None
     ) -> Optional[ExchangeRateResult]:
+        """ Get Cached Rate."""
         """Get exchange rate from cache."""
         # This is a simplified implementation
         # In production, you'd use Redis or similar
@@ -418,6 +438,7 @@ class ExchangeService:
             return None
     
     def _cache_rate(self, rate_result: ExchangeRateResult) -> None:
+        """ Cache Rate."""
         """Cache an exchange rate result."""
         # This is a simplified implementation
         # In production, you'd use Redis or similar with appropriate TTL
@@ -429,6 +450,7 @@ class ExchangeService:
             logger.warning(f"Cache store error: {str(e)}")
     
     def _load_ecb_rates(self) -> List[Dict]:
+        """ Load Ecb Rates."""
         """Load ECB rates from a static file or database."""
         # In production, implement proper ECB API integration
         # This is just a placeholder with sample data
@@ -447,5 +469,6 @@ class ExchangeService:
 
 # Singleton instance for dependency injection
 def get_exchange_service(db: Session) -> ExchangeService:
+    """Get Exchange Service."""
     """Get an instance of the exchange service."""
     return ExchangeService(db)

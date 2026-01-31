@@ -4,23 +4,26 @@ Data Warehouse Service
 This service provides data warehouse functionality with ETL processes
 for comprehensive business intelligence and analytics.
 """
-from typing import Dict, List, Any, Optional, Union
 from datetime import datetime, timedelta
-from uuid import UUID, uuid4
-from enum import Enum
+from typing import Dict, List, Any, Optional, Union
 import asyncio
+
 from dataclasses import dataclass
+from enum import Enum
+from sqlalchemy import select, func, and_, or_, text, create_engine
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+from uuid import UUID, uuid4
 import pandas as pd
 
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_, or_, text, create_engine
-from sqlalchemy.orm import selectinload
-
-from app.models.general_ledger import Transaction, Account, JournalEntry
 from app.models.accounts_payable import Vendor, Invoice as APInvoice, Payment
 from app.models.accounts_receivable import Customer, Invoice as ARInvoice, Receipt
-from app.models.payroll import Employee, Payroll, PayrollItem
+from app.models.general_ledger import Transaction, Account, JournalEntry
 from app.models.inventory import InventoryItem, InventoryTransaction
+from app.models.payroll import Employee, Payroll, PayrollItem
+
+
+
 
 
 class ETLStatus(str, Enum):
@@ -48,11 +51,13 @@ class DataWarehouseService:
     """Service for data warehouse operations and ETL processes."""
 
     def __init__(self, db: AsyncSession, company_id: UUID):
+        """  Init  ."""
         self.db = db
         self.company_id = company_id
         self.etl_jobs: Dict[str, ETLJob] = {}
 
     async def create_data_warehouse_schema(self) -> None:
+        """Create Data Warehouse Schema."""
         """Create data warehouse schema with fact and dimension tables."""
         
         # Create dimension tables
@@ -65,6 +70,7 @@ class DataWarehouseService:
         await self._create_aggregated_tables()
 
     async def _create_dimension_tables(self) -> None:
+        """Create Dimension Tables."""
         """Create dimension tables for the data warehouse."""
         
         dimension_tables = [
@@ -160,6 +166,7 @@ class DataWarehouseService:
         await self.db.commit()
 
     async def _create_fact_tables(self) -> None:
+        """Create Fact Tables."""
         """Create fact tables for the data warehouse."""
         
         fact_tables = [
@@ -250,6 +257,7 @@ class DataWarehouseService:
         await self.db.commit()
 
     async def _create_aggregated_tables(self) -> None:
+        """Create Aggregated Tables."""
         """Create pre-aggregated tables for faster reporting."""
         
         aggregated_tables = [
@@ -316,6 +324,7 @@ class DataWarehouseService:
         await self.db.commit()
 
     async def run_etl_process(self, full_refresh: bool = False) -> Dict[str, Any]:
+        """Run Etl Process."""
         """Run the complete ETL process."""
         
         etl_start_time = datetime.now()
@@ -362,6 +371,7 @@ class DataWarehouseService:
             }
 
     async def _populate_date_dimension(self) -> Dict[str, Any]:
+        """Populate Date Dimension."""
         """Populate the date dimension table."""
         
         # Generate dates for the next 5 years
@@ -415,6 +425,7 @@ class DataWarehouseService:
         }
 
     async def _populate_account_dimension(self, full_refresh: bool) -> Dict[str, Any]:
+        """Populate Account Dimension."""
         """Populate the account dimension table."""
         
         if full_refresh:
@@ -466,6 +477,7 @@ class DataWarehouseService:
         }
 
     async def _populate_financial_transactions_fact(self, full_refresh: bool) -> Dict[str, Any]:
+        """Populate Financial Transactions Fact."""
         """Populate the financial transactions fact table."""
         
         if full_refresh:
@@ -531,6 +543,7 @@ class DataWarehouseService:
         }
 
     async def _update_monthly_financial_aggregates(self) -> Dict[str, Any]:
+        """Update Monthly Financial Aggregates."""
         """Update monthly financial aggregates."""
         
         # Calculate monthly aggregates
@@ -567,6 +580,7 @@ class DataWarehouseService:
         }
 
     async def get_warehouse_statistics(self) -> Dict[str, Any]:
+        """Get Warehouse Statistics."""
         """Get data warehouse statistics."""
         
         stats_queries = {

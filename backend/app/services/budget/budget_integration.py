@@ -1,18 +1,21 @@
-from typing import List, Optional
 from datetime import datetime
-from fastapi import HTTPException
-from sqlalchemy.orm import Session
-from .budget import BudgetService
-from .gl import GLService
-from .ap import APService
-from .ar import ARService
-from .procurement import ProcurementService
-from .payroll import PayrollService
+from typing import List, Optional
+
 from ..models import Budget, BudgetLine, BudgetAllocation
 from ..schemas import BudgetCreate, BudgetUpdate, BudgetStatus
+from .ap import APService
+from .ar import ARService
+from .budget import BudgetService
+from .gl import GLService
+from .payroll import PayrollService
+from .procurement import ProcurementService
+from fastapi import HTTPException
+from sqlalchemy.orm import Session
+
 
 class BudgetIntegrationService:
     def __init__(
+        """  Init  ."""
         self,
         db: Session,
         budget_service: BudgetService,
@@ -22,6 +25,7 @@ class BudgetIntegrationService:
         procurement_service: ProcurementService,
         payroll_service: PayrollService
     ):
+        """  Init  ."""
         self.db = db
         self.budget_service = budget_service
         self.gl_service = gl_service
@@ -31,6 +35,7 @@ class BudgetIntegrationService:
         self.payroll_service = payroll_service
 
     def check_budget_availability(
+        """Check Budget Availability."""
         self,
         account_id: int,
         amount: float,
@@ -38,6 +43,7 @@ class BudgetIntegrationService:
         project_id: Optional[int] = None,
         date: Optional[datetime] = None
     ) -> bool:
+        """Check Budget Availability."""
         """
         Check if the requested amount is available in the budget for the given account, department, and project.
         """
@@ -68,6 +74,7 @@ class BudgetIntegrationService:
         return total_available >= amount
 
     def allocate_budget(
+        """Allocate Budget."""
         self,
         budget_id: int,
         amount: float,
@@ -76,6 +83,7 @@ class BudgetIntegrationService:
         project_id: Optional[int] = None,
         description: str = ""
     ) -> BudgetAllocation:
+        """Allocate Budget."""
         """
         Create a budget allocation for a transaction.
         """
@@ -93,6 +101,7 @@ class BudgetIntegrationService:
         return allocation
 
     def update_gl_entry_budget_allocation(
+        """Update Gl Entry Budget Allocation."""
         self,
         gl_entry_id: int,
         budget_id: int,
@@ -100,6 +109,7 @@ class BudgetIntegrationService:
         department_id: Optional[int] = None,
         project_id: Optional[int] = None
     ):
+        """Update Gl Entry Budget Allocation."""
         """
         Update GL entry with budget allocation information.
         """
@@ -120,6 +130,7 @@ class BudgetIntegrationService:
         return gl_entry
 
     def update_ap_invoice_budget_allocation(
+        """Update Ap Invoice Budget Allocation."""
         self,
         invoice_id: int,
         budget_id: int,
@@ -127,6 +138,7 @@ class BudgetIntegrationService:
         department_id: Optional[int] = None,
         project_id: Optional[int] = None
     ):
+        """Update Ap Invoice Budget Allocation."""
         """
         Update AP invoice with budget allocation information.
         """
@@ -147,6 +159,7 @@ class BudgetIntegrationService:
         return invoice
 
     def update_ar_invoice_budget_allocation(
+        """Update Ar Invoice Budget Allocation."""
         self,
         invoice_id: int,
         budget_id: int,
@@ -154,6 +167,7 @@ class BudgetIntegrationService:
         department_id: Optional[int] = None,
         project_id: Optional[int] = None
     ):
+        """Update Ar Invoice Budget Allocation."""
         """
         Update AR invoice with budget allocation information.
         """
@@ -174,6 +188,7 @@ class BudgetIntegrationService:
         return invoice
 
     def update_purchase_order_budget_allocation(
+        """Update Purchase Order Budget Allocation."""
         self,
         po_id: int,
         budget_id: int,
@@ -181,6 +196,7 @@ class BudgetIntegrationService:
         department_id: Optional[int] = None,
         project_id: Optional[int] = None
     ):
+        """Update Purchase Order Budget Allocation."""
         """
         Update Purchase Order with budget allocation information.
         """
@@ -201,6 +217,7 @@ class BudgetIntegrationService:
         return po
 
     def update_payroll_entry_budget_allocation(
+        """Update Payroll Entry Budget Allocation."""
         self,
         payroll_id: int,
         budget_id: int,
@@ -208,6 +225,7 @@ class BudgetIntegrationService:
         department_id: Optional[int] = None,
         project_id: Optional[int] = None
     ):
+        """Update Payroll Entry Budget Allocation."""
         """
         Update Payroll entry with budget allocation information.
         """
@@ -228,6 +246,7 @@ class BudgetIntegrationService:
         return payroll
 
     def get_budget_spending_report(
+        """Get Budget Spending Report."""
         self,
         account_id: int,
         department_id: Optional[int] = None,
@@ -235,6 +254,7 @@ class BudgetIntegrationService:
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None
     ):
+        """Get Budget Spending Report."""
         """
         Get budget spending report for a specific account, department, and project.
         """

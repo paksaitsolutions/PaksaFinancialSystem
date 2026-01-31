@@ -3,17 +3,20 @@ Comprehensive HRM Service
 """
 from datetime import date, datetime, timedelta
 from typing import List, Optional, Dict, Any
-from uuid import UUID
-from sqlalchemy.ext.asyncio import AsyncSession
+
 from sqlalchemy import select, func, and_, or_, desc
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+from uuid import UUID
 
 from app.models.hrm_models import (
+from app.schemas.hrm.hrm_schemas import (
+
+
     Employee, Department, LeaveRequest, AttendanceRecord, 
     PerformanceReview, TrainingRecord, Policy, JobOpening, 
     Candidate, Interview
 )
-from app.schemas.hrm.hrm_schemas import (
     EmployeeCreate, EmployeeUpdate, DepartmentCreate,
     LeaveRequestCreate, AttendanceRecordCreate, 
     PerformanceReviewCreate, PolicyCreate
@@ -23,15 +26,18 @@ class HRMService:
     """Comprehensive HRM Service with real-time data integration"""
     
     def __init__(self):
+        """  Init  ."""
         self.mock_tenant_id = UUID("12345678-1234-5678-9012-123456789012")
     
     # Employee Management
     async def create_employee(
+        """Create Employee."""
         self, 
         db: AsyncSession, 
         employee_data: EmployeeCreate,
         tenant_id: UUID = None
     ) -> Employee:
+        """Create Employee."""
         """Create a new employee"""
         tenant_id = tenant_id or self.mock_tenant_id
         
@@ -59,6 +65,7 @@ class HRMService:
         return employee
     
     async def get_employees(
+        """Get Employees."""
         self,
         db: AsyncSession,
         tenant_id: UUID = None,
@@ -68,6 +75,7 @@ class HRMService:
         is_active: bool = True,
         search: str = None
     ) -> List[Employee]:
+        """Get Employees."""
         """Get employees with filters"""
         tenant_id = tenant_id or self.mock_tenant_id
         
@@ -96,11 +104,13 @@ class HRMService:
         return result.scalars().all()
     
     async def get_employee_by_id(
+        """Get Employee By Id."""
         self, 
         db: AsyncSession, 
         employee_id: UUID,
         tenant_id: UUID = None
     ) -> Optional[Employee]:
+        """Get Employee By Id."""
         """Get employee by ID"""
         tenant_id = tenant_id or self.mock_tenant_id
         
@@ -116,12 +126,14 @@ class HRMService:
         return result.scalar_one_or_none()
     
     async def update_employee(
+        """Update Employee."""
         self,
         db: AsyncSession,
         employee_id: UUID,
         employee_data: EmployeeUpdate,
         tenant_id: UUID = None
     ) -> Optional[Employee]:
+        """Update Employee."""
         """Update employee"""
         employee = await self.get_employee_by_id(db, employee_id, tenant_id)
         if not employee:
@@ -137,11 +149,13 @@ class HRMService:
     
     # Department Management
     async def create_department(
+        """Create Department."""
         self,
         db: AsyncSession,
         department_data: DepartmentCreate,
         tenant_id: UUID = None
     ) -> Department:
+        """Create Department."""
         """Create a new department"""
         tenant_id = tenant_id or self.mock_tenant_id
         
@@ -160,11 +174,13 @@ class HRMService:
         return department
     
     async def get_departments(
+        """Get Departments."""
         self,
         db: AsyncSession,
         tenant_id: UUID = None,
         include_inactive: bool = False
     ) -> List[Department]:
+        """Get Departments."""
         """Get all departments"""
         tenant_id = tenant_id or self.mock_tenant_id
         
@@ -181,12 +197,14 @@ class HRMService:
     
     # Leave Management
     async def create_leave_request(
+        """Create Leave Request."""
         self,
         db: AsyncSession,
         leave_data: LeaveRequestCreate,
         employee_id: UUID,
         tenant_id: UUID = None
     ) -> LeaveRequest:
+        """Create Leave Request."""
         """Create a leave request"""
         tenant_id = tenant_id or self.mock_tenant_id
         
@@ -209,6 +227,7 @@ class HRMService:
         return leave_request
     
     async def get_leave_requests(
+        """Get Leave Requests."""
         self,
         db: AsyncSession,
         tenant_id: UUID = None,
@@ -217,6 +236,7 @@ class HRMService:
         start_date: date = None,
         end_date: date = None
     ) -> List[LeaveRequest]:
+        """Get Leave Requests."""
         """Get leave requests with filters"""
         tenant_id = tenant_id or self.mock_tenant_id
         
@@ -242,12 +262,14 @@ class HRMService:
         return result.scalars().all()
     
     async def approve_leave_request(
+        """Approve Leave Request."""
         self,
         db: AsyncSession,
         request_id: UUID,
         approved_by: UUID,
         tenant_id: UUID = None
     ) -> Optional[LeaveRequest]:
+        """Approve Leave Request."""
         """Approve a leave request"""
         tenant_id = tenant_id or self.mock_tenant_id
         
@@ -271,12 +293,14 @@ class HRMService:
     
     # Attendance Management
     async def record_attendance(
+        """Record Attendance."""
         self,
         db: AsyncSession,
         attendance_data: AttendanceRecordCreate,
         employee_id: UUID,
         tenant_id: UUID = None
     ) -> AttendanceRecord:
+        """Record Attendance."""
         """Record attendance"""
         tenant_id = tenant_id or self.mock_tenant_id
         
@@ -321,6 +345,7 @@ class HRMService:
             return attendance
     
     async def get_attendance_records(
+        """Get Attendance Records."""
         self,
         db: AsyncSession,
         tenant_id: UUID = None,
@@ -328,6 +353,7 @@ class HRMService:
         start_date: date = None,
         end_date: date = None
     ) -> List[AttendanceRecord]:
+        """Get Attendance Records."""
         """Get attendance records"""
         tenant_id = tenant_id or self.mock_tenant_id
         
@@ -350,6 +376,7 @@ class HRMService:
     
     # Performance Management
     async def create_performance_review(
+        """Create Performance Review."""
         self,
         db: AsyncSession,
         review_data: PerformanceReviewCreate,
@@ -357,6 +384,7 @@ class HRMService:
         reviewer_id: UUID,
         tenant_id: UUID = None
     ) -> PerformanceReview:
+        """Create Performance Review."""
         """Create performance review"""
         tenant_id = tenant_id or self.mock_tenant_id
         
@@ -373,12 +401,14 @@ class HRMService:
         return review
     
     async def get_performance_reviews(
+        """Get Performance Reviews."""
         self,
         db: AsyncSession,
         tenant_id: UUID = None,
         employee_id: UUID = None,
         year: int = None
     ) -> List[PerformanceReview]:
+        """Get Performance Reviews."""
         """Get performance reviews"""
         tenant_id = tenant_id or self.mock_tenant_id
         
@@ -406,10 +436,12 @@ class HRMService:
     
     # Analytics and Reporting
     async def get_hr_analytics(
+        """Get Hr Analytics."""
         self,
         db: AsyncSession,
         tenant_id: UUID = None
     ) -> Dict[str, Any]:
+        """Get Hr Analytics."""
         """Get HR analytics dashboard data"""
         tenant_id = tenant_id or self.mock_tenant_id
         
@@ -481,10 +513,12 @@ class HRMService:
         }
     
     async def _calculate_average_tenure(
+        """ Calculate Average Tenure."""
         self, 
         db: AsyncSession, 
         tenant_id: UUID
     ) -> float:
+        """Calculate Average Tenure."""
         """Calculate average employee tenure in months"""
         query = select(Employee.hire_date).where(
             and_(Employee.tenant_id == tenant_id, Employee.is_active == True)
@@ -505,11 +539,13 @@ class HRMService:
     
     # Policy Management
     async def create_policy(
+        """Create Policy."""
         self,
         db: AsyncSession,
         policy_data: PolicyCreate,
         tenant_id: UUID = None
     ) -> Policy:
+        """Create Policy."""
         """Create a new policy"""
         tenant_id = tenant_id or self.mock_tenant_id
         
@@ -524,12 +560,14 @@ class HRMService:
         return policy
     
     async def get_policies(
+        """Get Policies."""
         self,
         db: AsyncSession,
         tenant_id: UUID = None,
         category: str = None,
         status: str = None
     ) -> List[Policy]:
+        """Get Policies."""
         """Get policies with filters"""
         tenant_id = tenant_id or self.mock_tenant_id
         

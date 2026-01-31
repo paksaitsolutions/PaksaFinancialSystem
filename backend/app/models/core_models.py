@@ -102,6 +102,11 @@ class ExchangeRateType(str, PyEnum):
     FORWARD = "forward"
     HISTORICAL = "historical"
 
+class JournalEntryStatus(str, PyEnum):
+    DRAFT = "draft"
+    POSTED = "posted"
+    REVERSED = "reversed"
+
 # ============================================================================
 # CORE FINANCIAL ENTITIES
 # ============================================================================

@@ -1,25 +1,30 @@
 """
 Succession planning service.
 """
-from typing import List, Dict, Any, Optional
-from uuid import UUID
 from datetime import date, datetime
+from typing import List, Dict, Any, Optional
 
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_, or_
+from sqlalchemy.ext.asyncio import AsyncSession
+from uuid import UUID
 
 from app.models.hrm.employee import Employee
 from app.models.hrm.succession import SuccessionPlan, SuccessionCandidate, DevelopmentPlan, DevelopmentActivity
+
+
+
 
 class SuccessionService:
     """Succession planning service."""
     
     async def create_succession_plan(
+        """Create Succession Plan."""
         self,
         db: AsyncSession,
         tenant_id: UUID,
         plan_data: Dict[str, Any]
     ) -> SuccessionPlan:
+        """Create Succession Plan."""
         """Create a new succession plan."""
         plan = SuccessionPlan(
             tenant_id=tenant_id,
@@ -31,12 +36,14 @@ class SuccessionService:
         return plan
     
     async def add_succession_candidate(
+        """Add Succession Candidate."""
         self,
         db: AsyncSession,
         succession_plan_id: UUID,
         employee_id: UUID,
         candidate_data: Dict[str, Any]
     ) -> SuccessionCandidate:
+        """Add Succession Candidate."""
         """Add a candidate to succession plan."""
         candidate = SuccessionCandidate(
             succession_plan_id=succession_plan_id,
@@ -49,11 +56,13 @@ class SuccessionService:
         return candidate
     
     async def create_development_plan(
+        """Create Development Plan."""
         self,
         db: AsyncSession,
         employee_id: UUID,
         plan_data: Dict[str, Any]
     ) -> DevelopmentPlan:
+        """Create Development Plan."""
         """Create employee development plan."""
         plan = DevelopmentPlan(
             employee_id=employee_id,
@@ -65,11 +74,13 @@ class SuccessionService:
         return plan
     
     async def add_development_activity(
+        """Add Development Activity."""
         self,
         db: AsyncSession,
         development_plan_id: UUID,
         activity_data: Dict[str, Any]
     ) -> DevelopmentActivity:
+        """Add Development Activity."""
         """Add activity to development plan."""
         activity = DevelopmentActivity(
             development_plan_id=development_plan_id,
@@ -81,12 +92,14 @@ class SuccessionService:
         return activity
     
     async def get_succession_plans(
+        """Get Succession Plans."""
         self,
         db: AsyncSession,
         tenant_id: UUID,
         department: Optional[str] = None,
         risk_level: Optional[str] = None
     ) -> List[Dict[str, Any]]:
+        """Get Succession Plans."""
         """Get succession plans with filters."""
         filters = [SuccessionPlan.tenant_id == tenant_id, SuccessionPlan.status == "active"]
         
@@ -103,10 +116,12 @@ class SuccessionService:
         return [await self._serialize_succession_plan(db, plan) for plan in plans]
     
     async def get_succession_readiness_report(
+        """Get Succession Readiness Report."""
         self,
         db: AsyncSession,
         tenant_id: UUID
     ) -> Dict[str, Any]:
+        """Get Succession Readiness Report."""
         """Generate succession readiness report."""
         # Get all active succession plans
         plans_result = await db.execute(
@@ -181,10 +196,12 @@ class SuccessionService:
         }
     
     async def get_employee_development_dashboard(
+        """Get Employee Development Dashboard."""
         self,
         db: AsyncSession,
         employee_id: UUID
     ) -> Dict[str, Any]:
+        """Get Employee Development Dashboard."""
         """Get employee development dashboard."""
         # Get development plans
         plans_result = await db.execute(
@@ -226,6 +243,7 @@ class SuccessionService:
         }
     
     async def _serialize_succession_plan(self, db: AsyncSession, plan: SuccessionPlan) -> Dict[str, Any]:
+        """Serialize Succession Plan."""
         """Serialize succession plan with candidates."""
         # Get candidates
         candidates_result = await db.execute(
@@ -251,6 +269,7 @@ class SuccessionService:
         }
     
     def _serialize_candidate(self, candidate: SuccessionCandidate) -> Dict[str, Any]:
+        """ Serialize Candidate."""
         """Serialize succession candidate."""
         return {
             "id": str(candidate.id),
@@ -263,6 +282,7 @@ class SuccessionService:
         }
     
     def _serialize_development_plan(self, plan: DevelopmentPlan) -> Dict[str, Any]:
+        """ Serialize Development Plan."""
         """Serialize development plan."""
         return {
             "id": str(plan.id),
@@ -277,6 +297,7 @@ class SuccessionService:
         }
     
     def _serialize_activity(self, activity: DevelopmentActivity) -> Dict[str, Any]:
+        """ Serialize Activity."""
         """Serialize development activity."""
         return {
             "id": str(activity.id),
@@ -289,11 +310,13 @@ class SuccessionService:
         }
     
     def _generate_succession_recommendations(
+        """ Generate Succession Recommendations."""
         self,
         coverage_rate: float,
         positions_at_risk: int,
         risk_summary: Dict[str, int]
     ) -> List[str]:
+        """ Generate Succession Recommendations."""
         """Generate succession planning recommendations."""
         recommendations = []
         

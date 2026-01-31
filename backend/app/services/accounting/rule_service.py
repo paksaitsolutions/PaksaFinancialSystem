@@ -4,22 +4,28 @@ Reconciliation Rule Service
 This module provides services for managing reconciliation rules.
 """
 from datetime import datetime
-from decimal import Decimal
 from typing import List, Optional, Dict, Any, Union
-from uuid import UUID
 
+from ...models.account import Account
+from ...models.reconciliation import (
+from ...schemas.reconciliation import (
+from .base import BaseReconciliationService
+from decimal import Decimal
 from sqlalchemy import and_, or_, func, select, text
 from sqlalchemy.orm import Session, joinedload
+from uuid import UUID
 
 from app.core.exceptions import (
+from app.core.logging import get_logger
+
+
+
     NotFoundException,
     ValidationException,
     ForbiddenException,
     ConflictException
 )
-from app.core.logging import get_logger
 
-from ...models.reconciliation import (
     ReconciliationRule,
     ReconciliationRuleCondition,
     ReconciliationRuleAction,
@@ -29,8 +35,6 @@ from ...models.reconciliation import (
     ReconciliationRuleFieldType,
     ReconciliationMatchType
 )
-from ...models.account import Account
-from ...schemas.reconciliation import (
     ReconciliationRuleCreate,
     ReconciliationRuleUpdate,
     ReconciliationRuleConditionCreate,
@@ -38,7 +42,6 @@ from ...schemas.reconciliation import (
     ReconciliationRuleActionCreate,
     ReconciliationRuleActionUpdate
 )
-from .base import BaseReconciliationService
 
 logger = get_logger(__name__)
 
@@ -49,6 +52,7 @@ class ReconciliationRuleService(BaseReconciliationService):
     # Rule CRUD Operations
     
     def get_rule(self, rule_id: UUID, user_id: UUID) -> ReconciliationRule:
+        """Get Rule."""
         """Get a reconciliation rule by ID with permission check.
         
         Args:
@@ -75,7 +79,6 @@ class ReconciliationRuleService(BaseReconciliationService):
         if not rule:
             raise NotFoundException("Reconciliation rule not found")
             
-        # TODO: Add permission check based on user's access to the account
         # For now, just check if the user created the rule
         if rule.created_by != user_id:
             raise ForbiddenException("You don't have permission to access this rule")
@@ -83,6 +86,7 @@ class ReconciliationRuleService(BaseReconciliationService):
         return rule
     
     def list_rules(
+        """List Rules."""
         self,
         user_id: UUID,
         account_id: Optional[UUID] = None,
@@ -90,6 +94,7 @@ class ReconciliationRuleService(BaseReconciliationService):
         skip: int = 0,
         limit: int = 100
     ) -> Tuple[List[ReconciliationRule], int]:
+        """List Rules."""
         """List reconciliation rules with optional filtering.
         
         Args:
@@ -105,7 +110,6 @@ class ReconciliationRuleService(BaseReconciliationService):
         query = self.db.query(ReconciliationRule)
         
         # Apply filters
-        # TODO: Add permission filtering based on user's access to accounts
         # For now, just filter by created_by
         query = query.filter(ReconciliationRule.created_by == user_id)
         
@@ -138,6 +142,7 @@ class ReconciliationRuleService(BaseReconciliationService):
         return rules, total
     
     def create_rule(self, data: ReconciliationRuleCreate, user_id: UUID) -> ReconciliationRule:
+        """Create Rule."""
         """Create a new reconciliation rule.
         
         Args:
@@ -243,11 +248,13 @@ class ReconciliationRuleService(BaseReconciliationService):
         return rule
     
     def update_rule(
+        """Update Rule."""
         self, 
         rule_id: UUID, 
         data: ReconciliationRuleUpdate, 
         user_id: UUID
     ) -> ReconciliationRule:
+        """Update Rule."""
         """Update a reconciliation rule.
         
         Args:
@@ -387,6 +394,7 @@ class ReconciliationRuleService(BaseReconciliationService):
         return rule
     
     def delete_rule(self, rule_id: UUID, user_id: UUID) -> bool:
+        """Delete Rule."""
         """Delete a reconciliation rule.
         
         Args:

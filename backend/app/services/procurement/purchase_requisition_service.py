@@ -1,15 +1,18 @@
-from typing import List, Optional, Dict, Any
 from datetime import datetime
-from sqlalchemy.orm import Session
-from fastapi import HTTPException, status
-from ...core.deps import get_current_user
-from ...models.user import User
+from typing import List, Optional, Dict, Any
+
 from ...core.database import SessionLocal
+from ...core.deps import get_current_user
+from ...core.logging import logger
+from ...models.user import User
 from ..extended_financials.procurement.models.purchase_requisition import (
+from ..extended_financials.procurement.schemas.purchase_requisition import (
+from fastapi import HTTPException, status
+from sqlalchemy.orm import Session
+
     PurchaseRequisition, 
     RequisitionItem
 )
-from ..extended_financials.procurement.schemas.purchase_requisition import (
     PurchaseRequisitionCreate,
     PurchaseRequisitionUpdate,
     PurchaseRequisitionResponse,
@@ -18,7 +21,6 @@ from ..extended_financials.procurement.schemas.purchase_requisition import (
     RequisitionStatus,
     RequisitionFilter
 )
-from ...core.logging import logger
 
 class PurchaseRequisitionService:
     """
@@ -26,10 +28,12 @@ class PurchaseRequisitionService:
     """
     
     def __init__(self, db: Session, current_user: User):
+        """  Init  ."""
         self.db = db
         self.current_user = current_user
     
     def _generate_requisition_number(self) -> str:
+        """ Generate Requisition Number."""
         """Generate a unique requisition number."""
         prefix = "REQ"
         timestamp = datetime.utcnow().strftime("%Y%m%d")
@@ -42,13 +46,16 @@ class PurchaseRequisitionService:
         return f"{prefix}-{timestamp}-{count + 1:04d}"
     
     def _calculate_total_amount(self, items: List[RequisitionItemCreate]) -> float:
+        """ Calculate Total Amount."""
         """Calculate the total amount from requisition items."""
         return sum(item.quantity * item.unit_price for item in items)
     
     def create_requisition(
+        """Create Requisition."""
         self, 
         requisition_data: PurchaseRequisitionCreate
     ) -> PurchaseRequisitionResponse:
+        """Create Requisition."""
         """
         Create a new purchase requisition.
         """
@@ -113,9 +120,11 @@ class PurchaseRequisitionService:
             )
     
     def get_requisition(
+        """Get Requisition."""
         self, 
         requisition_id: int
     ) -> Optional[PurchaseRequisitionResponse]:
+        """Get Requisition."""
         """
         Get a purchase requisition by ID.
         """
@@ -141,11 +150,13 @@ class PurchaseRequisitionService:
         return requisition
     
     def list_requisitions(
+        """List Requisitions."""
         self, 
         skip: int = 0, 
         limit: int = 100,
         filters: Optional[RequisitionFilter] = None
     ) -> List[PurchaseRequisitionList]:
+        """List Requisitions."""
         """
         List purchase requisitions with optional filtering and pagination.
         """
@@ -187,10 +198,12 @@ class PurchaseRequisitionService:
         return query.offset(skip).limit(limit).all()
     
     def update_requisition(
+        """Update Requisition."""
         self, 
         requisition_id: int, 
         requisition_data: PurchaseRequisitionUpdate
     ) -> PurchaseRequisitionResponse:
+        """Update Requisition."""
         """
         Update a purchase requisition.
         """
@@ -252,9 +265,11 @@ class PurchaseRequisitionService:
             )
     
     def submit_requisition(
+        """Submit Requisition."""
         self, 
         requisition_id: int
     ) -> PurchaseRequisitionResponse:
+        """Submit Requisition."""
         """
         Submit a draft requisition for approval.
         """
@@ -276,7 +291,6 @@ class PurchaseRequisitionService:
             self.db.commit()
             self.db.refresh(db_requisition)
             
-            # TODO: Trigger approval workflow
             
             return db_requisition
             
@@ -289,10 +303,12 @@ class PurchaseRequisitionService:
             )
     
     def approve_requisition(
+        """Approve Requisition."""
         self, 
         requisition_id: int,
         approval_data: RequisitionApproval
     ) -> PurchaseRequisitionResponse:
+        """Approve Requisition."""
         """
         Approve or reject a submitted requisition.
         """
@@ -306,7 +322,6 @@ class PurchaseRequisitionService:
             )
         
         # Check if user has permission to approve
-        # TODO: Implement proper approval workflow with role-based permissions
         if not self.current_user.is_superuser:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -327,7 +342,6 @@ class PurchaseRequisitionService:
             self.db.commit()
             self.db.refresh(db_requisition)
             
-            # TODO: Trigger notifications and next steps
             
             return db_requisition
             
@@ -340,9 +354,11 @@ class PurchaseRequisitionService:
             )
     
     def delete_requisition(
+        """Delete Requisition."""
         self, 
         requisition_id: int
     ) -> bool:
+        """Delete Requisition."""
         """
         Delete a purchase requisition.
         """

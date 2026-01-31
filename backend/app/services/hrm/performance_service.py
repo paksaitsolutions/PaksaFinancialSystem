@@ -1,27 +1,32 @@
 """
 Advanced performance management service.
 """
-from typing import List, Dict, Any, Optional
-from uuid import UUID
 from datetime import date, datetime, timedelta
-from decimal import Decimal
+from typing import List, Dict, Any, Optional
 
-from sqlalchemy.ext.asyncio import AsyncSession
+from decimal import Decimal
 from sqlalchemy import select, func, and_, or_
+from sqlalchemy.ext.asyncio import AsyncSession
+from uuid import UUID
 
 from app.models.hrm.employee import Employee
 from app.models.hrm.performance import PerformanceReview, Goal
+
+
+
 
 class PerformanceService:
     """Advanced performance management service."""
     
     async def create_performance_review(
+        """Create Performance Review."""
         self,
         db: AsyncSession,
         employee_id: UUID,
         reviewer_id: UUID,
         review_data: Dict[str, Any]
     ) -> PerformanceReview:
+        """Create Performance Review."""
         """Create a new performance review."""
         review = PerformanceReview(
             employee_id=employee_id,
@@ -34,11 +39,13 @@ class PerformanceService:
         return review
     
     async def complete_performance_review(
+        """Complete Performance Review."""
         self,
         db: AsyncSession,
         review_id: UUID,
         completion_data: Dict[str, Any]
     ) -> PerformanceReview:
+        """Complete Performance Review."""
         """Complete a performance review."""
         result = await db.execute(
             select(PerformanceReview).where(PerformanceReview.id == review_id)
@@ -61,11 +68,13 @@ class PerformanceService:
         return review
     
     async def create_employee_goal(
+        """Create Employee Goal."""
         self,
         db: AsyncSession,
         employee_id: UUID,
         goal_data: Dict[str, Any]
     ) -> Goal:
+        """Create Employee Goal."""
         """Create a new employee goal."""
         goal = Goal(
             employee_id=employee_id,
@@ -77,12 +86,14 @@ class PerformanceService:
         return goal
     
     async def update_goal_progress(
+        """Update Goal Progress."""
         self,
         db: AsyncSession,
         goal_id: UUID,
         progress_percentage: int,
         notes: Optional[str] = None
     ) -> Goal:
+        """Update Goal Progress."""
         """Update goal progress."""
         result = await db.execute(
             select(Goal).where(Goal.id == goal_id)
@@ -103,11 +114,13 @@ class PerformanceService:
         return goal
     
     async def get_employee_performance_summary(
+        """Get Employee Performance Summary."""
         self,
         db: AsyncSession,
         employee_id: UUID,
         year: Optional[int] = None
     ) -> Dict[str, Any]:
+        """Get Employee Performance Summary."""
         """Get employee performance summary."""
         if not year:
             year = datetime.now().year
@@ -157,12 +170,14 @@ class PerformanceService:
         }
     
     async def get_team_performance_analytics(
+        """Get Team Performance Analytics."""
         self,
         db: AsyncSession,
         tenant_id: UUID,
         department: Optional[str] = None,
         year: Optional[int] = None
     ) -> Dict[str, Any]:
+        """Get Team Performance Analytics."""
         """Get team performance analytics."""
         if not year:
             year = datetime.now().year
@@ -222,6 +237,7 @@ class PerformanceService:
         }
     
     def _serialize_review(self, review: PerformanceReview) -> Dict[str, Any]:
+        """ Serialize Review."""
         """Serialize performance review."""
         return {
             "id": str(review.id),
@@ -234,6 +250,7 @@ class PerformanceService:
         }
     
     def _serialize_goal(self, goal: Goal) -> Dict[str, Any]:
+        """ Serialize Goal."""
         """Serialize goal."""
         return {
             "id": str(goal.id),

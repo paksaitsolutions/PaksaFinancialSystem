@@ -1,15 +1,18 @@
 """AI-powered tax optimization service."""
-from typing import Dict, List, Optional, TypedDict
 from datetime import date
-from enum import Enum
-import logging
+from typing import Dict, List, Optional, TypedDict
 
+from enum import Enum
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+import logging
 
-from app.models.tax_models import TaxTransaction, TaxRate, TaxDeduction
-from app.core.config import settings
 from app.core.ai.tax_llm import TaxLLMClient
+from app.core.config import settings
+from app.models.tax_models import TaxTransaction, TaxRate, TaxDeduction
+
+
+
 
 logger = logging.getLogger(__name__)
 
@@ -37,15 +40,18 @@ class AITaxOptimizationService:
     """Service for AI-powered tax optimization."""
     
     def __init__(self, db: Session):
+        """  Init  ."""
         self.db = db
         self.ai_client = TaxLLMClient(api_key=settings.AI_TAX_API_KEY)
     
     def get_deduction_suggestions(
+        """Get Deduction Suggestions."""
         self,
         company_id: str,
         fiscal_year: int,
         analysis_depth: str = 'STANDARD'
     ) -> List[DeductionSuggestion]:
+        """Get Deduction Suggestions."""
         """Get AI-suggested tax deductions."""
         try:
             # Get relevant tax data
@@ -74,6 +80,7 @@ class AITaxOptimizationService:
             raise
     
     def run_tax_scenario(self, scenario: TaxScenario) -> TaxScenario:
+        """Run Tax Scenario."""
         """Run a tax scenario simulation."""
         try:
             # Validate scenario
@@ -97,16 +104,19 @@ class AITaxOptimizationService:
             raise
     
     def _get_company_transactions(self, company_id: str, fiscal_year: int):
+        """ Get Company Transactions."""
         """Get company transactions for the fiscal year."""
         # Implementation depends on your database schema
         pass
     
     def _get_company_jurisdiction(self, company_id: str) -> str:
+        """ Get Company Jurisdiction."""
         """Get company's tax jurisdiction."""
         # Implementation depends on your database schema
         return "US"  # Default
     
     def _validate_scenario(self, scenario: TaxScenario):
+        """ Validate Scenario."""
         """Validate tax scenario parameters."""
         if scenario.base_year < 2000 or scenario.base_year > 2100:
             raise ValueError("Invalid base year")

@@ -1,19 +1,24 @@
 from datetime import date
 from typing import List, Optional, Dict, Any
-from sqlalchemy.orm import Session
+
 from fastapi import HTTPException, status
-from app.models import JournalEntry, JournalEntryLine
+from sqlalchemy.orm import Session
+
 from app.models import ChartOfAccounts as GLAccount
+from app.models import JournalEntry, JournalEntryLine
 from app.schemas.gl_schemas import TrialBalance, TrialBalanceEntry
+
 
 class TrialBalanceService:
     @staticmethod
     def get_trial_balance(
+        """Get Trial Balance."""
         db: Session, 
         start_date: date, 
         end_date: date, 
         include_zeros: bool = False
     ) -> TrialBalance:
+        """Get Trial Balance."""
         """
         Generate a trial balance for the given date range
         """
@@ -74,9 +79,11 @@ class TrialBalanceService:
         
     @staticmethod
     def export_trial_balance(
+        """Export Trial Balance."""
         trial_balance: TrialBalance,
         format: str = 'csv'  # 'csv' or 'excel'
     ) -> bytes:
+        """Export Trial Balance."""
         """
         Export trial balance to the specified format
         """

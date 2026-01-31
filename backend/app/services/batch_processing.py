@@ -1,33 +1,40 @@
 """
 Batch processing system for bulk operations.
 """
-import asyncio
-from typing import List, Dict, Any, Callable, Optional
 from datetime import datetime
+from typing import List, Dict, Any, Callable, Optional
+import asyncio
+
 import uuid
 
 from app.core.logging import logger
 from app.services.background_jobs import job_queue
 
+
+
 class BatchProcessor:
     """Batch processing manager for bulk operations."""
     
     def __init__(self, batch_size: int = 100):
+        """  Init  ."""
         self.batch_size = batch_size
         self.processors: Dict[str, Callable] = {}
     
     def register_processor(self, operation_type: str, processor: Callable):
+        """Register Processor."""
         """Register batch processor."""
         self.processors[operation_type] = processor
         logger.info(f"Registered batch processor: {operation_type}")
     
     async def process_batch(
+        """Process Batch."""
         self,
         operation_type: str,
         items: List[Dict[str, Any]],
         tenant_id: Optional[str] = None,
         chunk_size: Optional[int] = None
     ) -> Dict[str, Any]:
+        """Process Batch."""
         """Process items in batches."""
         if operation_type not in self.processors:
             raise ValueError(f"No processor registered for: {operation_type}")
@@ -76,12 +83,14 @@ class BatchProcessor:
         }
     
     async def schedule_batch_job(
+        """Schedule Batch Job."""
         self,
         operation_type: str,
         items: List[Dict[str, Any]],
         tenant_id: Optional[str] = None,
         delay: int = 0
     ) -> str:
+        """Schedule Batch Job."""
         """Schedule batch processing as background job."""
         job_id = await job_queue.enqueue(
             "batch_processing",
@@ -102,6 +111,7 @@ batch_processor = BatchProcessor()
 
 # Batch processing job handler
 async def batch_processing_job(payload: Dict[str, Any], tenant_id: Optional[str]):
+        """Batch Processing Job."""
     """Background job handler for batch processing."""
     operation_type = payload["operation_type"]
     items = payload["items"]
@@ -117,6 +127,7 @@ job_queue.register_handler("batch_processing", batch_processing_job)
 
 # Default batch processors
 async def bulk_invoice_processor(items: List[Dict[str, Any]], tenant_id: Optional[str]) -> List[Dict[str, Any]]:
+        """Bulk Invoice Processor."""
     """Process bulk invoice creation."""
     results = []
     
@@ -141,6 +152,7 @@ async def bulk_invoice_processor(items: List[Dict[str, Any]], tenant_id: Optiona
     return results
 
 async def bulk_payment_processor(items: List[Dict[str, Any]], tenant_id: Optional[str]) -> List[Dict[str, Any]]:
+        """Bulk Payment Processor."""
     """Process bulk payments."""
     results = []
     
@@ -165,6 +177,7 @@ async def bulk_payment_processor(items: List[Dict[str, Any]], tenant_id: Optiona
     return results
 
 async def bulk_employee_import_processor(items: List[Dict[str, Any]], tenant_id: Optional[str]) -> List[Dict[str, Any]]:
+        """Bulk Employee Import Processor."""
     """Process bulk employee import."""
     results = []
     

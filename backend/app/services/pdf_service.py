@@ -1,23 +1,26 @@
 """
 PDF generation service for the application.
 """
-import os
 from datetime import datetime
-from typing import Dict, Any, Optional
-from io import BytesIO
-
-from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
 from reportlab.lib.units import inch, mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
+from typing import Dict, Any, Optional
+import os
+
+from io import BytesIO
+
+
 
 class PDFService:
     """Service for generating PDF documents."""
     
     def __init__(self):
+        """  Init  ."""
         """Initialize the PDF service with default styles."""
         # Register fonts
         self._register_fonts()
@@ -27,6 +30,7 @@ class PDFService:
         self._define_custom_styles()
     
     def _register_fonts(self):
+        """ Register Fonts."""
         """Register custom fonts."""
         # Try to register common font paths
         font_paths = [
@@ -53,6 +57,7 @@ class PDFService:
             pdfmetrics.registerFont(TTFont('Arial', 'Helvetica'))
     
     def _define_custom_styles(self):
+        """ Define Custom Styles."""
         """Define custom styles for the PDF."""
         # Title style
         self.styles.add(ParagraphStyle(
@@ -103,6 +108,7 @@ class PDFService:
         ))
     
     def generate_tax_exemption_certificate(self, certificate_data: Dict[str, Any]) -> BytesIO:
+        """Generate Tax Exemption Certificate."""
         """
         Generate a tax exemption certificate PDF.
         
@@ -221,6 +227,7 @@ class PDFService:
         return buffer
     
     def _format_date(self, date_str: Optional[str]) -> str:
+        """ Format Date."""
         """Format a date string for display."""
         if not date_str:
             return 'N/A'

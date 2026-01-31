@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker
 
 from app.main import app
 from app.core.database_config import Base, get_db
-from app.models.gl_models_updated import GLAccount, JournalEntry, AccountingPeriod
+from app.models.core_models import ChartOfAccounts, JournalEntry, FinancialPeriod
 
 # Test database setup
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test_gl_database.db"

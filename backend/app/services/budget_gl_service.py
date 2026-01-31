@@ -2,17 +2,21 @@
 Budget GL Integration Service
 """
 from decimal import Decimal
-from uuid import UUID
-from sqlalchemy.orm import Session
 from sqlalchemy import func
+from sqlalchemy.orm import Session
+from uuid import UUID
+
 from app.models import Budget, BudgetLineItem, JournalEntry, JournalEntryLine, ChartOfAccounts
 from app.services.base import BaseService
 
+
 class BudgetGLService(BaseService):
     def __init__(self, db: Session):
+        """  Init  ."""
         super().__init__(db, Budget)
     
     def update_budget_actuals(self, budget: Budget) -> None:
+        """Update Budget Actuals."""
         """Update budget actual amounts from GL data"""
         
         # Get actual amounts from GL for budget accounts
@@ -48,6 +52,7 @@ class BudgetGLService(BaseService):
             line_item.variance = line_item.budgeted_amount - line_actual
     
     def generate_budget_vs_actual_report(self, company_id: UUID, budget_year: int) -> dict:
+        """Generate Budget Vs Actual Report."""
         """Generate budget vs actual report from GL data"""
         
         budgets = self.db.query(Budget).filter(

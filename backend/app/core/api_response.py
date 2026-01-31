@@ -66,26 +66,17 @@ def error_response(
 
 def paginated_response(
     data: List[Any],
-    total: int,
-    page: int,
-    page_size: int,
+    pagination_meta: Dict[str, Any],
     message: Optional[str] = None,
     meta: Optional[Dict[str, Any]] = None
 ) -> JSONResponse:
     """Create a standardized paginated response."""
-    pagination = {
-        "total": total,
-        "page": page,
-        "page_size": page_size,
-        "pages": (total + page_size - 1) // page_size
-    }
-    
     return JSONResponse(
         content=PaginatedResponse(
             status="success",
             message=message,
             data=data,
             meta=meta or {},
-            pagination=pagination
+            pagination=pagination_meta
         ).model_dump(exclude_none=True)
     )

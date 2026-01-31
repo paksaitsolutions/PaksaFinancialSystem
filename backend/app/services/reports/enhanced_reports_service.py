@@ -3,29 +3,35 @@ Enhanced reports service with multi-tenant support.
 """
 from datetime import datetime, timedelta
 from typing import List, Optional, Dict, Any
-from uuid import UUID
 
-from sqlalchemy.orm import Session
 from sqlalchemy import and_, desc
+from sqlalchemy.orm import Session
+from uuid import UUID
 
 from app.models.reports import CompanyReport, ReportTemplate, ReportSchedule, ReportType, ReportStatus
 from app.services.audit.audit_service import AuditService
+
+
+
 
 
 class EnhancedReportsService:
     """Service for generating multi-tenant financial and operational reports."""
     
     def __init__(self, db: Session):
+        """  Init  ."""
         self.db = db
         self.audit_service = AuditService(db)
     
     def generate_income_statement(
+        """Generate Income Statement."""
         self,
         company_id: UUID,
         period_start: datetime,
         period_end: datetime,
         generated_by: UUID
     ) -> CompanyReport:
+        """Generate Income Statement."""
         """Generate Income Statement (Profit & Loss) for company."""
         report = CompanyReport(
             company_id=company_id,
@@ -57,11 +63,13 @@ class EnhancedReportsService:
         return report
     
     def generate_balance_sheet(
+        """Generate Balance Sheet."""
         self,
         company_id: UUID,
         period_end: datetime,
         generated_by: UUID
     ) -> CompanyReport:
+        """Generate Balance Sheet."""
         """Generate Balance Sheet for company."""
         report = CompanyReport(
             company_id=company_id,
@@ -93,12 +101,14 @@ class EnhancedReportsService:
         return report
     
     def generate_aging_report(
+        """Generate Aging Report."""
         self,
         company_id: UUID,
         report_type: str,
         as_of_date: datetime,
         generated_by: UUID
     ) -> CompanyReport:
+        """Generate Aging Report."""
         """Generate Aging Report for company."""
         report = CompanyReport(
             company_id=company_id,
@@ -131,11 +141,13 @@ class EnhancedReportsService:
         return report
     
     def create_report_template(
+        """Create Report Template."""
         self,
         company_id: UUID,
         template_data: Dict[str, Any],
         created_by: UUID
     ) -> ReportTemplate:
+        """Create Report Template."""
         """Create company-specific report template."""
         template = ReportTemplate(
             company_id=company_id,
@@ -154,21 +166,25 @@ class EnhancedReportsService:
         return template
     
     def list_company_reports(self, company_id: UUID, limit: int = 100) -> List[CompanyReport]:
+        """List Company Reports."""
         """List reports for a company."""
         return self.db.query(CompanyReport).filter(
             CompanyReport.company_id == company_id
         ).order_by(desc(CompanyReport.created_at)).limit(limit).all()
     
     def get_report(self, report_id: UUID) -> Optional[CompanyReport]:
+        """Get Report."""
         """Get report by ID."""
         return self.db.query(CompanyReport).filter(CompanyReport.id == report_id).first()
     
     def _generate_income_statement_data(
+        """ Generate Income Statement Data."""
         self,
         company_id: UUID,
         period_start: datetime,
         period_end: datetime
     ) -> Dict[str, Any]:
+        """ Generate Income Statement Data."""
         """Generate income statement data for company."""
         return {
             "report_type": "Income Statement",
@@ -191,6 +207,7 @@ class EnhancedReportsService:
         }
     
     def _generate_balance_sheet_data(self, company_id: UUID, period_end: datetime) -> Dict[str, Any]:
+        """ Generate Balance Sheet Data."""
         """Generate balance sheet data for company."""
         return {
             "report_type": "Balance Sheet",
@@ -229,11 +246,13 @@ class EnhancedReportsService:
         }
     
     def _generate_aging_data(
+        """ Generate Aging Data."""
         self,
         company_id: UUID,
         aging_type: str,
         as_of_date: datetime
     ) -> Dict[str, Any]:
+        """ Generate Aging Data."""
         """Generate aging report data for company."""
         return {
             "report_type": f"{aging_type.title()} Aging Report",

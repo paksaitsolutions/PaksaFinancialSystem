@@ -1,6 +1,29 @@
 """
 Account balance service placeholder.
 """
+from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date
+from typing import Dict, List, Optional, Tuple, Union, Any
+from typing import Dict, List, Optional, Tuple, Union, Any
+
+from ..exceptions import (
+from ..exceptions import (
+from ..models import (
+from ..models import (
+from core.database import SessionLocal
+from dateutil.relativedelta import relativedelta
+from dateutil.relativedelta import relativedelta
+from decimal import Decimal, ROUND_HALF_UP
+from decimal import Decimal, ROUND_HALF_UP
+from sqlalchemy import and_, case, func, or_, select, text
+from sqlalchemy import and_, case, func, or_, select, text
+from sqlalchemy.orm import Session, aliased
+from sqlalchemy.orm import Session, aliased
+from uuid import UUID
+from uuid import UUID
+
+from app.core.database import SessionLocal
+
 """
 Paksa Financial System 
 Account Balance Service
@@ -8,24 +31,14 @@ Account Balance Service
 This module provides services for managing and calculating account balances,
 including real-time and historical balance calculations.
 """
-from datetime import datetime, timedelta, date
-from decimal import Decimal, ROUND_HALF_UP
-from typing import Dict, List, Optional, Tuple, Union, Any
-from uuid import UUID
 
-from dateutil.relativedelta import relativedelta
-from sqlalchemy import and_, case, func, or_, select, text
-from sqlalchemy.orm import Session, aliased
 
-from core.database import SessionLocal
-from ..exceptions import (
     AccountNotFoundException,
     InvalidDateRangeException,
     PeriodAlreadyClosedException,
     PeriodNotClosedException,
     InvalidBalancePeriodException,
 )
-from ..models import (
     Account,
     AccountBalance,
     AccountType,
@@ -39,19 +52,23 @@ class AccountBalanceService:
     """Service for managing account balances and related operations."""
     
     def __init__(self, db: Optional[Session] = None):
+        """  Init  ."""
         """Initialize the service with an optional database session."""
         self.db = db or SessionLocal()
     
     def __enter__(self):
+        """  Enter  ."""
         """Context manager entry."""
         return self
     
     def __exit__(self, exc_type, exc_val, exc_tb):
+        """  Exit  ."""
         """Context manager exit - close the session if we created it."""
         if self.db and not self.db.bind:
             self.db.close()
     
     def get_account(self, account_id: UUID) -> Account:
+        """Get Account."""
         """Get an account by ID, raising an exception if not found."""
         account = self.db.get(Account, account_id)
         if not account:
@@ -59,6 +76,7 @@ class AccountBalanceService:
         return account
     
     def get_balance_as_of(self, account_id: UUID, as_of_date: datetime = None) -> Decimal:
+        """Get Balance As Of."""
         """
         Get the balance of an account as of a specific date.
         
@@ -131,11 +149,13 @@ class AccountBalanceService:
         return balance.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
         
     def get_balance_for_period(
+        """Get Balance For Period."""
         self,
         account_id: UUID,
         start_date: datetime,
         end_date: Optional[datetime] = None
     ) -> Dict[str, Any]:
+        """Get Balance For Period."""
         """
         Get detailed balance information for an account over a specific period.
         
@@ -225,6 +245,7 @@ class AccountBalanceService:
         }
         
     def close_period(self, period_end: datetime) -> List[AccountBalance]:
+        """Close Period."""
         """
         Close an accounting period by creating balance records for all accounts.
         
@@ -376,6 +397,7 @@ class AccountBalanceService:
         return balance
     
     def get_balance_as_of(self, account_id: UUID, as_of_date: datetime = None) -> Decimal:
+        """Get Balance As Of."""
         """
         Get the balance of an account as of a specific date, using historical balances if available.
         
@@ -408,11 +430,13 @@ class AccountBalanceService:
         return self.calculate_account_balance(account_id, as_of_date)
     
     def get_balance_for_period(
+        """Get Balance For Period."""
         self, 
         account_id: UUID, 
         start_date: datetime, 
         end_date: datetime = None
     ) -> Dict[str, Union[Decimal, datetime]]:
+        """Get Balance For Period."""
         """
         Get the balance details for an account over a specific period.
         
@@ -475,12 +499,14 @@ class AccountBalanceService:
         }
     
     def create_periodic_balance(
+        """Create Periodic Balance."""
         self,
         account_id: UUID,
         period_start: datetime,
         period_end: datetime = None,
         commit: bool = True
     ) -> AccountBalance:
+        """Create Periodic Balance."""
         """
         Create a periodic balance record for an account.
         
@@ -519,10 +545,12 @@ class AccountBalanceService:
         return balance
     
     def close_period(
+        """Close Period."""
         self,
         period_end: datetime,
         commit: bool = True
     ) -> List[AccountBalance]:
+        """Close Period."""
         """
         Close a period by creating balance records for all accounts.
         
@@ -567,24 +595,14 @@ Account Balance Service
 This module provides services for managing and calculating account balances,
 including real-time and historical balance calculations.
 """
-from datetime import datetime, timedelta, date
-from decimal import Decimal, ROUND_HALF_UP
-from typing import Dict, List, Optional, Tuple, Union, Any
-from uuid import UUID
 
-from dateutil.relativedelta import relativedelta
-from sqlalchemy import and_, case, func, or_, select, text
-from sqlalchemy.orm import Session, aliased
 
-from app.core.database import SessionLocal
-from ..exceptions import (
     AccountNotFoundException,
     InvalidDateRangeException,
     PeriodAlreadyClosedException,
     PeriodNotClosedException,
     InvalidBalancePeriodException,
 )
-from ..models import (
     Account,
     AccountBalance,
     AccountType,
@@ -598,19 +616,23 @@ class AccountBalanceService:
     """Service for managing account balances and related operations."""
     
     def __init__(self, db: Optional[Session] = None):
+        """  Init  ."""
         """Initialize the service with an optional database session."""
         self.db = db or SessionLocal()
     
     def __enter__(self):
+        """  Enter  ."""
         """Context manager entry."""
         return self
     
     def __exit__(self, exc_type, exc_val, exc_tb):
+        """  Exit  ."""
         """Context manager exit - close the session if we created it."""
         if self.db and not self.db.bind:
             self.db.close()
     
     def get_account(self, account_id: UUID) -> Account:
+        """Get Account."""
         """Get an account by ID, raising an exception if not found."""
         account = self.db.get(Account, account_id)
         if not account:
@@ -618,6 +640,7 @@ class AccountBalanceService:
         return account
     
     def get_balance_as_of(self, account_id: UUID, as_of_date: datetime = None) -> Decimal:
+        """Get Balance As Of."""
         """
         Get the balance of an account as of a specific date.
         
@@ -690,11 +713,13 @@ class AccountBalanceService:
         return balance.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
         
     def get_balance_for_period(
+        """Get Balance For Period."""
         self,
         account_id: UUID,
         start_date: datetime,
         end_date: Optional[datetime] = None
     ) -> Dict[str, Any]:
+        """Get Balance For Period."""
         """
         Get detailed balance information for an account over a specific period.
         
@@ -784,6 +809,7 @@ class AccountBalanceService:
         }
         
     def close_period(self, period_end: datetime) -> List[AccountBalance]:
+        """Close Period."""
         """
         Close an accounting period by creating balance records for all accounts.
         
@@ -935,6 +961,7 @@ class AccountBalanceService:
         return balance
     
     def get_balance_as_of(self, account_id: UUID, as_of_date: datetime = None) -> Decimal:
+        """Get Balance As Of."""
         """
         Get the balance of an account as of a specific date, using historical balances if available.
         
@@ -967,11 +994,13 @@ class AccountBalanceService:
         return self.calculate_account_balance(account_id, as_of_date)
     
     def get_balance_for_period(
+        """Get Balance For Period."""
         self, 
         account_id: UUID, 
         start_date: datetime, 
         end_date: datetime = None
     ) -> Dict[str, Union[Decimal, datetime]]:
+        """Get Balance For Period."""
         """
         Get the balance details for an account over a specific period.
         
@@ -1034,12 +1063,14 @@ class AccountBalanceService:
         }
     
     def create_periodic_balance(
+        """Create Periodic Balance."""
         self,
         account_id: UUID,
         period_start: datetime,
         period_end: datetime = None,
         commit: bool = True
     ) -> AccountBalance:
+        """Create Periodic Balance."""
         """
         Create a periodic balance record for an account.
         
@@ -1078,10 +1109,12 @@ class AccountBalanceService:
         return balance
     
     def close_period(
+        """Close Period."""
         self,
         period_end: datetime,
         commit: bool = True
     ) -> List[AccountBalance]:
+        """Close Period."""
         """
         Close a period by creating balance records for all accounts.
         

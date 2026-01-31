@@ -1,14 +1,19 @@
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from app.models.user import User
-from app.core.security import verify_password, get_password_hash
 from typing import Optional
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.security import verify_password, get_password_hash
+from app.models.user import User
+
 
 class AuthService:
     def __init__(self, db: AsyncSession):
+        """  Init  ."""
         self.db = db
     
     async def authenticate_user(self, username: str, password: str) -> Optional[User]:
+        """Authenticate User."""
         """Authenticate user by username/email and password."""
         result = await self.db.execute(
             select(User).where(
@@ -24,6 +29,7 @@ class AuthService:
         return user
     
     async def create_user(self, user_data: dict) -> User:
+        """Create User."""
         """Create a new user."""
         user = User(
             email=user_data['email'],
@@ -41,6 +47,7 @@ class AuthService:
         return user
     
     async def get_user_by_id(self, user_id: str) -> Optional[User]:
+        """Get User By Id."""
         """Get user by ID."""
         result = await self.db.execute(select(User).where(User.id == user_id))
         return result.scalars().first()

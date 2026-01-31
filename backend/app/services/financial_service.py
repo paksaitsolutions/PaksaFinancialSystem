@@ -1,21 +1,26 @@
 """
 Enhanced Financial Services with double-entry validation and business logic
 """
-from sqlalchemy.orm import Session
-from sqlalchemy import func, and_, or_
-from typing import List, Dict, Any, Optional
 from datetime import datetime, timedelta
+from typing import List, Dict, Any, Optional
+
 from decimal import Decimal
+from sqlalchemy import func, and_, or_
+from sqlalchemy.orm import Session
+import uuid
+
+from app.core.auth_enhanced import get_current_user
 from app.models.financial_core import *
 from app.schemas.financial_schemas import *
-from app.core.auth_enhanced import get_current_user
-import uuid
+
 
 class FinancialService:
     def __init__(self, db: Session):
+        """  Init  ."""
         self.db = db
 
     def create_journal_entry(self, entry_data: JournalEntryCreate, user_id: str) -> JournalEntry:
+        """Create Journal Entry."""
         """Create a balanced journal entry with validation"""
         # Generate entry number
         entry_number = self._generate_entry_number()
@@ -59,6 +64,7 @@ class FinancialService:
         return journal_entry
 
     def post_journal_entry(self, entry_id: str, user_id: str) -> JournalEntry:
+        """Post Journal Entry."""
         """Post journal entry and update account balances"""
         entry = self.db.query(JournalEntry).filter(JournalEntry.id == entry_id).first()
         if not entry:
@@ -85,6 +91,7 @@ class FinancialService:
         return entry
 
     def get_trial_balance(self, as_of_date: Optional[datetime] = None) -> List[Dict[str, Any]]:
+        """Get Trial Balance."""
         """Generate trial balance report"""
         if not as_of_date:
             as_of_date = datetime.utcnow()
@@ -129,6 +136,7 @@ class FinancialService:
         }
 
     def generate_financial_statements(self, period_start: datetime, period_end: datetime) -> Dict[str, Any]:
+        """Generate Financial Statements."""
         """Generate Balance Sheet, Income Statement, and Cash Flow"""
         
         # Balance Sheet
@@ -170,6 +178,7 @@ class FinancialService:
         }
 
     def process_period_close(self, period_end: datetime, user_id: str) -> Dict[str, Any]:
+        """Process Period Close."""
         """Process period closing procedures"""
         
         # 1. Validate all journal entries are posted
@@ -266,6 +275,7 @@ class FinancialService:
         }
 
     def _generate_entry_number(self) -> str:
+        """ Generate Entry Number."""
         """Generate unique journal entry number"""
         today = datetime.now()
         prefix = f"JE{today.strftime('%Y%m')}"
@@ -283,6 +293,7 @@ class FinancialService:
         return f"{prefix}{new_num:04d}"
 
     def _get_accounts_by_type(self, account_type: str, as_of_date: datetime, from_date: Optional[datetime] = None) -> List[Dict[str, Any]]:
+        """ Get Accounts By Type."""
         """Get accounts by type with balances"""
         accounts = self.db.query(ChartOfAccounts).filter(
             and_(

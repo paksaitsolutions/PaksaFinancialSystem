@@ -8,22 +8,25 @@ Use is subject to license terms and restrictions.
 
 Service for handling encryption and decryption of sensitive data.
 """
+from typing import Optional, Union, Dict, Any, Tuple
+import os
 
+from .. import exceptions
+from cryptography.fernet import Fernet, InvalidToken
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes, hmac
+from cryptography.hazmat.primitives import padding
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+from uuid import UUID
 import base64
 import hashlib
-import os
-from typing import Optional, Union, Dict, Any, Tuple
-from uuid import UUID
-
-from cryptography.fernet import Fernet, InvalidToken
-from cryptography.hazmat.primitives import hashes, hmac
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-from cryptography.hazmat.primitives import padding
-from cryptography.hazmat.backends import default_backend
 
 from app.core.config import settings
-from .. import exceptions
+
+
+
+
 
 
 class EncryptionService:
@@ -35,6 +38,7 @@ class EncryptionService:
     """
     
     def __init__(self):
+        """  Init  ."""
         # Initialize with default encryption key from settings
         self.encryption_key = settings.ENCRYPTION_KEY.encode()
         
@@ -52,6 +56,7 @@ class EncryptionService:
             self.encryption_key = kdf.derive(self.encryption_key)
     
     def generate_key(self) -> bytes:
+        """Generate Key."""
         """
         Generate a new encryption key.
         
@@ -61,11 +66,13 @@ class EncryptionService:
         return os.urandom(32)
     
     def encrypt_data(
+        """Encrypt Data."""
         self,
         data: Union[str, bytes],
         key: Optional[bytes] = None,
         algorithm: str = 'aes-256-cbc'
     ) -> Dict[str, Any]:
+        """Encrypt Data."""
         """
         Encrypt data using the specified algorithm.
         
@@ -136,6 +143,7 @@ class EncryptionService:
             raise exceptions.EncryptionError(f"Encryption failed: {str(e)}")
     
     def decrypt_data(
+        """Decrypt Data."""
         self,
         encrypted_data: bytes,
         key: Optional[bytes] = None,
@@ -143,6 +151,7 @@ class EncryptionService:
         iv: Optional[bytes] = None,
         **kwargs
     ) -> bytes:
+        """Decrypt Data."""
         """
         Decrypt data using the specified algorithm.
         
@@ -200,6 +209,7 @@ class EncryptionService:
             raise exceptions.DecryptionError(f"Decryption failed: {str(e)}")
     
     def hash_data(
+        """Hash Data."""
         self,
         data: Union[str, bytes],
         algorithm: str = 'sha256',
@@ -207,6 +217,7 @@ class EncryptionService:
         iterations: int = 100000,
         key_length: Optional[int] = None
     ) -> Dict[str, Any]:
+        """Hash Data."""
         """
         Hash data using the specified algorithm.
         
@@ -300,10 +311,12 @@ class EncryptionService:
             raise exceptions.HashingError(f"Hashing failed: {str(e)}")
     
     def verify_hash(
+        """Verify Hash."""
         self,
         data: Union[str, bytes],
         hash_data: Dict[str, Any]
     ) -> bool:
+        """Verify Hash."""
         """
         Verify data against a hash.
         
@@ -362,12 +375,14 @@ class EncryptionService:
             raise exceptions.HashingError(f"Hash verification failed: {str(e)}")
     
     def encrypt_field(
+        """Encrypt Field."""
         self,
         field_value: Any,
         field_type: str = 'string',
         key_id: Optional[str] = None,
         **kwargs
     ) -> Dict[str, Any]:
+        """Encrypt Field."""
         """
         Encrypt a field value with type-specific handling.
         
@@ -427,10 +442,12 @@ class EncryptionService:
             raise exceptions.EncryptionError(f"Failed to encrypt field: {str(e)}")
     
     def decrypt_field(
+        """Decrypt Field."""
         self,
         encrypted_data: Dict[str, Any],
         **kwargs
     ) -> Any:
+        """Decrypt Field."""
         """
         Decrypt a field value with type-specific handling.
         
@@ -496,10 +513,12 @@ class EncryptionService:
             raise exceptions.DecryptionError(f"Failed to decrypt field: {str(e)}")
     
     def generate_secure_random(
+        """Generate Secure Random."""
         self,
         length: int = 32,
         encoding: str = 'hex'
     ) -> Union[str, bytes]:
+        """Generate Secure Random."""
         """
         Generate a secure random string or bytes.
         
@@ -530,6 +549,7 @@ class EncryptionService:
             raise ValueError(f"Unsupported encoding: {encoding}")
     
     def generate_key_pair(self, key_size: int = 2048):
+        """Generate Key Pair."""
         """
         Generate an RSA key pair.
         
@@ -574,11 +594,13 @@ class EncryptionService:
         return private_pem.decode('utf-8'), public_pem.decode('utf-8')
     
     def sign_data(
+        """Sign Data."""
         self,
         data: Union[str, bytes],
         private_key: Union[str, bytes],
         algorithm: str = 'sha256'
     ) -> bytes:
+        """Sign Data."""
         """
         Sign data using a private key.
         
@@ -638,12 +660,14 @@ class EncryptionService:
             raise exceptions.SigningError(f"Failed to sign data: {str(e)}")
     
     def verify_signature(
+        """Verify Signature."""
         self,
         data: Union[str, bytes],
         signature: bytes,
         public_key: Union[str, bytes],
         algorithm: str = 'sha256'
     ) -> bool:
+        """Verify Signature."""
         """
         Verify a signature using a public key.
         

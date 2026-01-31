@@ -4,27 +4,30 @@ Scheduled Reports Service
 This service provides background job system for generating and distributing
 reports on a scheduled basis.
 """
-from typing import Dict, List, Any, Optional, Union
 from datetime import datetime, timedelta
-from uuid import UUID, uuid4
-from enum import Enum
+from typing import Dict, List, Any, Optional, Union
 import asyncio
-from dataclasses import dataclass, asdict
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from email.mime.base import MIMEBase
-from email import encoders
-
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_, or_
-from celery import Celery
-from croniter import croniter
 
 from .reporting_engine import ReportingEngine, ReportType, ReportFormat
+from celery import Celery
+from croniter import croniter
+from dataclasses import dataclass, asdict
+from email import encoders
+from email.mime.base import MIMEBase
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from enum import Enum
+from sqlalchemy import select, func, and_, or_
+from sqlalchemy.ext.asyncio import AsyncSession
+from uuid import UUID, uuid4
+import smtplib
+
 from app.core.config import settings
-from app.models.user import User
 from app.models.company import Company
+from app.models.user import User
+
+
+
 
 
 class ScheduleFrequency(str, Enum):
@@ -88,11 +91,13 @@ class ScheduledReportsService:
     """Service for managing scheduled reports."""
 
     def __init__(self, db: AsyncSession):
+        """  Init  ."""
         self.db = db
         self.scheduled_reports: Dict[str, ScheduledReportConfig] = {}
         self.executions: Dict[str, ReportExecution] = {}
 
     async def create_scheduled_report(
+        """Create Scheduled Report."""
         self,
         company_id: UUID,
         report_type: ReportType,
@@ -104,6 +109,7 @@ class ScheduledReportsService:
         created_by: UUID,
         cron_expression: Optional[str] = None
     ) -> ScheduledReportConfig:
+        """Create Scheduled Report."""
         """Create a new scheduled report."""
         
         report_id = str(uuid4())
@@ -139,10 +145,12 @@ class ScheduledReportsService:
         return config
 
     async def update_scheduled_report(
+        """Update Scheduled Report."""
         self,
         report_id: str,
         updates: Dict[str, Any]
     ) -> Optional[ScheduledReportConfig]:
+        """Update Scheduled Report."""
         """Update an existing scheduled report."""
         
         if report_id not in self.scheduled_reports:
@@ -167,6 +175,7 @@ class ScheduledReportsService:
         return config
 
     async def delete_scheduled_report(self, report_id: str) -> bool:
+        """Delete Scheduled Report."""
         """Delete a scheduled report."""
         
         if report_id not in self.scheduled_reports:
@@ -181,14 +190,17 @@ class ScheduledReportsService:
         return True
 
     async def get_scheduled_report(self, report_id: str) -> Optional[ScheduledReportConfig]:
+        """Get Scheduled Report."""
         """Get a scheduled report by ID."""
         return self.scheduled_reports.get(report_id)
 
     async def list_scheduled_reports(
+        """List Scheduled Reports."""
         self,
         company_id: Optional[UUID] = None,
         is_active: Optional[bool] = None
     ) -> List[ScheduledReportConfig]:
+        """List Scheduled Reports."""
         """List scheduled reports with optional filters."""
         
         reports = list(self.scheduled_reports.values())
@@ -202,6 +214,7 @@ class ScheduledReportsService:
         return reports
 
     async def execute_scheduled_report(self, report_id: str) -> ReportExecution:
+        """Execute Scheduled Report."""
         """Execute a scheduled report immediately."""
         
         config = self.scheduled_reports.get(report_id)
@@ -253,10 +266,12 @@ class ScheduledReportsService:
         return execution
 
     async def get_execution_history(
+        """Get Execution History."""
         self,
         report_id: Optional[str] = None,
         limit: int = 50
     ) -> List[ReportExecution]:
+        """Get Execution History."""
         """Get execution history for scheduled reports."""
         
         executions = list(self.executions.values())
@@ -270,6 +285,7 @@ class ScheduledReportsService:
         return executions[:limit]
 
     def _generate_cron_expression(self, frequency: ScheduleFrequency) -> str:
+        """ Generate Cron Expression."""
         """Generate cron expression based on frequency."""
         
         expressions = {
@@ -283,12 +299,14 @@ class ScheduledReportsService:
         return expressions.get(frequency, "0 9 * * *")
 
     def _calculate_next_run(self, cron_expression: str) -> datetime:
+        """ Calculate Next Run."""
         """Calculate next run time based on cron expression."""
         
         cron = croniter(cron_expression, datetime.now())
         return cron.get_next(datetime)
 
     async def _schedule_report_task(self, config: ScheduledReportConfig) -> None:
+        """Schedule Report Task."""
         """Schedule a report task using Celery."""
         
         if not config.is_active or not config.next_run:
@@ -302,6 +320,7 @@ class ScheduledReportsService:
         )
 
     async def _cancel_report_task(self, report_id: str) -> None:
+        """Cancel Report Task."""
         """Cancel a scheduled report task."""
         
         # This would cancel the Celery task
@@ -309,10 +328,12 @@ class ScheduledReportsService:
         pass
 
     async def _save_report_file(
+        """ Save Report File."""
         self,
         report_result: Dict[str, Any],
         config: ScheduledReportConfig
     ) -> str:
+        """Save Report File."""
         """Save report to file system."""
         
         import os
@@ -341,11 +362,13 @@ class ScheduledReportsService:
         return file_path
 
     async def _send_report_email(
+        """ Send Report Email."""
         self,
         config: ScheduledReportConfig,
         report_result: Dict[str, Any],
         file_path: str
     ) -> None:
+        """Send Report Email."""
         """Send report via email to recipients."""
         
         # Get company info
@@ -412,6 +435,7 @@ class ScheduledReportsService:
 # Celery task for executing scheduled reports
 @celery_app.task(name='scheduled_reports.execute_report')
 def execute_report_task(report_id: str):
+    """Execute Report Task."""
     """Celery task to execute a scheduled report."""
     
     # This would need to be implemented with proper async handling

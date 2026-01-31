@@ -5,14 +5,18 @@ Financial Statement Generator
 This module provides a comprehensive service for generating all types of financial statements.
 """
 from datetime import date, datetime, timedelta
-from decimal import Decimal
 from typing import List, Dict, Optional, Any, Union, Tuple
-from uuid import UUID
-
-from sqlalchemy import and_, or_, func, case, text, select
-from sqlalchemy.orm import Session, joinedload
 
 from ...models import (
+from ..gl.period_service import PeriodService
+from .financial_statement_service import FinancialStatementService
+from decimal import Decimal
+from sqlalchemy import and_, or_, func, case, text, select
+from sqlalchemy.orm import Session, joinedload
+from uuid import UUID
+
+
+
     Account,
     AccountType,
     GLPeriod,
@@ -24,8 +28,6 @@ from ...models import (
     FinancialStatementSection,
     FinancialStatementLine
 )
-from ..gl.period_service import PeriodService
-from .financial_statement_service import FinancialStatementService
 
 
 class FinancialStatementGenerator:
@@ -34,12 +36,14 @@ class FinancialStatementGenerator:
     """
     
     def __init__(self, db: Session):
+        """  Init  ."""
         """Initialize the generator with a database session."""
         self.db = db
         self.fs_service = FinancialStatementService(db)
         self.period_service = PeriodService(db)
     
     def generate_all_statements(
+        """Generate All Statements."""
         self,
         company_id: UUID,
         as_of_date: date,
@@ -49,6 +53,7 @@ class FinancialStatementGenerator:
         format_currency: bool = True,
         created_by: UUID = None
     ) -> Dict[str, Any]:
+        """Generate All Statements."""
         """
         Generate all financial statements (balance sheet, income statement, cash flow)
         for a specific date.
@@ -133,6 +138,7 @@ class FinancialStatementGenerator:
         }
     
     def _get_previous_period(self, period: GLPeriod) -> Optional[GLPeriod]:
+        """ Get Previous Period."""
         """
         Get the previous period for a given period.
         
@@ -153,6 +159,7 @@ class FinancialStatementGenerator:
         )
     
     def _save_statements(
+        """ Save Statements."""
         self,
         company_id: UUID,
         balance_sheet: Dict[str, Any],
@@ -161,6 +168,7 @@ class FinancialStatementGenerator:
         period_id: UUID,
         created_by: UUID = None
     ) -> Dict[str, UUID]:
+        """ Save Statements."""
         """
         Save the generated financial statements to the database.
         
@@ -243,10 +251,12 @@ class FinancialStatementGenerator:
         }
     
     def _save_statement_structure(
+        """ Save Statement Structure."""
         self,
         statement: FinancialStatement,
         created_by: UUID
     ) -> None:
+        """ Save Statement Structure."""
         """
         Save the financial statement structure (sections and lines) to the database.
         
