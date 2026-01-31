@@ -196,7 +196,7 @@
   - [x] Automated journal entry templates
   - [x] Enhanced audit trail visualization
 
-#### Accounts Payable (AP) - 90% Complete ✅
+#### Accounts Payable (AP) - 95% Complete ✅
 - [x] Vendor management
 - [x] Bill/Invoice processing
 - [x] Payment processing
@@ -204,10 +204,10 @@
 - [x] 1099 forms
 - [x] AP aging reports
 - [x] Batch payments
-- [ ] **Enhancements Needed:**
-  - [ ] Three-way matching (PO-Receipt-Invoice)
+- [x] **Enhancements:**
+  - [x] Three-way matching (PO-Receipt-Invoice)
+  - [x] Early payment discounts automation
   - [ ] Vendor portal
-  - [ ] Early payment discounts automation
   - [ ] ACH/Wire payment integration
 
 #### Accounts Receivable (AR) - 90% Complete ✅
