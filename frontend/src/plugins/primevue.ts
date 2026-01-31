@@ -35,7 +35,10 @@ import Message from 'primevue/message'
 import Toast from 'primevue/toast'
 import Breadcrumb from 'primevue/breadcrumb'
 import ProgressBar from 'primevue/progressbar'
-import Divider from 'primevue/divider'
+import Menu from 'primevue/menu'
+import Avatar from 'primevue/avatar'
+import Badge from 'primevue/badge'
+import Timeline from 'primevue/timeline'
 
 export default {
   install(app: App) {
@@ -77,6 +80,9 @@ export default {
     app.component('Toast', Toast)
     app.component('Breadcrumb', Breadcrumb)
     app.component('ProgressBar', ProgressBar)
-    app.component('Divider', Divider)
+    app.component('Menu', Menu)
+    app.component('Avatar', Avatar)
+    app.component('Badge', Badge)
+    app.component('Timeline', Timeline)
   }
 }
