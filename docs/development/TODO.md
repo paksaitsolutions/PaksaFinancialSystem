@@ -183,7 +183,7 @@
 
 ### I. Core Financial Modules
 
-#### General Ledger (GL) - 95% Complete ✅
+#### General Ledger (GL) - 98% Complete ✅
 - [x] Chart of Accounts management
 - [x] Journal entries (standard & recurring)
 - [x] Trial balance
@@ -192,9 +192,9 @@
 - [x] Account reconciliation
 - [x] Budget vs Actual
 - [x] Multi-currency support
-- [ ] **Enhancements Needed:**
-  - [ ] Advanced allocation rules
-  - [ ] Automated journal entry templates
+- [x] **Enhancements:**
+  - [x] Advanced allocation rules (weighted, formula-based, fixed amount)
+  - [x] Automated journal entry templates
   - [ ] Enhanced audit trail visualization
 
 #### Accounts Payable (AP) - 90% Complete ✅

@@ -144,7 +144,6 @@ class AllocationEngine:
         total_amount: Decimal,
         created_by: UUID
     ) -> List[AllocationEntry]:
-        """ Create Allocation Entries."""
         """Create allocation entries based on the rule."""
         entries = []
         
@@ -152,6 +151,12 @@ class AllocationEngine:
             entries = self._allocate_by_percentage(allocation, rule, total_amount, created_by)
         elif rule.allocation_method == AllocationMethod.EQUAL:
             entries = self._allocate_equally(allocation, rule, total_amount, created_by)
+        elif rule.allocation_method == AllocationMethod.FIXED_AMOUNT:
+            entries = self._allocate_by_fixed_amount(allocation, rule, total_amount, created_by)
+        elif rule.allocation_method == AllocationMethod.WEIGHTED:
+            entries = self._allocate_by_weight(allocation, rule, total_amount, created_by)
+        elif rule.allocation_method == AllocationMethod.FORMULA:
+            entries = self._allocate_by_formula(allocation, rule, total_amount, created_by)
         
         return entries
     
@@ -162,7 +167,6 @@ class AllocationEngine:
         total_amount: Decimal,
         created_by: UUID
     ) -> List[AllocationEntry]:
-        """ Allocate By Percentage."""
         """Allocate amount based on percentages."""
         entries = []
         
@@ -194,7 +198,6 @@ class AllocationEngine:
         total_amount: Decimal,
         created_by: UUID
     ) -> List[AllocationEntry]:
-        """ Allocate Equally."""
         """Allocate amount equally among targets."""
         entries = []
         line_count = len(rule.allocation_lines)
@@ -222,13 +225,121 @@ class AllocationEngine:
         
         return entries
     
+    def _allocate_by_fixed_amount(
+        self,
+        allocation: Allocation,
+        rule: AllocationRule,
+        total_amount: Decimal,
+        created_by: UUID
+    ) -> List[AllocationEntry]:
+        """Allocate fixed amounts to targets."""
+        entries = []
+        
+        for line in rule.allocation_lines:
+            if line.fixed_amount:
+                allocated_amount = min(line.fixed_amount, total_amount)
+                percentage = (allocated_amount / total_amount * 100).quantize(
+                    Decimal('0.01'), rounding=ROUND_HALF_UP
+                )
+                
+                entry = AllocationEntry(
+                    allocation_id=allocation.id,
+                    target_account_id=line.target_account_id,
+                    allocated_amount=allocated_amount,
+                    allocation_percentage=percentage,
+                    description=f"Fixed allocation of {allocated_amount}",
+                    created_by=created_by,
+                    updated_by=created_by
+                )
+                
+                self.db.add(entry)
+                entries.append(entry)
+        
+        return entries
+    
+    def _allocate_by_weight(
+        self,
+        allocation: Allocation,
+        rule: AllocationRule,
+        total_amount: Decimal,
+        created_by: UUID
+    ) -> List[AllocationEntry]:
+        """Allocate based on weights."""
+        entries = []
+        total_weight = sum(line.weight or Decimal('0') for line in rule.allocation_lines)
+        
+        if total_weight == 0:
+            return entries
+        
+        for line in rule.allocation_lines:
+            if line.weight:
+                percentage = (line.weight / total_weight * 100).quantize(
+                    Decimal('0.01'), rounding=ROUND_HALF_UP
+                )
+                allocated_amount = (total_amount * percentage / 100).quantize(
+                    Decimal('0.01'), rounding=ROUND_HALF_UP
+                )
+                
+                entry = AllocationEntry(
+                    allocation_id=allocation.id,
+                    target_account_id=line.target_account_id,
+                    allocated_amount=allocated_amount,
+                    allocation_percentage=percentage,
+                    description=f"Weighted allocation {line.weight}/{total_weight} = {percentage}%",
+                    created_by=created_by,
+                    updated_by=created_by
+                )
+                
+                self.db.add(entry)
+                entries.append(entry)
+        
+        return entries
+    
+    def _allocate_by_formula(
+        self,
+        allocation: Allocation,
+        rule: AllocationRule,
+        total_amount: Decimal,
+        created_by: UUID
+    ) -> List[AllocationEntry]:
+        """Allocate based on formula evaluation."""
+        entries = []
+        
+        for line in rule.allocation_lines:
+            if line.formula:
+                try:
+                    context = {'total': float(total_amount)}
+                    result = eval(line.formula, {"__builtins__": {}}, context)
+                    allocated_amount = Decimal(str(result)).quantize(
+                        Decimal('0.01'), rounding=ROUND_HALF_UP
+                    )
+                    percentage = (allocated_amount / total_amount * 100).quantize(
+                        Decimal('0.01'), rounding=ROUND_HALF_UP
+                    )
+                    
+                    entry = AllocationEntry(
+                        allocation_id=allocation.id,
+                        target_account_id=line.target_account_id,
+                        allocated_amount=allocated_amount,
+                        allocation_percentage=percentage,
+                        description=f"Formula allocation: {line.formula} = {allocated_amount}",
+                        created_by=created_by,
+                        updated_by=created_by
+                    )
+                    
+                    self.db.add(entry)
+                    entries.append(entry)
+                except Exception as e:
+                    raise ValidationException(f"Formula evaluation failed: {str(e)}")
+        
+        return entries
+    
     def _create_allocation_journal_entry(
         self, 
         allocation_entry: AllocationEntry, 
         source_je: JournalEntry,
         created_by: UUID
     ) -> JournalEntry:
-        """ Create Allocation Journal Entry."""
         """Create a journal entry for an allocation entry."""
         je = JournalEntry(
             entry_number=f"ALLOC-{allocation_entry.allocation.allocation_number}",
