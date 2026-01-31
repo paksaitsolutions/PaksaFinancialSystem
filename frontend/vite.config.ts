@@ -26,45 +26,52 @@ export default defineConfig({
     }
   },
   build: {
-    // Code splitting and optimization
     rollupOptions: {
       output: {
-        manualChunks: {
+        manualChunks(id) {
           // Vendor chunks
-          'vue-vendor': ['vue', 'vue-router', 'pinia'],
-          'primevue-vendor': ['primevue/config', 'primevue/button', 'primevue/inputtext'],
-          'chart-vendor': ['chart.js', 'primevue/chart'],
+          if (id.includes('node_modules')) {
+            if (id.includes('vue') || id.includes('pinia') || id.includes('vue-router')) {
+              return 'vue-vendor';
+            }
+            if (id.includes('primevue')) {
+              return 'primevue-vendor';
+            }
+            if (id.includes('chart.js') || id.includes('echarts')) {
+              return 'chart-vendor';
+            }
+            if (id.includes('axios')) {
+              return 'http-vendor';
+            }
+            return 'vendor';
+          }
           
-          // Module chunks
-          'gl-module': [
-            './src/modules/general-ledger/views/Dashboard.vue',
-            './src/modules/general-ledger/views/ChartOfAccounts.vue'
-          ],
-          'ap-module': [
-            './src/modules/accounts-payable/views/APDashboard.vue'
-          ],
-          'ar-module': [
-            './src/modules/accounts-receivable/views/AccountsReceivableView.vue'
-          ],
-          'hrm-module': [
-            './src/modules/hrm/views/HRMDashboard.vue'
-          ],
-          'payroll-module': [
-            './src/modules/payroll/views/AnalyticsDashboard.vue'
-          ],
-          'tax-module': [
-            './src/modules/tax/views/TaxDashboard.vue'
-          ]
-        }
+          // Module-based chunks
+          if (id.includes('/modules/general-ledger/')) return 'gl-module';
+          if (id.includes('/modules/accounts-payable/')) return 'ap-module';
+          if (id.includes('/modules/accounts-receivable/')) return 'ar-module';
+          if (id.includes('/modules/cash-management/')) return 'cash-module';
+          if (id.includes('/modules/fixed-assets/')) return 'assets-module';
+          if (id.includes('/modules/payroll/')) return 'payroll-module';
+          if (id.includes('/modules/budget/')) return 'budget-module';
+          if (id.includes('/modules/tax/')) return 'tax-module';
+          if (id.includes('/modules/inventory/')) return 'inventory-module';
+          if (id.includes('/modules/hrm/')) return 'hrm-module';
+          if (id.includes('/modules/reports/')) return 'reports-module';
+          if (id.includes('/modules/settings/')) return 'settings-module';
+        },
+        chunkFileNames: 'assets/[name]-[hash].js',
+        entryFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]'
       }
     },
-    // Asset optimization
-    assetsInlineLimit: 4096, // 4kb
+    assetsInlineLimit: 4096,
     cssCodeSplit: true,
-    sourcemap: false, // Disable in production
-    minify: 'esbuild', // Use esbuild instead of terser
-    // Chunk size warnings
-    chunkSizeWarningLimit: 1000
+    sourcemap: false,
+    minify: 'esbuild',
+    chunkSizeWarningLimit: 500,
+    target: 'es2015',
+    reportCompressedSize: false
   },
   // Asset optimization
   assetsInclude: ['**/*.woff', '**/*.woff2', '**/*.ttf'],

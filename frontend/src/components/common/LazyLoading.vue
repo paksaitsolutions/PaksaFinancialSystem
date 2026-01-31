@@ -1,0 +1,18 @@
+<template>
+  <div class="lazy-loading">
+    <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+    <p>Loading...</p>
+  </div>
+</template>
+
+<style scoped>
+.lazy-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  gap: 1rem;
+  color: var(--primary-color);
+}
+</style>

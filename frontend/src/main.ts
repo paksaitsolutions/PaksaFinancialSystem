@@ -6,6 +6,7 @@ import UnifiedSystemPlugin from './plugins/unified-system'
 import App from './App.vue'
 import router from './router'
 import { useAuthStore } from './stores/auth'
+import { registerServiceWorker } from './utils/service-worker'
 
 // Import PrimeVue compatible styles
 import './assets/styles/primevue-theme.css'
@@ -45,12 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 })
 
-// Service worker for caching (if available)
-if ('serviceWorker' in navigator && import.meta.env.PROD) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .catch(() => console.log('SW registration failed'))
-  })
-}
+// Register service worker for offline caching
+registerServiceWorker()
 
 app.mount('#app')
