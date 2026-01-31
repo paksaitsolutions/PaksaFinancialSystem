@@ -97,7 +97,6 @@ class ScheduledReportsService:
         self.executions: Dict[str, ReportExecution] = {}
 
     async def create_scheduled_report(
-        """Create Scheduled Report."""
         self,
         company_id: UUID,
         report_type: ReportType,
@@ -145,7 +144,6 @@ class ScheduledReportsService:
         return config
 
     async def update_scheduled_report(
-        """Update Scheduled Report."""
         self,
         report_id: str,
         updates: Dict[str, Any]
@@ -195,7 +193,6 @@ class ScheduledReportsService:
         return self.scheduled_reports.get(report_id)
 
     async def list_scheduled_reports(
-        """List Scheduled Reports."""
         self,
         company_id: Optional[UUID] = None,
         is_active: Optional[bool] = None
@@ -266,7 +263,6 @@ class ScheduledReportsService:
         return execution
 
     async def get_execution_history(
-        """Get Execution History."""
         self,
         report_id: Optional[str] = None,
         limit: int = 50
@@ -328,7 +324,6 @@ class ScheduledReportsService:
         pass
 
     async def _save_report_file(
-        """ Save Report File."""
         self,
         report_result: Dict[str, Any],
         config: ScheduledReportConfig
@@ -362,7 +357,6 @@ class ScheduledReportsService:
         return file_path
 
     async def _send_report_email(
-        """ Send Report Email."""
         self,
         config: ScheduledReportConfig,
         report_result: Dict[str, Any],

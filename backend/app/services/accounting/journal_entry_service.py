@@ -50,7 +50,6 @@ class JournalEntryService(BaseService):
         self.period_service = GLPeriodService(db)
     
     def create_journal_entry(
-        """Create Journal Entry."""
         self,
         entry_date: date,
         lines: List[Dict[str, Any]],
@@ -224,7 +223,6 @@ class JournalEntryService(BaseService):
         return journal_entry
     
     def reverse_journal_entry(
-        """Reverse Journal Entry."""
         self, 
         entry_id: UUID, 
         reversal_date: Optional[date] = None,
@@ -325,7 +323,6 @@ class JournalEntryService(BaseService):
         return self._get_journal_entry(entry_id)
     
     def list_journal_entries(
-        """List Journal Entries."""
         self,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
@@ -454,7 +451,6 @@ class JournalEntryService(BaseService):
         return f"{prefix}-{seq:05d}"
     
     def _calculate_next_recurring_date(
-        """ Calculate Next Recurring Date."""
         self, 
         last_date: date, 
         frequency: str

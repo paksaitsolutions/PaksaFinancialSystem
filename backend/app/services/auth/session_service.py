@@ -25,7 +25,6 @@ class SessionService:
         self.db = db
     
     def create_session(
-        """Create Session."""
         self, 
         user_id: UUID, 
         ip_address: str = None, 
@@ -59,7 +58,6 @@ class SessionService:
         )
         
     def create_session(
-        """Create Session."""
         self,
         user_id: UUID,
         company_id: UUID,

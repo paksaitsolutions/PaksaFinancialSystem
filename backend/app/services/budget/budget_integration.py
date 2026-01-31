@@ -15,7 +15,6 @@ from sqlalchemy.orm import Session
 
 class BudgetIntegrationService:
     def __init__(
-        """  Init  ."""
         self,
         db: Session,
         budget_service: BudgetService,
@@ -35,7 +34,6 @@ class BudgetIntegrationService:
         self.payroll_service = payroll_service
 
     def check_budget_availability(
-        """Check Budget Availability."""
         self,
         account_id: int,
         amount: float,
@@ -74,7 +72,6 @@ class BudgetIntegrationService:
         return total_available >= amount
 
     def allocate_budget(
-        """Allocate Budget."""
         self,
         budget_id: int,
         amount: float,
@@ -101,7 +98,6 @@ class BudgetIntegrationService:
         return allocation
 
     def update_gl_entry_budget_allocation(
-        """Update Gl Entry Budget Allocation."""
         self,
         gl_entry_id: int,
         budget_id: int,
@@ -130,7 +126,6 @@ class BudgetIntegrationService:
         return gl_entry
 
     def update_ap_invoice_budget_allocation(
-        """Update Ap Invoice Budget Allocation."""
         self,
         invoice_id: int,
         budget_id: int,
@@ -159,7 +154,6 @@ class BudgetIntegrationService:
         return invoice
 
     def update_ar_invoice_budget_allocation(
-        """Update Ar Invoice Budget Allocation."""
         self,
         invoice_id: int,
         budget_id: int,
@@ -188,7 +182,6 @@ class BudgetIntegrationService:
         return invoice
 
     def update_purchase_order_budget_allocation(
-        """Update Purchase Order Budget Allocation."""
         self,
         po_id: int,
         budget_id: int,
@@ -217,7 +210,6 @@ class BudgetIntegrationService:
         return po
 
     def update_payroll_entry_budget_allocation(
-        """Update Payroll Entry Budget Allocation."""
         self,
         payroll_id: int,
         budget_id: int,
@@ -246,7 +238,6 @@ class BudgetIntegrationService:
         return payroll
 
     def get_budget_spending_report(
-        """Get Budget Spending Report."""
         self,
         account_id: int,
         department_id: Optional[int] = None,

@@ -40,7 +40,6 @@ class GLPeriodService(BaseService):
         super().__init__(db)
     
     def create_period(
-        """Create Period."""
         self,
         name: str,
         start_date: date,
@@ -128,7 +127,6 @@ class GLPeriodService(BaseService):
         return period
     
     def close_period(
-        """Close Period."""
         self, 
         period_id: UUID, 
         closed_by: UUID,
@@ -281,7 +279,6 @@ class GLPeriodService(BaseService):
         return self.get_period_for_date(today)
     
     def list_periods(
-        """List Periods."""
         self,
         fiscal_year: Optional[str] = None,
         status: Optional[Union[GLPeriodStatus, str]] = None,
@@ -370,7 +367,6 @@ class GLPeriodService(BaseService):
         return period is not None and period.status == GLPeriodStatus.OPEN
     
     def get_period_balances(
-        """Get Period Balances."""
         self,
         period_id: UUID,
         account_ids: Optional[List[UUID]] = None,

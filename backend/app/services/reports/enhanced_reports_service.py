@@ -24,7 +24,6 @@ class EnhancedReportsService:
         self.audit_service = AuditService(db)
     
     def generate_income_statement(
-        """Generate Income Statement."""
         self,
         company_id: UUID,
         period_start: datetime,
@@ -63,7 +62,6 @@ class EnhancedReportsService:
         return report
     
     def generate_balance_sheet(
-        """Generate Balance Sheet."""
         self,
         company_id: UUID,
         period_end: datetime,
@@ -101,7 +99,6 @@ class EnhancedReportsService:
         return report
     
     def generate_aging_report(
-        """Generate Aging Report."""
         self,
         company_id: UUID,
         report_type: str,
@@ -141,7 +138,6 @@ class EnhancedReportsService:
         return report
     
     def create_report_template(
-        """Create Report Template."""
         self,
         company_id: UUID,
         template_data: Dict[str, Any],
@@ -178,7 +174,6 @@ class EnhancedReportsService:
         return self.db.query(CompanyReport).filter(CompanyReport.id == report_id).first()
     
     def _generate_income_statement_data(
-        """ Generate Income Statement Data."""
         self,
         company_id: UUID,
         period_start: datetime,
@@ -246,7 +241,6 @@ class EnhancedReportsService:
         }
     
     def _generate_aging_data(
-        """ Generate Aging Data."""
         self,
         company_id: UUID,
         aging_type: str,

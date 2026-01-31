@@ -25,7 +25,6 @@ class UserActivityService:
         self.db = db
     
     def log_login(
-        """Log Login."""
         self,
         user_id: UUID,
         company_id: UUID,
@@ -54,7 +53,6 @@ class UserActivityService:
         return login_record
     
     def log_activity(
-        """Log Activity."""
         self,
         user_id: UUID,
         company_id: UUID,
@@ -85,7 +83,6 @@ class UserActivityService:
         return activity
     
     def get_login_history(
-        """Get Login History."""
         self,
         user_id: Optional[UUID] = None,
         company_id: Optional[UUID] = None,
@@ -104,7 +101,6 @@ class UserActivityService:
         return query.order_by(desc(LoginHistory.login_time)).limit(limit).all()
     
     def create_password_policy(
-        """Create Password Policy."""
         self,
         company_id: UUID,
         policy_data: Dict[str, Any]
@@ -132,7 +128,6 @@ class UserActivityService:
         return policy
     
     def grant_cross_company_access(
-        """Grant Cross Company Access."""
         self,
         user_id: UUID,
         source_company_id: UUID,

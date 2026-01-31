@@ -66,7 +66,6 @@ class EncryptionService:
         return os.urandom(32)
     
     def encrypt_data(
-        """Encrypt Data."""
         self,
         data: Union[str, bytes],
         key: Optional[bytes] = None,
@@ -143,7 +142,6 @@ class EncryptionService:
             raise exceptions.EncryptionError(f"Encryption failed: {str(e)}")
     
     def decrypt_data(
-        """Decrypt Data."""
         self,
         encrypted_data: bytes,
         key: Optional[bytes] = None,
@@ -209,7 +207,6 @@ class EncryptionService:
             raise exceptions.DecryptionError(f"Decryption failed: {str(e)}")
     
     def hash_data(
-        """Hash Data."""
         self,
         data: Union[str, bytes],
         algorithm: str = 'sha256',
@@ -311,7 +308,6 @@ class EncryptionService:
             raise exceptions.HashingError(f"Hashing failed: {str(e)}")
     
     def verify_hash(
-        """Verify Hash."""
         self,
         data: Union[str, bytes],
         hash_data: Dict[str, Any]
@@ -375,7 +371,6 @@ class EncryptionService:
             raise exceptions.HashingError(f"Hash verification failed: {str(e)}")
     
     def encrypt_field(
-        """Encrypt Field."""
         self,
         field_value: Any,
         field_type: str = 'string',
@@ -442,7 +437,6 @@ class EncryptionService:
             raise exceptions.EncryptionError(f"Failed to encrypt field: {str(e)}")
     
     def decrypt_field(
-        """Decrypt Field."""
         self,
         encrypted_data: Dict[str, Any],
         **kwargs
@@ -513,7 +507,6 @@ class EncryptionService:
             raise exceptions.DecryptionError(f"Failed to decrypt field: {str(e)}")
     
     def generate_secure_random(
-        """Generate Secure Random."""
         self,
         length: int = 32,
         encoding: str = 'hex'
@@ -594,7 +587,6 @@ class EncryptionService:
         return private_pem.decode('utf-8'), public_pem.decode('utf-8')
     
     def sign_data(
-        """Sign Data."""
         self,
         data: Union[str, bytes],
         private_key: Union[str, bytes],
@@ -660,7 +652,6 @@ class EncryptionService:
             raise exceptions.SigningError(f"Failed to sign data: {str(e)}")
     
     def verify_signature(
-        """Verify Signature."""
         self,
         data: Union[str, bytes],
         signature: bytes,

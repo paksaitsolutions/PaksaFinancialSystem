@@ -43,7 +43,6 @@ class PeriodService(BaseService):
         super().__init__(db, AccountingPeriod)
     
     def create_period(
-        """Create Period."""
         self, 
         period_data: AccountingPeriodCreate, 
         created_by: UUID
@@ -90,7 +89,6 @@ class PeriodService(BaseService):
         return AccountingPeriodResponse.from_orm(period)
     
     def close_period(
-        """Close Period."""
         self, 
         period_id: UUID, 
         closed_by: UUID,
@@ -144,7 +142,6 @@ class PeriodService(BaseService):
         return AccountingPeriodResponse.from_orm(period)
     
     def reopen_period(
-        """Reopen Period."""
         self, 
         period_id: UUID, 
         updated_by: UUID
@@ -184,7 +181,6 @@ class PeriodService(BaseService):
         return AccountingPeriodResponse.from_orm(period)
     
     def _generate_trial_balance(
-        """ Generate Trial Balance."""
         self,
         company_id: UUID,
         as_of_date: date,
@@ -246,7 +242,6 @@ class PeriodService(BaseService):
         return trial_balance
     
     def _update_ledger_balances(
-        """ Update Ledger Balances."""
         self,
         company_id: UUID,
         as_of_date: date,
@@ -324,7 +319,6 @@ class PeriodService(BaseService):
         self.db.commit()
 
     def get_period_by_date(
-        """Get Period By Date."""
         self,
         company_id: UUID,
         target_date: date,

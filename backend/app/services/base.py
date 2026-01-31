@@ -33,7 +33,6 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         return SessionLocal()
     
     def _get_or_404(
-        """ Get Or 404."""
         self, 
         db: Session, 
         model: Type[T], 
@@ -87,7 +86,6 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         return db_obj
 
     async def update(
-        """Update."""
         self,
         db: AsyncSession,
         *,

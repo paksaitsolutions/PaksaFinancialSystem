@@ -88,7 +88,6 @@ class CompanyService:
         return company
     
     def add_user_to_company(
-        """Add User To Company."""
         self, 
         company_id: UUID, 
         user_id: UUID, 

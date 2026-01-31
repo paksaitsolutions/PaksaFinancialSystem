@@ -27,7 +27,6 @@ class BatchProcessor:
         logger.info(f"Registered batch processor: {operation_type}")
     
     async def process_batch(
-        """Process Batch."""
         self,
         operation_type: str,
         items: List[Dict[str, Any]],
@@ -83,7 +82,6 @@ class BatchProcessor:
         }
     
     async def schedule_batch_job(
-        """Schedule Batch Job."""
         self,
         operation_type: str,
         items: List[Dict[str, Any]],

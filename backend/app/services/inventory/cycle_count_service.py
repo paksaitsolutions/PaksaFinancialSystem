@@ -19,7 +19,6 @@ class CycleCountService:
     """Cycle counting service."""
     
     async def create_cycle_count(
-        """Create Cycle Count."""
         self,
         db: AsyncSession,
         tenant_id: UUID,
@@ -40,7 +39,6 @@ class CycleCountService:
         return cycle_count
     
     async def add_items_to_count(
-        """Add Items To Count."""
         self,
         db: AsyncSession,
         cycle_count_id: UUID,
@@ -71,7 +69,6 @@ class CycleCountService:
         return count_items
     
     async def record_count(
-        """Record Count."""
         self,
         db: AsyncSession,
         cycle_count_id: UUID,
@@ -103,7 +100,6 @@ class CycleCountService:
         return count_item
     
     async def complete_cycle_count(
-        """Complete Cycle Count."""
         self,
         db: AsyncSession,
         cycle_count_id: UUID,
@@ -142,7 +138,6 @@ class CycleCountService:
         return cycle_count
     
     async def get_cycle_count_report(
-        """Get Cycle Count Report."""
         self,
         db: AsyncSession,
         cycle_count_id: UUID
@@ -179,7 +174,6 @@ class CycleCountService:
         }
     
     async def get_location_cycle_counts(
-        """Get Location Cycle Counts."""
         self,
         db: AsyncSession,
         tenant_id: UUID,

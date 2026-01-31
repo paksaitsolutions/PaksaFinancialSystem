@@ -37,7 +37,6 @@ class SecurityEventService:
         self.db = db
     
     def create_event(
-        """Create Event."""
         self,
         event_type: models.SecurityEventType,
         severity: models.SecurityEventSeverity,

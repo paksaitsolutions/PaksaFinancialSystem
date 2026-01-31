@@ -65,7 +65,6 @@ class BaseReconciliationService:
     # Helper Methods
     
     def _add_audit_log(
-        """ Add Audit Log."""
         self, 
         reconciliation_id: UUID, 
         action: str, 

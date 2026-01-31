@@ -39,7 +39,6 @@ class SecurityPolicyService:
         self.db = db
     
     def create_policy(
-        """Create Policy."""
         self,
         policy_data: schemas.SecurityPolicyCreate,
         created_by: UUID
@@ -95,7 +94,6 @@ class SecurityPolicyService:
             raise exceptions.SecurityPolicyError(f"Failed to create policy: {str(e)}")
     
     def get_policy(
-        """Get Policy."""
         self,
         policy_id: Optional[UUID] = None,
         name: Optional[str] = None
@@ -135,7 +133,6 @@ class SecurityPolicyService:
         return policy
     
     def list_policies(
-        """List Policies."""
         self,
         is_enabled: Optional[bool] = None,
         search: Optional[str] = None,
@@ -191,7 +188,6 @@ class SecurityPolicyService:
         return policies, total
     
     def update_policy(
-        """Update Policy."""
         self,
         policy_id: UUID,
         policy_data: schemas.SecurityPolicyUpdate,
@@ -275,7 +271,6 @@ class SecurityPolicyService:
             raise exceptions.SecurityPolicyError(f"Failed to delete policy: {str(e)}")
     
     def get_policy_config(
-        """Get Policy Config."""
         self,
         policy_name: str,
         default_config: Optional[Dict[str, Any]] = None

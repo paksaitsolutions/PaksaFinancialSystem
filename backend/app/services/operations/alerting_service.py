@@ -32,7 +32,6 @@ class AlertingService:
         self.db = db
     
     def create_alert(
-        """Create Alert."""
         self,
         alert_type: str,
         severity: str,

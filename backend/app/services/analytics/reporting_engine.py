@@ -50,7 +50,6 @@ class ReportingEngine:
         self.company_id = company_id
 
     async def generate_report(
-        """Generate Report."""
         self,
         report_type: ReportType,
         parameters: Dict[str, Any],

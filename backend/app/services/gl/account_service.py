@@ -269,7 +269,6 @@ class AccountService(BaseService):
             self._update_account_balance(account.parent_id)
     
     def update_account(
-        """Update Account."""
         self, 
         account_id: UUID, 
         account_data: AccountUpdate, 
@@ -414,7 +413,6 @@ class AccountService(BaseService):
         return root_nodes
     
     def get_account_balance(
-        """Get Account Balance."""
         self, 
         account_id: UUID, 
         as_of_date: Optional[datetime] = None,

@@ -42,7 +42,6 @@ class DataSubjectService:
         self.db = db
     
     def create_request(
-        """Create Request."""
         self,
         request_data: schemas.DataSubjectRightsRequestCreate,
         user_id: Optional[UUID] = None
@@ -123,7 +122,6 @@ class DataSubjectService:
         return request
     
     def list_requests(
-        """List Requests."""
         self,
         status: Optional[models.DataSubjectRightsRequest.RequestStatus] = None,
         request_type: Optional[models.DataSubjectRightsRequest.RequestType] = None,
@@ -194,7 +192,6 @@ class DataSubjectService:
         return requests, total
     
     def update_request(
-        """Update Request."""
         self,
         request_id: UUID,
         update_data: schemas.DataSubjectRightsRequestUpdate,
@@ -260,7 +257,6 @@ class DataSubjectService:
             raise exceptions.DataSubjectRequestError(f"Failed to update request: {str(e)}")
     
     def verify_subject_identity(
-        """Verify Subject Identity."""
         self,
         request_id: UUID,
         verification_method: str,
@@ -308,7 +304,6 @@ class DataSubjectService:
             )
     
     def process_request(
-        """Process Request."""
         self,
         request_id: UUID,
         processed_by: UUID,
@@ -366,7 +361,6 @@ class DataSubjectService:
             raise exceptions.DataSubjectRequestError(f"Failed to process request: {str(e)}")
     
     def complete_request(
-        """Complete Request."""
         self,
         request_id: UUID,
         completed_by: UUID,
@@ -434,7 +428,6 @@ class DataSubjectService:
             raise exceptions.DataSubjectRequestError(f"Failed to complete request: {str(e)}")
     
     def reject_request(
-        """Reject Request."""
         self,
         request_id: UUID,
         rejected_by: UUID,
@@ -500,7 +493,6 @@ class DataSubjectService:
             raise exceptions.DataSubjectRequestError(f"Failed to reject request: {str(e)}")
     
     def cancel_request(
-        """Cancel Request."""
         self,
         request_id: UUID,
         cancelled_by: Optional[UUID] = None,
@@ -562,7 +554,6 @@ class DataSubjectService:
             raise exceptions.DataSubjectRequestError(f"Failed to cancel request: {str(e)}")
     
     def export_subject_data(
-        """Export Subject Data."""
         self,
         request_id: UUID,
         export_format: str = "json",
@@ -652,7 +643,6 @@ class DataSubjectService:
             raise exceptions.DataExportError(f"Failed to export data: {str(e)}")
     
     def anonymize_subject_data(
-        """Anonymize Subject Data."""
         self,
         request_id: UUID,
         anonymization_map: Optional[Dict[str, str]] = None
@@ -718,7 +708,6 @@ class DataSubjectService:
             raise exceptions.DataAnonymizationError(f"Failed to anonymize data: {str(e)}")
     
     def get_request_timeline(
-        """Get Request Timeline."""
         self,
         request_id: UUID
     ) -> List[Dict[str, Any]]:

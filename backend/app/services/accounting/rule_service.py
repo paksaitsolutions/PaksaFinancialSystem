@@ -86,7 +86,6 @@ class ReconciliationRuleService(BaseReconciliationService):
         return rule
     
     def list_rules(
-        """List Rules."""
         self,
         user_id: UUID,
         account_id: Optional[UUID] = None,
@@ -248,7 +247,6 @@ class ReconciliationRuleService(BaseReconciliationService):
         return rule
     
     def update_rule(
-        """Update Rule."""
         self, 
         rule_id: UUID, 
         data: ReconciliationRuleUpdate, 

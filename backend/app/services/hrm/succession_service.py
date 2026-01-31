@@ -18,7 +18,6 @@ class SuccessionService:
     """Succession planning service."""
     
     async def create_succession_plan(
-        """Create Succession Plan."""
         self,
         db: AsyncSession,
         tenant_id: UUID,
@@ -36,7 +35,6 @@ class SuccessionService:
         return plan
     
     async def add_succession_candidate(
-        """Add Succession Candidate."""
         self,
         db: AsyncSession,
         succession_plan_id: UUID,
@@ -56,7 +54,6 @@ class SuccessionService:
         return candidate
     
     async def create_development_plan(
-        """Create Development Plan."""
         self,
         db: AsyncSession,
         employee_id: UUID,
@@ -74,7 +71,6 @@ class SuccessionService:
         return plan
     
     async def add_development_activity(
-        """Add Development Activity."""
         self,
         db: AsyncSession,
         development_plan_id: UUID,
@@ -92,7 +88,6 @@ class SuccessionService:
         return activity
     
     async def get_succession_plans(
-        """Get Succession Plans."""
         self,
         db: AsyncSession,
         tenant_id: UUID,
@@ -116,7 +111,6 @@ class SuccessionService:
         return [await self._serialize_succession_plan(db, plan) for plan in plans]
     
     async def get_succession_readiness_report(
-        """Get Succession Readiness Report."""
         self,
         db: AsyncSession,
         tenant_id: UUID
@@ -196,7 +190,6 @@ class SuccessionService:
         }
     
     async def get_employee_development_dashboard(
-        """Get Employee Development Dashboard."""
         self,
         db: AsyncSession,
         employee_id: UUID
@@ -310,7 +303,6 @@ class SuccessionService:
         }
     
     def _generate_succession_recommendations(
-        """ Generate Succession Recommendations."""
         self,
         coverage_rate: float,
         positions_at_risk: int,

@@ -79,7 +79,6 @@ class ReconciliationService(BaseReconciliationService):
         return reconciliation
     
     def list_reconciliations(
-        """List Reconciliations."""
         self,
         user_id: UUID,
         account_id: Optional[UUID] = None,

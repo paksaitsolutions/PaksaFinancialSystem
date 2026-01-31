@@ -19,7 +19,6 @@ class PerformanceService:
     """Advanced performance management service."""
     
     async def create_performance_review(
-        """Create Performance Review."""
         self,
         db: AsyncSession,
         employee_id: UUID,
@@ -39,7 +38,6 @@ class PerformanceService:
         return review
     
     async def complete_performance_review(
-        """Complete Performance Review."""
         self,
         db: AsyncSession,
         review_id: UUID,
@@ -68,7 +66,6 @@ class PerformanceService:
         return review
     
     async def create_employee_goal(
-        """Create Employee Goal."""
         self,
         db: AsyncSession,
         employee_id: UUID,
@@ -86,7 +83,6 @@ class PerformanceService:
         return goal
     
     async def update_goal_progress(
-        """Update Goal Progress."""
         self,
         db: AsyncSession,
         goal_id: UUID,
@@ -114,7 +110,6 @@ class PerformanceService:
         return goal
     
     async def get_employee_performance_summary(
-        """Get Employee Performance Summary."""
         self,
         db: AsyncSession,
         employee_id: UUID,
@@ -170,7 +165,6 @@ class PerformanceService:
         }
     
     async def get_team_performance_analytics(
-        """Get Team Performance Analytics."""
         self,
         db: AsyncSession,
         tenant_id: UUID,

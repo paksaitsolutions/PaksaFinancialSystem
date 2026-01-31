@@ -48,7 +48,6 @@ class FinancialStatementService(BaseService):
         self.period_service = GLPeriodService(db)
     
     def generate_balance_sheet(
-        """Generate Balance Sheet."""
         self,
         as_of_date: date,
         currency: str = 'USD',
@@ -398,7 +397,6 @@ class FinancialStatementService(BaseService):
             return Decimal('0')
     
     def generate_income_statement(
-        """Generate Income Statement."""
         self,
         start_date: date,
         end_date: date,
@@ -660,7 +658,6 @@ class FinancialStatementService(BaseService):
         )
     
     def _get_account_balances_for_date_range(
-        """ Get Account Balances For Date Range."""
         self, 
         start_date: date, 
         end_date: date,
@@ -724,7 +721,6 @@ class FinancialStatementService(BaseService):
         return balances
     
     def _calculate_income_statement_totals(
-        """ Calculate Income Statement Totals."""
         self, 
         income_statement: Dict[str, Any],
         format_currency: bool,
@@ -840,7 +836,6 @@ class FinancialStatementService(BaseService):
                 )
     
     def generate_balance_sheet(
-        """Generate Balance Sheet."""
         self,
         as_of_date: date,
         currency: str = 'USD',
@@ -1111,7 +1106,6 @@ class FinancialStatementService(BaseService):
         return balance_sheet
     
     def _get_account_balances_as_of_date(
-        """ Get Account Balances As Of Date."""
         self, 
         as_of_date: date,
         account_ids: Optional[List[UUID]] = None
@@ -1174,7 +1168,6 @@ class FinancialStatementService(BaseService):
         return balances
     
     def _calculate_balance_sheet_totals(
-        """ Calculate Balance Sheet Totals."""
         self, 
         balance_sheet: Dict[str, Any],
         format_currency: bool,
@@ -1276,7 +1269,6 @@ class FinancialStatementService(BaseService):
         )
     
     def generate_cash_flow_statement(
-        """Generate Cash Flow Statement."""
         self,
         start_date: date,
         end_date: date,
@@ -1594,7 +1586,6 @@ class FinancialStatementService(BaseService):
         return cash_flow
     
     def _calculate_depreciation_amortization(
-        """ Calculate Depreciation Amortization."""
         self, 
         start_date: date, 
         end_date: date
@@ -1638,7 +1629,6 @@ class FinancialStatementService(BaseService):
         return total
     
     def _calculate_working_capital_changes(
-        """ Calculate Working Capital Changes."""
         self,
         beginning_balances: Dict[UUID, Dict[str, Any]],
         ending_balances: Dict[UUID, Dict[str, Any]],
@@ -1698,7 +1688,6 @@ class FinancialStatementService(BaseService):
         return changes
     
     def _calculate_investing_activities(
-        """ Calculate Investing Activities."""
         self,
         journal_entries: List[JournalEntry],
         all_accounts: Dict[UUID, Account]
@@ -1759,7 +1748,6 @@ class FinancialStatementService(BaseService):
         return activities
     
     def _calculate_financing_activities(
-        """ Calculate Financing Activities."""
         self,
         journal_entries: List[JournalEntry],
         all_accounts: Dict[UUID, Account]
@@ -1830,7 +1818,6 @@ class FinancialStatementService(BaseService):
         return activities
     
     def _get_journal_entries_for_date_range(
-        """ Get Journal Entries For Date Range."""
         self,
         start_date: date,
         end_date: date

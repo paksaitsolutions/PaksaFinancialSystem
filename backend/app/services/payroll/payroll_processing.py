@@ -1,5 +1,4 @@
     def _calculate_overtime_pay(
-        """ Calculate Overtime Pay."""
         self, overtime_hours: Decimal, pay_rate: Decimal, pay_type: str
     ) -> Decimal:
         """ Calculate Overtime Pay."""
@@ -21,7 +20,6 @@
             return (overtime_hours * overtime_rate).quantize(Decimal("0.01"), ROUND_HALF_UP)
 
     def _calculate_earnings(
-        """ Calculate Earnings."""
         self, 
         employee: Employee, 
         pay_period: PayPeriod,
@@ -69,7 +67,6 @@
         return earnings
     
     def _get_other_earnings(
-        """ Get Other Earnings."""
         self, employee: Employee, pay_period: PayPeriod
     ) -> List[Dict]:
         """ Get Other Earnings."""
@@ -120,7 +117,6 @@
         return earnings
     
     def _get_sales_amount(
-        """ Get Sales Amount."""
         self, 
         employee_id: UUID, 
         pay_period: PayPeriod,
@@ -144,7 +140,6 @@
         return Decimal("0.00")
     
     def _calculate_pre_tax_deductions(
-        """ Calculate Pre Tax Deductions."""
         self, 
         employee: Employee, 
         pay_period: PayPeriod,
@@ -216,7 +211,6 @@
         return deductions
     
     def _get_ytd_deductions(
-        """ Get Ytd Deductions."""
         self, 
         employee_id: UUID, 
         benefit_plan_id: UUID,

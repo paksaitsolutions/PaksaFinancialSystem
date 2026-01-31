@@ -37,7 +37,6 @@ class AuditService:
         self.db = db
     
     def create_audit_log(
-        """Create Audit Log."""
         self,
         action: models.AuditActionType,
         resource_type: str,
@@ -111,7 +110,6 @@ class AuditService:
         return log
     
     def list_audit_logs(
-        """List Audit Logs."""
         self,
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None,
@@ -189,7 +187,6 @@ class AuditService:
         return logs, total
     
     def get_audit_summary(
-        """Get Audit Summary."""
         self,
         start_date: datetime,
         end_date: datetime,
@@ -264,7 +261,6 @@ class AuditService:
         return summary
     
     def cleanup_old_logs(
-        """Cleanup Old Logs."""
         self,
         older_than_days: int = 365,
         batch_size: int = 1000

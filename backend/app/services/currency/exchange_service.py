@@ -52,7 +52,6 @@ class ExchangeService:
         self.active_providers = settings.EXCHANGE_RATE_PROVIDERS
         
     async def get_rate(
-        """Get Rate."""
         self,
         from_currency: str,
         to_currency: str,
@@ -139,7 +138,6 @@ class ExchangeService:
         )
     
     async def convert_amount(
-        """Convert Amount."""
         self,
         amount: Decimal,
         from_currency: str,
@@ -178,7 +176,6 @@ class ExchangeService:
         return converted, rate_result
     
     async def get_historical_rates(
-        """Get Historical Rates."""
         self,
         base_currency: str,
         target_currencies: List[str],
@@ -206,7 +203,6 @@ class ExchangeService:
     # --- Provider Implementations ---
     
     async def _get_openexchangerates_rate(
-        """ Get Openexchangerates Rate."""
         self,
         from_currency: str,
         to_currency: str,
@@ -251,7 +247,6 @@ class ExchangeService:
             return None
     
     async def _get_ecb_rate(
-        """ Get Ecb Rate."""
         self,
         from_currency: str,
         to_currency: str,
@@ -307,7 +302,6 @@ class ExchangeService:
             return None
     
     async def _get_fixer_rate(
-        """ Get Fixer Rate."""
         self,
         from_currency: str,
         to_currency: str,
@@ -357,7 +351,6 @@ class ExchangeService:
             return None
     
     async def _get_fallback_rate(
-        """ Get Fallback Rate."""
         self,
         from_currency: str,
         to_currency: str,
@@ -419,7 +412,6 @@ class ExchangeService:
     # --- Helper Methods ---
     
     def _get_cached_rate(
-        """ Get Cached Rate."""
         self,
         from_currency: str,
         to_currency: str,

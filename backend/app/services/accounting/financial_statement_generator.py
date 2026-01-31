@@ -43,7 +43,6 @@ class FinancialStatementGenerator:
         self.period_service = PeriodService(db)
     
     def generate_all_statements(
-        """Generate All Statements."""
         self,
         company_id: UUID,
         as_of_date: date,
@@ -159,7 +158,6 @@ class FinancialStatementGenerator:
         )
     
     def _save_statements(
-        """ Save Statements."""
         self,
         company_id: UUID,
         balance_sheet: Dict[str, Any],
@@ -251,7 +249,6 @@ class FinancialStatementGenerator:
         }
     
     def _save_statement_structure(
-        """ Save Statement Structure."""
         self,
         statement: FinancialStatement,
         created_by: UUID

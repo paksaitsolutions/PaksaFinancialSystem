@@ -22,7 +22,6 @@ class PayrollService:
     
     # Employee Management
     def create_employee(
-        """Create Employee."""
         self,
         employee_id: str,
         first_name: str,
@@ -54,7 +53,6 @@ class PayrollService:
         return employee
     
     def get_employees(
-        """Get Employees."""
         self,
         active_only: bool = True,
         department: Optional[str] = None
@@ -96,7 +94,6 @@ class PayrollService:
     
     # Pay Run Management
     def create_pay_run(
-        """Create Pay Run."""
         self,
         pay_period_start: date,
         pay_period_end: date,
@@ -259,7 +256,6 @@ class PayrollService:
     
     # Payslip Management
     def get_payslips(
-        """Get Payslips."""
         self,
         employee_id: Optional[str] = None,
         pay_run_id: Optional[str] = None,
@@ -284,7 +280,6 @@ class PayrollService:
     
     # Payroll Items Management
     def create_payroll_item(
-        """Create Payroll Item."""
         self,
         name: str,
         code: str,
@@ -320,7 +315,6 @@ class PayrollService:
     
     # Analytics and Reporting
     def get_payroll_summary(
-        """Get Payroll Summary."""
         self,
         start_date: date,
         end_date: date

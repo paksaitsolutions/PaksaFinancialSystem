@@ -61,7 +61,6 @@ class TenantAuthService:
         return config
     
     def create_session(
-        """Create Session."""
         self,
         user_id: UUID,
         company_id: UUID,
@@ -170,7 +169,6 @@ class TenantAuthService:
         self.db.commit()
     
     def log_login_attempt(
-        """Log Login Attempt."""
         self,
         email: str,
         success: bool,
@@ -199,7 +197,6 @@ class TenantAuthService:
         return attempt
     
     def create_password_reset_token(
-        """Create Password Reset Token."""
         self,
         user_id: UUID,
         company_id: UUID,
@@ -261,7 +258,6 @@ class TenantAuthService:
         return False
     
     def create_oauth_provider(
-        """Create Oauth Provider."""
         self,
         company_id: UUID,
         provider_data: Dict[str, Any]
@@ -299,7 +295,6 @@ class TenantAuthService:
         return query.all()
     
     def get_login_attempts(
-        """Get Login Attempts."""
         self,
         company_id: Optional[UUID] = None,
         email: Optional[str] = None,

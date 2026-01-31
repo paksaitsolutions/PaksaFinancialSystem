@@ -29,7 +29,6 @@ class ComplianceService:
         self.audit_service = AuditService(db)
     
     def generate_report(
-        """Generate Report."""
         self,
         report_type: str,
         start_date: datetime,
@@ -84,7 +83,6 @@ class ComplianceService:
         ).first()
     
     def list_reports(
-        """List Reports."""
         self,
         report_type: Optional[str] = None,
         status: Optional[str] = None,
@@ -136,7 +134,6 @@ class ComplianceService:
         return query.order_by(CompliancePolicy.policy_name).all()
     
     def _generate_report_data(
-        """ Generate Report Data."""
         self,
         report_type: str,
         start_date: datetime,
@@ -159,7 +156,6 @@ class ComplianceService:
             raise ValueError(f"Unsupported report type: {report_type}")
     
     def _generate_audit_trail_report(
-        """ Generate Audit Trail Report."""
         self,
         start_date: datetime,
         end_date: datetime,
@@ -215,7 +211,6 @@ class ComplianceService:
         }
     
     def _generate_access_control_report(
-        """ Generate Access Control Report."""
         self,
         start_date: datetime,
         end_date: datetime,
@@ -269,7 +264,6 @@ class ComplianceService:
         }
     
     def _generate_user_activity_report(
-        """ Generate User Activity Report."""
         self,
         start_date: datetime,
         end_date: datetime,
@@ -321,7 +315,6 @@ class ComplianceService:
         }
     
     def _generate_security_assessment_report(
-        """ Generate Security Assessment Report."""
         self,
         start_date: datetime,
         end_date: datetime,
@@ -373,7 +366,6 @@ class ComplianceService:
         }
     
     def _generate_sox_compliance_report(
-        """ Generate Sox Compliance Report."""
         self,
         start_date: datetime,
         end_date: datetime,

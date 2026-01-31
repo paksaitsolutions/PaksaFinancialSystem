@@ -68,7 +68,6 @@ class FinancialStatementTemplateService:
         return query.first()
     
     def list_templates(
-        """List Templates."""
         self, 
         skip: int = 0, 
         limit: int = 100,
@@ -121,7 +120,6 @@ class FinancialStatementTemplateService:
         return db_template
     
     def update_template(
-        """Update Template."""
         self, 
         template_id: UUID, 
         template_data: FinancialStatementTemplateUpdate,
@@ -174,7 +172,6 @@ class FinancialStatementTemplateService:
         return True
     
     def set_default_template(
-        """Set Default Template."""
         self, 
         template_id: UUID, 
         template_type: Optional[TemplateType] = None,
@@ -205,7 +202,6 @@ class FinancialStatementTemplateService:
         return db_template
     
     def get_default_template(
-        """Get Default Template."""
         self, 
         template_type: TemplateType,
         company_id: Optional[UUID] = None
@@ -221,7 +217,6 @@ class FinancialStatementTemplateService:
         return query.first()
     
     def clone_template(
-        """Clone Template."""
         self, 
         template_id: UUID, 
         new_name: str,

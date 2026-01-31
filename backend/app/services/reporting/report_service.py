@@ -78,7 +78,6 @@ class ReportService:
         self.notification_service = NotificationService()
     
     async def generate_report(
-        """Generate Report."""
         self,
         report_definition: ReportDefinition,
         context: ReportContext,
@@ -152,7 +151,6 @@ class ReportService:
         }
     
     async def download_report(
-        """Download Report."""
         self, 
         report_id: str,
         format: ReportOutputFormat = ReportOutputFormat.PDF
@@ -295,7 +293,6 @@ class ReportService:
             )
     
     async def schedule_report(
-        """Schedule Report."""
         self,
         report_definition: ReportDefinition,
         schedule: ReportSchedule,
@@ -338,7 +335,6 @@ class ReportService:
         # Add more validation as needed
     
     def _create_report_record(
-        """ Create Report Record."""
         self,
         definition: ReportDefinition,
         context: ReportContext

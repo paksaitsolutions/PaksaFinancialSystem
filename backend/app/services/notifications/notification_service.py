@@ -178,7 +178,6 @@ class NotificationService:
         self.push_service = PushNotificationService()
     
     async def send_notification(
-        """Send Notification."""
         self,
         notification_type: str,
         recipient: str,
@@ -203,7 +202,6 @@ class NotificationService:
             return False
     
     async def send_multi_channel_notification(
-        """Send Multi Channel Notification."""
         self,
         channels: List[str],
         recipients: Dict[str, str],

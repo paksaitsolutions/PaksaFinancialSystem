@@ -30,7 +30,6 @@ class PayrollTaxCalculator:
         self.db = db
     
     def calculate_taxes(
-        """Calculate Taxes."""
         self,
         employee: Employee,
         pay_period: PayPeriod,
@@ -88,7 +87,6 @@ class PayrollTaxCalculator:
         return taxes
     
     def _get_applicable_tax_codes(
-        """ Get Applicable Tax Codes."""
         self,
         employee: Employee,
         pay_date: date,
@@ -146,7 +144,6 @@ class PayrollTaxCalculator:
         return query.all()
     
     def _calculate_tax_amount(
-        """ Calculate Tax Amount."""
         self,
         tax_code: TaxCode,
         taxable_income: Decimal,
@@ -192,7 +189,6 @@ class PayrollTaxCalculator:
         return Decimal("0.00")
     
     def _calculate_bracketed_tax(
-        """ Calculate Bracketed Tax."""
         self,
         tax_code: TaxCode,
         taxable_income: Decimal,
@@ -270,7 +266,6 @@ class PayrollTaxCalculator:
         return total_tax.quantize(Decimal("0.01"), ROUND_HALF_UP)
     
     def _get_ytd_taxes(
-        """ Get Ytd Taxes."""
         self,
         employee_id: UUID,
         tax_code_id: UUID,

@@ -37,7 +37,6 @@ class ConsolidatedReportingService(BaseService):
         super().__init__(db, JournalEntry)
     
     def generate_module_activity_report(
-        """Generate Module Activity Report."""
         self,
         company_id: UUID,
         start_date: date,
@@ -134,7 +133,6 @@ class ConsolidatedReportingService(BaseService):
         }
     
     def generate_account_activity_summary(
-        """Generate Account Activity Summary."""
         self,
         company_id: UUID,
         start_date: date,
@@ -285,7 +283,6 @@ class ConsolidatedReportingService(BaseService):
         }
     
     def _calculate_integration_health_score(
-        """ Calculate Integration Health Score."""
         self, 
         ap_orphaned: int, 
         ar_orphaned: int, 
@@ -306,7 +303,6 @@ class ConsolidatedReportingService(BaseService):
         return max(0, min(100, base_score))
     
     def _generate_integration_recommendations(
-        """ Generate Integration Recommendations."""
         self, 
         ap_orphaned: int, 
         ar_orphaned: int, 

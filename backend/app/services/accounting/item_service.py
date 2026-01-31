@@ -41,7 +41,6 @@ class ReconciliationItemService(BaseReconciliationService):
     """Service for handling reconciliation item operations."""
     
     def add_reconciliation_item(
-        """Add Reconciliation Item."""
         self, 
         reconciliation_id: UUID, 
         data: ReconciliationItemCreate, 
@@ -189,7 +188,6 @@ class ReconciliationItemService(BaseReconciliationService):
         return item
     
     def update_reconciliation_item(
-        """Update Reconciliation Item."""
         self, 
         item_id: UUID, 
         data: ReconciliationItemUpdate, 

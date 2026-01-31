@@ -42,7 +42,6 @@ class PayrollProcessor:
         self.db = db
     
     def initialize_pay_run(
-        """Initialize Pay Run."""
         self,
         pay_period_id: UUID,
         created_by: UUID,
@@ -113,7 +112,6 @@ class PayrollProcessor:
         return pay_run
     
     def process_pay_run(
-        """Process Pay Run."""
         self,
         pay_run_id: UUID,
         processed_by: UUID,
@@ -184,7 +182,6 @@ class PayrollProcessor:
             )
     
     def _get_eligible_employees(
-        """ Get Eligible Employees."""
         self,
         company_id: UUID,
         pay_period: PayPeriod,
@@ -218,7 +215,6 @@ class PayrollProcessor:
         return query.all()
     
     def _calculate_employee_pay(
-        """ Calculate Employee Pay."""
         self,
         employee: Employee,
         pay_period: PayPeriod,

@@ -16,7 +16,6 @@ from app.services.procurement import ProcurementService
 
 class BudgetAnalyticsService:
     def __init__(
-        """  Init  ."""
         self,
         db: Session,
         budget_service: BudgetService,

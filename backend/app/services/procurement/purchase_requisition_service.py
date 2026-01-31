@@ -51,7 +51,6 @@ class PurchaseRequisitionService:
         return sum(item.quantity * item.unit_price for item in items)
     
     def create_requisition(
-        """Create Requisition."""
         self, 
         requisition_data: PurchaseRequisitionCreate
     ) -> PurchaseRequisitionResponse:
@@ -120,7 +119,6 @@ class PurchaseRequisitionService:
             )
     
     def get_requisition(
-        """Get Requisition."""
         self, 
         requisition_id: int
     ) -> Optional[PurchaseRequisitionResponse]:
@@ -150,7 +148,6 @@ class PurchaseRequisitionService:
         return requisition
     
     def list_requisitions(
-        """List Requisitions."""
         self, 
         skip: int = 0, 
         limit: int = 100,
@@ -198,7 +195,6 @@ class PurchaseRequisitionService:
         return query.offset(skip).limit(limit).all()
     
     def update_requisition(
-        """Update Requisition."""
         self, 
         requisition_id: int, 
         requisition_data: PurchaseRequisitionUpdate
@@ -265,7 +261,6 @@ class PurchaseRequisitionService:
             )
     
     def submit_requisition(
-        """Submit Requisition."""
         self, 
         requisition_id: int
     ) -> PurchaseRequisitionResponse:
@@ -303,7 +298,6 @@ class PurchaseRequisitionService:
             )
     
     def approve_requisition(
-        """Approve Requisition."""
         self, 
         requisition_id: int,
         approval_data: RequisitionApproval
@@ -354,7 +348,6 @@ class PurchaseRequisitionService:
             )
     
     def delete_requisition(
-        """Delete Requisition."""
         self, 
         requisition_id: int
     ) -> bool:

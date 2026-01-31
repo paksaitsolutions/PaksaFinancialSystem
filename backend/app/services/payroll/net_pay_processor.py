@@ -32,7 +32,6 @@ class NetPayProcessor:
         self.db = db
     
     def calculate_net_pay(
-        """Calculate Net Pay."""
         self,
         gross_pay: Decimal,
         pre_tax_deductions: List[PayrollDeductionItem],
@@ -107,7 +106,6 @@ class NetPayProcessor:
         )
     
     def process_payments(
-        """Process Payments."""
         self,
         pay_run_id: UUID,
         processed_by: UUID,
@@ -184,7 +182,6 @@ class NetPayProcessor:
         return disbursements
     
     def _process_employee_payment(
-        """ Process Employee Payment."""
         self,
         payslip: Payslip,
         payment_date: date,
@@ -292,7 +289,6 @@ class NetPayProcessor:
             )
     
     def _get_payment_method(
-        """ Get Payment Method."""
         self,
         employee: Employee,
         method_code: Optional[str] = None

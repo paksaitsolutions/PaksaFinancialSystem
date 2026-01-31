@@ -45,7 +45,6 @@ class AITaxOptimizationService:
         self.ai_client = TaxLLMClient(api_key=settings.AI_TAX_API_KEY)
     
     def get_deduction_suggestions(
-        """Get Deduction Suggestions."""
         self,
         company_id: str,
         fiscal_year: int,

@@ -20,7 +20,6 @@ class TransferService:
     """Multi-location transfer service."""
     
     async def create_transfer(
-        """Create Transfer."""
         self,
         db: AsyncSession,
         tenant_id: UUID,
@@ -41,7 +40,6 @@ class TransferService:
         return transfer
     
     async def approve_transfer(
-        """Approve Transfer."""
         self,
         db: AsyncSession,
         transfer_id: UUID,
@@ -66,7 +64,6 @@ class TransferService:
         return transfer
     
     async def ship_transfer(
-        """Ship Transfer."""
         self,
         db: AsyncSession,
         transfer_id: UUID,
@@ -92,7 +89,6 @@ class TransferService:
         return transfer
     
     async def get_transfer_status(
-        """Get Transfer Status."""
         self,
         db: AsyncSession,
         transfer_id: UUID

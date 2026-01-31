@@ -25,7 +25,6 @@ class BackgroundJob:
     """Background job definition."""
     
     def __init__(
-        """  Init  ."""
         self,
         job_id: str,
         job_type: str,
@@ -65,7 +64,6 @@ class JobQueue:
         logger.info(f"Registered job handler: {job_type}")
     
     async def enqueue(
-        """Enqueue."""
         self,
         job_type: str,
         payload: Dict[str, Any],

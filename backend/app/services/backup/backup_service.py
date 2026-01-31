@@ -28,7 +28,6 @@ class BackupService:
         os.makedirs(self.backup_dir, exist_ok=True)
     
     def create_backup(
-        """Create Backup."""
         self,
         backup_name: str,
         backup_type: str = BackupType.FULL,
@@ -76,7 +75,6 @@ class BackupService:
         return backup
     
     def restore_backup(
-        """Restore Backup."""
         self,
         backup_id: UUID,
         restore_name: str,

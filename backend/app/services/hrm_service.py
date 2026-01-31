@@ -31,7 +31,6 @@ class HRMService:
     
     # Employee Management
     async def create_employee(
-        """Create Employee."""
         self, 
         db: AsyncSession, 
         employee_data: EmployeeCreate,
@@ -65,7 +64,6 @@ class HRMService:
         return employee
     
     async def get_employees(
-        """Get Employees."""
         self,
         db: AsyncSession,
         tenant_id: UUID = None,
@@ -104,7 +102,6 @@ class HRMService:
         return result.scalars().all()
     
     async def get_employee_by_id(
-        """Get Employee By Id."""
         self, 
         db: AsyncSession, 
         employee_id: UUID,
@@ -126,7 +123,6 @@ class HRMService:
         return result.scalar_one_or_none()
     
     async def update_employee(
-        """Update Employee."""
         self,
         db: AsyncSession,
         employee_id: UUID,
@@ -149,7 +145,6 @@ class HRMService:
     
     # Department Management
     async def create_department(
-        """Create Department."""
         self,
         db: AsyncSession,
         department_data: DepartmentCreate,
@@ -174,7 +169,6 @@ class HRMService:
         return department
     
     async def get_departments(
-        """Get Departments."""
         self,
         db: AsyncSession,
         tenant_id: UUID = None,
@@ -197,7 +191,6 @@ class HRMService:
     
     # Leave Management
     async def create_leave_request(
-        """Create Leave Request."""
         self,
         db: AsyncSession,
         leave_data: LeaveRequestCreate,
@@ -227,7 +220,6 @@ class HRMService:
         return leave_request
     
     async def get_leave_requests(
-        """Get Leave Requests."""
         self,
         db: AsyncSession,
         tenant_id: UUID = None,
@@ -262,7 +254,6 @@ class HRMService:
         return result.scalars().all()
     
     async def approve_leave_request(
-        """Approve Leave Request."""
         self,
         db: AsyncSession,
         request_id: UUID,
@@ -293,7 +284,6 @@ class HRMService:
     
     # Attendance Management
     async def record_attendance(
-        """Record Attendance."""
         self,
         db: AsyncSession,
         attendance_data: AttendanceRecordCreate,
@@ -345,7 +335,6 @@ class HRMService:
             return attendance
     
     async def get_attendance_records(
-        """Get Attendance Records."""
         self,
         db: AsyncSession,
         tenant_id: UUID = None,
@@ -376,7 +365,6 @@ class HRMService:
     
     # Performance Management
     async def create_performance_review(
-        """Create Performance Review."""
         self,
         db: AsyncSession,
         review_data: PerformanceReviewCreate,
@@ -401,7 +389,6 @@ class HRMService:
         return review
     
     async def get_performance_reviews(
-        """Get Performance Reviews."""
         self,
         db: AsyncSession,
         tenant_id: UUID = None,
@@ -436,7 +423,6 @@ class HRMService:
     
     # Analytics and Reporting
     async def get_hr_analytics(
-        """Get Hr Analytics."""
         self,
         db: AsyncSession,
         tenant_id: UUID = None
@@ -513,7 +499,6 @@ class HRMService:
         }
     
     async def _calculate_average_tenure(
-        """ Calculate Average Tenure."""
         self, 
         db: AsyncSession, 
         tenant_id: UUID
@@ -539,7 +524,6 @@ class HRMService:
     
     # Policy Management
     async def create_policy(
-        """Create Policy."""
         self,
         db: AsyncSession,
         policy_data: PolicyCreate,
@@ -560,7 +544,6 @@ class HRMService:
         return policy
     
     async def get_policies(
-        """Get Policies."""
         self,
         db: AsyncSession,
         tenant_id: UUID = None,

@@ -24,7 +24,6 @@ class AuditService:
         self.db = db
     
     def log_action(
-        """Log Action."""
         self,
         action: str,
         resource_type: str,
@@ -74,7 +73,6 @@ class AuditService:
         return audit_log
     
     def get_audit_logs(
-        """Get Audit Logs."""
         self,
         user_id: Optional[UUID] = None,
         resource_type: Optional[str] = None,

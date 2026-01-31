@@ -38,7 +38,6 @@ class DataSyncService:
         logger.info("Data sync scheduler stopped")
     
     async def register_sync_job(
-        """Register Sync Job."""
         self,
         job_id: str,
         sync_func: callable,

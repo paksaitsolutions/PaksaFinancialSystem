@@ -125,7 +125,6 @@ class IntercompanyService:
         ).first()
     
     def list_transactions(
-        """List Transactions."""
         self, 
         company_id: Optional[UUID] = None,
         status: Optional[IntercompanyTransactionStatus] = None,
@@ -151,7 +150,6 @@ class IntercompanyService:
                    .offset(skip).limit(limit).all()
     
     def _create_journal_entry(
-        """ Create Journal Entry."""
         self, 
         transaction: IntercompanyTransaction, 
         company_id: UUID,

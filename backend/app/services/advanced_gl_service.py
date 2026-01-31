@@ -31,7 +31,6 @@ class AdvancedGLService:
         self.audit_logger = AuditLogger(db)
     
     async def create_journal_entry(
-        """Create Journal Entry."""
         self,
         entry_data: Dict[str, Any],
         auto_post: bool = False
@@ -210,7 +209,6 @@ class AdvancedGLService:
         entry.posted_by = str(self.user.id)
     
     async def generate_trial_balance(
-        """Generate Trial Balance."""
         self,
         as_of_date: date,
         include_zero_balances: bool = False
@@ -303,7 +301,6 @@ class AdvancedGLService:
         }
     
     async def close_accounting_period(
-        """Close Accounting Period."""
         self,
         period_year: int,
         period_month: int
@@ -377,7 +374,6 @@ class AdvancedGLService:
         return period
     
     async def _calculate_account_balance(
-        """ Calculate Account Balance."""
         self,
         account_id: str,
         as_of_date: date

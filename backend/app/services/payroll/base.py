@@ -39,7 +39,6 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType, Respons
         return self.db.query(self.model).filter(self.model.id == id).first()
 
     def get_multi(
-        """Get Multi."""
         self, *, skip: int = 0, limit: int = 100, **filters: Any
     ) -> List[ModelType]:
         """Get Multi."""
@@ -64,7 +63,6 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType, Respons
         return db_obj
 
     def update(
-        """Update."""
         self, *, id: Union[UUID, str, int], obj_in: Union[UpdateSchemaType, Dict[str, Any]]
     ) -> Optional[ModelType]:
         """Update."""
@@ -111,7 +109,6 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType, Respons
         return obj
         
     def get_multi_by_employee(
-        """Get Multi By Employee."""
         self, employee_id: UUID, *, skip: int = 0, limit: int = 100, **filters: Any
     ) -> List[ModelType]:
         """Get Multi By Employee."""
@@ -130,7 +127,6 @@ class CRUDService(
     """CRUD service with response schema mapping."""
     
     def __init__(
-        """  Init  ."""
         self, 
         model: Type[ModelType], 
         db: Session, 
@@ -147,7 +143,6 @@ class CRUDService(
         return self.response_schema.from_orm(db_obj)
     
     def get_multi_response(
-        """Get Multi Response."""
         self, db_objs: List[ModelType]
     ) -> List[ResponseSchemaType]:
         """Get Multi Response."""
@@ -169,7 +164,6 @@ class CRUDService(
         return self.get_response(db_obj)
     
     def get_all(
-        """Get All."""
         self, *, skip: int = 0, limit: int = 100, **filters: Any
     ) -> List[ResponseSchemaType]:
         """Get All."""
@@ -178,7 +172,6 @@ class CRUDService(
         return self.get_multi_response(db_objs)
     
     def create_with_response(
-        """Create With Response."""
         self, *, obj_in: CreateSchemaType
     ) -> ResponseSchemaType:
         """Create With Response."""
@@ -187,7 +180,6 @@ class CRUDService(
         return self.get_response(db_obj)
     
     def update_with_response(
-        """Update With Response."""
         self, *, id: UUID, obj_in: Union[UpdateSchemaType, Dict[str, Any]]
     ) -> Optional[ResponseSchemaType]:
         """Update With Response."""
@@ -198,7 +190,6 @@ class CRUDService(
         return None
     
     def get_by_employee(
-        """Get By Employee."""
         self, employee_id: UUID, *, skip: int = 0, limit: int = 100, **filters: Any
     ) -> List[ResponseSchemaType]:
         """Get By Employee."""

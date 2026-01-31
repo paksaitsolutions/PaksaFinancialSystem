@@ -44,7 +44,6 @@ class JournalEntryService(BaseService):
         super().__init__(db, JournalEntry)
     
     def create_entry(
-        """Create Entry."""
         self, 
         entry_data: JournalEntryCreate, 
         created_by: UUID
@@ -102,7 +101,6 @@ class JournalEntryService(BaseService):
         return self._get_entry_response(entry.id)
     
     def update_entry(
-        """Update Entry."""
         self, 
         entry_id: UUID, 
         entry_data: JournalEntryUpdate, 
@@ -226,7 +224,6 @@ class JournalEntryService(BaseService):
         return self._get_entry_response(entry_id)
     
     def search_entries(
-        """Search Entries."""
         self, 
         search_params: JournalEntrySearch,
         company_id: UUID
@@ -273,7 +270,6 @@ class JournalEntryService(BaseService):
         return entry_responses, total
     
     def reverse_entry(
-        """Reverse Entry."""
         self, 
         entry_id: UUID, 
         reversal_date: date,
@@ -342,7 +338,6 @@ class JournalEntryService(BaseService):
             )
     
     def _update_account_balance(
-        """ Update Account Balance."""
         self, 
         account_id: UUID, 
         debit: Decimal, 
@@ -381,7 +376,6 @@ class JournalEntryService(BaseService):
         balance.closing_balance = balance.opening_balance + balance.period_debit - balance.period_credit
     
     def _get_previous_period_balance(
-        """ Get Previous Period Balance."""
         self, 
         account_id: UUID, 
         period_id: UUID
@@ -414,7 +408,6 @@ class JournalEntryService(BaseService):
         return prev_balance.closing_balance if prev_balance else Decimal('0')
     
     def _validate_accounting_period(
-        """ Validate Accounting Period."""
         self, 
         entry_date: date, 
         company_id: UUID
@@ -437,7 +430,6 @@ class JournalEntryService(BaseService):
         return period
     
     def _validate_journal_entry(
-        """ Validate Journal Entry."""
         self, 
         lines: List[JournalEntryLineCreate], 
         company_id: UUID

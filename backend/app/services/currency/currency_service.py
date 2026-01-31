@@ -216,7 +216,6 @@ class CurrencyService:
         return True
     
     def get_exchange_rate(
-        """Get Exchange Rate."""
         self,
         source_currency_code: str,
         target_currency_code: str,

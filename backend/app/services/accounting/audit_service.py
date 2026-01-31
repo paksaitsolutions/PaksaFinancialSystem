@@ -70,7 +70,6 @@ class ReconciliationAuditService(BaseReconciliationService):
         return log
     
     def list_audit_logs(
-        """List Audit Logs."""
         self,
         reconciliation_id: UUID,
         user_id: UUID,
@@ -166,7 +165,6 @@ class ReconciliationAuditService(BaseReconciliationService):
         return logs, total
     
     def create_audit_log(
-        """Create Audit Log."""
         self, 
         reconciliation_id: UUID, 
         action: str, 
@@ -222,7 +220,6 @@ class ReconciliationAuditService(BaseReconciliationService):
         return log
     
     def export_audit_logs(
-        """Export Audit Logs."""
         self, 
         reconciliation_id: UUID, 
         user_id: UUID,

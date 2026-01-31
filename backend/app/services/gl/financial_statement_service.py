@@ -47,7 +47,6 @@ class FinancialStatementService(BaseService):
         super().__init__(db, FinancialStatement)
     
     def generate_financial_statement(
-        """Generate Financial Statement."""
         self,
         statement_type: FSType,
         company_id: UUID,
@@ -127,7 +126,6 @@ class FinancialStatementService(BaseService):
         return self._format_statement_response(statement)
     
     def _get_trial_balance(
-        """ Get Trial Balance."""
         self, 
         company_id: UUID, 
         as_of_date: date,
@@ -161,7 +159,6 @@ class FinancialStatementService(BaseService):
         return trial_balance
     
     def _generate_balance_sheet(
-        """ Generate Balance Sheet."""
         self, 
         trial_balance: TrialBalance,
         as_of_date: date
@@ -275,7 +272,6 @@ class FinancialStatementService(BaseService):
         }
     
     def _generate_income_statement(
-        """ Generate Income Statement."""
         self,
         company_id: UUID,
         start_date: date,
@@ -390,7 +386,6 @@ class FinancialStatementService(BaseService):
         }
     
     def _generate_cash_flow_statement(
-        """ Generate Cash Flow Statement."""
         self,
         company_id: UUID,
         start_date: date,
@@ -449,7 +444,6 @@ class FinancialStatementService(BaseService):
         }
     
     def _save_statement_structure(
-        """ Save Statement Structure."""
         self,
         statement_id: UUID,
         statement_data: Dict[str, Any],
@@ -493,7 +487,6 @@ class FinancialStatementService(BaseService):
                 self.db.add(line)
     
     def _format_statement_response(
-        """ Format Statement Response."""
         self, 
         statement: FinancialStatement
     ) -> FinancialStatementResponse:

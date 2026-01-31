@@ -250,7 +250,6 @@ class PayrollService:
         )
     
     def process_payroll(
-        """Process Payroll."""
         self,
         pay_period_id: UUID,
         company_id: UUID,
@@ -579,7 +578,6 @@ class PayrollService:
         )
     
     def process_payments(
-        """Process Payments."""
         self,
         pay_run_id: UUID,
         processed_by: UUID,
@@ -607,7 +605,6 @@ class PayrollService:
         )
     
     def get_employee_pay_history(
-        """Get Employee Pay History."""
         self,
         employee_id: UUID,
         start_date: Optional[date] = None,

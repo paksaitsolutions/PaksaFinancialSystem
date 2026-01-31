@@ -42,7 +42,6 @@ class UserAdminService:
         self.db = db
     
     def provision_user(
-        """Provision User."""
         self,
         user_id: UUID,
         company_id: UUID,

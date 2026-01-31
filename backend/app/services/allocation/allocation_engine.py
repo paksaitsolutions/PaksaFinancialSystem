@@ -149,7 +149,6 @@ class AllocationEngine:
         return query.order_by(AllocationRule.priority).all()
     
     def _create_allocation_entries(
-        """ Create Allocation Entries."""
         self, 
         allocation: Allocation, 
         rule: AllocationRule, 
@@ -168,7 +167,6 @@ class AllocationEngine:
         return entries
     
     def _allocate_by_percentage(
-        """ Allocate By Percentage."""
         self, 
         allocation: Allocation, 
         rule: AllocationRule, 
@@ -201,7 +199,6 @@ class AllocationEngine:
         return entries
     
     def _allocate_equally(
-        """ Allocate Equally."""
         self, 
         allocation: Allocation, 
         rule: AllocationRule, 
@@ -237,7 +234,6 @@ class AllocationEngine:
         return entries
     
     def _create_allocation_journal_entry(
-        """ Create Allocation Journal Entry."""
         self, 
         allocation_entry: AllocationEntry, 
         source_je: JournalEntry,

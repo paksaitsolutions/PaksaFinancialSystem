@@ -149,7 +149,6 @@ class AccountBalanceService:
         return balance.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
         
     def get_balance_for_period(
-        """Get Balance For Period."""
         self,
         account_id: UUID,
         start_date: datetime,
@@ -430,7 +429,6 @@ class AccountBalanceService:
         return self.calculate_account_balance(account_id, as_of_date)
     
     def get_balance_for_period(
-        """Get Balance For Period."""
         self, 
         account_id: UUID, 
         start_date: datetime, 
@@ -499,7 +497,6 @@ class AccountBalanceService:
         }
     
     def create_periodic_balance(
-        """Create Periodic Balance."""
         self,
         account_id: UUID,
         period_start: datetime,
@@ -545,7 +542,6 @@ class AccountBalanceService:
         return balance
     
     def close_period(
-        """Close Period."""
         self,
         period_end: datetime,
         commit: bool = True
@@ -713,7 +709,6 @@ class AccountBalanceService:
         return balance.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
         
     def get_balance_for_period(
-        """Get Balance For Period."""
         self,
         account_id: UUID,
         start_date: datetime,
@@ -994,7 +989,6 @@ class AccountBalanceService:
         return self.calculate_account_balance(account_id, as_of_date)
     
     def get_balance_for_period(
-        """Get Balance For Period."""
         self, 
         account_id: UUID, 
         start_date: datetime, 
@@ -1063,7 +1057,6 @@ class AccountBalanceService:
         }
     
     def create_periodic_balance(
-        """Create Periodic Balance."""
         self,
         account_id: UUID,
         period_start: datetime,
@@ -1109,7 +1102,6 @@ class AccountBalanceService:
         return balance
     
     def close_period(
-        """Close Period."""
         self,
         period_end: datetime,
         commit: bool = True

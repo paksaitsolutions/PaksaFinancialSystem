@@ -18,7 +18,6 @@ class BarcodeService:
     """Barcode scanning and management service."""
     
     async def create_barcode_mapping(
-        """Create Barcode Mapping."""
         self,
         db: AsyncSession,
         tenant_id: UUID,
@@ -60,7 +59,6 @@ class BarcodeService:
         return mapping
     
     async def scan_barcode(
-        """Scan Barcode."""
         self,
         db: AsyncSession,
         tenant_id: UUID,
@@ -128,7 +126,6 @@ class BarcodeService:
         }
     
     async def get_item_barcodes(
-        """Get Item Barcodes."""
         self,
         db: AsyncSession,
         item_id: UUID
@@ -158,7 +155,6 @@ class BarcodeService:
         return barcodes
     
     async def update_item_quantity_by_barcode(
-        """Update Item Quantity By Barcode."""
         self,
         db: AsyncSession,
         tenant_id: UUID,
@@ -206,7 +202,6 @@ class BarcodeService:
         }
     
     async def generate_barcode_report(
-        """Generate Barcode Report."""
         self,
         db: AsyncSession,
         tenant_id: UUID,
