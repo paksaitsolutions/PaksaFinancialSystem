@@ -20,6 +20,7 @@ cryptography==44.0.1
 
 # Session and Cache Management
 redis==5.0.1
+celery==5.3.4
 
 # HTTP and API
 httpx==0.25.2

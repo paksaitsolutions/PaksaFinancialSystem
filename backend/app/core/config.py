@@ -13,6 +13,10 @@ class Settings(BaseModel):
     MAX_LOGIN_ATTEMPTS: int
     LOCKOUT_DURATION_MINUTES: int
     REDIS_URL: str
+    REDIS_HOST: str
+    REDIS_PORT: int
+    REDIS_DB: int
+    REDIS_PASSWORD: str
     SMTP_HOST: str
     SMTP_PORT: int
     SMTP_USER: str
@@ -36,6 +40,10 @@ settings = Settings(
     MAX_LOGIN_ATTEMPTS=int(os.getenv("MAX_LOGIN_ATTEMPTS", "5")),
     LOCKOUT_DURATION_MINUTES=int(os.getenv("LOCKOUT_DURATION_MINUTES", "15")),
     REDIS_URL=os.getenv("REDIS_URL", "redis://localhost:6379"),
+    REDIS_HOST=os.getenv("REDIS_HOST", "localhost"),
+    REDIS_PORT=int(os.getenv("REDIS_PORT", "6379")),
+    REDIS_DB=int(os.getenv("REDIS_DB", "0")),
+    REDIS_PASSWORD=os.getenv("REDIS_PASSWORD", ""),
     SMTP_HOST=os.getenv("SMTP_HOST", ""),
     SMTP_PORT=int(os.getenv("SMTP_PORT", "587")),
     SMTP_USER=os.getenv("SMTP_USER", ""),
