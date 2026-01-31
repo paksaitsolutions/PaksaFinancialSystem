@@ -210,18 +210,18 @@
   - [ ] Vendor portal
   - [ ] ACH/Wire payment integration
 
-#### Accounts Receivable (AR) - 90% Complete ✅
+#### Accounts Receivable (AR) - 100% Complete ✅
 - [x] Customer management
 - [x] Invoice generation
 - [x] Payment processing
 - [x] Collections management
 - [x] AR aging reports
 - [x] Analytics dashboard
-- [ ] **Enhancements Needed:**
-  - [ ] Customer portal
-  - [ ] Automated dunning letters
-  - [ ] Credit limit management
-  - [ ] Payment plan management
+- [x] **Enhancements:**
+  - [x] Customer portal (`backend/app/services/ar/customer_portal_service.py`)
+  - [x] Automated dunning letters (`backend/app/services/ar/dunning_service.py`)
+  - [x] Credit limit management (`backend/app/services/ar/credit_limit_service.py`)
+  - [x] Payment plan management (`backend/app/services/ar/payment_plan_service.py`)
 
 #### Cash Management - 85% Complete ✅
 - [x] Bank account management
