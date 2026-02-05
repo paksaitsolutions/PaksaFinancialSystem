@@ -104,6 +104,23 @@ class TestAPIEndpointsIntegration:
         response = client.post("/api/v1/ap/vendors", json=vendor_data)
         assert response.status_code in [200, 409, 500]  # 500 for DB constraints
     
+
+    def test_probe_endpoints(self):
+        """Test liveness and readiness probe endpoints"""
+        live_response = client.get("/health/live")
+        assert live_response.status_code == 200
+        assert live_response.json()["status"] == "alive"
+
+        ready_response = client.get("/health/ready")
+        assert ready_response.status_code in [200, 503]
+        assert "checks" in ready_response.json()
+
+    def test_request_id_header_propagation(self):
+        """Test request ID middleware adds correlation header"""
+        response = client.get("/api/info")
+        assert response.status_code == 200
+        assert "X-Request-ID" in response.headers
+
     def test_error_handling_consistency(self):
         """Test consistent error handling across modules"""
         response = client.get("/nonexistent/endpoint")
