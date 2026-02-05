@@ -185,7 +185,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import bankAccountService from '@/services/bankAccountService'
+import bankAccountService from '@/services/BankAccountService'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from 'primevue/usetoast'
 
@@ -238,7 +238,7 @@ const loadBankAccounts = async () => {
   loading.value = true
   try {
     const response = await bankAccountService.getBankAccounts(currentCompany.value.id)
-    bankAccounts.value = response.data
+    bankAccounts.value = response || []
   } catch (error) {
     console.error('Error loading bank accounts:', error)
     toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load bank accounts' })

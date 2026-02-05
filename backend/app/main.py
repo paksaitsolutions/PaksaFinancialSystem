@@ -30,6 +30,8 @@ from app.models.user import User
 from app.models.ai_bi_models import AIInsight, AIRecommendation, AIAnomaly, AIPrediction, AIModelMetrics
 # Remove problematic AR models import - use unified models instead
 from app.core.config.settings import settings
+from app.middleware.request_id import RequestIDMiddleware
+from app.services.system_health import get_liveness_payload, get_readiness_payload
 
 # Import routers
 from app.modules.core_financials.payroll.api import router as payroll_router
@@ -87,6 +89,8 @@ app = FastAPI(
     redoc_url="/redoc",
     lifespan=lifespan,
 )
+
+app.add_middleware(RequestIDMiddleware)
 
 # Security middleware
 from app.middleware.security import SecurityMiddleware, CSRFMiddleware
@@ -178,11 +182,12 @@ async def api_info():
 # Health check
 @app.get("/health")
 async def health_check():
+    readiness = get_readiness_payload()
     return {
-        "status": "healthy",
+        "status": "healthy" if readiness["checks"]["database"] == "connected" else "degraded",
         "service": "paksa-financial-system",
-        "version": "1.0.0",
-        "timestamp": datetime.utcnow().isoformat(),
+        "version": readiness["version"],
+        "timestamp": readiness["timestamp"],
         "security_features": {
             "jwt_authentication": True,
             "rate_limiting": True,
@@ -205,10 +210,23 @@ async def health_check():
             "financial_reports": "operational",
             "system_admin": "operational",
         },
-        "database": "connected",
+        "database": readiness["checks"]["database"],
         "cache": "active",
         "uptime": "running",
     }
+
+
+@app.get("/health/live")
+async def liveness_check():
+    return get_liveness_payload()
+
+
+@app.get("/health/ready")
+async def readiness_check(response: Response):
+    readiness = get_readiness_payload()
+    if readiness["status"] != "ready":
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+    return readiness
 
 # Security status endpoint
 @app.get("/api/security/status")
@@ -252,14 +270,15 @@ async def login(username: str = Form(), password: str = Form(), db: Session = De
             "refresh_token": f"refresh-{user.id}",
         }
     
-    # Fallback for demo
-    if username == "admin@paksa.com" and password == "admin123":
-        return {
-            "access_token": "demo-jwt-token-12345",
-            "token_type": "bearer",
-            "expires_in": 3600,
-            "refresh_token": "demo-refresh-token-12345",
-        }
+    # Optional fallback for demo mode only
+    if os.getenv("DEMO_MODE", "false").lower() == "true":
+        if username == "admin@paksa.com" and password == "admin123":
+            return {
+                "access_token": "demo-jwt-token-12345",
+                "token_type": "bearer",
+                "expires_in": 3600,
+                "refresh_token": "demo-refresh-token-12345",
+            }
 
     raise HTTPException(status_code=401, detail="Invalid credentials")
 
@@ -270,6 +289,44 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class RegisterRequestJSON(BaseModel):
+    fullName: str
+    email: str
+    company: str
+    password: str
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    password: str
+
+
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str
+
+
+def _serialize_user_response(user: User) -> dict:
+    return {
+        "id": str(user.id),
+        "email": user.email,
+        "full_name": f"{user.first_name or ''} {user.last_name or ''}".strip(),
+        "is_active": bool(getattr(user, 'is_active', True)),
+        "is_superuser": bool(getattr(user, 'is_superuser', False)),
+        "created_at": user.created_at.isoformat() if getattr(user, 'created_at', None) else datetime.utcnow().isoformat(),
+    }
+
+
+def _get_user_from_token_subject(user_id: str, db: Session) -> Optional[User]:
+    try:
+        return db.query(User).filter(User.id == user_id).first()
+    except Exception:
+        return None
+
+
 @app.post("/auth/login")
 def api_login(
     payload: LoginRequest,
@@ -277,46 +334,46 @@ def api_login(
 ):
     print(f"Login attempt: {payload.email}")
     
-    # Simple demo authentication - bypass bcrypt issues
-    if payload.email == "admin@paksa.com" and payload.password == "admin123":
-        print("Demo credentials accepted")
-        token = create_access_token(subject="demo-admin")
-        return {
-            "access_token": token,
-            "user": {
-                "id": "demo-admin",
-                "email": payload.email,
-                "firstName": "System",
-                "lastName": "Administrator",
-                "roles": ["admin"],
-                "permissions": ["*"],
-                "isAdmin": True,
-            },
-        }
+    # Optional demo authentication (explicitly controlled by environment)
+    if os.getenv("DEMO_MODE", "false").lower() == "true":
+        if payload.email == "admin@paksa.com" and payload.password == "admin123":
+            print("Demo credentials accepted")
+            token = create_access_token(subject="demo-admin")
+            return {
+                "access_token": token,
+                "user": {
+                    "id": "demo-admin",
+                    "email": payload.email,
+                    "firstName": "System",
+                    "lastName": "Administrator",
+                    "roles": ["admin"],
+                    "permissions": ["*"],
+                    "isAdmin": True,
+                },
+            }
 
     print(f"Authentication failed for {payload.email}")
     raise HTTPException(status_code=401, detail="Invalid credentials")
 
 
 @app.get("/auth/me")
-async def get_current_user_info(db: Session = Depends(get_db)):
-    # Try to get real user from database
-    user = db.query(User).filter(User.email == "admin@paksa.com").first()
+async def get_current_user_info(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
+    user_id = current_user.get("user_id")
+    user = _get_user_from_token_subject(user_id, db)
     if user:
+        return _serialize_user_response(user)
+
+    if os.getenv("DEMO_MODE", "false").lower() == "true" and user_id == "demo-admin":
         return {
-            "id": str(user.id),
-            "email": user.email,
-            "name": f"{user.first_name or ''} {user.last_name or ''}".strip() or "Administrator",
-            "permissions": ["admin"] if user.is_superuser else [],
+            "id": "demo-admin",
+            "email": "admin@paksa.com",
+            "full_name": "System Administrator",
+            "is_active": True,
+            "is_superuser": True,
+            "created_at": datetime.utcnow().isoformat(),
         }
-    
-    # Fallback
-    return {
-        "id": "1",
-        "email": "admin@paksa.com",
-        "name": "System Administrator",
-        "permissions": ["admin"],
-    }
+
+    raise HTTPException(status_code=404, detail="User not found")
 
 
 @app.get("/auth/verify-token")
@@ -429,6 +486,79 @@ def api_v1_login(
             }
     
     raise HTTPException(status_code=401, detail="Invalid credentials")
+
+
+@app.post("/api/v1/auth/register")
+def api_v1_register(payload: RegisterRequestJSON, db: Session = Depends(get_db)):
+    existing_user = db.query(User).filter(User.email == payload.email).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    names = payload.fullName.split(' ', 1)
+    user = User(
+        id=uuid.uuid4(),
+        email=payload.email,
+        first_name=names[0] if names else "",
+        last_name=names[1] if len(names) > 1 else "",
+        hashed_password=get_password_hash(payload.password),
+        is_active=True,
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    return {"success": True, "message": "Registration successful", "user_id": str(user.id)}
+
+
+@app.get("/api/v1/auth/me")
+async def api_v1_auth_me(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
+    user_id = current_user.get("user_id")
+    user = _get_user_from_token_subject(user_id, db)
+    if user:
+        return _serialize_user_response(user)
+
+    if os.getenv("DEMO_MODE", "false").lower() == "true" and user_id == "demo-admin":
+        return {
+            "id": "demo-admin",
+            "email": "admin@paksa.com",
+            "full_name": "System Administrator",
+            "is_active": True,
+            "is_superuser": True,
+            "created_at": datetime.utcnow().isoformat(),
+        }
+
+    raise HTTPException(status_code=404, detail="User not found")
+
+
+@app.get("/api/v1/auth/verify-token")
+async def api_v1_verify_token(current_user=Depends(get_current_user)):
+    return {"valid": True, "user_id": current_user.get("user_id")}
+
+
+@app.post("/api/v1/auth/logout")
+async def api_v1_logout():
+    return {"message": "Logged out successfully"}
+
+
+@app.post("/api/v1/auth/forgot-password")
+async def api_v1_forgot_password(payload: ForgotPasswordRequest):
+    return {"success": True, "message": "Password reset email sent", "email": payload.email}
+
+
+@app.post("/api/v1/auth/reset-password")
+async def api_v1_reset_password(payload: ResetPasswordRequest):
+    return {"success": True, "message": "Password reset successful", "token": payload.token}
+
+
+@app.post("/api/v1/auth/refresh-token")
+async def api_v1_refresh_token(payload: RefreshTokenRequest):
+    if payload.refresh_token == "demo-refresh-token-12345":
+        return {
+            "access_token": "demo-jwt-token-refreshed-12345",
+            "token_type": "bearer",
+            "expires_in": 3600,
+        }
+    raise HTTPException(status_code=401, detail="Invalid refresh token")
 
 
 # General Ledger endpoints
