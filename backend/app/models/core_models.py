@@ -200,6 +200,38 @@ class VendorContact(Base):
 # CUSTOMER MANAGEMENT (Unified for AR & Sales)
 # ============================================================================
 
+
+class VendorPortalAccess(Base, AuditMixin):
+    """Vendor portal access invitation and status tracking."""
+    __tablename__ = "vendor_portal_access"
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    vendor_id = Column(GUID(), ForeignKey("vendors.id"), nullable=False, index=True)
+    portal_email = Column(String(255), nullable=False)
+    access_token = Column(String(128), nullable=False, unique=True)
+    status = Column(String(20), default="invited")
+    invited_at = Column(DateTime, default=datetime.utcnow)
+    activated_at = Column(DateTime)
+
+    vendor = relationship("Vendor")
+
+
+class VendorPaymentInstruction(Base, AuditMixin):
+    """Vendor ACH/Wire payment instruction profile."""
+    __tablename__ = "vendor_payment_instructions"
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    vendor_id = Column(GUID(), ForeignKey("vendors.id"), nullable=False, index=True)
+    payment_method = Column(String(20), nullable=False)  # ach|wire
+    account_name = Column(String(255), nullable=False)
+    account_number_last4 = Column(String(4), nullable=False)
+    routing_number = Column(String(50))
+    bank_name = Column(String(255))
+    swift_code = Column(String(50))
+    is_active = Column(Boolean, default=True)
+
+    vendor = relationship("Vendor")
+
 class Customer(Base, AuditMixin):
     """Unified Customer for AR and Sales"""
     __tablename__ = "customers"
@@ -929,6 +961,57 @@ class BankAccount(Base, AuditMixin):
     account_number = Column(String(50), nullable=False)
     bank_name = Column(String(255), nullable=False)
     current_balance = Column(Numeric(15, 2), default=0)
+    is_active = Column(Boolean, default=True)
+
+
+class BankFeedConnection(Base, AuditMixin):
+    """Automated bank feed integration profile."""
+    __tablename__ = "bank_feed_connections"
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
+    account_id = Column(GUID(), ForeignKey("bank_accounts.id"), nullable=False, index=True)
+    provider = Column(String(100), nullable=False)
+    provider_account_id = Column(String(150), nullable=False)
+    status = Column(String(20), default="active")
+    last_sync_at = Column(DateTime)
+
+
+class CashConcentrationRule(Base, AuditMixin):
+    """Rules for sweeping balances into a concentration account."""
+    __tablename__ = "cash_concentration_rules"
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
+    source_account_id = Column(GUID(), ForeignKey("bank_accounts.id"), nullable=False)
+    concentration_account_id = Column(GUID(), ForeignKey("bank_accounts.id"), nullable=False)
+    min_source_balance = Column(Numeric(15, 2), default=0)
+    transfer_frequency = Column(String(20), default="daily")
+    is_active = Column(Boolean, default=True)
+
+
+class ZeroBalanceAccountConfig(Base, AuditMixin):
+    """Configuration for zero balance account (ZBA) operation."""
+    __tablename__ = "zero_balance_account_configs"
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
+    child_account_id = Column(GUID(), ForeignKey("bank_accounts.id"), nullable=False)
+    funding_account_id = Column(GUID(), ForeignKey("bank_accounts.id"), nullable=False)
+    target_balance = Column(Numeric(15, 2), default=0)
+    is_active = Column(Boolean, default=True)
+
+
+class InvestmentSweepConfig(Base, AuditMixin):
+    """Configuration for investment sweep account behavior."""
+    __tablename__ = "investment_sweep_configs"
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
+    operating_account_id = Column(GUID(), ForeignKey("bank_accounts.id"), nullable=False)
+    investment_account_name = Column(String(255), nullable=False)
+    sweep_threshold = Column(Numeric(15, 2), default=0)
+    target_operating_balance = Column(Numeric(15, 2), default=0)
     is_active = Column(Boolean, default=True)
 
 # CashTransaction already exists in reconciliation_core.py - removing duplicate

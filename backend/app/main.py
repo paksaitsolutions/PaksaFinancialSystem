@@ -21,6 +21,7 @@ import os
 import logging
 import uuid
 import asyncio
+import secrets
 from pathlib import Path
 
 # Import database and models
@@ -852,6 +853,140 @@ async def create_vendor(vendor_data: dict, db=Depends(get_db)):
         raise HTTPException(status_code=500, detail="Failed to create vendor. Please try again.")
 
 
+@app.get("/api/v1/ap/vendors/{vendor_id}/portal-access")
+async def get_vendor_portal_access(vendor_id: str, db=Depends(get_db)):
+    from app.models.core_models import VendorPortalAccess
+
+    access_records = (
+        db.query(VendorPortalAccess)
+        .filter(VendorPortalAccess.vendor_id == vendor_id)
+        .order_by(VendorPortalAccess.invited_at.desc())
+        .all()
+    )
+    return {
+        "vendor_id": vendor_id,
+        "records": [
+            {
+                "id": str(record.id),
+                "portal_email": record.portal_email,
+                "status": record.status,
+                "invited_at": record.invited_at.isoformat() if record.invited_at else None,
+                "activated_at": record.activated_at.isoformat() if record.activated_at else None,
+            }
+            for record in access_records
+        ],
+    }
+
+
+@app.post("/api/v1/ap/vendors/{vendor_id}/portal-access")
+async def invite_vendor_portal_access(vendor_id: str, payload: dict, db=Depends(get_db)):
+    from app.models.core_models import Vendor, VendorPortalAccess
+
+    vendor = db.query(Vendor).filter(Vendor.id == vendor_id).first()
+    if not vendor:
+        raise HTTPException(status_code=404, detail="Vendor not found")
+
+    portal_email = (payload.get("portal_email") or vendor.email or "").strip()
+    if not portal_email:
+        raise HTTPException(status_code=400, detail="portal_email is required")
+
+    record = VendorPortalAccess(
+        id=uuid.uuid4(),
+        vendor_id=vendor.id,
+        portal_email=portal_email,
+        access_token=secrets.token_urlsafe(32),
+        status="invited",
+        invited_at=datetime.utcnow(),
+    )
+    db.add(record)
+    db.commit()
+    db.refresh(record)
+
+    return {
+        "success": True,
+        "message": "Vendor portal invitation created",
+        "data": {
+            "id": str(record.id),
+            "vendor_id": str(vendor.id),
+            "portal_email": record.portal_email,
+            "status": record.status,
+            "access_token": record.access_token,
+        },
+    }
+
+
+@app.get("/api/v1/ap/vendors/{vendor_id}/payment-instructions")
+async def get_vendor_payment_instructions(vendor_id: str, db=Depends(get_db)):
+    from app.models.core_models import VendorPaymentInstruction
+
+    instructions = (
+        db.query(VendorPaymentInstruction)
+        .filter(VendorPaymentInstruction.vendor_id == vendor_id)
+        .order_by(VendorPaymentInstruction.created_at.desc())
+        .all()
+    )
+    return {
+        "vendor_id": vendor_id,
+        "instructions": [
+            {
+                "id": str(item.id),
+                "payment_method": item.payment_method,
+                "account_name": item.account_name,
+                "account_number_last4": item.account_number_last4,
+                "routing_number": item.routing_number,
+                "bank_name": item.bank_name,
+                "swift_code": item.swift_code,
+                "is_active": item.is_active,
+            }
+            for item in instructions
+        ],
+    }
+
+
+@app.post("/api/v1/ap/vendors/{vendor_id}/payment-instructions")
+async def upsert_vendor_payment_instruction(vendor_id: str, payload: dict, db=Depends(get_db)):
+    from app.models.core_models import Vendor, VendorPaymentInstruction
+
+    vendor = db.query(Vendor).filter(Vendor.id == vendor_id).first()
+    if not vendor:
+        raise HTTPException(status_code=404, detail="Vendor not found")
+
+    payment_method = (payload.get("payment_method") or "").lower().strip()
+    if payment_method not in {"ach", "wire"}:
+        raise HTTPException(status_code=400, detail="payment_method must be one of: ach, wire")
+
+    account_number = str(payload.get("account_number") or "").strip()
+    if len(account_number) < 4:
+        raise HTTPException(status_code=400, detail="account_number must be at least 4 characters")
+
+    instruction = VendorPaymentInstruction(
+        id=uuid.uuid4(),
+        vendor_id=vendor.id,
+        payment_method=payment_method,
+        account_name=(payload.get("account_name") or vendor.vendor_name).strip(),
+        account_number_last4=account_number[-4:],
+        routing_number=(payload.get("routing_number") or "").strip() or None,
+        bank_name=(payload.get("bank_name") or "").strip() or None,
+        swift_code=(payload.get("swift_code") or "").strip() or None,
+        is_active=bool(payload.get("is_active", True)),
+    )
+    db.add(instruction)
+    db.commit()
+    db.refresh(instruction)
+
+    return {
+        "success": True,
+        "message": "Vendor payment instruction saved",
+        "data": {
+            "id": str(instruction.id),
+            "vendor_id": str(vendor.id),
+            "payment_method": instruction.payment_method,
+            "account_number_last4": instruction.account_number_last4,
+            "is_active": instruction.is_active,
+        },
+    }
+
+
 @app.post("/api/v1/ap/invoices")
 async def create_ap_invoice(invoice_data: dict, db=Depends(get_db)):
     from app.models.core_models import APInvoice
@@ -1019,20 +1154,48 @@ async def process_ap_batch_payments(db=Depends(get_db)):
 
 @app.post("/api/v1/ap/payments")
 async def create_ap_payment(payment_data: dict, db=Depends(get_db)):
-    from app.models.core_models import APPayment
+    from app.models.core_models import APPayment, Vendor, VendorPaymentInstruction
     import uuid
+
+    vendor_id = payment_data.get("vendor_id")
+    vendor = db.query(Vendor).filter(Vendor.id == vendor_id).first() if vendor_id else None
+    if not vendor:
+        raise HTTPException(status_code=400, detail="Valid vendor_id is required")
+
+    payment_method = str(payment_data.get("payment_method", "check")).lower().strip()
+    if payment_method not in {"check", "ach", "wire", "cash", "credit_card"}:
+        raise HTTPException(status_code=400, detail="Invalid payment_method")
+
+    if payment_method in {"ach", "wire"}:
+        has_instruction = db.query(VendorPaymentInstruction).filter(
+            VendorPaymentInstruction.vendor_id == vendor.id,
+            VendorPaymentInstruction.payment_method == payment_method,
+            VendorPaymentInstruction.is_active == True
+        ).first()
+        if not has_instruction:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Active {payment_method.upper()} instruction not configured for vendor"
+            )
+
     payment = APPayment(
         id=uuid.uuid4(),
         payment_number=f"PAY{len(db.query(APPayment).all()) + 1:04d}",
-        vendor_id=payment_data.get("vendor_id"),
+        vendor_id=vendor.id,
         amount=payment_data.get("amount", 0),
         payment_date=datetime.now().date(),
-        payment_method=payment_data.get("payment_method", "check")
+        payment_method=payment_method,
+        reference=(payment_data.get("reference") or "").strip() or None,
+        status=payment_data.get("status", "pending")
     )
     db.add(payment)
     db.commit()
     db.refresh(payment)
-    return {"id": str(payment.id), "payment_number": payment.payment_number}
+    return {
+        "id": str(payment.id),
+        "payment_number": payment.payment_number,
+        "payment_method": payment.payment_method.value if hasattr(payment.payment_method, "value") else payment.payment_method,
+    }
 @app.get("/api/v1/ar/customers")
 async def get_customers(db: Session = Depends(get_db)):
     from app.services.ar_service import ARService
@@ -1513,6 +1676,145 @@ async def reconcile_cash_account(account_id: str, reconciliation_data: dict, db=
         data=data,
         message="Account reconciled successfully"
     )
+
+@app.get("/cash/bank-feeds")
+async def get_cash_bank_feeds(db=Depends(get_db)):
+    from app.models.core_models import BankFeedConnection
+
+    feeds = db.query(BankFeedConnection).all()
+    return {
+        "bank_feeds": [
+            {
+                "id": str(feed.id),
+                "company_id": str(feed.company_id),
+                "account_id": str(feed.account_id),
+                "provider": feed.provider,
+                "provider_account_id": feed.provider_account_id,
+                "status": feed.status,
+                "last_sync_at": feed.last_sync_at.isoformat() if feed.last_sync_at else None,
+            }
+            for feed in feeds
+        ]
+    }
+
+
+@app.post("/cash/bank-feeds")
+async def create_cash_bank_feed(feed_data: dict, db=Depends(get_db)):
+    from app.models.core_models import BankAccount, BankFeedConnection
+
+    account_id = feed_data.get("account_id")
+    provider = (feed_data.get("provider") or "").strip()
+    provider_account_id = (feed_data.get("provider_account_id") or "").strip()
+
+    if not account_id or not provider or not provider_account_id:
+        raise HTTPException(status_code=400, detail="account_id, provider, provider_account_id are required")
+
+    account = db.query(BankAccount).filter(BankAccount.id == account_id).first()
+    if not account:
+        raise HTTPException(status_code=404, detail="Bank account not found")
+
+    connection = BankFeedConnection(
+        id=uuid.uuid4(),
+        company_id=account.company_id,
+        account_id=account.id,
+        provider=provider,
+        provider_account_id=provider_account_id,
+        status=feed_data.get("status", "active"),
+        last_sync_at=datetime.utcnow(),
+    )
+    db.add(connection)
+    db.commit()
+    db.refresh(connection)
+
+    return {"success": True, "message": "Bank feed connected", "data": {"id": str(connection.id)}}
+
+
+@app.post("/cash/concentration-rules")
+async def create_cash_concentration_rule(rule_data: dict, db=Depends(get_db)):
+    from app.models.core_models import CashConcentrationRule, BankAccount
+
+    source_account_id = rule_data.get("source_account_id")
+    concentration_account_id = rule_data.get("concentration_account_id")
+
+    if not source_account_id or not concentration_account_id:
+        raise HTTPException(status_code=400, detail="source_account_id and concentration_account_id are required")
+
+    source = db.query(BankAccount).filter(BankAccount.id == source_account_id).first()
+    target = db.query(BankAccount).filter(BankAccount.id == concentration_account_id).first()
+    if not source or not target:
+        raise HTTPException(status_code=404, detail="Source or concentration account not found")
+
+    rule = CashConcentrationRule(
+        id=uuid.uuid4(),
+        company_id=source.company_id,
+        source_account_id=source.id,
+        concentration_account_id=target.id,
+        min_source_balance=rule_data.get("min_source_balance", 0),
+        transfer_frequency=rule_data.get("transfer_frequency", "daily"),
+        is_active=bool(rule_data.get("is_active", True)),
+    )
+    db.add(rule)
+    db.commit()
+    db.refresh(rule)
+
+    return {"success": True, "message": "Cash concentration rule created", "data": {"id": str(rule.id)}}
+
+
+@app.post("/cash/zero-balance-configs")
+async def create_zero_balance_config(config_data: dict, db=Depends(get_db)):
+    from app.models.core_models import ZeroBalanceAccountConfig, BankAccount
+
+    child_account_id = config_data.get("child_account_id")
+    funding_account_id = config_data.get("funding_account_id")
+
+    child = db.query(BankAccount).filter(BankAccount.id == child_account_id).first() if child_account_id else None
+    funding = db.query(BankAccount).filter(BankAccount.id == funding_account_id).first() if funding_account_id else None
+    if not child or not funding:
+        raise HTTPException(status_code=404, detail="Child or funding account not found")
+
+    cfg = ZeroBalanceAccountConfig(
+        id=uuid.uuid4(),
+        company_id=child.company_id,
+        child_account_id=child.id,
+        funding_account_id=funding.id,
+        target_balance=config_data.get("target_balance", 0),
+        is_active=bool(config_data.get("is_active", True)),
+    )
+    db.add(cfg)
+    db.commit()
+    db.refresh(cfg)
+
+    return {"success": True, "message": "Zero balance account config created", "data": {"id": str(cfg.id)}}
+
+
+@app.post("/cash/investment-sweeps")
+async def create_investment_sweep_config(config_data: dict, db=Depends(get_db)):
+    from app.models.core_models import InvestmentSweepConfig, BankAccount
+
+    operating_account_id = config_data.get("operating_account_id")
+    investment_account_name = (config_data.get("investment_account_name") or "").strip()
+    if not operating_account_id or not investment_account_name:
+        raise HTTPException(status_code=400, detail="operating_account_id and investment_account_name are required")
+
+    operating = db.query(BankAccount).filter(BankAccount.id == operating_account_id).first()
+    if not operating:
+        raise HTTPException(status_code=404, detail="Operating account not found")
+
+    cfg = InvestmentSweepConfig(
+        id=uuid.uuid4(),
+        company_id=operating.company_id,
+        operating_account_id=operating.id,
+        investment_account_name=investment_account_name,
+        sweep_threshold=config_data.get("sweep_threshold", 0),
+        target_operating_balance=config_data.get("target_operating_balance", 0),
+        is_active=bool(config_data.get("is_active", True)),
+    )
+    db.add(cfg)
+    db.commit()
+    db.refresh(cfg)
+
+    return {"success": True, "message": "Investment sweep config created", "data": {"id": str(cfg.id)}}
+
 
 @app.get("/cash/analytics/liquidity")
 async def get_liquidity_analysis(db=Depends(get_db)):
