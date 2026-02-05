@@ -17,7 +17,7 @@ python-multipart==0.0.22
 
 # Basic utilities
 python-dotenv==1.0.0
-requests==2.32.4
+requests==2.32.5
 aiofiles==23.2.1
 
 # Production server
