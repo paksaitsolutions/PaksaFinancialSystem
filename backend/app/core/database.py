@@ -65,7 +65,9 @@ def init_db():
             PayrollRun, PayrollEntry, LeaveRequest,
             InventoryItem, InventoryCategory, PurchaseOrder,
             TaxRate, FinancialPeriod, Budget, FixedAsset,
-            Company, Currency, ExchangeRate
+            Company, Currency, ExchangeRate,
+            BankFeedConnection, CashConcentrationRule,
+            ZeroBalanceAccountConfig, InvestmentSweepConfig
         )
         print("[OK] Core models imported")
     except ImportError as e:
