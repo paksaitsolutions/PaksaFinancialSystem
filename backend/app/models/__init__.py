@@ -15,6 +15,8 @@ from .core_models import (
     # Vendor Management
     Vendor,
     VendorContact,
+    VendorPortalAccess,
+    VendorPaymentInstruction,
     
     # Customer Management  
     Customer,
@@ -55,6 +57,10 @@ from .core_models import (
     
     # Tax Management
     TaxRate,
+    SalesTaxNexus,
+    TaxAutomationRule,
+    TaxEFilingIntegration,
+    TaxPaymentSchedule,
     
     # Financial Periods & Reporting
     FinancialPeriod,
@@ -66,6 +72,14 @@ from .core_models import (
     Company,
     Currency,
     ExchangeRate,
+    IdempotencyKey,
+    RefreshToken,
+    AuditEvent,
+    CompensationAction,
+    BankFeedConnection,
+    CashConcentrationRule,
+    ZeroBalanceAccountConfig,
+    InvestmentSweepConfig,
 )
 
 # Import enums
@@ -175,6 +189,10 @@ __all__ = [
     
     # Tax Management
     'TaxRate',
+    'SalesTaxNexus',
+    'TaxAutomationRule',
+    'TaxEFilingIntegration',
+    'TaxPaymentSchedule',
     
     # Financial Periods & Reporting
     'FinancialPeriod',

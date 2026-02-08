@@ -3,6 +3,11 @@
 ## Overview
 The Paksa Financial System provides a comprehensive RESTful API for financial management operations. All endpoints are secured with JWT authentication and support multi-tenant architecture.
 
+## Contract Governance
+- Backward compatibility policy: `docs/api/API_COMPATIBILITY_POLICY.md`
+- Deprecation calendar: `docs/api/DEPRECATION_CALENDAR.md`
+- Versioned OpenAPI snapshots: `docs/api/openapi/`
+
 ## Base URL
 ```
 Production: https://api.paksa.com/v1

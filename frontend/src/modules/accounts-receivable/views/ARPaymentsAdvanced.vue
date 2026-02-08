@@ -110,19 +110,45 @@
         </div>
         
         <form @submit.prevent="savePayment" class="payment-form">
+          <ErrorPanel
+            v-if="formError"
+            :visible="!!formError"
+            title="Unable to record payment"
+            :message="formError.message"
+            :request-id="formError.requestId"
+            :details="formError.details"
+          />
           <div class="form-grid">
             <div class="form-group">
               <label>Customer *</label>
-              <select v-model="paymentForm.customerId" required class="form-input" @change="loadCustomerInvoices">
+              <select
+                v-model="paymentForm.customerId"
+                required
+                class="form-input"
+                :class="{ 'input-error': showValidation && formErrors.customerId }"
+                :aria-invalid="showValidation && !!formErrors.customerId"
+                :aria-describedby="formErrors.customerId ? 'payment_customer_error' : undefined"
+                @change="loadCustomerInvoices"
+              >
                 <option value="">Select Customer</option>
                 <option v-for="customer in customers" :key="customer.id" :value="customer.id">
                   {{ customer.name }}
                 </option>
               </select>
+              <small v-if="showValidation && formErrors.customerId" id="payment_customer_error" class="error-text">
+                {{ formErrors.customerId }}
+              </small>
             </div>
             <div class="form-group">
               <label>Payment Method *</label>
-              <select v-model="paymentForm.method" required class="form-input">
+              <select
+                v-model="paymentForm.method"
+                required
+                class="form-input"
+                :class="{ 'input-error': showValidation && formErrors.method }"
+                :aria-invalid="showValidation && !!formErrors.method"
+                :aria-describedby="formErrors.method ? 'payment_method_error' : undefined"
+              >
                 <option value="">Select Method</option>
                 <option value="cash">Cash</option>
                 <option value="check">Check</option>
@@ -130,13 +156,27 @@
                 <option value="bank_transfer">Bank Transfer</option>
                 <option value="digital_wallet">Digital Wallet</option>
               </select>
+              <small v-if="showValidation && formErrors.method" id="payment_method_error" class="error-text">
+                {{ formErrors.method }}
+              </small>
             </div>
           </div>
           
           <div class="form-grid">
             <div class="form-group">
               <label>Payment Date *</label>
-              <input type="date" v-model="paymentForm.paymentDate" required class="form-input">
+              <input
+                type="date"
+                v-model="paymentForm.paymentDate"
+                required
+                class="form-input"
+                :class="{ 'input-error': showValidation && formErrors.paymentDate }"
+                :aria-invalid="showValidation && !!formErrors.paymentDate"
+                :aria-describedby="formErrors.paymentDate ? 'payment_date_error' : undefined"
+              >
+              <small v-if="showValidation && formErrors.paymentDate" id="payment_date_error" class="error-text">
+                {{ formErrors.paymentDate }}
+              </small>
             </div>
             <div class="form-group">
               <label>Reference Number</label>
@@ -147,6 +187,9 @@
           <!-- Invoice Selection -->
           <div class="invoice-selection" v-if="paymentForm.customerId">
             <h4>Select Invoices to Pay</h4>
+            <small v-if="showValidation && formErrors.totalAmount" class="error-text">
+              {{ formErrors.totalAmount }}
+            </small>
             <div class="invoice-list">
               <div v-for="invoice in customerInvoices" :key="invoice.id" class="invoice-item">
                 <label class="invoice-checkbox">
@@ -199,8 +242,14 @@
 import { ref, computed } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { useReportExport } from '@/composables/useReportExport'
+import { api } from '@/utils/api'
+import ErrorPanel from '@/components/common/ErrorPanel.vue'
+import { validateSchema } from '@/utils/formValidation'
 
 const showCreateModal = ref(false)
+const formError = ref<{ message: string; requestId?: string; details?: string[] } | null>(null)
+const showValidation = ref(false)
+const formErrors = ref<Record<string, string>>({})
 
 const summaryData = ref({
   thisMonth: 285000,
@@ -219,6 +268,16 @@ const paymentForm = ref({
   totalAmount: 0,
   notes: ''
 })
+
+const paymentSchema = {
+  customerId: { required: true, label: 'Customer' },
+  method: { required: true, label: 'Payment method' },
+  paymentDate: { required: true, label: 'Payment date' },
+  totalAmount: {
+    label: 'Payment amount',
+    custom: (value: number) => (value > 0 ? null : 'Select at least one invoice to pay')
+  }
+}
 
 const customers = ref([
   { id: 1, name: 'ABC Corporation' },
@@ -297,30 +356,56 @@ const processPayment = (payment: any) => {
   }
 }
 
-const savePayment = () => {
-  if (!paymentForm.value.customerId || !paymentForm.value.method) {
-    alert('Please fill in required fields')
+const savePayment = async () => {
+  formError.value = null
+  showValidation.value = true
+  const validation = validateSchema(paymentForm.value, paymentSchema)
+  formErrors.value = validation.errors
+
+  if (!validation.isValid) {
     return
   }
-  
-  const newPayment = {
-    id: Math.max(...payments.value.map(p => p.id)) + 1,
-    paymentNumber: `PAY-${new Date().getFullYear()}-${String(payments.value.length + 1).padStart(3, '0')}`,
-    customerName: customers.value.find(c => c.id == paymentForm.value.customerId)?.name || '',
-    invoiceNumber: customerInvoices.value.filter(i => i.selected).map(i => i.invoiceNumber).join(', '),
-    amount: paymentForm.value.totalAmount,
-    method: paymentForm.value.method,
-    paymentDate: paymentForm.value.paymentDate,
-    status: 'pending'
+
+  try {
+    const payload = {
+      customer_id: paymentForm.value.customerId,
+      payment_method: paymentForm.value.method,
+      amount: paymentForm.value.totalAmount,
+      payment_date: paymentForm.value.paymentDate,
+      reference_number: paymentForm.value.referenceNumber,
+      invoice_numbers: customerInvoices.value.filter(i => i.selected).map(i => i.invoiceNumber)
+    }
+
+    const response = await api.post('/api/v1/ar/payments', payload, { idempotencyKey: true })
+    const paymentNumber = response.payment_number || `PAY-${new Date().getFullYear()}-${String(payments.value.length + 1).padStart(3, '0')}`
+
+    const newPayment = {
+      id: response.id || Math.max(...payments.value.map(p => p.id)) + 1,
+      paymentNumber,
+      customerName: customers.value.find(c => c.id == paymentForm.value.customerId)?.name || '',
+      invoiceNumber: payload.invoice_numbers.join(', '),
+      amount: paymentForm.value.totalAmount,
+      method: paymentForm.value.method,
+      paymentDate: paymentForm.value.paymentDate,
+      status: 'pending'
+    }
+
+    payments.value = [newPayment, ...payments.value]
+    alert('Payment recorded successfully')
+    closeModal()
+  } catch (error: any) {
+    formError.value = {
+      message: error.message || 'Failed to record payment',
+      requestId: error.requestId || error.response?.headers?.['x-request-id']
+    }
   }
-  
-  payments.value.push(newPayment)
-  alert('Payment recorded successfully')
-  closeModal()
 }
 
 const closeModal = () => {
   showCreateModal.value = false
+  formError.value = null
+  showValidation.value = false
+  formErrors.value = {}
   customerInvoices.value = []
   paymentForm.value = {
     customerId: '',
@@ -534,6 +619,17 @@ const handleExport = async (format: string, options: any = {}) => {
 
 .invoice-checkbox input {
   margin-right: 12px;
+}
+
+.input-error {
+  border-color: #dc2626;
+}
+
+.error-text {
+  color: #dc2626;
+  font-size: 0.8rem;
+  margin-top: 0.35rem;
+  display: inline-block;
 }
 
 .invoice-details {

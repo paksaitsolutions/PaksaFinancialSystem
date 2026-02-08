@@ -48,6 +48,9 @@ npm run e2e:ui
 
 # Run in headed mode
 npm run e2e:headed
+
+# Run smoke suite only
+npm run e2e -- --grep Smoke
 ```
 
 ## Test Categories

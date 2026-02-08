@@ -76,6 +76,59 @@ export interface TaxJurisdiction {
   updated_at: string;
 }
 
+export interface SalesTaxNexus {
+  id: UUID;
+  company_id: UUID;
+  jurisdiction: string;
+  nexus_type: string;
+  effective_date: string;
+  threshold_amount: number;
+  threshold_transactions: number;
+  current_sales: number;
+  status: string;
+  last_evaluated_at?: string;
+  notes?: string;
+}
+
+export interface TaxAutomationRule {
+  id: UUID;
+  company_id: UUID;
+  name: string;
+  tax_type: string;
+  jurisdiction?: string;
+  trigger_event: string;
+  threshold_amount: number;
+  action: string;
+  schedule_cron?: string;
+  priority: number;
+  is_active: boolean;
+  last_triggered_at?: string;
+}
+
+export interface TaxEFilingIntegration {
+  id: UUID;
+  company_id: UUID;
+  provider: string;
+  environment: string;
+  status: string;
+  connection_reference?: string;
+  last_sync_at?: string;
+}
+
+export interface TaxPaymentSchedule {
+  id: UUID;
+  company_id: UUID;
+  tax_return_id?: UUID;
+  jurisdiction?: string;
+  scheduled_date: string;
+  amount: number;
+  status: string;
+  payment_method?: string;
+  reference?: string;
+  paid_at?: string;
+  notes?: string;
+}
+
 // Transaction Types
 export interface TaxTransaction {
   id: UUID;

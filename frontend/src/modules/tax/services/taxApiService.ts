@@ -1,5 +1,15 @@
 import axios from 'axios'
-import { TaxTransaction, TaxRate, TaxJurisdiction, TaxExemption, TaxReturn } from '../types/tax'
+import {
+  TaxTransaction,
+  TaxRate,
+  TaxJurisdiction,
+  TaxExemption,
+  TaxReturn,
+  SalesTaxNexus,
+  TaxAutomationRule,
+  TaxEFilingIntegration,
+  TaxPaymentSchedule
+} from '../types/tax'
 
 const API_BASE = '/api/v1/tax'
 
@@ -98,6 +108,70 @@ export class TaxApiService {
 
   async getTaxReturn(id: number): Promise<TaxReturn> {
     const response = await axios.get(`${API_BASE}/returns/${id}`)
+    return response.data
+  }
+
+  // Sales Tax Nexus
+  async getSalesTaxNexus(): Promise<SalesTaxNexus[]> {
+    const response = await axios.get(`${API_BASE}/nexus`)
+    return response.data
+  }
+
+  async createSalesTaxNexus(payload: Omit<SalesTaxNexus, 'id' | 'last_evaluated_at'>): Promise<{ id: string }> {
+    const response = await axios.post(`${API_BASE}/nexus`, payload)
+    return response.data
+  }
+
+  async updateSalesTaxNexus(id: string, payload: Partial<SalesTaxNexus>): Promise<{ id: string }> {
+    const response = await axios.put(`${API_BASE}/nexus/${id}`, payload)
+    return response.data
+  }
+
+  // Tax Automation Rules
+  async getAutomationRules(): Promise<TaxAutomationRule[]> {
+    const response = await axios.get(`${API_BASE}/automation-rules`)
+    return response.data
+  }
+
+  async createAutomationRule(payload: Omit<TaxAutomationRule, 'id' | 'last_triggered_at'>): Promise<{ id: string }> {
+    const response = await axios.post(`${API_BASE}/automation-rules`, payload)
+    return response.data
+  }
+
+  async updateAutomationRule(id: string, payload: Partial<TaxAutomationRule>): Promise<{ id: string }> {
+    const response = await axios.put(`${API_BASE}/automation-rules/${id}`, payload)
+    return response.data
+  }
+
+  // E-filing integrations
+  async getEFilingIntegrations(): Promise<TaxEFilingIntegration[]> {
+    const response = await axios.get(`${API_BASE}/e-filing-integrations`)
+    return response.data
+  }
+
+  async createEFilingIntegration(payload: Omit<TaxEFilingIntegration, 'id' | 'last_sync_at'>): Promise<{ id: string }> {
+    const response = await axios.post(`${API_BASE}/e-filing-integrations`, payload)
+    return response.data
+  }
+
+  async updateEFilingIntegration(id: string, payload: Partial<TaxEFilingIntegration>): Promise<{ id: string }> {
+    const response = await axios.put(`${API_BASE}/e-filing-integrations/${id}`, payload)
+    return response.data
+  }
+
+  // Payment scheduling
+  async getPaymentSchedules(): Promise<TaxPaymentSchedule[]> {
+    const response = await axios.get(`${API_BASE}/payment-schedules`)
+    return response.data
+  }
+
+  async createPaymentSchedule(payload: Omit<TaxPaymentSchedule, 'id' | 'paid_at'>): Promise<{ id: string }> {
+    const response = await axios.post(`${API_BASE}/payment-schedules`, payload)
+    return response.data
+  }
+
+  async updatePaymentSchedule(id: string, payload: Partial<TaxPaymentSchedule>): Promise<{ id: string }> {
+    const response = await axios.put(`${API_BASE}/payment-schedules/${id}`, payload)
     return response.data
   }
 }

@@ -144,6 +144,114 @@
           </template>
         </Card>
       </TabPanel>
+
+      <TabPanel header="Nexus Tracking">
+        <Card>
+          <template #title>
+            <div class="flex justify-content-between align-items-center">
+              <span>Sales Tax Nexus</span>
+              <Button label="Add Nexus" icon="pi pi-plus" @click="openNexusDialog" />
+            </div>
+          </template>
+          <template #content>
+            <DataTable :value="nexusEntries" :loading="loadingNexus" paginator :rows="10">
+              <Column field="jurisdiction" header="Jurisdiction" sortable />
+              <Column field="nexus_type" header="Type" sortable />
+              <Column field="effective_date" header="Effective Date" sortable />
+              <Column field="threshold_amount" header="Threshold" sortable>
+                <template #body="{ data }">
+                  {{ formatCurrency(data.threshold_amount) }}
+                </template>
+              </Column>
+              <Column field="current_sales" header="Current Sales" sortable>
+                <template #body="{ data }">
+                  {{ formatCurrency(data.current_sales) }}
+                </template>
+              </Column>
+              <Column field="status" header="Status" sortable>
+                <template #body="{ data }">
+                  <Tag :value="data.status" :severity="data.status === 'active' ? 'success' : 'info'" />
+                </template>
+              </Column>
+            </DataTable>
+          </template>
+        </Card>
+      </TabPanel>
+
+      <TabPanel header="Automation Rules">
+        <Card>
+          <template #title>
+            <div class="flex justify-content-between align-items-center">
+              <span>Tax Automation Rules</span>
+              <Button label="Add Rule" icon="pi pi-plus" @click="openRuleDialog" />
+            </div>
+          </template>
+          <template #content>
+            <DataTable :value="automationRules" :loading="loadingRules" paginator :rows="10">
+              <Column field="name" header="Rule" sortable />
+              <Column field="trigger_event" header="Trigger" sortable />
+              <Column field="action" header="Action" sortable />
+              <Column field="tax_type" header="Tax Type" sortable />
+              <Column field="is_active" header="Status" sortable>
+                <template #body="{ data }">
+                  <Tag :value="data.is_active ? 'Active' : 'Disabled'" :severity="data.is_active ? 'success' : 'warning'" />
+                </template>
+              </Column>
+            </DataTable>
+          </template>
+        </Card>
+      </TabPanel>
+
+      <TabPanel header="E-Filing Integration">
+        <Card>
+          <template #title>
+            <div class="flex justify-content-between align-items-center">
+              <span>E-Filing Providers</span>
+              <Button label="Add Provider" icon="pi pi-plus" @click="openEFilingDialog" />
+            </div>
+          </template>
+          <template #content>
+            <DataTable :value="efilingIntegrations" :loading="loadingEFiling" paginator :rows="10">
+              <Column field="provider" header="Provider" sortable />
+              <Column field="environment" header="Environment" sortable />
+              <Column field="status" header="Status" sortable>
+                <template #body="{ data }">
+                  <Tag :value="data.status" :severity="data.status === 'configured' ? 'success' : 'info'" />
+                </template>
+              </Column>
+              <Column field="last_sync_at" header="Last Sync" sortable />
+            </DataTable>
+          </template>
+        </Card>
+      </TabPanel>
+
+      <TabPanel header="Payment Scheduling">
+        <Card>
+          <template #title>
+            <div class="flex justify-content-between align-items-center">
+              <span>Tax Payment Schedules</span>
+              <Button label="Schedule Payment" icon="pi pi-plus" @click="openPaymentDialog" />
+            </div>
+          </template>
+          <template #content>
+            <DataTable :value="paymentSchedules" :loading="loadingSchedules" paginator :rows="10">
+              <Column field="jurisdiction" header="Jurisdiction" sortable />
+              <Column field="scheduled_date" header="Scheduled Date" sortable />
+              <Column field="amount" header="Amount" sortable>
+                <template #body="{ data }">
+                  {{ formatCurrency(data.amount) }}
+                </template>
+              </Column>
+              <Column field="payment_method" header="Method" sortable />
+              <Column field="status" header="Status" sortable>
+                <template #body="{ data }">
+                  <Tag :value="data.status" :severity="data.status === 'paid' ? 'success' : 'info'" />
+                </template>
+              </Column>
+            </DataTable>
+          </template>
+        </Card>
+      </TabPanel>
       
       <TabPanel header="Reports">
         <Card>
@@ -212,12 +320,157 @@
         <Button :label="taxRateDialog.isEdit ? 'Update' : 'Create'" :loading="taxRateDialog.saving" @click="saveTaxRate" />
       </template>
     </Dialog>
+
+    <Dialog v-model:visible="nexusDialog.show" header="Nexus Tracking" :modal="true" :style="{width: '520px'}">
+      <div class="grid">
+        <div class="col-12 md:col-6">
+          <div class="field">
+            <label>Jurisdiction</label>
+            <InputText v-model="nexusDialog.formData.jurisdiction" class="w-full" />
+          </div>
+        </div>
+        <div class="col-12 md:col-6">
+          <div class="field">
+            <label>Nexus Type</label>
+            <Dropdown v-model="nexusDialog.formData.nexus_type" :options="nexusTypes" optionLabel="label" optionValue="value" class="w-full" />
+          </div>
+        </div>
+        <div class="col-12 md:col-6">
+          <div class="field">
+            <label>Effective Date</label>
+            <InputText v-model="nexusDialog.formData.effective_date" placeholder="YYYY-MM-DD" class="w-full" />
+          </div>
+        </div>
+        <div class="col-12 md:col-6">
+          <div class="field">
+            <label>Threshold Amount</label>
+            <InputNumber v-model="nexusDialog.formData.threshold_amount" mode="currency" currency="USD" class="w-full" />
+          </div>
+        </div>
+        <div class="col-12 md:col-6">
+          <div class="field">
+            <label>Current Sales</label>
+            <InputNumber v-model="nexusDialog.formData.current_sales" mode="currency" currency="USD" class="w-full" />
+          </div>
+        </div>
+        <div class="col-12 md:col-6">
+          <div class="field">
+            <label>Status</label>
+            <Dropdown v-model="nexusDialog.formData.status" :options="nexusStatuses" optionLabel="label" optionValue="value" class="w-full" />
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <Button label="Cancel" class="p-button-text" @click="nexusDialog.show = false" />
+        <Button label="Save" :loading="nexusDialog.saving" @click="saveNexus" />
+      </template>
+    </Dialog>
+
+    <Dialog v-model:visible="ruleDialog.show" header="Automation Rule" :modal="true" :style="{width: '520px'}">
+      <div class="grid">
+        <div class="col-12">
+          <div class="field">
+            <label>Rule Name</label>
+            <InputText v-model="ruleDialog.formData.name" class="w-full" />
+          </div>
+        </div>
+        <div class="col-12 md:col-6">
+          <div class="field">
+            <label>Tax Type</label>
+            <Dropdown v-model="ruleDialog.formData.tax_type" :options="taxTypes" optionLabel="title" optionValue="value" class="w-full" />
+          </div>
+        </div>
+        <div class="col-12 md:col-6">
+          <div class="field">
+            <label>Trigger</label>
+            <InputText v-model="ruleDialog.formData.trigger_event" class="w-full" />
+          </div>
+        </div>
+        <div class="col-12">
+          <div class="field">
+            <label>Action</label>
+            <InputText v-model="ruleDialog.formData.action" class="w-full" />
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <Button label="Cancel" class="p-button-text" @click="ruleDialog.show = false" />
+        <Button label="Save" :loading="ruleDialog.saving" @click="saveRule" />
+      </template>
+    </Dialog>
+
+    <Dialog v-model:visible="efilingDialog.show" header="E-Filing Provider" :modal="true" :style="{width: '520px'}">
+      <div class="grid">
+        <div class="col-12">
+          <div class="field">
+            <label>Provider</label>
+            <InputText v-model="efilingDialog.formData.provider" class="w-full" />
+          </div>
+        </div>
+        <div class="col-12 md:col-6">
+          <div class="field">
+            <label>Environment</label>
+            <Dropdown v-model="efilingDialog.formData.environment" :options="efilingEnvironments" optionLabel="label" optionValue="value" class="w-full" />
+          </div>
+        </div>
+        <div class="col-12 md:col-6">
+          <div class="field">
+            <label>Status</label>
+            <Dropdown v-model="efilingDialog.formData.status" :options="efilingStatuses" optionLabel="label" optionValue="value" class="w-full" />
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <Button label="Cancel" class="p-button-text" @click="efilingDialog.show = false" />
+        <Button label="Save" :loading="efilingDialog.saving" @click="saveEFiling" />
+      </template>
+    </Dialog>
+
+    <Dialog v-model:visible="paymentDialog.show" header="Tax Payment Schedule" :modal="true" :style="{width: '520px'}">
+      <div class="grid">
+        <div class="col-12">
+          <div class="field">
+            <label>Jurisdiction</label>
+            <InputText v-model="paymentDialog.formData.jurisdiction" class="w-full" />
+          </div>
+        </div>
+        <div class="col-12 md:col-6">
+          <div class="field">
+            <label>Scheduled Date</label>
+            <InputText v-model="paymentDialog.formData.scheduled_date" placeholder="YYYY-MM-DD" class="w-full" />
+          </div>
+        </div>
+        <div class="col-12 md:col-6">
+          <div class="field">
+            <label>Amount</label>
+            <InputNumber v-model="paymentDialog.formData.amount" mode="currency" currency="USD" class="w-full" />
+          </div>
+        </div>
+        <div class="col-12 md:col-6">
+          <div class="field">
+            <label>Payment Method</label>
+            <InputText v-model="paymentDialog.formData.payment_method" class="w-full" />
+          </div>
+        </div>
+        <div class="col-12 md:col-6">
+          <div class="field">
+            <label>Status</label>
+            <Dropdown v-model="paymentDialog.formData.status" :options="paymentStatuses" optionLabel="label" optionValue="value" class="w-full" />
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <Button label="Cancel" class="p-button-text" @click="paymentDialog.show = false" />
+        <Button label="Save" :loading="paymentDialog.saving" @click="savePaymentSchedule" />
+      </template>
+    </Dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
 import { useToast } from 'primevue/usetoast';
+import { taxApiService } from '../services/taxApiService';
 
 const toast = useToast();
 
@@ -230,6 +483,14 @@ const loadingRates = ref(false);
 const loadingExemptions = ref(false);
 const calculatingTax = ref(false);
 const taxResult = ref(null);
+const nexusEntries = ref([]);
+const automationRules = ref([]);
+const efilingIntegrations = ref([]);
+const paymentSchedules = ref([]);
+const loadingNexus = ref(false);
+const loadingRules = ref(false);
+const loadingEFiling = ref(false);
+const loadingSchedules = ref(false);
 
 // Tax Rate Dialog
 const taxRateDialog = reactive({
@@ -246,6 +507,52 @@ const taxRateDialog = reactive({
     description: '',
   },
   editId: null,
+});
+
+const nexusDialog = reactive({
+  show: false,
+  saving: false,
+  formData: {
+    jurisdiction: '',
+    nexus_type: 'economic',
+    effective_date: '',
+    threshold_amount: 0,
+    current_sales: 0,
+    status: 'tracking',
+  },
+});
+
+const ruleDialog = reactive({
+  show: false,
+  saving: false,
+  formData: {
+    name: '',
+    tax_type: 'sales',
+    trigger_event: 'return_due',
+    action: 'notify',
+  },
+});
+
+const efilingDialog = reactive({
+  show: false,
+  saving: false,
+  formData: {
+    provider: '',
+    environment: 'sandbox',
+    status: 'configured',
+  },
+});
+
+const paymentDialog = reactive({
+  show: false,
+  saving: false,
+  formData: {
+    jurisdiction: '',
+    scheduled_date: '',
+    amount: 0,
+    payment_method: '',
+    status: 'scheduled',
+  },
 });
 
 // Calculator
@@ -281,6 +588,35 @@ const taxTypes = [
   { title: 'Income Tax', value: 'income' },
 ];
 
+const nexusTypes = [
+  { label: 'Economic', value: 'economic' },
+  { label: 'Physical', value: 'physical' },
+  { label: 'Marketplace', value: 'marketplace' },
+];
+
+const nexusStatuses = [
+  { label: 'Tracking', value: 'tracking' },
+  { label: 'Active', value: 'active' },
+  { label: 'Inactive', value: 'inactive' },
+];
+
+const efilingEnvironments = [
+  { label: 'Sandbox', value: 'sandbox' },
+  { label: 'Production', value: 'production' },
+];
+
+const efilingStatuses = [
+  { label: 'Configured', value: 'configured' },
+  { label: 'Pending', value: 'pending' },
+  { label: 'Error', value: 'error' },
+];
+
+const paymentStatuses = [
+  { label: 'Scheduled', value: 'scheduled' },
+  { label: 'Paid', value: 'paid' },
+  { label: 'Failed', value: 'failed' },
+];
+
 // Methods
 const fetchTaxRates = async () => {
   loadingRates.value = true;
@@ -295,6 +631,50 @@ const fetchTaxRates = async () => {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load tax rates', life: 3000 });
   } finally {
     loadingRates.value = false;
+  }
+};
+
+const fetchNexus = async () => {
+  loadingNexus.value = true;
+  try {
+    nexusEntries.value = await taxApiService.getSalesTaxNexus();
+  } catch (error) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load nexus tracking', life: 3000 });
+  } finally {
+    loadingNexus.value = false;
+  }
+};
+
+const fetchAutomationRules = async () => {
+  loadingRules.value = true;
+  try {
+    automationRules.value = await taxApiService.getAutomationRules();
+  } catch (error) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load automation rules', life: 3000 });
+  } finally {
+    loadingRules.value = false;
+  }
+};
+
+const fetchEFilingIntegrations = async () => {
+  loadingEFiling.value = true;
+  try {
+    efilingIntegrations.value = await taxApiService.getEFilingIntegrations();
+  } catch (error) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load e-filing integrations', life: 3000 });
+  } finally {
+    loadingEFiling.value = false;
+  }
+};
+
+const fetchPaymentSchedules = async () => {
+  loadingSchedules.value = true;
+  try {
+    paymentSchedules.value = await taxApiService.getPaymentSchedules();
+  } catch (error) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load payment schedules', life: 3000 });
+  } finally {
+    loadingSchedules.value = false;
   }
 };
 
@@ -417,6 +797,139 @@ const deleteExemption = (exemption: any) => {
   toast.add({ severity: 'success', summary: 'Success', detail: 'Exemption deleted', life: 3000 });
 };
 
+const openNexusDialog = () => {
+  nexusDialog.formData = {
+    jurisdiction: '',
+    nexus_type: 'economic',
+    effective_date: '',
+    threshold_amount: 0,
+    current_sales: 0,
+    status: 'tracking',
+  };
+  nexusDialog.show = true;
+};
+
+const saveNexus = async () => {
+  if (!nexusDialog.formData.jurisdiction || !nexusDialog.formData.effective_date) {
+    toast.add({ severity: 'warn', summary: 'Required', detail: 'Jurisdiction and effective date are required', life: 3000 });
+    return;
+  }
+  nexusDialog.saving = true;
+  try {
+    await taxApiService.createSalesTaxNexus({
+      ...nexusDialog.formData,
+      company_id: '12345678-1234-5678-9012-123456789012',
+      threshold_transactions: 0,
+    });
+    await fetchNexus();
+    nexusDialog.show = false;
+    toast.add({ severity: 'success', summary: 'Saved', detail: 'Nexus entry created', life: 3000 });
+  } catch (error) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to save nexus entry', life: 3000 });
+  } finally {
+    nexusDialog.saving = false;
+  }
+};
+
+const openRuleDialog = () => {
+  ruleDialog.formData = {
+    name: '',
+    tax_type: 'sales',
+    trigger_event: 'return_due',
+    action: 'notify',
+  };
+  ruleDialog.show = true;
+};
+
+const saveRule = async () => {
+  if (!ruleDialog.formData.name) {
+    toast.add({ severity: 'warn', summary: 'Required', detail: 'Rule name is required', life: 3000 });
+    return;
+  }
+  ruleDialog.saving = true;
+  try {
+    await taxApiService.createAutomationRule({
+      ...ruleDialog.formData,
+      company_id: '12345678-1234-5678-9012-123456789012',
+      jurisdiction: undefined,
+      threshold_amount: 0,
+      schedule_cron: undefined,
+      priority: 1,
+      is_active: true,
+    });
+    await fetchAutomationRules();
+    ruleDialog.show = false;
+    toast.add({ severity: 'success', summary: 'Saved', detail: 'Automation rule created', life: 3000 });
+  } catch (error) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to save automation rule', life: 3000 });
+  } finally {
+    ruleDialog.saving = false;
+  }
+};
+
+const openEFilingDialog = () => {
+  efilingDialog.formData = {
+    provider: '',
+    environment: 'sandbox',
+    status: 'configured',
+  };
+  efilingDialog.show = true;
+};
+
+const saveEFiling = async () => {
+  if (!efilingDialog.formData.provider) {
+    toast.add({ severity: 'warn', summary: 'Required', detail: 'Provider is required', life: 3000 });
+    return;
+  }
+  efilingDialog.saving = true;
+  try {
+    await taxApiService.createEFilingIntegration({
+      ...efilingDialog.formData,
+      company_id: '12345678-1234-5678-9012-123456789012',
+    });
+    await fetchEFilingIntegrations();
+    efilingDialog.show = false;
+    toast.add({ severity: 'success', summary: 'Saved', detail: 'E-filing integration saved', life: 3000 });
+  } catch (error) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to save e-filing integration', life: 3000 });
+  } finally {
+    efilingDialog.saving = false;
+  }
+};
+
+const openPaymentDialog = () => {
+  paymentDialog.formData = {
+    jurisdiction: '',
+    scheduled_date: '',
+    amount: 0,
+    payment_method: '',
+    status: 'scheduled',
+  };
+  paymentDialog.show = true;
+};
+
+const savePaymentSchedule = async () => {
+  if (!paymentDialog.formData.scheduled_date) {
+    toast.add({ severity: 'warn', summary: 'Required', detail: 'Scheduled date is required', life: 3000 });
+    return;
+  }
+  paymentDialog.saving = true;
+  try {
+    await taxApiService.createPaymentSchedule({
+      ...paymentDialog.formData,
+      company_id: '12345678-1234-5678-9012-123456789012',
+      tax_return_id: undefined,
+    });
+    await fetchPaymentSchedules();
+    paymentDialog.show = false;
+    toast.add({ severity: 'success', summary: 'Saved', detail: 'Payment scheduled', life: 3000 });
+  } catch (error) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to schedule payment', life: 3000 });
+  } finally {
+    paymentDialog.saving = false;
+  }
+};
+
 const generateTaxSummaryReport = () => {
   toast.add({ severity: 'info', summary: 'Report', detail: 'Generating tax summary report...', life: 3000 });
 };
@@ -440,6 +953,10 @@ const formatCurrency = (amount: number) => {
 onMounted(() => {
   fetchTaxRates();
   fetchExemptions();
+  fetchNexus();
+  fetchAutomationRules();
+  fetchEFilingIntegrations();
+  fetchPaymentSchedules();
 });
 </script>
 

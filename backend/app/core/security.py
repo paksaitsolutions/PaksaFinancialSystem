@@ -6,6 +6,8 @@ from fastapi import HTTPException, status, Depends, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import json
 from app.core.config.settings import settings
+from app.core.database import get_db
+from sqlalchemy.orm import Session
 
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -159,6 +161,32 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         "email": payload.get("email"),
         "tenant_id": payload.get("tenant_id", "demo-tenant-123")
     }
+
+
+async def require_mfa_for_privileged(
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    from app.models.user import User, MFADevice
+
+    user = db.query(User).filter(User.id == current_user.get("user_id")).first()
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid user")
+
+    if user.is_superuser:
+        mfa_device = (
+            db.query(MFADevice)
+            .filter(
+                MFADevice.user_id == user.id,
+                MFADevice.is_active == True,
+                MFADevice.is_verified == True,
+            )
+            .first()
+        )
+        if not mfa_device:
+            raise HTTPException(status_code=403, detail="MFA required for privileged access")
+
+    return current_user
 
 # Dependency for getting current active user
 async def get_current_active_user(current_user: dict = Depends(get_current_user)):

@@ -23,6 +23,14 @@
       </template>
       
       <template #content>
+        <ErrorPanel
+          v-if="formError"
+          :visible="!!formError"
+          title="Unable to save invoice"
+          :message="formError.message"
+          :request-id="formError.requestId"
+          :details="formError.details"
+        />
         <form @submit.prevent="saveInvoice">
           <div class="grid">
             <!-- Invoice Header -->
@@ -40,11 +48,15 @@
                   optionLabel="name"
                   optionValue="id"
                   placeholder="Select vendor"
-                  :class="{ 'p-invalid': !formData.vendor_id }"
+                  :class="{ 'p-invalid': showValidation && validationErrors.vendor_id }"
                   :disabled="isEdit"
+                  :aria-invalid="showValidation && !!validationErrors.vendor_id"
+                  :aria-describedby="validationErrors.vendor_id ? 'vendor_error' : undefined"
                   class="w-full"
                 />
-                <small v-if="!formData.vendor_id" class="p-error">Vendor is required</small>
+                <small v-if="showValidation && validationErrors.vendor_id" id="vendor_error" class="p-error">
+                  {{ validationErrors.vendor_id }}
+                </small>
               </div>
             </div>
             
@@ -54,11 +66,15 @@
                 <InputText
                   id="invoice_number"
                   v-model="formData.invoice_number"
-                  :class="{ 'p-invalid': !formData.invoice_number }"
+                  :class="{ 'p-invalid': showValidation && validationErrors.invoice_number }"
                   :disabled="isEdit"
+                  :aria-invalid="showValidation && !!validationErrors.invoice_number"
+                  :aria-describedby="validationErrors.invoice_number ? 'invoice_number_error' : undefined"
                   class="w-full"
                 />
-                <small v-if="!formData.invoice_number" class="p-error">Invoice number is required</small>
+                <small v-if="showValidation && validationErrors.invoice_number" id="invoice_number_error" class="p-error">
+                  {{ validationErrors.invoice_number }}
+                </small>
               </div>
             </div>
             
@@ -68,11 +84,15 @@
                 <Calendar
                   id="invoice_date"
                   v-model="formData.invoice_date"
-                  :class="{ 'p-invalid': !formData.invoice_date }"
+                  :class="{ 'p-invalid': showValidation && validationErrors.invoice_date }"
+                  :aria-invalid="showValidation && !!validationErrors.invoice_date"
+                  :aria-describedby="validationErrors.invoice_date ? 'invoice_date_error' : undefined"
                   showIcon
                   class="w-full"
                 />
-                <small v-if="!formData.invoice_date" class="p-error">Invoice date is required</small>
+                <small v-if="showValidation && validationErrors.invoice_date" id="invoice_date_error" class="p-error">
+                  {{ validationErrors.invoice_date }}
+                </small>
               </div>
             </div>
             
@@ -82,11 +102,15 @@
                 <Calendar
                   id="due_date"
                   v-model="formData.due_date"
-                  :class="{ 'p-invalid': !formData.due_date }"
+                  :class="{ 'p-invalid': showValidation && validationErrors.due_date }"
+                  :aria-invalid="showValidation && !!validationErrors.due_date"
+                  :aria-describedby="validationErrors.due_date ? 'due_date_error' : undefined"
                   showIcon
                   class="w-full"
                 />
-                <small v-if="!formData.due_date" class="p-error">Due date is required</small>
+                <small v-if="showValidation && validationErrors.due_date" id="due_date_error" class="p-error">
+                  {{ validationErrors.due_date }}
+                </small>
               </div>
             </div>
             
@@ -158,6 +182,9 @@
             <!-- Line Items -->
             <div class="col-12 mt-4">
               <h3 class="text-lg font-semibold mb-3">Line Items</h3>
+              <small v-if="showValidation && validationErrors.line_items" class="p-error">
+                {{ validationErrors.line_items }}
+              </small>
               
               <DataTable
                 :value="formData.line_items"
@@ -247,10 +274,14 @@
             <InputText
               id="item_description"
               v-model="lineItemDialog.item.description"
-              :class="{ 'p-invalid': !lineItemDialog.item.description }"
+              :class="{ 'p-invalid': showLineItemValidation && lineItemErrors.description }"
+              :aria-invalid="showLineItemValidation && !!lineItemErrors.description"
+              :aria-describedby="lineItemErrors.description ? 'line_description_error' : undefined"
               class="w-full"
             />
-            <small v-if="!lineItemDialog.item.description" class="p-error">Description is required</small>
+            <small v-if="showLineItemValidation && lineItemErrors.description" id="line_description_error" class="p-error">
+              {{ lineItemErrors.description }}
+            </small>
           </div>
         </div>
         
@@ -263,7 +294,11 @@
               :min="0"
               class="w-full"
               @input="calculateLineItemAmount"
+              :class="{ 'p-invalid': showLineItemValidation && lineItemErrors.quantity }"
             />
+            <small v-if="showLineItemValidation && lineItemErrors.quantity" class="p-error">
+              {{ lineItemErrors.quantity }}
+            </small>
           </div>
         </div>
         
@@ -279,7 +314,11 @@
               :min="0"
               class="w-full"
               @input="calculateLineItemAmount"
+              :class="{ 'p-invalid': showLineItemValidation && lineItemErrors.unit_price }"
             />
+            <small v-if="showLineItemValidation && lineItemErrors.unit_price" class="p-error">
+              {{ lineItemErrors.unit_price }}
+            </small>
           </div>
         </div>
         
@@ -308,8 +347,14 @@
               optionLabel="name"
               optionValue="id"
               placeholder="Select account"
+              :class="{ 'p-invalid': showLineItemValidation && lineItemErrors.account_id }"
+              :aria-invalid="showLineItemValidation && !!lineItemErrors.account_id"
+              :aria-describedby="lineItemErrors.account_id ? 'line_account_error' : undefined"
               class="w-full"
             />
+            <small v-if="showLineItemValidation && lineItemErrors.account_id" id="line_account_error" class="p-error">
+              {{ lineItemErrors.account_id }}
+            </small>
           </div>
         </div>
         
@@ -350,6 +395,8 @@ import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { apiClient } from '@/utils/apiClient'
 import { addToDate } from '@/utils/date'
+import ErrorPanel from '@/components/common/ErrorPanel.vue'
+import { validateSchema } from '@/utils/formValidation'
 
 // Props
 const props = defineProps({
@@ -367,6 +414,11 @@ const toast = useToast()
 
 // Refs
 const saving = ref(false)
+const formError = ref<{ message: string; requestId?: string; details?: string[] } | null>(null)
+const showValidation = ref(false)
+const validationErrors = ref<Record<string, string>>({})
+const showLineItemValidation = ref(false)
+const lineItemErrors = ref<Record<string, string>>({})
 
 // Data
 const vendors = ref([]);
@@ -406,13 +458,27 @@ const lineItemDialog = reactive({
   },
 })
 
-// Computed
+const formSchema = {
+  vendor_id: { required: true, label: 'Vendor' },
+  invoice_number: { required: true, label: 'Invoice number' },
+  invoice_date: { required: true, label: 'Invoice date' },
+  due_date: { required: true, label: 'Due date' }
+}
+
+const lineItemSchema = {
+  description: { required: true, label: 'Description' },
+  quantity: { required: true, min: 1, label: 'Quantity' },
+  unit_price: { required: true, min: 0, label: 'Unit price' },
+  account_id: { required: true, label: 'GL account' }
+}
+
 const isFormValid = computed(() => {
-  return formData.vendor_id && formData.invoice_number && formData.invoice_date && formData.due_date
+  const validation = validateSchema(formData, formSchema)
+  return validation.isValid && formData.line_items.length > 0
 })
 
 const isLineItemValid = computed(() => {
-  return lineItemDialog.item.description && lineItemDialog.item.quantity > 0 && lineItemDialog.item.unit_price >= 0
+  return validateSchema(lineItemDialog.item, lineItemSchema).isValid
 })
 
 // Payment terms options
@@ -543,6 +609,8 @@ const openLineItemDialog = () => {
     account_id: null,
     tax_code_id: null,
   };
+  showLineItemValidation.value = false;
+  lineItemErrors.value = {};
   lineItemDialog.show = true;
 };
 
@@ -567,7 +635,10 @@ const calculateLineItemAmount = () => {
 };
 
 const saveLineItem = () => {
-  if (!isLineItemValid.value) return
+  showLineItemValidation.value = true;
+  const lineValidation = validateSchema(lineItemDialog.item, lineItemSchema);
+  lineItemErrors.value = lineValidation.errors;
+  if (!lineValidation.isValid) return
   
   if (lineItemDialog.isEdit && lineItemDialog.index !== -1) {
     // Update existing line item
@@ -581,12 +652,18 @@ const saveLineItem = () => {
 };
 
 const saveInvoice = async () => {
-  if (!valid.value) return;
+  formError.value = null;
+  showValidation.value = true;
+  const formValidation = validateSchema(formData, formSchema);
+  validationErrors.value = formValidation.errors;
   
   // Validate line items
   if (formData.line_items.length === 0) {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'At least one line item is required' })
-    return
+    validationErrors.value.line_items = 'At least one line item is required';
+  }
+
+  if (!formValidation.isValid || formData.line_items.length === 0) {
+    return;
   }
   
   saving.value = true;
@@ -603,7 +680,11 @@ const saveInvoice = async () => {
     
     emit('saved');
   } catch (error) {
-    toast.add({ severity: 'error', summary: 'Error', detail: error.response?.data?.message || 'Failed to save invoice' })
+    formError.value = {
+      message: error.response?.data?.message || 'Failed to save invoice',
+      requestId: error.response?.headers?.['x-request-id']
+    };
+    toast.add({ severity: 'error', summary: 'Error', detail: formError.value.message })
     console.error('Error saving invoice:', error);
   } finally {
     saving.value = false;
@@ -618,7 +699,11 @@ const submitInvoice = async () => {
     toast.add({ severity: 'success', summary: 'Success', detail: 'Invoice submitted for approval' })
     emit('saved');
   } catch (error) {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to submit invoice' })
+    formError.value = {
+      message: 'Failed to submit invoice',
+      requestId: error.response?.headers?.['x-request-id']
+    };
+    toast.add({ severity: 'error', summary: 'Error', detail: formError.value.message })
     console.error('Error submitting invoice:', error);
   }
 };

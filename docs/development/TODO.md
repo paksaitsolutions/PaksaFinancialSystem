@@ -1,12 +1,81 @@
 # Paksa Financial System - Comprehensive TODO List
 
-**Last Updated**: 30 January 2025  
+**Last Updated**: 05 February 2026  
 **Based on**: Comprehensive QA Report
 
 > This file tracks all pending tasks, missing features, and improvements needed across the entire system.
 
 ---
 
+
+## ✅ Recent Integration Fixes (Auth + Health + Frontend/Backend Contracts)
+
+- [x] Added production probe endpoints and service health checks
+  - [x] `GET /health/live` (liveness)
+  - [x] `GET /health/ready` (readiness with DB connectivity check)
+  - [x] Updated `/health` to report readiness-derived DB status
+- [x] Added request tracing middleware
+  - [x] `RequestIDMiddleware` wired in main app
+  - [x] `X-Request-ID` propagated to responses
+- [x] Standardized JSON auth API for frontend integration
+  - [x] `POST /api/v1/auth/register`
+  - [x] `GET /api/v1/auth/me`
+  - [x] `GET /api/v1/auth/verify-token`
+  - [x] `POST /api/v1/auth/logout`
+  - [x] `POST /api/v1/auth/forgot-password`
+  - [x] `POST /api/v1/auth/reset-password`
+  - [x] `POST /api/v1/auth/refresh-token`
+- [x] Fixed demo token crash path (`demo-admin` non-UUID subject)
+- [x] Fixed frontend auth store response handling mismatch (`response.data` vs parsed payload)
+- [x] Fixed case-sensitive Bank Accounts service import for Linux builds
+
+---
+
+## 🚀 Enterprise Completion Plan (Execution Backlog)
+
+### 1) End-to-End Financial Flow Hardening (P0)
+- [x] Define canonical workflow contracts for Quote → Order → Invoice → Payment → GL Posting (`docs/architecture/WORKFLOW_CONTRACTS.md`)
+- [x] Enforce idempotency keys for posting/payment endpoints (Idempotency-Key header + storage)
+- [x] Add compensating transaction patterns for partial failures (contracted in workflow spec)
+- [x] Add audit event schema for all state transitions (audit events table + logging helper)
+
+### 2) Data Integrity & DB Governance (P0)
+- [x] Add migration guardrails (forward-only + rollback playbooks per release) (`docs/development/MIGRATION_GUARDRAILS.md`)
+- [x] Add DB constraints review (FKs, unique keys, check constraints) per module (constraints review API)
+- [x] Add reconciliation jobs for cross-module balances (AR/AP/Cash/GL) (`/api/v1/data-integrity/reconciliation`)
+- [x] Add data quality dashboards (orphaned records, posting gaps, stale states) (`/api/v1/data-quality/dashboard`)
+
+### 3) Security & Compliance Hardening (P0)
+- [x] Enforce MFA for privileged roles and super-admin routes (MFA enforcement dependency)
+- [x] Add refresh-token rotation + revocation list persistence (refresh token storage)
+- [x] Add PII field-level encryption review and key-rotation runbook (`docs/development/PII_ENCRYPTION_RUNBOOK.md`)
+- [x] Add SOX-style approval matrix checks for high-risk actions (`/api/v1/compliance/sox/approval-matrix`)
+
+### 4) Frontend Form Reliability & UX Consistency (P1)
+- [x] Implement consistent form schema validation for high-value forms (AP/AR/Payroll/Tax)
+- [x] Add optimistic UI only for safe operations; fallback to server truth on posting flows
+- [x] Add standardized error panel with correlation ID display for support
+- [x] Add accessibility pass (keyboard nav, labels, contrast) for finance-critical screens
+
+### 5) API Contract Maturity (P1)
+- [x] Publish versioned OpenAPI contract snapshots per release
+- [x] Add consumer-driven contract tests for frontend critical services
+- [x] Add strict response envelope conformance tests
+- [x] Add backward-compatibility policy and deprecation calendar
+
+### 6) Observability & SRE Readiness (P1)
+- [x] Add RED metrics (Rate/Errors/Duration) per domain endpoint
+- [x] Add distributed tracing across API + async jobs + DB spans
+- [x] Add alerting SLOs for auth, posting latency, reconciliation failures
+- [x] Add operational runbooks for incident classes (auth outage, posting drift, DB saturation)
+
+### 7) Testing Gate Upgrade (P0)
+- [x] Make full backend integration suite green in CI using seeded test DB fixtures
+- [x] Add E2E financial scenario tests (monthly close, vendor payment cycle, tax filing)
+- [x] Add frontend Playwright smoke suite for login + posting + reporting paths
+- [x] Enforce PR quality gate: unit + integration + contract + e2e smoke
+
+---
 ## 🔴 CRITICAL PRIORITY (Fix Immediately)
 
 ### Backend Critical Issues
@@ -196,7 +265,7 @@
   - [x] Automated journal entry templates
   - [x] Enhanced audit trail visualization
 
-#### Accounts Payable (AP) - 95% Complete ✅
+#### Accounts Payable (AP) - 100% Complete ✅
 - [x] Vendor management
 - [x] Bill/Invoice processing
 - [x] Payment processing
@@ -207,8 +276,8 @@
 - [x] **Enhancements:**
   - [x] Three-way matching (PO-Receipt-Invoice)
   - [x] Early payment discounts automation
-  - [ ] Vendor portal
-  - [ ] ACH/Wire payment integration
+  - [x] Vendor portal (`/api/v1/ap/vendors/{vendor_id}/portal-access`)
+  - [x] ACH/Wire payment integration (`/api/v1/ap/vendors/{vendor_id}/payment-instructions`, `/api/v1/ap/payments`)
 
 #### Accounts Receivable (AR) - 100% Complete ✅
 - [x] Customer management
@@ -223,16 +292,16 @@
   - [x] Credit limit management (`backend/app/services/ar/credit_limit_service.py`)
   - [x] Payment plan management (`backend/app/services/ar/payment_plan_service.py`)
 
-#### Cash Management - 85% Complete ✅
+#### Cash Management - 100% Complete ✅
 - [x] Bank account management
 - [x] Transaction recording
 - [x] Bank reconciliation
 - [x] Cash flow forecasting
-- [ ] **Missing Features:**
-  - [ ] Automated bank feed integration
-  - [ ] Cash concentration
-  - [ ] Zero balance accounts
-  - [ ] Investment sweep accounts
+- [x] **Missing Features:**
+  - [x] Automated bank feed integration (`/cash/bank-feeds`)
+  - [x] Cash concentration (`/cash/concentration-rules`)
+  - [x] Zero balance accounts (`/cash/zero-balance-configs`)
+  - [x] Investment sweep accounts (`/cash/investment-sweeps`)
 
 #### Fixed Assets - 90% Complete ✅
 - [x] Asset registration

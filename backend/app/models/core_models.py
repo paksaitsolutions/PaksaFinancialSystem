@@ -200,6 +200,38 @@ class VendorContact(Base):
 # CUSTOMER MANAGEMENT (Unified for AR & Sales)
 # ============================================================================
 
+
+class VendorPortalAccess(Base, AuditMixin):
+    """Vendor portal access invitation and status tracking."""
+    __tablename__ = "vendor_portal_access"
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    vendor_id = Column(GUID(), ForeignKey("vendors.id"), nullable=False, index=True)
+    portal_email = Column(String(255), nullable=False)
+    access_token = Column(String(128), nullable=False, unique=True)
+    status = Column(String(20), default="invited")
+    invited_at = Column(DateTime, default=datetime.utcnow)
+    activated_at = Column(DateTime)
+
+    vendor = relationship("Vendor")
+
+
+class VendorPaymentInstruction(Base, AuditMixin):
+    """Vendor ACH/Wire payment instruction profile."""
+    __tablename__ = "vendor_payment_instructions"
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    vendor_id = Column(GUID(), ForeignKey("vendors.id"), nullable=False, index=True)
+    payment_method = Column(String(20), nullable=False)  # ach|wire
+    account_name = Column(String(255), nullable=False)
+    account_number_last4 = Column(String(4), nullable=False)
+    routing_number = Column(String(50))
+    bank_name = Column(String(255))
+    swift_code = Column(String(50))
+    is_active = Column(Boolean, default=True)
+
+    vendor = relationship("Vendor")
+
 class Customer(Base, AuditMixin):
     """Unified Customer for AR and Sales"""
     __tablename__ = "customers"
@@ -739,6 +771,74 @@ class TaxTransaction(Base, AuditMixin):
     reference_number = Column(String(100))
     description = Column(Text)
 
+
+class SalesTaxNexus(Base, AuditMixin):
+    """Sales tax nexus tracking by jurisdiction."""
+    __tablename__ = "sales_tax_nexus"
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
+    jurisdiction = Column(String(100), nullable=False)
+    nexus_type = Column(String(50), nullable=False)  # economic, physical, marketplace, etc.
+    effective_date = Column(Date, nullable=False)
+    threshold_amount = Column(Numeric(15, 2), default=0)
+    threshold_transactions = Column(Integer, default=0)
+    current_sales = Column(Numeric(15, 2), default=0)
+    status = Column(String(20), default="tracking")
+    last_evaluated_at = Column(DateTime)
+    notes = Column(Text)
+
+
+class TaxAutomationRule(Base, AuditMixin):
+    """Automation rules for tax workflows."""
+    __tablename__ = "tax_automation_rules"
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
+    name = Column(String(255), nullable=False)
+    tax_type = Column(String(50), nullable=False)
+    jurisdiction = Column(String(100))
+    trigger_event = Column(String(100), nullable=False)
+    threshold_amount = Column(Numeric(15, 2), default=0)
+    action = Column(String(100), nullable=False)
+    schedule_cron = Column(String(100))
+    priority = Column(Integer, default=1)
+    is_active = Column(Boolean, default=True)
+    last_triggered_at = Column(DateTime)
+
+
+class TaxEFilingIntegration(Base, AuditMixin):
+    """E-filing provider integration settings."""
+    __tablename__ = "tax_efiling_integrations"
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
+    provider = Column(String(100), nullable=False)
+    environment = Column(String(50), default="sandbox")
+    status = Column(String(20), default="configured")
+    connection_reference = Column(String(255))
+    last_sync_at = Column(DateTime)
+    credentials_last_rotated_at = Column(DateTime)
+
+
+class TaxPaymentSchedule(Base, AuditMixin):
+    """Scheduled tax payments."""
+    __tablename__ = "tax_payment_schedules"
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
+    tax_return_id = Column(GUID(), ForeignKey("tax_returns.id"))
+    jurisdiction = Column(String(100))
+    scheduled_date = Column(Date, nullable=False)
+    amount = Column(Numeric(15, 2), nullable=False)
+    status = Column(String(20), default="scheduled")
+    payment_method = Column(String(50))
+    reference = Column(String(100))
+    paid_at = Column(DateTime)
+    notes = Column(Text)
+
+    tax_return = relationship("TaxReturn")
+
 # CashTransaction model exists in reconciliation_core.py - removed duplicate
 
 # ============================================================================
@@ -929,6 +1029,106 @@ class BankAccount(Base, AuditMixin):
     account_number = Column(String(50), nullable=False)
     bank_name = Column(String(255), nullable=False)
     current_balance = Column(Numeric(15, 2), default=0)
+    is_active = Column(Boolean, default=True)
+
+
+class IdempotencyKey(Base, AuditMixin):
+    """Idempotency keys for safe retries on posting endpoints."""
+    __tablename__ = "idempotency_keys"
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    key = Column(String(128), nullable=False, unique=True, index=True)
+    endpoint = Column(String(255), nullable=False)
+    request_hash = Column(String(64), nullable=False)
+    response_body = Column(Text)
+    status_code = Column(Integer, default=200)
+
+
+class RefreshToken(Base, AuditMixin):
+    """Refresh token persistence with rotation and revocation."""
+    __tablename__ = "refresh_tokens"
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    user_id = Column(String(100), nullable=False, index=True)
+    token = Column(String(255), nullable=False, unique=True, index=True)
+    issued_at = Column(DateTime, default=datetime.utcnow)
+    expires_at = Column(DateTime, nullable=False)
+    revoked_at = Column(DateTime)
+    replaced_by_token = Column(String(255))
+
+
+class AuditEvent(Base, AuditMixin):
+    """Audit event schema for state transition tracking."""
+    __tablename__ = "audit_events"
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    entity_type = Column(String(100), nullable=False, index=True)
+    entity_id = Column(String(100), nullable=False, index=True)
+    event_type = Column(String(100), nullable=False)
+    actor_id = Column(String(100))
+    metadata_json = Column(Text)
+
+
+class CompensationAction(Base, AuditMixin):
+    """Compensating transaction record for partial-failure recovery."""
+    __tablename__ = "compensation_actions"
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    entity_type = Column(String(100), nullable=False, index=True)
+    entity_id = Column(String(100), nullable=False, index=True)
+    reason = Column(String(255), nullable=False)
+    status = Column(String(20), default="pending")
+    payload = Column(Text)
+
+
+class BankFeedConnection(Base, AuditMixin):
+    """Automated bank feed integration profile."""
+    __tablename__ = "bank_feed_connections"
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
+    account_id = Column(GUID(), ForeignKey("bank_accounts.id"), nullable=False, index=True)
+    provider = Column(String(100), nullable=False)
+    provider_account_id = Column(String(150), nullable=False)
+    status = Column(String(20), default="active")
+    last_sync_at = Column(DateTime)
+
+
+class CashConcentrationRule(Base, AuditMixin):
+    """Rules for sweeping balances into a concentration account."""
+    __tablename__ = "cash_concentration_rules"
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
+    source_account_id = Column(GUID(), ForeignKey("bank_accounts.id"), nullable=False)
+    concentration_account_id = Column(GUID(), ForeignKey("bank_accounts.id"), nullable=False)
+    min_source_balance = Column(Numeric(15, 2), default=0)
+    transfer_frequency = Column(String(20), default="daily")
+    is_active = Column(Boolean, default=True)
+
+
+class ZeroBalanceAccountConfig(Base, AuditMixin):
+    """Configuration for zero balance account (ZBA) operation."""
+    __tablename__ = "zero_balance_account_configs"
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
+    child_account_id = Column(GUID(), ForeignKey("bank_accounts.id"), nullable=False)
+    funding_account_id = Column(GUID(), ForeignKey("bank_accounts.id"), nullable=False)
+    target_balance = Column(Numeric(15, 2), default=0)
+    is_active = Column(Boolean, default=True)
+
+
+class InvestmentSweepConfig(Base, AuditMixin):
+    """Configuration for investment sweep account behavior."""
+    __tablename__ = "investment_sweep_configs"
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
+    operating_account_id = Column(GUID(), ForeignKey("bank_accounts.id"), nullable=False)
+    investment_account_name = Column(String(255), nullable=False)
+    sweep_threshold = Column(Numeric(15, 2), default=0)
+    target_operating_balance = Column(Numeric(15, 2), default=0)
     is_active = Column(Boolean, default=True)
 
 # CashTransaction already exists in reconciliation_core.py - removing duplicate

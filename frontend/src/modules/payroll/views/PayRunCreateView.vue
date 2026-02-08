@@ -53,6 +53,15 @@
       </v-col>
     </v-row>
 
+    <ErrorPanel
+      v-if="formError"
+      :visible="!!formError"
+      title="Unable to create pay run"
+      :message="formError.message"
+      :request-id="formError.requestId"
+      :details="formError.details"
+    />
+
     <!-- Progress Stepper -->
     <v-stepper v-model="currentStep" class="elevation-0 mb-6" :items="stepItems">
       <template v-slot:item.1.title>
@@ -90,6 +99,7 @@
                     label="Pay Period Type"
                     variant="outlined"
                     :rules="[required]"
+                    :error-messages="formErrors.payPeriodType ? [formErrors.payPeriodType] : []"
                     density="comfortable"
                     :disabled="isSubmitting"
                     @update:modelValue="updatePayPeriodDates"
@@ -101,6 +111,7 @@
                     label="Pay Run Name"
                     variant="outlined"
                     :rules="[required]"
+                    :error-messages="formErrors.payRunName ? [formErrors.payRunName] : []"
                     density="comfortable"
                     :disabled="isSubmitting"
                     hint="A descriptive name for this pay run (e.g., 'January 2025 Monthly Payroll')"
@@ -120,6 +131,7 @@
                         label="Pay Period Start Date"
                         variant="outlined"
                         :rules="[required]"
+                        :error-messages="formErrors.payPeriodStartDate ? [formErrors.payPeriodStartDate] : []"
                         density="comfortable"
                         :disabled="isSubmitting"
                         v-bind="props"
@@ -148,6 +160,7 @@
                         label="Pay Period End Date"
                         variant="outlined"
                         :rules="[required]"
+                        :error-messages="formErrors.payPeriodEndDate ? [formErrors.payPeriodEndDate] : []"
                         density="comfortable"
                         :disabled="isSubmitting || !payRun.payPeriodStartDate"
                         readonly
@@ -175,6 +188,7 @@
                         label="Payment Date"
                         variant="outlined"
                         :rules="[required]"
+                        :error-messages="formErrors.paymentDate ? [formErrors.paymentDate] : []"
                         density="comfortable"
                         :disabled="isSubmitting"
                         readonly
@@ -196,6 +210,7 @@
                     label="Pay Frequency"
                     variant="outlined"
                     :rules="[required]"
+                    :error-messages="formErrors.payFrequency ? [formErrors.payFrequency] : []"
                     density="comfortable"
                     :disabled="isSubmitting"
                   ></v-select>
@@ -262,6 +277,9 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useTaxPolicyStore } from '@/modules/tax/store/policy';
+import { createPayRun } from '@/modules/payroll/services/payrollService';
+import ErrorPanel from '@/components/common/ErrorPanel.vue';
+import { validateSchema } from '@/utils/formValidation';
 // Mock tax calculation service
 const taxCalculationService = {
   calculatePayRunTax: (payRun: any) => ({
@@ -284,6 +302,8 @@ const totalSteps = 4;
 const isFormValid = ref(false);
 const isSubmitting = ref(false);
 const form = ref(null);
+const formError = ref<{ message: string; requestId?: string; details?: string[] } | null>(null);
+const formErrors = ref<Record<string, string>>({});
 
 // UI state
 const startDateMenu = ref(false);
@@ -338,6 +358,21 @@ const stepItems = computed(() => {
 
 // Validation rules
 const required = (v: any) => !!v || 'This field is required';
+
+const payRunSchema = {
+  payPeriodType: { required: true, label: 'Pay period type' },
+  payRunName: { required: true, label: 'Pay run name' },
+  payPeriodStartDate: { required: true, label: 'Pay period start date' },
+  payPeriodEndDate: { required: true, label: 'Pay period end date' },
+  paymentDate: { required: true, label: 'Payment date' },
+  payFrequency: { required: true, label: 'Pay frequency' }
+};
+
+const validatePayRunForm = () => {
+  const validation = validateSchema(payRun.value, payRunSchema);
+  formErrors.value = validation.errors;
+  return validation.isValid;
+};
 
 // Methods
 const updatePayPeriodDates = () => {
@@ -398,7 +433,7 @@ const calculateTotalTax = () => {
 
 const nextStep = async () => {
   const { valid } = await form.value.validate();
-  if (valid) {
+  if (valid && validatePayRunForm()) {
     currentStep.value = Math.min(currentStep.value + 1, totalSteps - 1);
   }
 };
@@ -409,12 +444,16 @@ const prevStep = () => {
 
 const submitPayRun = async () => {
   try {
+    formError.value = null;
+    if (!validatePayRunForm()) {
+      return;
+    }
     isSubmitting.value = true;
     
     // Calculate tax before submission
     calculateTotalTax();
 
-    const response = await payrollService.createPayRun({
+    const response = await createPayRun({
       period_id: payRun.value.payPeriodStartDate,
       notes: payRun.value.notes,
       tax_policy_id: useTaxPolicyStore().getCurrentPolicy()?.id,
@@ -425,6 +464,10 @@ const submitPayRun = async () => {
     router.push({ name: 'payroll-run-details', params: { id: response.id } });
   } catch (error) {
     console.error('Error creating pay run:', error);
+    formError.value = {
+      message: 'Failed to create pay run. Please try again.',
+      requestId: (error as any)?.requestId || (error as any)?.response?.headers?.['x-request-id']
+    };
     snackbar.value = {
       message: 'Failed to create pay run. Please try again.',
       color: 'error'

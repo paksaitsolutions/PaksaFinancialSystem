@@ -119,8 +119,8 @@ export const useAuthStore = defineStore('auth', () => {
     if (!user.value) return;
     
     try {
-      const response = await api.get(`/company/user/${user.value.id}/companies`);
-      companies.value = response.data;
+      const response = await api.get<Company[]>(`/company/user/${user.value.id}/companies`);
+      companies.value = response || [];
       
       // Set current company from localStorage or first company
       const savedCompanyId = localStorage.getItem('currentCompany');
@@ -149,8 +149,8 @@ export const useAuthStore = defineStore('auth', () => {
     if (!token.value) return;
     
     try {
-      const response = await api.get('/auth/me');
-      user.value = response.data;
+      const response = await api.get<User>('/auth/me');
+      user.value = response;
       await loadUserCompanies();
     } catch (error: any) {
       console.error('Auth initialization error:', error);
