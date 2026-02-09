@@ -2,10 +2,12 @@
 Database configuration and session management.
 """
 import os
-from sqlalchemy import create_engine
+import time
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy.pool import StaticPool
 from app.core.config.settings import settings
+from app.core.observability import metrics_store
 
 # Create sync engine (avoiding async issues)
 sync_db_url = settings.DATABASE_URL.replace("sqlite+aiosqlite", "sqlite")
@@ -22,6 +24,19 @@ else:
         sync_db_url,
         echo=settings.DEBUG
     )
+
+
+@event.listens_for(engine, "before_cursor_execute")
+def before_cursor_execute(conn, cursor, statement, parameters, context, executemany):  # noqa: D401
+    conn.info.setdefault("query_start_time", []).append(time.perf_counter())
+
+
+@event.listens_for(engine, "after_cursor_execute")
+def after_cursor_execute(conn, cursor, statement, parameters, context, executemany):  # noqa: D401
+    start_times = conn.info.get("query_start_time", [])
+    if start_times:
+        duration_ms = (time.perf_counter() - start_times.pop()) * 1000
+        metrics_store.record_db_span(duration_ms)
 
 # Create session factory
 SessionLocal = sessionmaker(

@@ -622,6 +622,12 @@ const mainAppRoute: AppRouteRecordRaw = {
       meta: { title: 'Tax Management' }
     },
     {
+      path: 'tax/management',
+      name: 'TaxManagementWorkspace',
+      component: () => import('@/modules/tax/views/TaxManagementView.vue'),
+      meta: { title: 'Tax Management Workspace' }
+    },
+    {
       path: 'tax/codes',
       name: 'TaxCodes',
       component: () => import('@/modules/tax/views/TaxCodes.vue'),
@@ -866,6 +872,18 @@ const mainAppRoute: AppRouteRecordRaw = {
       name: 'SystemHealthDashboard',
       component: () => import('@/modules/super-admin/views/SystemHealthDashboard.vue'),
       meta: { title: 'System Health Dashboard', requiresAdmin: true }
+    },
+    {
+      path: 'admin/data-quality',
+      name: 'DataQualityDashboard',
+      component: () => import('@/modules/super-admin/views/DataQualityDashboard.vue'),
+      meta: { title: 'Data Quality Dashboard', requiresAdmin: true }
+    },
+    {
+      path: 'admin/security-compliance',
+      name: 'SecurityComplianceDashboard',
+      component: () => import('@/modules/super-admin/views/SecurityComplianceDashboard.vue'),
+      meta: { title: 'Security & Compliance', requiresAdmin: true }
     },
     // Profile
     {

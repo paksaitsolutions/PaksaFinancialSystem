@@ -31,6 +31,12 @@ type RequestConfig = AxiosRequestConfig & {
    * Custom success message to show when the request succeeds
    */
   successMessage?: string;
+
+  /**
+   * Optional idempotency key for safe retry behavior on POST/PUT endpoints.
+   * When set to true, a UUID will be generated automatically.
+   */
+  idempotencyKey?: string | boolean;
 };
 
 /**
@@ -55,6 +61,15 @@ function createApiClient(baseURL: string): AxiosInstance {
       if (config.requireAuth !== false && authStore.isAuthenticated) {
         config.headers = config.headers || {};
         config.headers.Authorization = `Bearer ${authStore.token}`;
+      }
+
+      if (config.idempotencyKey) {
+        config.headers = config.headers || {};
+        const key =
+          config.idempotencyKey === true
+            ? (crypto?.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`)
+            : config.idempotencyKey;
+        config.headers['Idempotency-Key'] = key;
       }
       
       return config;
@@ -88,6 +103,8 @@ function createApiClient(baseURL: string): AxiosInstance {
       // Default error message
       let message = errorMessage || 'An error occurred';
       let status = error.response?.status;
+      const requestId = (error.response?.headers?.['x-request-id'] ||
+        error.response?.headers?.['X-Request-ID']) as string | undefined;
       
       // Handle specific HTTP status codes
       if (error.response) {
@@ -146,6 +163,7 @@ function createApiClient(baseURL: string): AxiosInstance {
         message,
         status,
         code: error.code,
+        requestId,
         response: error.response,
         isAxiosError: error.isAxiosError,
         toJSON: error.toJSON,

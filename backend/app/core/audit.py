@@ -1,146 +1,63 @@
-"""
-Enterprise-level audit logging system for compliance and security.
-"""
+"""Audit event utilities for state transition logging."""
+
+from __future__ import annotations
+
 import json
-import uuid
-from datetime import datetime
-from typing import Any, Dict, Optional, List
 from enum import Enum
-from sqlalchemy import Column, String, DateTime, Text, Boolean, Integer
-from sqlalchemy.dialects.postgresql import UUID, JSONB
-from sqlalchemy import JSON
+from typing import Any, Dict, Optional
+
 from sqlalchemy.orm import Session
-from app.core.database import Base
-from app.models.user import User
+
+from app.models.core_models import AuditEvent
 
 
 class AuditAction(str, Enum):
-    """Audit action types."""
-    CREATE = "CREATE"
-    READ = "READ"
-    UPDATE = "UPDATE"
-    DELETE = "DELETE"
-    LOGIN = "LOGIN"
-    LOGOUT = "LOGOUT"
-    APPROVE = "APPROVE"
-    REJECT = "REJECT"
-    EXPORT = "EXPORT"
-    IMPORT = "IMPORT"
-    BACKUP = "BACKUP"
-    RESTORE = "RESTORE"
-    CONFIGURE = "CONFIGURE"
-
-
-class AuditLevel(str, Enum):
-    """Audit severity levels."""
-    LOW = "LOW"
-    MEDIUM = "MEDIUM"
-    HIGH = "HIGH"
-    CRITICAL = "CRITICAL"
-
-
-class AuditLog(Base):
-    """Audit log model for tracking all system activities."""
-    
-    __tablename__ = "audit_logs"
-    
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), nullable=True)
-    session_id = Column(String(255), nullable=True)
-    action = Column(String(50), nullable=False)
-    resource_type = Column(String(100), nullable=False)
-    resource_id = Column(String(255), nullable=True)
-    resource_name = Column(String(255), nullable=True)
-    old_values = Column(JSON, nullable=True)
-    new_values = Column(JSON, nullable=True)
-    ip_address = Column(String(45), nullable=True)
-    user_agent = Column(Text, nullable=True)
-    endpoint = Column(String(255), nullable=True)
-    method = Column(String(10), nullable=True)
-    status_code = Column(Integer, nullable=True)
-    level = Column(String(20), default=AuditLevel.MEDIUM)
-    message = Column(Text, nullable=True)
-    audit_metadata = Column(JSON, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    company_id = Column(String(255), nullable=True)
-    tenant_id = Column(String(255), nullable=True)
+    CREATE = "create"
+    UPDATE = "update"
+    DELETE = "delete"
+    APPROVE = "approve"
+    POST = "post"
+    REVERSE = "reverse"
 
 
 class AuditLogger:
-    """Centralized audit logging service."""
-    
-    def __init__(self, db: Session):
+    def __init__(self, db: Session) -> None:
         self.db = db
-    
+
     def log(
         self,
         action: AuditAction,
         resource_type: str,
-        user_id: Optional[str] = None,
-        resource_id: Optional[str] = None,
-        resource_name: Optional[str] = None,
-        old_values: Optional[Dict[str, Any]] = None,
-        new_values: Optional[Dict[str, Any]] = None,
-        level: AuditLevel = AuditLevel.MEDIUM,
-        message: Optional[str] = None,
-        audit_metadata: Optional[Dict[str, Any]] = None,
-        ip_address: Optional[str] = None,
-        user_agent: Optional[str] = None,
-        endpoint: Optional[str] = None,
-        method: Optional[str] = None,
-        status_code: Optional[int] = None,
-        session_id: Optional[str] = None,
-        company_id: Optional[str] = None,
-        tenant_id: Optional[str] = None
-    ) -> AuditLog:
-        """Log an audit event."""
-        
-        audit_entry = AuditLog(
-            user_id=user_id,
-            session_id=session_id,
-            action=action.value,
-            resource_type=resource_type,
-            resource_id=resource_id,
-            resource_name=resource_name,
-            old_values=old_values,
-            new_values=new_values,
-            ip_address=ip_address,
-            user_agent=user_agent,
-            endpoint=endpoint,
-            method=method,
-            status_code=status_code,
-            level=level.value,
-            message=message,
-            audit_metadata=audit_metadata,
-            company_id=company_id,
-            tenant_id=tenant_id
-        )
-        
-        self.db.add(audit_entry)
-        self.db.commit()
-        return audit_entry
-    
-    def log_create(
-        self,
-        resource_type: str,
-        resource_id: str,
-        new_values: Dict[str, Any],
-        user_id: Optional[str] = None,
-        **kwargs
-    ) -> AuditLog:
-        """Log resource creation."""
-        return self.log(
-            action=AuditAction.CREATE,
-            resource_type=resource_type,
-            resource_id=resource_id,
-            new_values=new_values,
-            user_id=user_id,
-            level=AuditLevel.MEDIUM,
-            message=f"Created {resource_type} with ID {resource_id}",
-            **kwargs
+        resource_id: str | None = None,
+        user_id: str | None = None,
+        company_id: str | None = None,
+        tenant_id: str | None = None,
+        **kwargs: Any,
+    ) -> None:
+        log_audit_event(
+            db=self.db,
+            entity_type=resource_type,
+            entity_id=resource_id or "-",
+            event_type=action.value,
+            actor_id=user_id,
+            metadata={"company_id": company_id, "tenant_id": tenant_id, **kwargs},
         )
 
 
-def get_audit_logger(db: Session) -> AuditLogger:
-    """Get audit logger instance."""
-    return AuditLogger(db)
+def log_audit_event(
+    db: Session,
+    entity_type: str,
+    entity_id: str,
+    event_type: str,
+    actor_id: Optional[str] = None,
+    metadata: Optional[Dict[str, Any]] = None,
+) -> None:
+    event = AuditEvent(
+        entity_type=entity_type,
+        entity_id=entity_id,
+        event_type=event_type,
+        actor_id=actor_id,
+        metadata_json=json.dumps(metadata or {}, default=str),
+    )
+    db.add(event)
+    db.commit()

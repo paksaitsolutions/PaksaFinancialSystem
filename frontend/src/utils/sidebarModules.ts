@@ -80,6 +80,7 @@ export interface SidebarModuleItem {
     {
       title: 'Tax', icon: 'pi pi-receipt', children: [
         { title: 'Dashboard', icon: 'pi pi-chart-bar', to: '/tax' },
+        { title: 'Management', icon: 'pi pi-sliders-h', to: '/tax/management' },
         { title: 'Rates', icon: 'pi pi-percentage', to: '/tax/rates' },
         { title: 'Exemptions', icon: 'pi pi-ban', to: '/tax/exemptions' },
         { title: 'Compliance', icon: 'pi pi-shield', to: '/tax/compliance' },
@@ -175,6 +176,8 @@ export interface SidebarModuleItem {
         { title: 'Dashboard', icon: 'pi pi-chart-bar', to: '/admin' },
         { title: 'Companies', icon: 'pi pi-building', to: '/admin/companies' },
         { title: 'Analytics', icon: 'pi pi-chart-line', to: '/admin/analytics' },
+        { title: 'Data Quality', icon: 'pi pi-database', to: '/admin/data-quality' },
+        { title: 'Security & Compliance', icon: 'pi pi-lock', to: '/admin/security-compliance' },
         { title: 'Monitoring', icon: 'pi pi-desktop', to: '/admin/monitoring' },
         { title: 'Configuration', icon: 'pi pi-cog', to: '/admin/configuration' },
         { title: 'Role Management', icon: 'pi pi-key', to: '/rbac' },

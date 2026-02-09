@@ -771,6 +771,74 @@ class TaxTransaction(Base, AuditMixin):
     reference_number = Column(String(100))
     description = Column(Text)
 
+
+class SalesTaxNexus(Base, AuditMixin):
+    """Sales tax nexus tracking by jurisdiction."""
+    __tablename__ = "sales_tax_nexus"
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
+    jurisdiction = Column(String(100), nullable=False)
+    nexus_type = Column(String(50), nullable=False)  # economic, physical, marketplace, etc.
+    effective_date = Column(Date, nullable=False)
+    threshold_amount = Column(Numeric(15, 2), default=0)
+    threshold_transactions = Column(Integer, default=0)
+    current_sales = Column(Numeric(15, 2), default=0)
+    status = Column(String(20), default="tracking")
+    last_evaluated_at = Column(DateTime)
+    notes = Column(Text)
+
+
+class TaxAutomationRule(Base, AuditMixin):
+    """Automation rules for tax workflows."""
+    __tablename__ = "tax_automation_rules"
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
+    name = Column(String(255), nullable=False)
+    tax_type = Column(String(50), nullable=False)
+    jurisdiction = Column(String(100))
+    trigger_event = Column(String(100), nullable=False)
+    threshold_amount = Column(Numeric(15, 2), default=0)
+    action = Column(String(100), nullable=False)
+    schedule_cron = Column(String(100))
+    priority = Column(Integer, default=1)
+    is_active = Column(Boolean, default=True)
+    last_triggered_at = Column(DateTime)
+
+
+class TaxEFilingIntegration(Base, AuditMixin):
+    """E-filing provider integration settings."""
+    __tablename__ = "tax_efiling_integrations"
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
+    provider = Column(String(100), nullable=False)
+    environment = Column(String(50), default="sandbox")
+    status = Column(String(20), default="configured")
+    connection_reference = Column(String(255))
+    last_sync_at = Column(DateTime)
+    credentials_last_rotated_at = Column(DateTime)
+
+
+class TaxPaymentSchedule(Base, AuditMixin):
+    """Scheduled tax payments."""
+    __tablename__ = "tax_payment_schedules"
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), nullable=False, index=True)
+    tax_return_id = Column(GUID(), ForeignKey("tax_returns.id"))
+    jurisdiction = Column(String(100))
+    scheduled_date = Column(Date, nullable=False)
+    amount = Column(Numeric(15, 2), nullable=False)
+    status = Column(String(20), default="scheduled")
+    payment_method = Column(String(50))
+    reference = Column(String(100))
+    paid_at = Column(DateTime)
+    notes = Column(Text)
+
+    tax_return = relationship("TaxReturn")
+
 # CashTransaction model exists in reconciliation_core.py - removed duplicate
 
 # ============================================================================

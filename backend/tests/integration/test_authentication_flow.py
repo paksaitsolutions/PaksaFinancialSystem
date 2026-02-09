@@ -9,7 +9,6 @@ os.environ.setdefault("DEMO_MODE", "true")
 
 from app.main import app
 
-client = TestClient(app)
 
 
 class TestAuthenticationFlow:

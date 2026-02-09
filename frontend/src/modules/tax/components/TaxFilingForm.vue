@@ -1,5 +1,13 @@
 <template>
   <div class="tax-filing-form">
+    <ErrorPanel
+      v-if="submissionError"
+      :visible="!!submissionError"
+      title="Unable to submit tax filing"
+      :message="submissionError.message"
+      :request-id="submissionError.requestId"
+      :details="submissionError.details"
+    />
     <form @submit.prevent="handleSubmit">
       <div class="grid">
         <!-- Basic Information -->
@@ -18,8 +26,10 @@
                 optionValue="code"
                 placeholder="Select Tax Type"
                 :class="{ 'p-invalid': errors.tax_type }"
+                :aria-invalid="!!errors.tax_type"
+                :aria-describedby="errors.tax_type ? 'tax_type_error' : undefined"
               />
-              <small v-if="errors.tax_type" class="p-error">{{ errors.tax_type[0] }}</small>
+              <small v-if="errors.tax_type" id="tax_type_error" class="p-error">{{ errors.tax_type[0] }}</small>
             </div>
 
             <!-- Jurisdiction -->
@@ -33,6 +43,8 @@
                 optionValue="id"
                 placeholder="Select Jurisdiction"
                 :class="{ 'p-invalid': errors.jurisdiction_id }"
+                :aria-invalid="!!errors.jurisdiction_id"
+                :aria-describedby="errors.jurisdiction_id ? 'jurisdiction_error' : undefined"
                 :loading="loadingJurisdictions"
                 :filter="true"
               >
@@ -48,7 +60,7 @@
                   <div>{{ slotProps.option.name }} ({{ slotProps.option.code }})</div>
                 </template>
               </Dropdown>
-              <small v-if="errors.jurisdiction_id" class="p-error">{{ errors.jurisdiction_id[0] }}</small>
+              <small v-if="errors.jurisdiction_id" id="jurisdiction_error" class="p-error">{{ errors.jurisdiction_id[0] }}</small>
             </div>
 
             <!-- Tax Period -->
@@ -62,12 +74,23 @@
                 optionValue="id"
                 placeholder="Select Tax Period"
                 :class="{ 'p-invalid': errors.tax_period_id }"
+                :aria-invalid="!!errors.tax_period_id"
+                :aria-describedby="errors.tax_period_id ? 'tax_period_error' : undefined"
                 :loading="loadingPeriods"
               >
                 <template #value="slotProps">
                   <div v-if="slotProps.value">
                     {{ getPeriodName(slotProps.value) }}
-              <small v-if="errors.tax_period_id" class="p-error">{{ errors.tax_period_id[0] }}</small>
+                  </div>
+                  <span v-else>
+                    {{ slotProps.placeholder }}
+                  </span>
+                </template>
+                <template #option="slotProps">
+                  <div>{{ slotProps.option.name }}</div>
+                </template>
+              </Dropdown>
+              <small v-if="errors.tax_period_id" id="tax_period_error" class="p-error">{{ errors.tax_period_id[0] }}</small>
             </div>
 
             <!-- Due Date -->
@@ -80,9 +103,11 @@
                 dateFormat="yy-mm-dd"
                 :showIcon="true"
                 :class="{ 'p-invalid': errors.due_date }"
+                :aria-invalid="!!errors.due_date"
+                :aria-describedby="errors.due_date ? 'due_date_error' : undefined"
                 :disabled="submitting"
               />
-              <small v-if="errors.due_date" class="p-error">{{ errors.due_date[0] }}</small>
+              <small v-if="errors.due_date" id="due_date_error" class="p-error">{{ errors.due_date[0] }}</small>
             </div>
           </div>
 
@@ -102,9 +127,11 @@
                   optionValue="code"
                   placeholder="Select Currency"
                   :class="{ 'p-invalid': errors.currency }"
+                  :aria-invalid="!!errors.currency"
+                  :aria-describedby="errors.currency ? 'currency_error' : undefined"
                   :disabled="submitting"
                 />
-                <small v-if="errors.currency" class="p-error">{{ errors.currency[0] }}</small>
+                <small v-if="errors.currency" id="currency_error" class="p-error">{{ errors.currency[0] }}</small>
               </div>
 
               <!-- Tax Amount -->
@@ -119,9 +146,11 @@
                   :maxFractionDigits="2"
                   :min="0"
                   :class="{ 'p-invalid': errors.tax_amount }"
+                  :aria-invalid="!!errors.tax_amount"
+                  :aria-describedby="errors.tax_amount ? 'tax_amount_error' : undefined"
                   :disabled="submitting || autoCalculate"
                 />
-                <small v-if="errors.tax_amount" class="p-error">{{ errors.tax_amount[0] }}</small>
+                <small v-if="errors.tax_amount" id="tax_amount_error" class="p-error">{{ errors.tax_amount[0] }}</small>
               </div>
 
               <!-- Penalty Amount -->
@@ -274,6 +303,8 @@ import { useConfirm } from 'primevue/useconfirm';
 import { useTaxFilingStore } from '../store/filing';
 import { useAuthStore } from '@/stores/auth';
 import type { TaxFiling, TaxFilingCreate, TaxFilingAttachment } from '../types/filing';
+import ErrorPanel from '@/components/common/ErrorPanel.vue';
+import { validateSchema } from '@/utils/formValidation';
 
 const props = defineProps({
   filingId: {
@@ -325,6 +356,19 @@ const formData = ref<TaxFilingFormData>({
 const errors = ref<Record<string, string[]>>({});
 const submitting = ref(false);
 const isEditing = computed(() => !!props.filingId);
+const submissionError = ref<{ message: string; requestId?: string; details?: string[] } | null>(null);
+
+const filingSchema = {
+  tax_type: { required: true, label: 'Tax type' },
+  jurisdiction_id: { required: true, label: 'Jurisdiction' },
+  tax_period_id: { required: true, label: 'Tax period' },
+  due_date: { required: true, label: 'Due date' },
+  currency: { required: true, label: 'Currency' },
+  tax_amount: {
+    label: 'Tax amount',
+    custom: (value: number) => (value > 0 ? null : 'Tax amount must be greater than 0')
+  }
+};
 
 // Tax types
 const taxTypes = ref([
@@ -659,41 +703,29 @@ const removeAttachment = async (index: number) => {
 };
 
 const validateForm = (): boolean => {
+  const validation = validateSchema(formData.value, filingSchema);
   const newErrors: Record<string, string[]> = {};
-  
-  if (!formData.value.tax_type) {
-    newErrors.tax_type = ['Tax type is required'];
+
+  Object.entries(validation.errors).forEach(([key, message]) => {
+    newErrors[key] = [message];
+  });
+
+  if (formData.value.due_date) {
+    const dueDate = new Date(formData.value.due_date);
+    if (minDueDate.value && dueDate < minDueDate.value) {
+      newErrors.due_date = [`Due date cannot be before ${minDueDate.value.toLocaleDateString()}`];
+    }
+    if (maxDueDate.value && dueDate > maxDueDate.value) {
+      newErrors.due_date = [`Due date cannot be after ${maxDueDate.value.toLocaleDateString()}`];
+    }
   }
-  
-  if (!formData.value.jurisdiction_id) {
-    newErrors.jurisdiction_id = ['Jurisdiction is required'];
-  }
-  
-  if (!formData.value.tax_period_id) {
-    newErrors.tax_period_id = ['Tax period is required'];
-  }
-  
-  if (!formData.value.due_date) {
-    newErrors.due_date = ['Due date is required'];
-  } else if (minDueDate.value && new Date(formData.value.due_date) < minDueDate.value) {
-    newErrors.due_date = [`Due date cannot be before ${minDueDate.value.toLocaleDateString()}`];
-  } else if (maxDueDate.value && new Date(formData.value.due_date) > maxDueDate.value) {
-    newErrors.due_date = [`Due date cannot be after ${maxDueDate.value.toLocaleDateString()}`];
-  }
-  
-  if (!formData.value.currency) {
-    newErrors.currency = ['Currency is required'];
-  }
-  
-  if (!formData.value.tax_amount || formData.value.tax_amount <= 0) {
-    newErrors.tax_amount = ['Tax amount must be greater than 0'];
-  }
-  
+
   errors.value = newErrors;
   return Object.keys(newErrors).length === 0;
 };
 
 const handleSubmit = async () => {
+  submissionError.value = null;
   if (!validateForm()) {
     // Show the first error message to the user
     const firstError = Object.values(errors.value)[0]?.[0] || 'Please fill in all required fields correctly.';
@@ -757,6 +789,10 @@ const handleSubmit = async () => {
     
   } catch (error: any) {
     console.error('Error saving tax filing:', error);
+    submissionError.value = {
+      message: 'Failed to submit tax filing. Please review the form and try again.',
+      requestId: error?.requestId || error?.response?.headers?.['x-request-id']
+    };
     
     if (error.response?.data?.errors) {
       // Handle validation errors
