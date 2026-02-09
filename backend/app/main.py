@@ -36,6 +36,7 @@ from app.middleware.observability import ObservabilityMiddleware
 from app.core.observability import get_trace_context, metrics_store
 from app.services.system_health import get_liveness_payload, get_readiness_payload
 from app.services.observability_slo import get_slo_status
+from app.services.system_health import get_liveness_payload, get_readiness_payload
 
 # Import routers
 from app.modules.core_financials.payroll.api import router as payroll_router
@@ -110,7 +111,6 @@ app = FastAPI(
 )
 
 app.add_middleware(RequestIDMiddleware)
-app.add_middleware(ObservabilityMiddleware)
 
 # Security middleware
 from app.middleware.security import SecurityMiddleware, CSRFMiddleware
@@ -253,21 +253,6 @@ async def readiness_check(response: Response):
         response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
     return readiness
 
-
-@app.get("/api/v1/observability/metrics")
-async def get_observability_metrics():
-    return metrics_store.snapshot()
-
-
-@app.get("/api/v1/observability/slo-status")
-async def get_observability_slo_status():
-    return get_slo_status()
-
-
-@app.get("/api/v1/observability/trace")
-async def get_observability_trace_context():
-    return get_trace_context()
-
 # Security status endpoint
 @app.get("/api/security/status")
 async def security_status(user=Depends(get_current_user)):
@@ -351,12 +336,11 @@ async def login(username: str = Form(), password: str = Form(), db: Session = De
     # Optional fallback for demo mode only
     if os.getenv("DEMO_MODE", "false").lower() == "true":
         if username == "admin@paksa.com" and password == "admin123":
-            refresh_token = issue_refresh_token(db, "demo-admin")
             return {
                 "access_token": "demo-jwt-token-12345",
                 "token_type": "bearer",
                 "expires_in": 3600,
-                "refresh_token": refresh_token,
+                "refresh_token": "demo-refresh-token-12345",
             }
 
     raise HTTPException(status_code=401, detail="Invalid credentials")
@@ -418,10 +402,8 @@ def api_login(
         if payload.email == "admin@paksa.com" and payload.password == "admin123":
             print("Demo credentials accepted")
             token = create_access_token(subject="demo-admin")
-            refresh_token = issue_refresh_token(db, "demo-admin")
             return {
                 "access_token": token,
-                "refresh_token": refresh_token,
                 "user": {
                     "id": "demo-admin",
                     "email": payload.email,
@@ -628,9 +610,7 @@ async def api_v1_verify_token(current_user=Depends(get_current_user)):
 
 
 @app.post("/api/v1/auth/logout")
-async def api_v1_logout(refresh_token: Optional[str] = Body(None), db: Session = Depends(get_db)):
-    if refresh_token:
-        revoke_refresh_token(db, refresh_token)
+async def api_v1_logout():
     return {"message": "Logged out successfully"}
 
 
@@ -645,28 +625,14 @@ async def api_v1_reset_password(payload: ResetPasswordRequest):
 
 
 @app.post("/api/v1/auth/refresh-token")
-async def api_v1_refresh_token(payload: RefreshTokenRequest, db: Session = Depends(get_db)):
-    if os.getenv("DEMO_MODE", "false").lower() == "true" and payload.refresh_token.startswith("demo-refresh-token"):
-        access_token = create_access_token(subject="demo-admin")
+async def api_v1_refresh_token(payload: RefreshTokenRequest):
+    if payload.refresh_token == "demo-refresh-token-12345":
         return {
-            "access_token": access_token,
-            "refresh_token": payload.refresh_token,
+            "access_token": "demo-jwt-token-refreshed-12345",
             "token_type": "bearer",
             "expires_in": 3600,
         }
-    try:
-        token_payload = SecurityManager.verify_token(payload.refresh_token, token_type="refresh")
-        user_id = token_payload.get("sub")
-        rotated = rotate_refresh_token(db=db, token=payload.refresh_token)
-        access_token = create_access_token(subject=str(user_id))
-        return {
-            "access_token": access_token,
-            "refresh_token": rotated["refresh_token"],
-            "token_type": "bearer",
-            "expires_in": 3600,
-        }
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid refresh token")
+    raise HTTPException(status_code=401, detail="Invalid refresh token")
 
 
 # General Ledger endpoints
@@ -1318,23 +1284,9 @@ async def process_ap_batch_payments(db=Depends(get_db)):
     return success_response(message="Batch payments processed successfully")
 
 @app.post("/api/v1/ap/payments")
-async def create_ap_payment(payment_data: dict, request: Request, db=Depends(get_db)):
+async def create_ap_payment(payment_data: dict, db=Depends(get_db)):
     from app.models.core_models import APPayment, Vendor, VendorPaymentInstruction
     import uuid
-
-    idempotency_key = request.headers.get("Idempotency-Key")
-    if idempotency_key:
-        try:
-            cached = get_idempotency_response(
-                db=db,
-                key=idempotency_key,
-                endpoint="/api/v1/ap/payments",
-                payload=payment_data,
-            )
-        except ValueError as exc:
-            raise HTTPException(status_code=409, detail=str(exc))
-        if cached:
-            return JSONResponse(status_code=cached["status_code"], content=cached["body"])
 
     vendor_id = payment_data.get("vendor_id")
     vendor = db.query(Vendor).filter(Vendor.id == vendor_id).first() if vendor_id else None
@@ -1371,28 +1323,11 @@ async def create_ap_payment(payment_data: dict, request: Request, db=Depends(get
     db.add(payment)
     db.commit()
     db.refresh(payment)
-    response_payload = {
+    return {
         "id": str(payment.id),
         "payment_number": payment.payment_number,
         "payment_method": payment.payment_method.value if hasattr(payment.payment_method, "value") else payment.payment_method,
     }
-    if idempotency_key:
-        save_idempotency_response(
-            db=db,
-            key=idempotency_key,
-            endpoint="/api/v1/ap/payments",
-            payload=payment_data,
-            response_body=response_payload,
-            status_code=200,
-        )
-    log_audit_event(
-        db=db,
-        entity_type="ap_payment",
-        entity_id=str(payment.id),
-        event_type="created",
-        metadata={"vendor_id": str(vendor.id), "payment_method": payment_method},
-    )
-    return response_payload
 @app.get("/api/v1/ar/customers")
 async def get_customers(db: Session = Depends(get_db)):
     from app.services.ar_service import ARService

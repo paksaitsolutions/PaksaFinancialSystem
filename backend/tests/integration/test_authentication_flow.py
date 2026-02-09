@@ -1,18 +1,26 @@
 """
 Integration tests for authentication flows and security.
 """
+import os
+
+from fastapi.testclient import TestClient
+
+os.environ.setdefault("DEMO_MODE", "true")
+
+from app.main import app
+
 
 
 class TestAuthenticationFlow:
     """Test authentication flows and security"""
 
-    def _login_and_get_token(self, client) -> str:
+    def _login_and_get_token(self) -> str:
         login_data = {"email": "admin@paksa.com", "password": "admin123"}
         response = client.post("/auth/login", json=login_data)
         assert response.status_code == 200
         return response.json()["access_token"]
 
-    def test_login_flow(self, client):
+    def test_login_flow(self):
         """Test complete login flow"""
         response = client.post("/auth/login", json={"email": "admin@paksa.com", "password": "admin123"})
         assert response.status_code == 200
@@ -22,20 +30,20 @@ class TestAuthenticationFlow:
         assert "user" in data
         assert data["user"]["email"] == "admin@paksa.com"
 
-    def test_login_invalid_credentials(self, client):
+    def test_login_invalid_credentials(self):
         response = client.post("/auth/login", json={"email": "invalid@example.com", "password": "wrongpassword"})
         assert response.status_code == 401
 
-    def test_token_authentication(self, client):
-        token = self._login_and_get_token(client)
+    def test_token_authentication(self):
+        token = self._login_and_get_token()
         response = client.get("/auth/verify-token", headers={"Authorization": f"Bearer {token}"})
         assert response.status_code == 200
 
-    def test_user_info_endpoint_requires_token(self, client):
+    def test_user_info_endpoint_requires_token(self):
         unauthorized_response = client.get("/auth/me")
         assert unauthorized_response.status_code == 403
 
-        token = self._login_and_get_token(client)
+        token = self._login_and_get_token()
         response = client.get("/auth/me", headers={"Authorization": f"Bearer {token}"})
         assert response.status_code in [200, 404]
         if response.status_code == 200:
@@ -43,7 +51,7 @@ class TestAuthenticationFlow:
             assert "email" in data
             assert "full_name" in data
 
-    def test_api_v1_auth_endpoints_json_contract(self, client):
+    def test_api_v1_auth_endpoints_json_contract(self):
         login_response = client.post("/api/v1/auth/login", json={"email": "admin@paksa.com", "password": "admin123"})
         assert login_response.status_code in [200, 500]
 
@@ -62,8 +70,8 @@ class TestAuthenticationFlow:
         )
         assert refresh_response.status_code == 200
 
-    def test_api_v1_auth_me_and_verify_token(self, client):
-        token = self._login_and_get_token(client)
+    def test_api_v1_auth_me_and_verify_token(self):
+        token = self._login_and_get_token()
 
         verify = client.get("/api/v1/auth/verify-token", headers={"Authorization": f"Bearer {token}"})
         assert verify.status_code == 200
@@ -71,14 +79,12 @@ class TestAuthenticationFlow:
         me = client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {token}"})
         assert me.status_code in [200, 404]
 
-    def test_logout_flow(self, client):
+    def test_logout_flow(self):
         response = client.post("/auth/logout")
         assert response.status_code == 200
         assert "message" in response.json()
 
-    def test_registration_flow_form_and_json(self, client):
-        import os
-
+    def test_registration_flow_form_and_json(self):
         suffix = os.urandom(3).hex()
         form_email = f"testuser_{suffix}@example.com"
         json_email = f"apiuser_{suffix}@example.com"
@@ -105,15 +111,15 @@ class TestAuthenticationFlow:
         )
         assert json_response.status_code in [200, 400, 409, 500]
 
-    def test_password_reset_flow_legacy_endpoints(self, client):
+    def test_password_reset_flow_legacy_endpoints(self):
         assert client.post("/auth/forgot-password", data={"email": "admin@paksa.com"}).status_code == 200
         assert client.post("/auth/reset-password", data={"token": "test-token", "password": "newpassword"}).status_code == 200
 
-    def test_oauth_token_endpoint(self, client):
+    def test_oauth_token_endpoint(self):
         response = client.post("/auth/token", data={"username": "admin@paksa.com", "password": "admin123"})
         assert response.status_code in [200, 500]
 
-    def test_security_headers(self, client):
+    def test_security_headers(self):
         response = client.get("/health")
         assert response.status_code == 200
         assert "x-content-type-options" in response.headers

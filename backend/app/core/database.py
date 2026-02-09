@@ -82,9 +82,7 @@ def init_db():
             TaxRate, FinancialPeriod, Budget, FixedAsset,
             Company, Currency, ExchangeRate,
             BankFeedConnection, CashConcentrationRule,
-            ZeroBalanceAccountConfig, InvestmentSweepConfig,
-            IdempotencyKey, RefreshToken, AuditEvent, CompensationAction,
-            SalesTaxNexus, TaxAutomationRule, TaxEFilingIntegration, TaxPaymentSchedule
+            ZeroBalanceAccountConfig, InvestmentSweepConfig
         )
         print("[OK] Core models imported")
     except ImportError as e:

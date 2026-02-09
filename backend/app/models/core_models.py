@@ -1032,55 +1032,6 @@ class BankAccount(Base, AuditMixin):
     is_active = Column(Boolean, default=True)
 
 
-class IdempotencyKey(Base, AuditMixin):
-    """Idempotency keys for safe retries on posting endpoints."""
-    __tablename__ = "idempotency_keys"
-
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    key = Column(String(128), nullable=False, unique=True, index=True)
-    endpoint = Column(String(255), nullable=False)
-    request_hash = Column(String(64), nullable=False)
-    response_body = Column(Text)
-    status_code = Column(Integer, default=200)
-
-
-class RefreshToken(Base, AuditMixin):
-    """Refresh token persistence with rotation and revocation."""
-    __tablename__ = "refresh_tokens"
-
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    user_id = Column(String(100), nullable=False, index=True)
-    token = Column(String(255), nullable=False, unique=True, index=True)
-    issued_at = Column(DateTime, default=datetime.utcnow)
-    expires_at = Column(DateTime, nullable=False)
-    revoked_at = Column(DateTime)
-    replaced_by_token = Column(String(255))
-
-
-class AuditEvent(Base, AuditMixin):
-    """Audit event schema for state transition tracking."""
-    __tablename__ = "audit_events"
-
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    entity_type = Column(String(100), nullable=False, index=True)
-    entity_id = Column(String(100), nullable=False, index=True)
-    event_type = Column(String(100), nullable=False)
-    actor_id = Column(String(100))
-    metadata_json = Column(Text)
-
-
-class CompensationAction(Base, AuditMixin):
-    """Compensating transaction record for partial-failure recovery."""
-    __tablename__ = "compensation_actions"
-
-    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    entity_type = Column(String(100), nullable=False, index=True)
-    entity_id = Column(String(100), nullable=False, index=True)
-    reason = Column(String(255), nullable=False)
-    status = Column(String(20), default="pending")
-    payload = Column(Text)
-
-
 class BankFeedConnection(Base, AuditMixin):
     """Automated bank feed integration profile."""
     __tablename__ = "bank_feed_connections"

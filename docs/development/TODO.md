@@ -74,6 +74,46 @@
 - [x] Add E2E financial scenario tests (monthly close, vendor payment cycle, tax filing)
 - [x] Add frontend Playwright smoke suite for login + posting + reporting paths
 - [x] Enforce PR quality gate: unit + integration + contract + e2e smoke
+- [ ] Define canonical workflow contracts for Quote → Order → Invoice → Payment → GL Posting
+- [ ] Enforce idempotency keys for posting/payment endpoints
+- [ ] Add compensating transaction patterns for partial failures
+- [ ] Add audit event schema for all state transitions
+
+### 2) Data Integrity & DB Governance (P0)
+- [ ] Add migration guardrails (forward-only + rollback playbooks per release)
+- [ ] Add DB constraints review (FKs, unique keys, check constraints) per module
+- [ ] Add reconciliation jobs for cross-module balances (AR/AP/Cash/GL)
+- [ ] Add data quality dashboards (orphaned records, posting gaps, stale states)
+
+### 3) Security & Compliance Hardening (P0)
+- [ ] Enforce MFA for privileged roles and super-admin routes
+- [ ] Add refresh-token rotation + revocation list persistence
+- [ ] Add PII field-level encryption review and key-rotation runbook
+- [ ] Add SOX-style approval matrix checks for high-risk actions
+
+### 4) Frontend Form Reliability & UX Consistency (P1)
+- [ ] Implement consistent form schema validation for high-value forms (AP/AR/Payroll/Tax)
+- [ ] Add optimistic UI only for safe operations; fallback to server truth on posting flows
+- [ ] Add standardized error panel with correlation ID display for support
+- [ ] Add accessibility pass (keyboard nav, labels, contrast) for finance-critical screens
+
+### 5) API Contract Maturity (P1)
+- [ ] Publish versioned OpenAPI contract snapshots per release
+- [ ] Add consumer-driven contract tests for frontend critical services
+- [ ] Add strict response envelope conformance tests
+- [ ] Add backward-compatibility policy and deprecation calendar
+
+### 6) Observability & SRE Readiness (P1)
+- [ ] Add RED metrics (Rate/Errors/Duration) per domain endpoint
+- [ ] Add distributed tracing across API + async jobs + DB spans
+- [ ] Add alerting SLOs for auth, posting latency, reconciliation failures
+- [ ] Add operational runbooks for incident classes (auth outage, posting drift, DB saturation)
+
+### 7) Testing Gate Upgrade (P0)
+- [ ] Make full backend integration suite green in CI using seeded test DB fixtures
+- [ ] Add E2E financial scenario tests (monthly close, vendor payment cycle, tax filing)
+- [ ] Add frontend Playwright smoke suite for login + posting + reporting paths
+- [ ] Enforce PR quality gate: unit + integration + contract + e2e smoke
 
 ---
 ## 🔴 CRITICAL PRIORITY (Fix Immediately)
