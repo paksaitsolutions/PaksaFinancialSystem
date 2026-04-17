@@ -34,7 +34,7 @@
     "chart.js": "^4.5.0",
     "date-fns": "^4.1.0",
     "echarts": "^6.0.0",
-    "express": "^4.19.2",
+    "express": "^4.22.1",
     "express-rate-limit": "^6.11.1",
     "pinia": "^2.1.7",
     "primeflex": "^3.3.0",
