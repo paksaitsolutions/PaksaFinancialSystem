@@ -2,6 +2,15 @@ import { api } from '../../../utils/api'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 
+const RECOMMENDATION_ID_PATTERN = /^[A-Za-z0-9_-]+$/
+
+const toSafeRecommendationPathSegment = (recommendationId: string): string => {
+  if (!RECOMMENDATION_ID_PATTERN.test(recommendationId)) {
+    throw new Error('Invalid recommendation id format')
+  }
+  return encodeURIComponent(recommendationId)
+}
+
 export interface AIInsight {
   id: string
   type: 'prediction' | 'anomaly' | 'recommendation' | 'optimization'
@@ -157,7 +166,8 @@ class AIService {
 
   async applyRecommendation(recommendationId: string): Promise<boolean> {
     try {
-      const response = await api.post(`/api/v1/bi-ai/recommendations/${recommendationId}/apply`)
+      const safeRecommendationId = toSafeRecommendationPathSegment(recommendationId)
+      const response = await api.post(`/api/v1/bi-ai/recommendations/${safeRecommendationId}/apply`)
       return response.data?.success || true
     } catch (error) {
       console.error('Failed to apply recommendation:', error)
@@ -167,7 +177,8 @@ class AIService {
 
   async dismissRecommendation(recommendationId: string): Promise<boolean> {
     try {
-      const response = await api.delete(`/api/v1/bi-ai/recommendations/${recommendationId}`)
+      const safeRecommendationId = toSafeRecommendationPathSegment(recommendationId)
+      const response = await api.delete(`/api/v1/bi-ai/recommendations/${safeRecommendationId}`)
       return response.data?.success || true
     } catch (error) {
       console.error('Failed to dismiss recommendation:', error)
