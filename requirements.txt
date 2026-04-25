@@ -13,11 +13,11 @@ psycopg2-binary==2.9.9; sys_platform != "win32"
 psycopg2==2.9.9; sys_platform == "win32"
 
 # Authentication and Security
-python-jose[cryptography]==3.4.0
+python-jose[cryptography]==3.5.0
 passlib[bcrypt]==1.7.4
 python-multipart==0.0.26
 bcrypt==4.1.2
-cryptography==46.0.7
+cryptography==47.0.0
 
 # Session and Cache Management
 redis==5.0.1
