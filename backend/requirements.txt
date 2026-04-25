@@ -13,11 +13,11 @@ psycopg2-binary==2.9.9
 aiosqlite==0.19.0
 
 # Authentication and Security
-python-jose[cryptography]==3.3.0
+python-jose[cryptography]==3.4.0
 passlib[bcrypt]==1.7.4
 python-multipart==0.0.20
 bcrypt==4.1.2
-cryptography==46.0.5
+cryptography==46.0.7
 
 # Session and Cache Management
 redis==5.0.1
