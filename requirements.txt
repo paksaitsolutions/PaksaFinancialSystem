@@ -17,7 +17,7 @@ python-jose[cryptography]==3.4.0
 passlib[bcrypt]==1.7.4
 python-multipart==0.0.31
 bcrypt==4.1.2
-cryptography==48.0.1
+cryptography==50.0.0
 
 # Session and Cache Management
 redis==5.0.1
@@ -55,7 +55,7 @@ forex-python==1.8
 # PDF and Document Generation
 reportlab==4.0.7
 # WeasyPrint has platform-specific dependencies
-weasyprint==68.0; sys_platform != "win32"
+weasyprint==70.0; sys_platform != "win32"
 
 # Production and Monitoring
 gunicorn==22.0.0; sys_platform != "win32"

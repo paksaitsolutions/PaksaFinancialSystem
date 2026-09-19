@@ -15,7 +15,7 @@ python-jose[cryptography]==3.4.0
 passlib[bcrypt]==1.7.4
 python-multipart==0.0.31
 bcrypt==4.1.2
-cryptography==48.0.1
+cryptography==50.0.0
 
 # Session and Cache Management
 redis==5.0.1
